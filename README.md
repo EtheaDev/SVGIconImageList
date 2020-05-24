@@ -21,7 +21,6 @@ Use of this file is permitted for commercial and non-commercial. Use, as long as
 home page: http://www.mwcs.de  email: martin.walter@mwcs.de 
 This library is included in this project into svg folder
 
-**TSVGIconImageList** and **TSVGIconImage** are similar to **TSVGImageList** and **TSVGImage** included into but those versions are more efficient for performances, and adds some features like setting SVGText, store icons in binary or SVGText format into dfm and more...
-![https://github.com/ekot1/DelphiSVG.git]
-(https://github.com/ekot1/DelphiSVG.git)
+**TSVGIconImageList** and **TSVGIconImage** are similar to **TSVGImageList** and **TSVGImage** included into project: [https://github.com/ekot1/DelphiSVG.git](https://github.com/ekot1/DelphiSVG.git)
+but those versions are more efficient in performances, and adds some features like SVGText property, store icons in binary or SVGText format into dfm and more...
 
