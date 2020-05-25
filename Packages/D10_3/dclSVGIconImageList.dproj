@@ -89,7 +89,7 @@
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_UsePackage>SVGIconImageList;VclSmp;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>SVGIconImageList;VclSmp;SVGIconPackage;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_UsePackage>VclSmp;$(DCC_UsePackage)</DCC_UsePackage>
@@ -123,6 +123,7 @@
         </DelphiCompile>
         <DCCReference Include="..\SVGIconImageListNew.dcr"/>
         <DCCReference Include="DesignIDE.dcp"/>
+        <DCCReference Include="SVGIconPackage.dcp"/>
         <DCCReference Include="SVGIconImageList.dcp"/>
         <DCCReference Include="VclSmp.dcp"/>
         <DCCReference Include="..\SVGIconImageListEditorUnit.pas">

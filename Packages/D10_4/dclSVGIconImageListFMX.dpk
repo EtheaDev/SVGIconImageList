@@ -1,4 +1,4 @@
-package dclSVGIconImageList;
+package dclSVGIconImageListFMX;
 
 {$R *.res}
 {$R '..\SVGIconImageListNew.dcr'}
@@ -10,35 +10,35 @@ package dclSVGIconImageList;
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
-{$LOCALSYMBOLS ON}
+{$LOCALSYMBOLS OFF}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION OFF}
+{$OPTIMIZATION ON}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
-{$REFERENCEINFO ON}
+{$REFERENCEINFO OFF}
 {$SAFEDIVIDE OFF}
-{$STACKFRAMES ON}
+{$STACKFRAMES OFF}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DEFINE DEBUG}
+{$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'Ethea SVGIconImageList VCL components'}
-{$LIBSUFFIX '_D10_3'}
+{$DESCRIPTION 'Ethea SVGIconImageList  FMX components'}
+{$LIBSUFFIX '_D10_4'}
 {$DESIGNONLY}
-{$IMPLICITBUILD OFF}
+{$IMPLICITBUILD ON}
 
 requires
   DesignIDE,
+  dclfmxstd,
   SVGIconPackage,
-  SVGIconImageList,
-  VclSmp;
+  SVGIconImageListFMX;
 
 contains
-  SVGIconImageListEditorUnit in '..\SVGIconImageListEditorUnit.pas' {SVGIconImageListEditor},
-  SVGIconImageRegister in '..\SVGIconImageRegister.pas';
+  FMX.SVGIconImageRegister in '..\FMX.SVGIconImageRegister.pas',
+  FMX.SVGIconImageListEditorUnit in '..\FMX.SVGIconImageListEditorUnit.pas' {SVGIconImageListEditorFMX};
 
 end.

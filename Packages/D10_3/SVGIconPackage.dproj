@@ -1,8 +1,8 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{67EDECA9-2CF8-4EB1-BCE1-910D4B3F08F1}</ProjectGuid>
-        <MainSource>SVGIconImageList.dpk</MainSource>
-        <ProjectVersion>19.0</ProjectVersion>
+        <ProjectGuid>{099DEF19-06D1-4B7C-A46A-EE1940BAF102}</ProjectGuid>
+        <MainSource>SVGIconPackage.dpk</MainSource>
+        <ProjectVersion>18.8</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
@@ -51,7 +51,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_DcuOutput>..\..\Lib\D10_4\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>..\..\Lib\D10_3\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
@@ -62,12 +62,12 @@
         <GenPackage>true</GenPackage>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
-        <SanitizedProjectName>SVGIconImageList</SanitizedProjectName>
+        <SanitizedProjectName>SVGIconPackage</SanitizedProjectName>
         <VerInfo_Locale>1040</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=;ProductName=;ProductVersion=1.0;Comments=</VerInfo_Keys>
         <DCC_Description>Ethea SVGIconImageList VCL components</DCC_Description>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
-        <DllSuffix>_D10_4</DllSuffix>
+        <DllSuffix>_D10_3</DllSuffix>
         <DCC_UnitSearchPath>..\..\svg;..\..\GDIP;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
     </PropertyGroup>
@@ -112,11 +112,22 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="xmlrtl.dcp"/>
         <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="SVGIconPackage.dcp"/>
-        <DCCReference Include="..\..\Source\SVGIconImage.pas"/>
-        <DCCReference Include="..\..\Source\SVGIconImageList.pas"/>
-        <DCCReference Include="..\..\Source\SVGIconUtils.pas"/>
+        <DCCReference Include="..\..\svg\SVG.pas"/>
+        <DCCReference Include="..\..\Svg\SVGColor.pas"/>
+        <DCCReference Include="..\..\Svg\SVGCommon.pas"/>
+        <DCCReference Include="..\..\Svg\SVGPaint.pas"/>
+        <DCCReference Include="..\..\Svg\SVGParse.pas"/>
+        <DCCReference Include="..\..\Svg\SVGPath.pas"/>
+        <DCCReference Include="..\..\Svg\SVGProperties.pas"/>
+        <DCCReference Include="..\..\Svg\SVGStyle.pas"/>
+        <DCCReference Include="..\..\Svg\SVGTypes.pas"/>
+        <DCCReference Include="..\..\GDIP\GDIPKerning.pas"/>
+        <DCCReference Include="..\..\GDIP\GDIPOBJ2.pas"/>
+        <DCCReference Include="..\..\GDIP\GDIPPathText.pas"/>
+        <DCCReference Include="..\..\GDIP\GDIPUtils.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -135,11 +146,12 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">SVGIconImageList.dpk</Source>
+                    <Source Name="MainSource">SVGIconPackage.dpk</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k270.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp270.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\dclIconFontsImageListFMX_D10_3.bpl">Ethea IconFontsImageList FMX components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\ChromeTabs_D.250.bpl">Chrome Tabs</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k260.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
@@ -158,9 +170,15 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\SVGIconImageList_D10_4.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\SVGIconPackage_D10_3.bpl" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>SVGIconImageList.bpl</RemoteName>
+                        <RemoteName>SVGIconPackage.bpl</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\SVGIconPackage.bpl" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>SVGIconPackage.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

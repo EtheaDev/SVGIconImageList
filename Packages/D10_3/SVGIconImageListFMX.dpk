@@ -1,4 +1,4 @@
-package SVGIconImageList;
+package SVGIconImageListFMX;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -9,34 +9,33 @@ package SVGIconImageList;
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
-{$LOCALSYMBOLS ON}
+{$LOCALSYMBOLS OFF}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION OFF}
+{$OPTIMIZATION ON}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
-{$REFERENCEINFO ON}
+{$REFERENCEINFO OFF}
 {$SAFEDIVIDE OFF}
-{$STACKFRAMES ON}
+{$STACKFRAMES OFF}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DEFINE DEBUG}
+{$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'Ethea SVGIconImageList VCL components'}
-{$LIBSUFFIX '_D10_4'}
+{$DESCRIPTION 'Ethea SVGIconImageList FMX components'}
+{$LIBSUFFIX '_D10_3'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
-  vcl,
+  fmx,
   SVGIconPackage;
 
 contains
-  SVGIconImage in '..\..\Source\SVGIconImage.pas',
-  SVGIconImageList in '..\..\Source\SVGIconImageList.pas',
-  SVGIconUtils in '..\..\Source\SVGIconUtils.pas';
+  FMX.SVGIconImageList in '..\..\Source\FMX.SVGIconImageList.pas',
+  FMX.SVGIconImage in '..\..\Source\FMX.SVGIconImage.pas';
 
 end.

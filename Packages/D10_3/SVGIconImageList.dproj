@@ -112,24 +112,10 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="xmlrtl.dcp"/>
         <DCCReference Include="vcl.dcp"/>
+        <DCCReference Include="SVGIconPackage.dcp"/>
         <DCCReference Include="..\..\Source\SVGIconImage.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageList.pas"/>
-        <DCCReference Include="..\..\svg\SVG.pas"/>
-        <DCCReference Include="..\..\Svg\SVGColor.pas"/>
-        <DCCReference Include="..\..\Svg\SVGCommon.pas"/>
-        <DCCReference Include="..\..\Svg\SVGPaint.pas"/>
-        <DCCReference Include="..\..\Svg\SVGParse.pas"/>
-        <DCCReference Include="..\..\Svg\SVGPath.pas"/>
-        <DCCReference Include="..\..\Svg\SVGProperties.pas"/>
-        <DCCReference Include="..\..\Svg\SVGStyle.pas"/>
-        <DCCReference Include="..\..\Svg\SVGTypes.pas"/>
-        <DCCReference Include="..\..\GDIP\GDIPKerning.pas"/>
-        <DCCReference Include="..\..\GDIP\GDIPOBJ2.pas"/>
-        <DCCReference Include="..\..\GDIP\GDIPPathText.pas"/>
-        <DCCReference Include="..\..\GDIP\GDIPUtils.pas"/>
         <DCCReference Include="..\..\Source\SVGIconUtils.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

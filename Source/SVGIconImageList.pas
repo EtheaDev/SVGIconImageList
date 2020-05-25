@@ -1,6 +1,6 @@
 {******************************************************************************}
 {                                                                              }
-{       Icon SVG ImageList: An extended ImageList for Delphi/VCL               }
+{       SVGIconImageList: An extended ImageList for Delphi/VCL                 }
 {       to simplify use of SVG Icons (resize, opacity and more...)             }
 {                                                                              }
 {       Copyright (c) 2019-2020 (Ethea S.r.l.)                                 }
@@ -52,7 +52,7 @@ uses
   , SVG;
 
 const
-  SVGIconImageListVersion = '1.0.0';
+  SVGIconImageListVersion = '1.1.0';
   DEFAULT_SIZE = 16;
 
 type
@@ -147,7 +147,7 @@ type
     procedure Delete(const Index: Integer);
     procedure Remove(const Name: string);
     function IndexOf(const Name: string): Integer;
-    procedure Clear;
+    procedure ClearIcons;
     procedure PaintTo(const DC: HDC; const Index: Integer;
       const X, Y, Width, Height: Double); overload;
     procedure PaintTo(const DC: HDC; const Name: string;
@@ -380,7 +380,7 @@ end;
 
 procedure TSVGIconImageList.AssignTo(Dest: TPersistent);
 begin
-  Clear;
+  ClearIcons;
   inherited;
   if Dest is TSVGIconImageList then
   begin
@@ -391,7 +391,7 @@ begin
   end;
 end;
 
-procedure TSVGIconImageList.Clear;
+procedure TSVGIconImageList.ClearIcons;
 begin
   StopDrawing(True);
   try
@@ -552,7 +552,7 @@ begin
     LSVG := TSVG.Create;
     try
       if not AAppend then
-        Clear;
+        ClearIcons;
       for LIndex := 0 to AFileNames.Count - 1 do
       begin
         LFileName := AFileNames[LIndex];

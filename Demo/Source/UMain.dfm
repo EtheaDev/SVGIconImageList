@@ -35,7 +35,6 @@ object MainForm: TMainForm
       Caption = 'Select Theme/Color'
       TabOrder = 3
       OnClick = SelectThemeRadioGroupClick
-      ExplicitHeight = 344
     end
     object GroupBox1: TGroupBox
       Left = 1
@@ -274,7 +273,7 @@ object MainForm: TMainForm
   end
   object ActionList: TActionList
     Images = SVGIconImageList
-    Left = 240
+    Left = 248
     Top = 424
     object ChangeIconAction: TAction
       Category = 'Edit'

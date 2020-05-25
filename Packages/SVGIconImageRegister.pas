@@ -109,7 +109,7 @@ end;
 
 function TSVGIconImageListCompEditor.GetVerbCount: Integer;
 begin
-  Result := 3;
+  Result := 2;
 end;
 
 { TSVGIconImageListProperty }
