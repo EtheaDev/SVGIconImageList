@@ -52,7 +52,7 @@ uses
   , SVG;
 
 const
-  SVGIconImageListVersion = '1.1.0';
+  SVGIconImageListVersion = '1.2.0';
   DEFAULT_SIZE = 16;
 
 type
@@ -129,12 +129,17 @@ type
     {$IFDEF HiDPISupport}
     procedure DPIChangedMessageHandler(const Sender: TObject; const Msg: Messaging.TMessage);
     {$ENDIF}
+    {$IF CompilerVersion < 29}
+    function GetCount: Integer;
+    {$IFEND}
   protected
+    {$IF CompilerVersion > 28}
+    function GetCount: Integer; override;
+    {$IFEND}
     procedure DefineProperties(Filer: TFiler); override;
     procedure AssignTo(Dest: TPersistent); override;
     procedure DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer;
       Style: Cardinal; Enabled: Boolean = True); override;
-    function GetCount: Integer; override;
     procedure Loaded; override;
   public
     procedure Assign(Source: TPersistent); override;
@@ -148,6 +153,7 @@ type
     procedure Remove(const Name: string);
     function IndexOf(const Name: string): Integer;
     procedure ClearIcons;
+    procedure SaveToFile(const AFileName: string);
     procedure PaintTo(const DC: HDC; const Index: Integer;
       const X, Y, Width, Height: Double); overload;
     procedure PaintTo(const DC: HDC; const Name: string;
@@ -683,6 +689,63 @@ end;
 procedure TSVGIconImageList.Remove(const Name: string);
 begin
   Delete(IndexOf(Name));
+end;
+
+procedure TSVGIconImageList.SaveToFile(const AFileName: string);
+var
+  LImageStrip: TBitmap;
+  LImageCount: Integer;
+  LStripWidth, LStripHeight: Integer;
+
+  procedure CreateLImageStrip(var AStrip: TBitmap);
+  var
+    I, J, K: Integer;
+  begin
+    with AStrip do
+    begin
+      Canvas.Brush.Color := clNone;
+      Canvas.FillRect(Rect(0, 0, AStrip.Width, AStrip.Height));
+      J := 0;
+      K := 0;
+      for I := 0 to Self.Count - 1 do
+      begin
+        Draw(Canvas, J * Width, K * Height, I, dsTransparent, itImage);
+        Inc(J);
+        if J >= LStripWidth then
+        begin
+          J := 0;
+          Inc(K);
+        end;
+      end;
+    end;
+  end;
+
+  procedure CalcDimensions(ACount: Integer; var AWidth, AHeight: Integer);
+  var
+    X: Double;
+  begin
+    X := Sqrt(ACount);
+    AWidth := Trunc(X);
+    if Frac(X) > 0 then
+      Inc(AWidth);
+    X := ACount / AWidth;
+    AHeight := Trunc(X);
+    if Frac(X) > 0 then
+      Inc(AHeight);
+  end;
+
+begin
+  LImageStrip := TBitmap.Create;
+  try
+    LImageCount := Count;
+    CalcDimensions(LImageCount, LStripWidth, LStripHeight);
+    LImageStrip.Width := LStripWidth * Width;
+    LImageStrip.Height := LStripHeight * Height;
+    CreateLImageStrip(LImageStrip);
+    LImageStrip.SaveToFile(AFileName);
+  finally
+    LImageStrip.Free;
+  end;
 end;
 
 procedure TSVGIconImageList.SetHeight(const Value: Integer);

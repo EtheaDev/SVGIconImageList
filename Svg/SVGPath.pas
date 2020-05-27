@@ -134,6 +134,13 @@ uses
   Winapi.GDIPAPI,
   SVGCommon, SVGParse;
 
+{$IF CompilerVersion <= 28}
+function FMod(const ANumerator, ADenominator: Single): Single;
+begin
+  Result := ANumerator - Trunc(ANumerator / ADenominator) * ADenominator;
+end;
+{$IFEND}
+
 // TSVGPathElement
 
 procedure TSVGPathElement.AssignTo(Dest: TPersistent);

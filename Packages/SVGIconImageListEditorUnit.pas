@@ -60,10 +60,10 @@ type
     CancelButton: TButton;
     OpenDialog: TOpenPictureDialog;
     SaveDialog: TSavePictureDialog;
+    ImageListGroup: TGroupBox;
     paTop: TPanel;
     paClient: TPanel;
     SVGText: TMemo;
-    ImageListGroupBox: TGroupBox;
     SizeLabel: TLabel;
     SizeSpinEdit: TSpinEdit;
     StoreAsTextCheckBox: TCheckBox;
@@ -74,6 +74,7 @@ type
     AddButton: TButton;
     IconName: TEdit;
     paButtons: TPanel;
+    ImageListGroupBox: TGroupBox;
     HelpButton: TButton;
     ApplyButton: TButton;
     WidthLabel: TLabel;
@@ -93,10 +94,12 @@ type
     procedure FormCreate(Sender: TObject);
     procedure ApplyButtonClick(Sender: TObject);
     procedure ClearAllButtonClick(Sender: TObject);
-    procedure AddButtonClick(Sender: TObject);
     procedure DeleteButtonClick(Sender: TObject);
+    procedure AddButtonClick(Sender: TObject);
     procedure ImageViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
+    procedure ImageViewKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure ExportButtonClick(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -118,6 +121,7 @@ type
   private
     FSourceList, FEditingList: TSVGIconImageList;
     FIconIndexLabel: string;
+    FTotIconsLabel: string;
     FUpdating: Boolean;
     FChanged: Boolean;
     FModified: Boolean;
@@ -127,9 +131,9 @@ type
     procedure UpdateGUI;
     function SelectedIcon: TSVGIconItem;
     procedure UpdateSizeGUI;
+    procedure AddNewItem;
+    procedure DeleteSelectedItem;
   public
-    constructor CreateSVGIconImageListEditor(AOwner: TComponent;
-      ASVGImgList: TSVGIconImageList);
     property Modified: Boolean read FModified;
     property SVGIconImageList: TSVGIconImageList read FEditingList;
   end;
@@ -147,32 +151,47 @@ uses
   , ShellApi
   , SVGIconUtils;
 
+var
+  SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
+  paTopHeight: Integer;
+
 function EditSVGIconImageList(const AImageList: TSVGIconImageList): Boolean;
 var
   LEditor: TSVGIconImageListEditor;
 begin
-  Screen.Cursor := crHourGlass;
-  try
-    LEditor := TSVGIconImageListEditor.CreateSVGIconImageListEditor(
-      nil, AImageList);
-    with LEditor do
-    begin
+  LEditor := TSVGIconImageListEditor.Create(nil);
+  with LEditor do
+  begin
+    try
+      Screen.Cursor := crHourglass;
       try
-        Screen.Cursor := crDefault;
-        Result := ShowModal = mrOk;
-        if Result then
-        begin
-          Screen.Cursor := crHourGlass;
-          AImageList.Assign(LEditor.SVGIconImageList);
-        end;
+        FSourceList := AImageList;
+        FEditingList.Assign(AImageList);
+        OpacitySpinEdit.Value := FSourceList.Opacity;
+        StoreAsTextCheckBox.Checked := FSourceList.StoreAsText;
+        UpdateGUI;
       finally
-        DisposeOf;
+        Screen.Cursor := crDefault;
       end;
+      Result := ShowModal = mrOk;
+      if Result then
+      begin
+        Screen.Cursor := crHourglass;
+        try
+          AImageList.Assign(LEditor.FEditingList);
+        finally
+          Screen.Cursor := crDefault;
+        end;
+      end;
+      SavedBounds := BoundsRect;
+      paTopHeight := paTop.Height;
+    finally
+      Free;
     end;
-  finally
-    Screen.Cursor := crDefault;
   end;
 end;
+
+{ TSVGIconImageListEditor }
 
 procedure TSVGIconImageListEditor.UpdateSizeGUI;
 begin
@@ -181,24 +200,10 @@ begin
   HeightSpinEdit.Value := FEditingList.Height;
 end;
 
-
 procedure TSVGIconImageListEditor.ApplyButtonClick(Sender: TObject);
 begin
   Apply;
   UpdateGUI;
-end;
-
-procedure TSVGIconImageListEditor.ClearAllButtonClick(Sender: TObject);
-begin
-  Screen.Cursor := crHourGlass;
-  try
-    ImageView.Clear;
-    FEditingList.Clear;
-    FChanged := True;
-    UpdateGUI;
-  finally
-    Screen.Cursor := crDefault;
-  end;
 end;
 
 procedure TSVGIconImageListEditor.AddButtonClick(Sender: TObject);
@@ -215,29 +220,6 @@ begin
   end;
 end;
 
-procedure TSVGIconImageListEditor.DeleteButtonClick(Sender: TObject);
-var
-  LIndex: Integer;
-  Selected: Integer;
-begin
-  Screen.Cursor := crHourGlass;
-  try
-    Selected := ImageView.ItemIndex;
-    FEditingList.StopDrawing(True);
-    try
-      for LIndex := ImageView.Items.Count - 1 downto 0 do
-        if ImageView.Items[LIndex].Selected then
-          FEditingList.SVGIconItems.Delete(LIndex);
-    finally
-      FEditingList.StopDrawing(False);
-      FEditingList.RecreateBitmaps;
-    end;
-    FChanged := True;
-    BuildList(Selected);
-  finally
-    Screen.Cursor := crDefault;
-  end;
-end;
 
 procedure TSVGIconImageListEditor.UpdateGUI;
 var
@@ -255,6 +237,7 @@ begin
     ApplyButton.Enabled := FChanged;
     IconName.Enabled := LIsItemSelected;
     SVGText.Enabled := LIsItemSelected;
+    ImageListGroup.Caption := Format(FTotIconsLabel, [FEditingList.Count]);
     if LIsItemSelected then
     begin
       IconImage.ImageIndex := SelectedIcon.Index;
@@ -318,11 +301,30 @@ begin
   UpdateGUI;
 end;
 
-procedure TSVGIconImageListEditor.NewButtonClick(Sender: TObject);
+procedure TSVGIconImageListEditor.AddNewItem;
 begin
   FEditingList.SVGIconItems.Add;
+  FChanged := True;
   BuildList(MaxInt);
   UpdateGUI;
+end;
+
+procedure TSVGIconImageListEditor.NewButtonClick(Sender: TObject);
+begin
+  AddNewItem;
+end;
+
+procedure TSVGIconImageListEditor.ClearAllButtonClick(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    ImageView.Clear;
+    FEditingList.ClearIcons;
+    FChanged := True;
+    UpdateGUI;
+  finally
+    Screen.Cursor := crDefault;
+  end;
 end;
 
 procedure TSVGIconImageListEditor.ReplaceButtonClick(Sender: TObject);
@@ -361,6 +363,15 @@ begin
       Screen.Cursor := crDefault;
     end;
   end;
+end;
+
+procedure TSVGIconImageListEditor.ImageViewKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if (Key = VK_INSERT) and (Shift = []) then
+    AddNewItem
+  else if (Key = VK_DELETE) and (Shift = []) then
+    DeleteSelectedItem;
 end;
 
 function TSVGIconImageListEditor.SelectedIcon: TSVGIconItem;
@@ -410,17 +421,33 @@ begin
   UpdateGUI;
 end;
 
-procedure TSVGIconImageListEditor.ExportButtonClick(Sender: TObject);
+procedure TSVGIconImageListEditor.DeleteSelectedItem;
+var
+  LIndex: Integer;
+  Selected: Integer;
 begin
-  if SaveDialog.Execute then
-  begin
-    Screen.Cursor := crHourGlass;
+  Screen.Cursor := crHourGlass;
+  try
+    Selected := ImageView.ItemIndex;
+    FEditingList.StopDrawing(True);
     try
-      FEditingList.SVGIconItems[ImageView.ItemIndex].SVG.SaveToFile(SaveDialog.FileName);
+      for LIndex := ImageView.Items.Count - 1 downto 0 do
+        if ImageView.Items[LIndex].Selected then
+          FEditingList.SVGIconItems.Delete(LIndex);
     finally
-      Screen.Cursor := crDefault;
+      FEditingList.StopDrawing(False);
+      FEditingList.RecreateBitmaps;
     end;
+    FChanged := True;
+    BuildList(Selected);
+  finally
+    Screen.Cursor := crDefault;
   end;
+end;
+
+procedure TSVGIconImageListEditor.DeleteButtonClick(Sender: TObject);
+begin
+  DeleteSelectedItem;
 end;
 
 procedure TSVGIconImageListEditor.FormClose(Sender: TObject;
@@ -438,8 +465,9 @@ begin
   FEditingList := TSVGIconImageList.Create(Self);
   ImageView.LargeImages := FEditingList;
   IconImage.ImageList := FEditingList;
-  FChanged := False;
   FIconIndexLabel := ItemGroupBox.Caption;
+  FTotIconsLabel := ImageListGroup.Caption;
+  FChanged := False;
   FModified := False;
   SVGText.Font.Name := 'Courier New';
   Caption := Format(Caption, [SVGIconImageListVersion]);
@@ -453,7 +481,7 @@ begin
   try
     FSourceList.StopDrawing(True);
     Try
-      FSourceList.SVGIconItems.Assign(FEditingList.SVGIconItems);
+      FSourceList.Assign(FEditingList);
       FChanged := False;
       FModified := True;
     Finally
@@ -465,17 +493,6 @@ begin
   end;
 end;
 
-constructor TSVGIconImageListEditor.CreateSVGIconImageListEditor(AOwner: TComponent;
-  ASVGImgList: TSVGIconImageList);
-begin
-  inherited Create(AOwner);
-  FSourceList := ASVGImgList;
-  FEditingList.Assign(FSourceList);
-  OpacitySpinEdit.Value := FEditingList.Opacity;
-  StoreAsTextCheckBox.Checked := FEditingList.StoreAsText;
-  UpdateSizeGUI;
-end;
-
 procedure TSVGIconImageListEditor.OkButtonClick(Sender: TObject);
 begin
   Apply;
@@ -485,6 +502,20 @@ procedure TSVGIconImageListEditor.OpacitySpinEditChange(Sender: TObject);
 begin
   if FUpdating then Exit;
   FEditingList.Opacity := OpacitySpinEdit.Value;
+end;
+
+procedure TSVGIconImageListEditor.ExportButtonClick(Sender: TObject);
+begin
+  if SaveDialog.Execute then
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      FEditingList.SaveToFile(SaveDialog.FileName);
+      //FEditingList.SVGIconItems[ImageView.ItemIndex].SVG.SaveToFile(SaveDialog.FileName);
+    finally
+      Screen.Cursor := crDefault;
+    end;
+  end;
 end;
 
 procedure TSVGIconImageListEditor.FormDestroy(Sender: TObject);
@@ -502,7 +533,16 @@ end;
 
 procedure TSVGIconImageListEditor.FormShow(Sender: TObject);
 begin
+  UpdateSizeGUI;
+
   BuildList(0);
+
+  if SavedBounds.Right - SavedBounds.Left > 0 then
+    SetBounds(SavedBounds.Left, SavedBounds.Top, SavedBounds.Width, SavedBounds.Height);
+
+  if paTopHeight <> 0 then
+    paTop.Height := paTopHeight;
+
   if ImageView.CanFocus then
     ImageView.SetFocus;
 end;
@@ -520,5 +560,8 @@ begin
     PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Image-Editor'), nil, nil,
     SW_SHOWNORMAL)
 end;
+
+initialization
+  paTopHeight := 0;
 
 end.

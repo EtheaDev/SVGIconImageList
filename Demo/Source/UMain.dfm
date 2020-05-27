@@ -19,6 +19,17 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
+  object Splitter1: TSplitter
+    Left = 624
+    Top = 38
+    Height = 509
+    Align = alRight
+    AutoSnap = False
+    MinSize = 80
+    ExplicitLeft = 9
+    ExplicitTop = 9
+    ExplicitHeight = 427
+  end
   object Panel1: TPanel
     Left = 0
     Top = 38
@@ -49,7 +60,7 @@ object MainForm: TMainForm
         Top = 23
         Width = 189
         Height = 30
-        Caption = 'Build from files'
+        Caption = 'Build from files...'
         TabOrder = 0
         OnClick = BuildFromFilesButtonClick
       end
@@ -167,12 +178,13 @@ object MainForm: TMainForm
     Height = 509
     Align = alRight
     TabOrder = 2
+    OnResize = Panel2Resize
     object SVGIconImage: TSVGIconImage
       Left = 1
       Top = 428
       Width = 80
       Height = 80
-      Hint = 'TSVGIconImage with Delphi SVG Logo'
+      Hint = 'Click left - right mouse button to change icon into SVGIconImage'
       Margins.Left = 10
       Margins.Top = 10
       Margins.Right = 10
@@ -186,6 +198,7 @@ object MainForm: TMainForm
       ImageList = SVGIconImageList
       ImageIndex = 100
       Align = alBottom
+      OnMouseDown = SVGIconImageMouseDown
       Data = {00000000}
     end
     object DeleteButton: TBitBtn
@@ -212,14 +225,14 @@ object MainForm: TMainForm
   object ClientPanel: TPanel
     Left = 202
     Top = 38
-    Width = 425
+    Width = 422
     Height = 509
     Align = alClient
     TabOrder = 3
     object ImageListLabel: TLabel
       Left = 1
       Top = 209
-      Width = 423
+      Width = 420
       Height = 13
       Align = alTop
       Alignment = taCenter
@@ -229,7 +242,7 @@ object MainForm: TMainForm
     object TreeView: TTreeView
       Left = 1
       Top = 1
-      Width = 423
+      Width = 420
       Height = 208
       Align = alTop
       Images = SVGIconImageList
@@ -249,7 +262,7 @@ object MainForm: TMainForm
     object ImageView: TListView
       Left = 1
       Top = 222
-      Width = 423
+      Width = 420
       Height = 286
       Align = alClient
       Columns = <>
@@ -268,6 +281,7 @@ object MainForm: TMainForm
       OnSelectItem = ImageViewSelectItem
       ExplicitLeft = 5
       ExplicitTop = 242
+      ExplicitWidth = 423
       ExplicitHeight = 272
     end
   end

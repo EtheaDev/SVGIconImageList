@@ -1,6 +1,6 @@
 {******************************************************************************}
 {                                                                              }
-{       Icon Fonts ImageList: An extended ImageList for Delphi/VCL             }
+{       SVG Icon ImageList: An extended ImageList for Delphi/VCL               }
 {       to simplify use of Icons (resize, colors and more...)                  }
 {                                                                              }
 {       Copyright (c) 2019-2020 (Ethea S.r.l.)                                 }
@@ -8,7 +8,7 @@
 {       Contributors:                                                          }
 {         Nicola Tambascia                                                     }
 {                                                                              }
-{       https://github.com/EtheaDev/SVGIconImageList                         }
+{       https://github.com/EtheaDev/SVGIconImageList                           }
 {                                                                              }
 {******************************************************************************}
 {                                                                              }
@@ -36,7 +36,6 @@ uses
   Controls, Forms, Dialogs, ImgList,
   StdCtrls, Buttons, StdActns,
   ActnList, ExtCtrls, ComCtrls, ToolWin,
-  System.Actions, System.ImageList,
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs;
 
 type
@@ -73,6 +72,7 @@ type
     SVGIconImageList: TSVGIconImageList;
     OpenDialog: TOpenPictureDialog;
     SVGIconImage: TSVGIconImage;
+    Splitter1: TSplitter;
     procedure ChangeIconActionExecute(Sender: TObject);
     procedure SelectThemeRadioGroupClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -83,6 +83,9 @@ type
     procedure ImageViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure BuildFromFilesButtonClick(Sender: TObject);
+    procedure SVGIconImageMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure Panel2Resize(Sender: TObject);
   private
     FSVGIconImageListHot: TSVGIconImageList;
     FSVGIconImageListDisabled: TSVGIconImageList;
@@ -201,7 +204,7 @@ begin
   TStringList(SelectThemeRadioGroup.Items).Sort;
   SelectThemeRadioGroup.OnClick := nil;
   try
-    SelectThemeRadioGroup.ItemIndex := SelectThemeRadioGroup.Items.IndexOf('Windows10');
+    SelectThemeRadioGroup.ItemIndex := SelectThemeRadioGroup.Items.IndexOf({$IFDEF D10_1+}'Windows10'{$ELSE}'Windows'{$ENDIF});
   finally
     SelectThemeRadioGroup.OnClick := SelectThemeRadioGroupClick;
   end;
@@ -241,10 +244,24 @@ begin
   SVGIconImage.ImageIndex := Item.Index;
 end;
 
+procedure TMainForm.Panel2Resize(Sender: TObject);
+begin
+  SVGIconImage.Height := SVGIconImage.width;
+end;
+
 procedure TMainForm.ShowImageEditorButtonClick(Sender: TObject);
 begin
   if EditSVGIconImageList(SVGIconImageList) then
     UpdateGUI;
+end;
+
+procedure TMainForm.SVGIconImageMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if Button = mbLeft then
+    SVGIconImage.ImageIndex := SVGIconImage.ImageIndex + 1
+  else
+    SVGIconImage.ImageIndex := SVGIconImage.ImageIndex - 1;
 end;
 
 procedure TMainForm.updateGUI;

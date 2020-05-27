@@ -74,21 +74,12 @@ begin
 end;
 
 procedure TSVGIconImageListCompEditor.ExecuteVerb(Index: Integer);
-var
-  LCompEditor: TSVGIconImageListEditor;
 begin
   inherited;
   if Index = 0 then
   begin
-    LCompEditor := TSVGIconImageListEditor.CreateSVGIconImageListEditor(nil,
-      Component as TSVGIconImageList);
-    try
-      LCompEditor.ShowModal;
-      if LCompEditor.Modified then
-        Designer.Modified;
-    finally
-      LCompEditor.Free;
-    end;
+    if EditSVGIconImageList(Component as TSVGIconImageList) then
+      Designer.Modified;
   end
   else if Index = 1 then
   begin
@@ -115,18 +106,11 @@ end;
 { TSVGIconImageListProperty }
 procedure TSVGIconImageListProperty.Edit;
 var
-  LCompEditor: TSVGIconImageListEditor;
   SVGImageList: TSVGIconImageList;
 begin
   SVGImageList := TSVGIconImageList(GetComponent(0));
-  LCompEditor := TSVGIconImageListEditor.CreateSVGIconImageListEditor(nil, SVGImageList);
-  try
-    LCompEditor.ShowModal;
-    if LCompEditor.Modified then
-      Modified;
-  finally
-    LCompEditor.Free;
-  end;
+  if EditSVGIconImageList(SVGImageList) then
+    Modified;
 end;
 
 function TSVGIconImageListProperty.GetAttributes: TPropertyAttributes;

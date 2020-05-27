@@ -43,7 +43,7 @@ type
     AddButton: TButton;
     DeleteButton: TButton;
     ClearAllButton: TButton;
-    ÿ: TPanel;
+    paTop: TPanel;
     Panel4: TPanel;
     OKButton: TButton;
     CancelButton: TButton;
@@ -73,6 +73,7 @@ type
     procedure DeleteButtonClick(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormShow(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
     procedure IconNameExit(Sender: TObject);
     procedure ImageViewSelectItem(Sender: TObject);
@@ -111,6 +112,10 @@ uses
   Winapi.Messages
   , Winapi.Windows
   , Winapi.shellApi;
+
+var
+  SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
+  paTopHeight: Single;
 
 function UpdateSVGIconListView(const AListBox: TListBox): Integer;
 var
@@ -176,7 +181,6 @@ begin
       //Screen.Cursor := crHourglass;
       try
         FEditinglist.Assign(AImageList);
-        //DefaultFontName.ItemIndex := DefaultFontName.Items.IndexOf(FEditingList.FontName);
         SizeSpinBox.Value := FEditingList.Size;
         AutoSizeCheckBox.IsChecked := FEditingList.AutoSizeBitmaps;
         DefaultOpacitySpinBox.Value := FEditingList.Opacity * 100;
@@ -186,16 +190,21 @@ begin
         if ImageView.Items.Count > 0 then
           ImageView.ItemIndex := 0;
 
-        //if SavedBounds.Right - SavedBounds.Left > 0 then
-        //  BoundsRect := SavedBounds;
       finally
         //Screen.Cursor := crDefault;
       end;
       Result := ShowModal = mrOk;
       if Result then
+      begin
+        //Screen.Cursor := crHourglass;
+        try
         AImageList.Assign(FEditingList);
-      //Savedprocedure TSVGIconImageListEditorFMX.AddButtonClick(Sender: TObject);
-      //Bounds := BoundsRect;
+        finally
+          //Screen.Cursor := crDefault;
+        end;
+      end;
+      SavedBounds := Bounds;
+      paTopHeight := paTop.Height;
     finally
       DisposeOf;
     end;
@@ -431,6 +440,18 @@ begin
   end;
 end;
 
+procedure TSVGIconImageListEditorFMX.FormShow(Sender: TObject);
+begin
+  if SavedBounds.Right - SavedBounds.Left > 0 then
+    SetBounds(SavedBounds.Left, SavedBounds.Top, SavedBounds.Width, SavedBounds.Height);
+
+  if paTopHeight <> 0 then
+    paTop.Height := paTopHeight;
+
+  if ImageView.CanFocus then
+    ImageView.SetFocus;
+end;
+
 procedure TSVGIconImageListEditorFMX.AddNewItem;
 var
   LInsertIndex: Integer;
@@ -443,5 +464,8 @@ begin
   UpdateSVGIconListView(ImageView);
   ImageView.ItemIndex := LInsertIndex;
 end;
+
+initialization
+  paTopHeight := 0;
 
 end.

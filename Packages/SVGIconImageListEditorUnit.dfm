@@ -8,10 +8,9 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
-  Font.Name = 'MS Sans Serif'
+  Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = True
-  Position = poScreenCenter
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -37,10 +36,8 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
     Width = 679
     Height = 319
     Align = alClient
-    Caption = ' Icons of Imagelist'
+    Caption = '%d Icons of Imagelist'
     TabOrder = 1
-    ExplicitTop = 169
-    ExplicitHeight = 324
     object ImageView: TListView
       Left = 2
       Top = 15
@@ -57,8 +54,8 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       TabOrder = 0
       OnDragDrop = ImageViewDragDrop
       OnDragOver = ImageViewDragOver
+      OnKeyDown = ImageViewKeyDown
       OnSelectItem = ImageViewSelectItem
-      ExplicitHeight = 307
     end
   end
   object paTop: TPanel
@@ -77,7 +74,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitHeight = 183
       object ImageListGroupBox: TGroupBox
         Left = 0
         Top = 0
@@ -188,7 +184,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         Align = alClient
         Caption = 'Properties of Selected Icon n.%d'
         TabOrder = 1
-        ExplicitHeight = 104
         DesignSize = (
           596
           108)
@@ -248,7 +243,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           ScrollBars = ssBoth
           TabOrder = 2
           OnExit = SVGTextExit
-          ExplicitHeight = 89
         end
       end
     end
@@ -260,7 +254,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitHeight = 169
       object OKButton: TButton
         Left = 2
         Top = 8
@@ -376,8 +369,8 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   end
   object SaveDialog: TSavePictureDialog
     DefaultExt = 'svg'
-    Filter = 'Scalable Vector Graphics (*.svg)|*.svg'
-    Options = [ofHideReadOnly, ofPathMustExist, ofEnableSizing]
+    Filter = 'Bitmaps (*.bmp)|*.bmp'
+    Options = [ofOverwritePrompt, ofPathMustExist, ofEnableSizing]
     Left = 528
     Top = 16
   end

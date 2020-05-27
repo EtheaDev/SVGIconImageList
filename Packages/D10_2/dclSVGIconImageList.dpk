@@ -33,6 +33,7 @@ package dclSVGIconImageList;
 
 requires
   DesignIDE,
+  SVGIconPackage,
   SVGIconImageList,
   VclSmp;
 
