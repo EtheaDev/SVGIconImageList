@@ -2,17 +2,26 @@
 
 ## An extended ImageList for Delphi (VCL+FMX) to simplify use of SVG Icons (resize, opacity and more...)
 
-Sample image of VCL version
+**Sample image of VCL version**
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/Sample.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/Sample.jpg)
 
-Sample image of FMX (Windows) version
+**Sample image of FMX (Windows) version**
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SampleFMX.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SampleFMX.jpg)
+
+**DOCUMENTATION**
 
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 **RELEASE NOTES:**
 
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png)
+
+28 May 2020: version 1.2 (VCL+FMX)
+- Complete support of **Delphi 10.4**
+- Added support for other Delphi versions (VCL): **DXE6**, **DXE8**, **D10.1**
+- Added position memory of component editor
+- Fixed Issue: Icon Editor not keeping added icons
+- Fixed Issue: SVG with exponent notation does not parse correctly and affects image display
 
 25 May 2020: version 1.1 (VCL+FMX)
 - Added the component **TSVGIconImageListFMX** with advanced component editor.
