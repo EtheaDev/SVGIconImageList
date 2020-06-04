@@ -121,21 +121,6 @@ object SVGTextPropertyEditorForm: TSVGTextPropertyEditorForm
     BorderWidth = 1
     TabOrder = 2
     OnResize = paImageResize
-    object SVGIconImage: TSVGIconImage
-      AlignWithMargins = True
-      Left = 5
-      Top = 29
-      Width = 175
-      Height = 189
-      AutoSize = False
-      Center = True
-      Proportional = True
-      Stretch = True
-      Opacity = 255
-      Scale = 1.000000000000000000
-      ImageIndex = 0
-      Align = alClient
-    end
     object paTitle: TPanel
       Left = 2
       Top = 2
@@ -144,6 +129,62 @@ object SVGTextPropertyEditorForm: TSVGTextPropertyEditorForm
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
+    end
+    object ImagePanel: TPanel
+      AlignWithMargins = True
+      Left = 2
+      Top = 26
+      Width = 181
+      Height = 171
+      Margins.Left = 0
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alClient
+      BevelOuter = bvLowered
+      Color = clWindow
+      ParentBackground = False
+      TabOrder = 1
+      ExplicitHeight = 195
+      object SVGIconImage: TSVGIconImage
+        Left = 1
+        Top = 1
+        Width = 179
+        Height = 169
+        AutoSize = False
+        Center = False
+        Proportional = True
+        Stretch = True
+        Opacity = 255
+        Scale = 1.000000000000000000
+        ImageIndex = 0
+        Align = alClient
+        ExplicitLeft = 6
+        ExplicitTop = 28
+        ExplicitWidth = 175
+        ExplicitHeight = 189
+      end
+    end
+    object BottomPanel: TPanel
+      Left = 2
+      Top = 197
+      Width = 181
+      Height = 24
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 2
+      ExplicitTop = 2
+      object ProportionalCheckBox: TCheckBox
+        Left = 8
+        Top = 4
+        Width = 161
+        Height = 17
+        Caption = 'Proportional'
+        Checked = True
+        State = cbChecked
+        TabOrder = 0
+        OnClick = ProportionalCheckBoxClick
+      end
     end
   end
   object OpenDialog: TOpenPictureDialog

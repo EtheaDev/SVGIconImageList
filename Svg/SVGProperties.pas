@@ -1,19 +1,24 @@
-      {******************************************************************}
-      { Parse of SVG properties                                          }
-      {                                                                  }
-      { home page : http://www.mwcs.de                                   }
-      { email     : martin.walter@mwcs.de                                }
-      {                                                                  }
-      { date      : 05-04-2008                                           }
-      {                                                                  }
-      { Use of this file is permitted for commercial and non-commercial  }
-      { use, as long as the author is credited.                          }
-      { This file (c) 2005, 2008 Martin Walter                           }
-      {                                                                  }
-      { This Software is distributed on an "AS IS" basis, WITHOUT        }
-      { WARRANTY OF ANY KIND, either express or implied.                 }
-      {                                                                  }
-      { *****************************************************************}
+{******************************************************************}
+{ Parse of SVG properties                                          }
+{                                                                  }
+{ home page : http://www.mwcs.de                                   }
+{ email     : martin.walter@mwcs.de                                }
+{                                                                  }
+{ date      : 05-06-2020                                           }
+{                                                                  }
+{ version   : 0.69c                                                }
+{                                                                  }
+{ Use of this file is permitted for commercial and non-commercial  }
+{ use, as long as the author is credited.                          }
+{ This file (c) 2005, 2008 Martin Walter                           }
+{                                                                  }
+{ Thanks to:                                                       }
+{ Carlo Barazzetta (parsing errors)                                }
+{                                                                  }
+{ This Software is distributed on an "AS IS" basis, WITHOUT        }
+{ WARRANTY OF ANY KIND, either express or implied.                 }
+{                                                                  }
+{ *****************************************************************}
 
 unit SVGProperties;
 
@@ -47,7 +52,7 @@ procedure LoadGradientUnits(const Node: IXMLNode; var Units: TGradientUnits);
 implementation
 
 uses
-  SVGCommon, SVGParse;
+  SVGCommon, SVGParse, Variants;
 
 procedure LoadLength(const Node: IXMLNode; const S: string;
   var X: TFloat);
@@ -57,7 +62,7 @@ begin
   Attribute := Node.AttributeNodes.FindNode(S);
   if Assigned(Attribute) then
   begin
-    X := ParseLength(Attribute.nodeValue);
+    X := ParseLength(VarToStr(Attribute.nodeValue));
   end;
 end;
 

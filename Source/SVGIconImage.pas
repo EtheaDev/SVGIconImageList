@@ -273,14 +273,22 @@ var
       else
         R := 1;
 
-      if Width / Height > R then
+      if Height <> 0 then
       begin
-        Bounds.Width := Height * R;
-        Bounds.Height := Height;
-      end else
+        if Width / Height > R then
+        begin
+          Bounds.Width := Height * R;
+          Bounds.Height := Height;
+        end else
+        begin
+          Bounds.Width := Width;
+          Bounds.Height := Width / R;
+        end;
+      end
+      else
       begin
-        Bounds.Width := Width;
-        Bounds.Height := Width / R;
+        Bounds.Width := 0;
+        Bounds.Height := 0;
       end;
       Exit;
     end;

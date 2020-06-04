@@ -1,27 +1,29 @@
-      {******************************************************************}
-      { SVG Image                                                        }
-      {                                                                  }
-      { home page : http://www.mwcs.de                                   }
-      { email     : martin.walter@mwcs.de                                }
-      {                                                                  }
-      { date      : 22-09-2008                                           }
-      {                                                                  }
-      { version   : 0.69b                                                }
-      {                                                                  }
-      { Use of this file is permitted for commercial and non-commercial  }
-      { use, as long as the author is credited.                          }
-      { This file (c) 2005, 2008 Martin Walter                           }
-      {                                                                  }
-      { Thanks to:                                                       }
-      { Bart Vandromme (parsing errors)                                  }
-      { Chris Ueberall (parsing errors)                                  }
-      { Elias Zurschmiede (font error)                                   }
-      { Christopher Cerny  (Dash Pattern)                                }
-      {                                                                  }
-      { This Software is distributed on an "AS IS" basis, WITHOUT        }
-      { WARRANTY OF ANY KIND, either express or implied.                 }
-      {                                                                  }
-      { *****************************************************************}
+{******************************************************************}
+{ SVG Image                                                        }
+{                                                                  }
+{ home page : http://www.mwcs.de                                   }
+{ email     : martin.walter@mwcs.de                                }
+{                                                                  }
+{ date      : 05-06-2020                                           }
+{                                                                  }
+{ version   : 0.69c                                                }
+{                                                                  }
+{ Use of this file is permitted for commercial and non-commercial  }
+{ use, as long as the author is credited.                          }
+{ This file (c) 2005, 2008 Martin Walter                           }
+{                                                                  }
+{ Thanks to:                                                       }
+{ Bart Vandromme (parsing errors)                                  }
+{ Chris Ueberall (parsing errors)                                  }
+{ Elias Zurschmiede (font error)                                   }
+{ Christopher Cerny  (Dash Pattern)                                }
+{ Carlo Barazzetta (fixed transform)                               }
+{ Carlo Barazzetta (fixed style display none)                      }
+{                                                                  }
+{ This Software is distributed on an "AS IS" basis, WITHOUT        }
+{ WARRANTY OF ANY KIND, either express or implied.                 }
+{                                                                  }
+{ *****************************************************************}
 
 unit SVG;
 
@@ -790,7 +792,7 @@ begin
   for C := 0 to Node.AttributeNodes.count - 1 do
   begin
     S := Node.AttributeNodes[C].nodeName;
-    FStyle.AddStyle(S, Node.AttributeNodes[C].nodeValue);
+    FStyle.AddStyle(S, VarToStr(Node.AttributeNodes[C].nodeValue));
   end;
 
   LoadString(Node, 'style', S);
@@ -903,14 +905,9 @@ end;
 
 function TSVGMatrix.Transform(const P: TPointF): TPointF;
 begin
+  Result := P;
   if FCalculatedMatrix.m33 = 1 then
-  begin
-    Result := P * FCalculatedMatrix;
-  end
-  else
-  begin
-    Result := P;
-  end;
+    Result := Result * FCalculatedMatrix;
 end;
 
 function TSVGMatrix.Transform(const X, Y: TFloat): TPointF;
@@ -1438,6 +1435,13 @@ begin
 
     if Value = 'italic' then
       FFontStyle := FontItalic;
+  end;
+
+  Value := Style['display'];
+  if Value <> '' then
+  begin
+    if Value = 'none' then
+      FVisible := 0;
   end;
 end;
 
@@ -2384,13 +2388,25 @@ procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
   procedure PaintItem(const Item: TSVGObject);
   var
     C: Integer;
+    LItem: TSVGObject;
   begin
     if NeedsPainting(Item) then
     begin
       if InBounds(Item) then
         Item.PaintToGraphics(Graphics);
       for C := 0 to Item.Count - 1 do
-        PaintItem(Item[C]);
+      begin
+        LItem := Item[C];
+        if LItem is TSVGMatrix then
+        begin
+          //Fix for transform with rescaling
+          TSVGMatrix(LItem).FCompleteCalculatedMatrix.m31 :=
+            TSVGMatrix(LItem).FCompleteCalculatedMatrix.m31 * FDX;
+          TSVGMatrix(LItem).FCompleteCalculatedMatrix.m32 :=
+            TSVGMatrix(LItem).FCompleteCalculatedMatrix.m32 * FDY;
+        end;
+        PaintItem(LItem);
+      end;
     end;
   end;
 

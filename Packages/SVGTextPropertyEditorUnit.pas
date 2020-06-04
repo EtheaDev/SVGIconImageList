@@ -46,12 +46,15 @@ type
     HelpButton: TButton;
     RightSplitter: TSplitter;
     paImage: TPanel;
-    SVGIconImage: TSVGIconImage;
     paTitle: TPanel;
     LoadButton: TButton;
     SaveButton: TButton;
     OpenDialog: TOpenPictureDialog;
     SaveDialog: TSavePictureDialog;
+    ImagePanel: TPanel;
+    SVGIconImage: TSVGIconImage;
+    BottomPanel: TPanel;
+    ProportionalCheckBox: TCheckBox;
     procedure FormResize(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure paImageResize(Sender: TObject);
@@ -59,11 +62,9 @@ type
     procedure LoadButtonClick(Sender: TObject);
     procedure SaveButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
+    procedure ProportionalCheckBoxClick(Sender: TObject);
   private
     procedure UpdateImage;
-    {$IFDEF HiDPISupport}
-    procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI, NewDPI: Integer);
-    {$ENDIF}
     procedure UpdateGUI;
     function GetSVGText: string;
     procedure SetSVGText(const Value: string);
@@ -80,6 +81,7 @@ implementation
 
 uses
   Themes
+  , Math
   {$IFDEF DXE3+}
   , UITypes
   {$ENDIF}
@@ -108,13 +110,6 @@ begin
     LForm.Free;
   end;
 end;
-
-{$IFDEF HiDPISupport}
-procedure TSVGTextPropertyEditorForm.FormAfterMonitorDpiChanged(Sender: TObject; OldDPI, NewDPI: Integer);
-begin
-  UpdateGUI;
-end;
-{$ENDIF}
 
 constructor TSVGTextPropertyEditorForm.Create(AOwner: TComponent);
 begin
@@ -163,6 +158,11 @@ begin
   paTitle.Caption := Format('w:%d-h:%d',
    [SVGIconImage.Width, SVGIconImage.Height]);
   SVGIconImage.Hint := paTitle.Caption;
+end;
+
+procedure TSVGTextPropertyEditorForm.ProportionalCheckBoxClick(Sender: TObject);
+begin
+  SVGIconImage.Proportional := ProportionalCheckBox.Checked;
 end;
 
 procedure TSVGTextPropertyEditorForm.SaveButtonClick(Sender: TObject);

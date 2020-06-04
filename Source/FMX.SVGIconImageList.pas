@@ -53,7 +53,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '1.2.0';
+  SVGIconImageListVersion = '1.3.0';
 
 type
   TSVGIconMultiResBitmap = class;

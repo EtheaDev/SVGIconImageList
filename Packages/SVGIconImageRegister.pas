@@ -157,12 +157,12 @@ end;
 
 function TSVGTextProperty.GetAttributes: TPropertyAttributes;
 begin
-  Result := inherited GetAttributes + [paDialog, paReadOnly];
+  Result := [paDialog, paReadOnly];
 end;
 
 function TSVGTextProperty.GetValue: string;
 begin
-  Result := 'SVGText';
+  Result := 'Click to edit SVG Text';
 end;
 
 procedure Register;
