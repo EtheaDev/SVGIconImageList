@@ -41,11 +41,9 @@ uses
 
 type
   TMainForm = class(TForm)
-    SVGIconImageList: TSVGIconImageList;
     SVGIconImage: TSVGIconImage;
-    Panel1: TPanel;
-    procedure FormResize(Sender: TObject);
-    procedure Panel1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure SVGIconImageClick(Sender: TObject);
   private
     {$IFDEF HiDPISupport}
     procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI, NewDPI: Integer);
@@ -66,9 +64,9 @@ uses
   {$IFDEF DXE3+}
   , UITypes
   {$ENDIF}
-  , SVG
   , SVGIconUtils
-  , SVGIconImageListEditorUnit;
+  , SVGTextPropertyEditorUnit
+  , SVG;
 
 {$IFDEF HiDPISupport}
 procedure TMainForm.FormAfterMonitorDpiChanged(Sender: TObject; OldDPI, NewDPI: Integer);
@@ -77,19 +75,23 @@ begin
 end;
 {$ENDIF}
 
-procedure TMainForm.FormResize(Sender: TObject);
+procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  panel1.Caption := Format('width:%d - height:%d',
-   [SVGIconImage.Width, SVGIconImage.Height]);
+  ;
 end;
 
-procedure TMainForm.Panel1Click(Sender: TObject);
+procedure TMainForm.SVGIconImageClick(Sender: TObject);
+var
+  LSVGText: string;
 begin
-  SVGIconImage.Repaint;
+  LSVGText := SVGIconImage.SVGText;
+  if EditSVGTextProperty(LSVGText) then
+    SVGIconImage.SVGText := LSVGText;
 end;
 
 procedure TMainForm.updateGUI;
 begin
+  ;
 end;
 
 initialization

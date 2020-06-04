@@ -199,7 +199,6 @@ object MainForm: TMainForm
       ImageIndex = 100
       Align = alBottom
       OnMouseDown = SVGIconImageMouseDown
-      Data = {00000000}
     end
     object DeleteButton: TBitBtn
       Left = 5

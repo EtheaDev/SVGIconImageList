@@ -507,7 +507,7 @@ implementation
 
 uses
   System.SysUtils, System.Variants, System.StrUtils, System.Character,
-  Xml.XmlDoc,
+  Xml.XmlDoc, Xml.xmldom,
 {$IFDEF MSWINDOWS}
   Xml.Win.msxmldom,
 {$ENDIF}
@@ -2019,17 +2019,22 @@ begin
     TMSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False, True);
     {$ENDIF}
     XML := TXmlDocument.Create(nil);
-    XML.LoadFromXML(Text);
+    try
+      XML.LoadFromXML(Text);
 
-    if Assigned(XML) then
-    begin
-      DocNode := XML.documentElement;
-      if Assigned(DocNode) and (DocNode.nodeName = 'svg') then
-        ReadIn(DocNode)
-      else
+      if Assigned(XML) then
+      begin
+        DocNode := XML.documentElement;
+        if Assigned(DocNode) and (DocNode.nodeName = 'svg') then
+          ReadIn(DocNode)
+        else
+          FSource := '';
+      end else
         FSource := '';
-    end else
+    except
+      On EDomParseError do
       FSource := '';
+    end;
   finally
     XML := nil;
   end;
@@ -2802,12 +2807,6 @@ begin
   FBounds.TopRight := Transform(FX + FWidth + SW, FY - SW);
   FBounds.BottomRight := Transform(FX + FWidth + SW, FY + Height + SW);
   FBounds.BottomLeft := Transform(FX - SW, FY + FHeight + SW);
-(*
-  FBounds.TopLeft := Transform(FX - SW, FY - SW);
-  FBounds.TopRight := Transform(FX + FWidth - SW, FY - SW);
-  FBounds.BottomRight := Transform(FX + FWidth - SW, FY + Height - SW);
-  FBounds.BottomLeft := Transform(FX - SW, FY + FHeight - SW);
-*)
 end;
 
 procedure TSVGRect.ConstructPath;

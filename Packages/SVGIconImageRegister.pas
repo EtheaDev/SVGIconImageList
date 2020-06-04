@@ -54,6 +54,12 @@ type
     function GetValue: string; override;
   end;
 
+  TSVGTextProperty = class(TClassProperty)
+  public
+    procedure Edit; override;
+    function GetAttributes: TPropertyAttributes; override;
+    function GetValue: string; override;
+  end;
 
 procedure Register;
 
@@ -65,7 +71,8 @@ uses
   , Windows
   , SVGIconImage
   , SVGIconImageList
-  , SVGIconImageListEditorUnit;
+  , SVGIconImageListEditorUnit
+  , SVGTextPropertyEditorUnit;
 
 { TSVGIconImageListCompEditor }
 procedure TSVGIconImageListCompEditor.Edit;
@@ -123,6 +130,41 @@ begin
   Result := 'SVGImages';
 end;
 
+{ TSVGTextProperty }
+
+procedure TSVGTextProperty.Edit;
+var
+  LSVGText: string;
+  LComponent: TPersistent;
+begin
+  LComponent := GetComponent(0);
+  if LComponent is TSVGIconItem then
+    LSVGText := TSVGIconItem(LComponent).SVGText
+  else if LComponent is TSVGIconImage then
+    LSVGText := TSVGIconImage(LComponent).SVGText
+  else
+    Exit;
+  if EditSVGTextProperty(LSVGText) then
+  begin
+    if LComponent is TSVGIconItem then
+      TSVGIconItem(LComponent).SVGText := LSVGText
+    else if LComponent is TSVGIconImage then
+      TSVGIconImage(LComponent).SVGText := LSVGText;
+    Modified;
+  end;
+  inherited;
+end;
+
+function TSVGTextProperty.GetAttributes: TPropertyAttributes;
+begin
+  Result := inherited GetAttributes + [paDialog, paReadOnly];
+end;
+
+function TSVGTextProperty.GetValue: string;
+begin
+  Result := 'SVGText';
+end;
+
 procedure Register;
 begin
   RegisterComponents('Ethea',
@@ -131,6 +173,8 @@ begin
 
   RegisterComponentEditor(TSVGIconImageList, TSVGIconImageListCompEditor);
   RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageList, 'IconItems', TSVGIconImageListProperty);
+  RegisterPropertyEditor(TypeInfo(string), TSVGIconItem, 'SVGText', TSVGTextProperty);
+  RegisterPropertyEditor(TypeInfo(string), TSVGIconImage, 'SVGText', TSVGTextProperty);
 end;
 
 end.

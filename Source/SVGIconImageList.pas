@@ -52,8 +52,9 @@ uses
   , SVG;
 
 const
-  SVGIconImageListVersion = '1.2.0';
+  SVGIconImageListVersion = '1.3.0';
   DEFAULT_SIZE = 16;
+  ERROR_LOADING_FILES = 'SVG Syntax error loading files:';
 
 type
   TSVGIconItem = class(TCollectionItem)
@@ -480,6 +481,7 @@ begin
         finally
           StopDrawing(False);
         end;
+        RecreateBitmaps;
       end;
     finally
       FScaling := False;
@@ -551,10 +553,12 @@ var
   LSVG: TSVG;
   LFileName: string;
   LItem: TSVGIconItem;
+  LErrors: string;
 begin
   Result := 0;
   StopDrawing(True);
   try
+    LErrors := '';
     LSVG := TSVG.Create;
     try
       if not AAppend then
@@ -562,12 +566,22 @@ begin
       for LIndex := 0 to AFileNames.Count - 1 do
       begin
         LFileName := AFileNames[LIndex];
-        LSVG.LoadFromFile(LFileName);
-        LItem := SVGIconItems.Add;
-        LItem.IconName := ChangeFileExt(ExtractFileName(LFileName), '');
-        LItem.SVG := LSVG;
-        Inc(Result);
+        try
+          LSVG.LoadFromFile(LFileName);
+          LItem := SVGIconItems.Add;
+          LItem.IconName := ChangeFileExt(ExtractFileName(LFileName), '');
+          LItem.SVG := LSVG;
+          Inc(Result);
+        except
+          on E: Exception do
+          begin
+            DeleteFile(PWideChar(LFileName));
+            //LErrors := LErrors + LFileName + sLineBreak;
+          end;
+        end;
       end;
+      if LErrors <> '' then
+        raise Exception.Create(ERROR_LOADING_FILES+sLineBreak+LErrors);
     finally
       LSVG.Free;
     end;

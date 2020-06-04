@@ -36,7 +36,8 @@ uses
   Controls, Forms, Dialogs, ImgList,
   StdCtrls, Buttons, StdActns,
   ActnList, ExtCtrls, ComCtrls, ToolWin,
-  Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs;
+  Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
+  System.Actions;
 
 type
   TMainForm = class(TForm)
@@ -165,7 +166,7 @@ end;
 procedure TMainForm.ClearButtonClick(Sender: TObject);
 begin
   //Clear Collection
-  SVGIconImageList.Clear;
+  SVGIconImageList.ClearIcons;
   UpdateGUI;
 end;
 

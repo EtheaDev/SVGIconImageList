@@ -221,7 +221,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             Scale = 1.000000000000000000
             ImageIndex = -1
             Align = alClient
-            Data = {00000000}
           end
         end
         object IconName: TEdit

@@ -4,16 +4,15 @@ uses
   Vcl.Forms,
   Vcl.Themes,
   Vcl.Styles,
-  UMaintEST in '..\Source\UMaintEST.pas' {MainForm},
-  SVGIconImageListEditorUnit in '..\..\Packages\SVGIconImageListEditorUnit.pas' {SVGIconImageListEditor},
-  SVGIconImageList in '..\..\source\SVGIconImageList.pas';
+  SVGTextPropertyEditorUnit in '..\..\Packages\SVGTextPropertyEditorUnit.pas' {SVGTextPropertyEditorForm},
+  SVGIconImageList in '..\..\source\SVGIconImageList.pas',
+  UMaintEST in '..\Source\UMaintEST.pas' {MainForm};
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  TStyleManager.TrySetStyle('Windows10');
   Application.CreateForm(TMainForm, MainForm);
   Application.Run;
 end.

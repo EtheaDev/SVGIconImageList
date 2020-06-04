@@ -51,7 +51,7 @@ uses
 type
   TSVGIconImage = class(TGraphicControl)
   strict private
-    FSVGIconImage: TSVG;
+    FSVG: TSVG;
     FStream: TMemoryStream;
 
     FCenter: Boolean;
@@ -59,24 +59,27 @@ type
     FStretch: Boolean;
     FAutoSize: Boolean;
     FScale: Double;
-
     FOpacity: Byte;
     FFileName: TFileName;
     FImageList: TSVGIconImageList;
     FImageIndex: Integer;
-
     procedure SetCenter(Value: Boolean);
     procedure SetProportional(Value: Boolean);
     procedure SetOpacity(Value: Byte);
     procedure SetFileName(const Value: TFileName);
-    procedure ReadData(Stream: TStream);
-    procedure WriteData(Stream: TStream);
+    //procedure ReadData(Stream: TStream);
+    //procedure WriteData(Stream: TStream);
     procedure SetImageIndex(const Value: Integer);
     procedure SetStretch(const Value: Boolean);
     procedure SetScale(const Value: Double);
     procedure SetAutoSizeImage(const Value: Boolean);
+  private
+    function GetSVGText: string;
+    procedure SetSVGText(const AValue: string);
+    function UsingSVGText: Boolean;
+    procedure SetImageList(const Value: TSVGIconImageList);
   protected
-    procedure DefineProperties(Filer: TFiler); override;
+    //procedure DefineProperties(Filer: TFiler); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure CheckAutoSize;
   public
@@ -87,8 +90,9 @@ type
     procedure Paint; override;
     procedure LoadFromFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
+    procedure SaveToFile(const FileName: string);
     procedure Assign(Source: TPersistent); override;
-    property SVG: TSVG read FSVGIconImage;
+    property SVG: TSVG read FSVG;
   published
     property AutoSize: Boolean read FAutoSize write SetAutoSizeImage;
     property Center: Boolean read FCenter write SetCenter;
@@ -97,8 +101,9 @@ type
     property Opacity: Byte read FOpacity write SetOpacity;
     property Scale: Double read FScale write SetScale;
     property FileName: TFileName read FFileName write SetFileName;
-    property ImageList: TSVGIconImageList read FImageList write FImageList;
+    property ImageList: TSVGIconImageList read FImageList write SetImageList;
     property ImageIndex: Integer read FImageIndex write SetImageIndex;
+    property SVGText: string read GetSVGText write SetSVGText stored UsingSVGText;
     property Enabled;
     property Visible;
     property Constraints;
@@ -115,7 +120,7 @@ type
 
   TSVGGraphic = class(TGraphic)
   strict private
-    FSVGIconImage: TSVG;
+    FSVG: TSVG;
     FStream: TMemoryStream;
 
     FOpacity: Byte;
@@ -202,7 +207,7 @@ end;
 constructor TSVGIconImage.Create(AOwner: TComponent);
 begin
   inherited;
-  FSVGIconImage := TSVG.Create;
+  FSVG := TSVG.Create;
   FProportional := False;
   FCenter := True;
   FStretch := True;
@@ -214,34 +219,40 @@ end;
 
 destructor TSVGIconImage.Destroy;
 begin
-  FSVGIconImage.Free;
+  FSVG.Free;
   FStream.Free;
   inherited;
 end;
 
 procedure TSVGIconImage.CheckAutoSize;
 begin
-  if FAutoSize and (FSVGIconImage.Width > 0) and (FSVGIconImage.Height > 0) then
+  if FAutoSize and (FSVG.Width > 0) and (FSVG.Height > 0) then
   begin
-    SetBounds(Left, Top,  Round(FSVGIconImage.Width), Round(FSVGIconImage.Height));
+    SetBounds(Left, Top,  Round(FSVG.Width), Round(FSVG.Height));
   end;
 end;
 
 procedure TSVGIconImage.Clear;
 begin
-  FSVGIconImage.Clear;
+  FSVG.Clear;
   FFileName := '';
   Repaint;
 end;
 
 function TSVGIconImage.Empty: Boolean;
 begin
-  Empty := FSVGIconImage.Count = 0;
+  Empty := FSVG.Count = 0;
 end;
 
-procedure TSVGIconImage.DefineProperties(Filer: TFiler);
+function TSVGIconImage.GetSVGText: string;
 begin
-  Filer.DefineBinaryProperty('Data', ReadData, WriteData, True);
+  Result := FSVG.Source;
+end;
+
+function TSVGIconImage.UsingSVGText: Boolean;
+begin
+  Result := not (Assigned(FImageList) and (FImageIndex >= 0) and
+     (FImageIndex < FImagelist.Count));
 end;
 
 procedure TSVGIconImage.Paint;
@@ -295,11 +306,10 @@ var
 var
   SVG: TSVG;
 begin
-  if Assigned(FImageList) and (FImageIndex >= 0) and
-     (FImageIndex < FImagelist.Count) then
+  if not UsingSVGText then
     SVG := FImageList.Images[FImageIndex]
   else
-    SVG := FSVGIconImage;
+    SVG := FSVG;
 
   if SVG.Count > 0 then
   begin
@@ -327,7 +337,7 @@ begin
   try
     FStream.Clear;
     FStream.LoadFromFile(FileName);
-    FSVGIconImage.LoadFromStream(FStream);
+    FSVG.LoadFromStream(FStream);
     FFileName := FileName;
   except
     Clear;
@@ -342,7 +352,7 @@ begin
     FFileName := '';
     FStream.Clear;
     FStream.LoadFromStream(Stream);
-    FSVGIconImage.LoadFromStream(FStream);
+    FSVG.LoadFromStream(FStream);
   except
   end;
   CheckAutoSize;
@@ -362,8 +372,8 @@ var
 begin
   if (Source is TSVGIconImage) then
   begin
-    SVG := (Source as TSVGIconImage).FSVGIconImage;
-    FSVGIconImage.LoadFromText(SVG.Source);
+    SVG := (Source as TSVGIconImage).FSVG;
+    FSVG.LoadFromText(SVG.Source);
     FImageIndex := -1;
     CheckAutoSize;
   end;
@@ -371,11 +381,16 @@ begin
   if (Source.ClassType = TSVG) then
   begin
     SVG := TSVG(Source);
-    FSVGIconImage.LoadFromText(SVG.Source);
+    FSVG.LoadFromText(SVG.Source);
     FImageIndex := -1;
   end;
 
   Repaint;
+end;
+
+procedure TSVGIconImage.SaveToFile(const FileName: string);
+begin
+  FSVG.SaveToFile(FileName);
 end;
 
 procedure TSVGIconImage.SetAutoSizeImage(const Value: Boolean);
@@ -425,6 +440,12 @@ begin
   Repaint;
 end;
 
+procedure TSVGIconImage.SetSVGText(const AValue: string);
+begin
+  FSVG.LoadFromText(AValue);
+  Repaint;
+end;
+
 procedure TSVGIconImage.SetOpacity(Value: Byte);
 begin
   if Value = FOpacity then
@@ -438,54 +459,59 @@ procedure TSVGIconImage.SetFileName(const Value: TFileName);
 begin
   if Value = FFileName then
     Exit;
-
   LoadFromFile(Value);
+end;
+
+(*
+procedure TSVGIconImage.DefineProperties(Filer: TFiler);
+begin
+  Filer.DefineBinaryProperty('Data', ReadData, WriteData, True);
 end;
 
 procedure TSVGIconImage.ReadData(Stream: TStream);
 var
   Size: LongInt;
 begin
+  if UsingSVGText then
+    Exit;
   Stream.Read(Size, SizeOf(Size));
   FStream.Clear;
   if Size > 0 then
   begin
     FStream.CopyFrom(Stream, Size);
-    FSVGIconImage.LoadFromStream(FStream);
+    FSVG.LoadFromStream(FStream);
   end else
-    FSVGIconImage.Clear;
+    FSVG.Clear;
 end;
 
 procedure TSVGIconImage.WriteData(Stream: TStream);
 var
   Size: LongInt;
 begin
-  Size := FStream.Size;
-  Stream.Write(Size, SizeOf(Size));
-  FStream.Position := 0;
-  if FStream.Size > 0 then
-    FStream.SaveToStream(Stream);
+  if UsingSVGText then
+    Exit;
+  FSVG.SaveToStream(Stream);
 end;
-
+*)
 
 constructor TSVGGraphic.Create;
 begin
   inherited;
-  FSVGIconImage := TSVG.Create;
+  FSVG := TSVG.Create;
   FOpacity := 255;
   FStream := TMemoryStream.Create;
 end;
 
 destructor TSVGGraphic.Destroy;
 begin
-  FSVGIconImage.Free;
+  FSVG.Free;
   FStream.Free;
   inherited;
 end;
 
 procedure TSVGGraphic.Clear;
 begin
-  FSVGIconImage.Clear;
+  FSVG.Clear;
   FFileName := '';
   Changed(Self);
 end;
@@ -495,8 +521,8 @@ begin
   if (Source is TSVGGraphic) then
   begin
     try
-      FSVGIconImage.Free;
-      FSVGIconImage := TSVG(TSVGGraphic(Source).FSVGIconImage.Clone(nil));
+      FSVG.Free;
+      FSVG := TSVG(TSVGGraphic(Source).FSVG.Clone(nil));
       FStream.Clear;
       FStream.LoadFromStream(TSVGGraphic(Source).FStream);
     except
@@ -507,7 +533,7 @@ end;
 
 procedure TSVGGraphic.AssignSVG(SVG: TSVG);
 begin
-  FSVGIconImage.LoadFromText(SVG.Source);
+  FSVG.LoadFromText(SVG.Source);
   Changed(Self);
 end;
 
@@ -553,7 +579,7 @@ begin
   Stream.Read(Size, SizeOf(Size));
   FStream.Clear;
   FStream.CopyFrom(Stream, Size);
-  FSVGIconImage.LoadFromStream(FStream);
+  FSVG.LoadFromStream(FStream);
 end;
 
 procedure TSVGGraphic.WriteData(Stream: TStream);
@@ -581,24 +607,24 @@ begin
   Bounds := MakeRect(Rect.Left + 0.0, Rect.Top,
     Rect.Right - Rect.Left, Rect.Bottom - Rect.Top);
 
-  FSVGIconImage.SVGOpacity := FOpacity / 255;
-  FSVGIconImage.PaintTo(ACanvas.Handle, Bounds, nil, 0);
+  FSVG.SVGOpacity := FOpacity / 255;
+  FSVG.PaintTo(ACanvas.Handle, Bounds, nil, 0);
 end;
 
 
 function TSVGGraphic.GetEmpty: Boolean;
 begin
-  Result := FSVGIconImage.Count = 0;
+  Result := FSVG.Count = 0;
 end;
 
 function TSVGGraphic.GetWidth: Integer;
 begin
-  Result := Round(FSVGIconImage.Width);
+  Result := Round(FSVG.Width);
 end;
 
 function TSVGGraphic.GetHeight: Integer;
 begin
-  Result := Round(FSVGIconImage.Height);
+  Result := Round(FSVG.Height);
 end;
 
 procedure TSVGGraphic.LoadFromClipboardFormat(AFormat: Word; AData: THandle;
@@ -612,7 +638,7 @@ procedure TSVGGraphic.LoadFromFile(const Filename: String);
 begin
   FStream.Clear;
   FStream.LoadFromFile(FileName);
-  FSVGIconImage.LoadFromStream(FStream);
+  FSVG.LoadFromStream(FStream);
   Changed(Self);
 end;
 
@@ -621,7 +647,7 @@ begin
   try
     FFileName := '';
     FStream.LoadFromStream(Stream);
-    FSVGIconImage.LoadFromStream(FStream);
+    FSVG.LoadFromStream(FStream);
   except
   end;
   Changed(Self);
@@ -648,6 +674,12 @@ begin
   FImageIndex := Value;
   CheckAutoSize;
   Repaint;
+end;
+
+procedure TSVGIconImage.SetImageList(const Value: TSVGIconImageList);
+begin
+  FImageList := Value;
+  SVGText := '';
 end;
 
 initialization

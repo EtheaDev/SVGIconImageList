@@ -48,9 +48,10 @@ type
     Image120x120: TImage;
     Memo: TMemo;
     LoadButton: TButton;
-    Image180x180: TImage;
+    Image100x100: TImage;
     procedure LoadButtonClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure MemoExit(Sender: TObject);
   private
     FSVG: TSVG;
     procedure UpdatePreview;
@@ -144,12 +145,7 @@ procedure TIconPicker.DrawIcon(const Size: Integer;
 begin
   ImageViewer.Bitmap.Width := Size;
   ImageViewer.Bitmap.Height := Size;
-  //
-  try
-    PaintToBitmap(ImageViewer.Bitmap, FSVG);
-  finally
-    //ImageViewer.Bitmap.Canvas.EndScene;
-  end;
+  PaintToBitmap(ImageViewer.Bitmap, FSVG);
 end;
 
 procedure TIconPicker.FormCreate(Sender: TObject);
@@ -166,14 +162,23 @@ begin
   UpdatePreview;
 end;
 
+procedure TIconPicker.MemoExit(Sender: TObject);
+begin
+  FSVG.LoadFromText(Memo.Lines.Text);
+  UpdatePreview;
+end;
+
 procedure TIconPicker.UpdatePreview;
 begin
+  Memo.Lines.Text := FSVG.Source;
+(*
   DrawIcon( 16, Image16x16);
   DrawIcon( 32, Image32x32);
   DrawIcon( 64, Image64x64);
   DrawIcon( 90, Image90x90);
   DrawIcon(120, Image120x120);
-  DrawIcon(180, Image180x180);
+*)
+  DrawIcon(100, Image100x100);
 end;
 
 

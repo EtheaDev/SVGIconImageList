@@ -12,8 +12,8 @@ object IconPicker: TIconPicker
   object Preview: TGroupBox
     Position.X = 8.000000000000000000
     Position.Y = 296.000000000000000000
-    Size.Width = 521.000000000000000000
-    Size.Height = 201.000000000000000000
+    Size.Width = 537.000000000000000000
+    Size.Height = 281.000000000000000000
     Size.PlatformDefault = False
     Text = 'Preview'
     TabOrder = 4
@@ -67,14 +67,14 @@ object IconPicker: TIconPicker
       Size.Height = 120.000000000000000000
       Size.PlatformDefault = False
     end
-    object Image180x180: TImage
+    object Image100x100: TImage
       MultiResBitmap = <
         item
         end>
       Position.X = 347.000000000000000000
       Position.Y = 24.000000000000000000
-      Size.Width = 180.000000000000000000
-      Size.Height = 180.000000000000000000
+      Size.Width = 100.000000000000000000
+      Size.Height = 100.000000000000000000
       Size.PlatformDefault = False
     end
   end
@@ -115,11 +115,12 @@ object IconPicker: TIconPicker
     DataDetectorTypes = []
     Position.X = 8.000000000000000000
     Position.Y = 112.000000000000000000
-    Size.Width = 361.000000000000000000
+    Size.Width = 529.000000000000000000
     Size.Height = 185.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 5
-    Viewport.Width = 357.000000000000000000
+    OnExit = MemoExit
+    Viewport.Width = 525.000000000000000000
     Viewport.Height = 181.000000000000000000
   end
   object LoadButton: TButton
