@@ -8,6 +8,9 @@
 **Sample image of FMX (Windows) version**
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SampleFMX.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SampleFMX.jpg)
 
+**Sample image of the VCL SVGText-property editor**
+![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg)
+
 **DOCUMENTATION**
 
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
@@ -15,6 +18,11 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 **RELEASE NOTES:**
 
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png)
+
+05 June 2020: version 1.3 (VCL+FMX)
+- Added property editor for TSVGIconImage.SVGText and TSVGIconItem.SVGText
+- Fixed some drawing problems with transform attribute
+- Fixed rescaling icons when monitor DPI changes
 
 28 May 2020: version 1.2 (VCL+FMX)
 - Complete support of **Delphi 10.4**
@@ -45,5 +53,3 @@ This library is included in this project into svg folder
 but those versions are more efficient in performances, and adds some features like SVGText property, store icons in binary or SVGText format into dfm and more...
 
 **TSVGIconImageListFMX** and **TSVGIconImageFMX** are similar to **TIconFontsImageListFMX** and **TIconFontsImage** included into similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/IconFontsImageList](https://github.com/EtheaDev/IconFontsImageList)
-
-
