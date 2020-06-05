@@ -2399,11 +2399,13 @@ procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
         LItem := Item[C];
         if LItem is TSVGMatrix then
         begin
+          (*
           //Fix for transform with rescaling
           TSVGMatrix(LItem).FCompleteCalculatedMatrix.m31 :=
             TSVGMatrix(LItem).FCompleteCalculatedMatrix.m31 * FDX;
           TSVGMatrix(LItem).FCompleteCalculatedMatrix.m32 :=
             TSVGMatrix(LItem).FCompleteCalculatedMatrix.m32 * FDY;
+          *)
         end;
         PaintItem(LItem);
       end;
