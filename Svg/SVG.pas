@@ -80,7 +80,7 @@ type
     function IndexOf(Item: TSVGObject): Integer;
     function FindByID(const Name: string): TSVGObject;
     function FindByType(Typ: TClass; Previous: TSVGObject = nil): TSVGObject;
-    procedure CalculateMatrices;
+    procedure CalculateMatrices(const ADX, ADY: TFloat);
 
     procedure PaintToGraphics(Graphics: TGPGraphics); virtual; abstract;
     procedure PaintToPath(Path: TGPGraphicsPath); virtual; abstract;
@@ -104,7 +104,7 @@ type
     FCompleteCalculatedMatrix: TMatrix;
     FCalculatedMatrix: TMatrix;
     procedure SetPureMatrix(const Value: TMatrix);
-    procedure CalcMatrix;
+    procedure CalcMatrix(const ADX, ADY: TFloat);
 
     function Transform(const P: TPointF): TPointF; overload;
     function Transform(const X, Y: TFloat): TPointF; overload;
@@ -238,8 +238,6 @@ type
   TSVG = class(TSVGBasic)
   strict private
     FRootBounds: TGPRectF;
-    FDX: TFloat;
-    FDY: TFloat;
     FInitialMatrix: TMatrix;
     FSource: string;
     FAngle: TFloat;
@@ -257,6 +255,8 @@ type
       RectCount: Integer);
     procedure CalcCompleteSize;
   private
+    FDX: TFloat;
+    FDY: TFloat;
     FStyles: TStyleList;
     procedure CalcRootMatrix;
   protected
@@ -556,7 +556,7 @@ procedure TSVGObject.CalcObjectBounds;
 begin
 end;
 
-procedure TSVGObject.CalculateMatrices;
+procedure TSVGObject.CalculateMatrices(const ADX, ADY: TFloat);
 var
   C: Integer;
 begin
@@ -565,7 +565,7 @@ begin
     if Self is TSVG then
       TSVG(Self).CalcRootMatrix
     else
-      TSVGMatrix(Self).CalcMatrix;
+      TSVGMatrix(Self).CalcMatrix(ADX, ADY);
 
     if Self is TSVGBasic then
       TSVGBasic(Self).CalcClipPath;
@@ -575,7 +575,7 @@ begin
 
   for C := 0 to FItems.Count - 1 do
   begin
-    TSVGObject(FItems[C]).CalculateMatrices;
+    TSVGObject(FItems[C]).CalculateMatrices(ADX, ADY);
   end;
 end;
 
@@ -823,7 +823,7 @@ begin
   end;
 end;
 
-procedure TSVGMatrix.CalcMatrix;
+procedure TSVGMatrix.CalcMatrix(const ADX, ADY: TFloat);
 var
   C: Integer;
   List: TList;
@@ -851,9 +851,16 @@ begin
       if (SVG is TSVGMatrix) then
       begin
         if SVG is TSVG then
-          NewMatrix := TSVG(SVG).RootMatrix
+        begin
+          NewMatrix := TSVG(SVG).RootMatrix;
+        end
         else
+        begin
           NewMatrix := TSVGMatrix(SVG).FPureMatrix;
+          //Fix for transform:translate with rescaling
+          NewMatrix.m31 := NewMatrix.m31 * ADX;
+          NewMatrix.m32 := NewMatrix.m32 * ADY;
+        end;
 
         if NewMatrix.m33 = 1 then
         begin
@@ -900,14 +907,15 @@ procedure TSVGMatrix.SetPureMatrix(const Value: TMatrix);
 begin
   FPureMatrix := Value;
 
-  CalcMatrix;
+  CalcMatrix(1,1);
 end;
 
 function TSVGMatrix.Transform(const P: TPointF): TPointF;
 begin
-  Result := P;
   if FCalculatedMatrix.m33 = 1 then
-    Result := Result * FCalculatedMatrix;
+    Result := P * FCalculatedMatrix
+  else
+    Result := P;
 end;
 
 function TSVGMatrix.Transform(const X, Y: TFloat): TPointF;
@@ -2333,7 +2341,7 @@ begin
   if (FHeight > 0) and (FRootBounds.Height <> -1) then
     FDY := FRootBounds.Height / FHeight;
 
-  CalculateMatrices;
+  CalculateMatrices(FDX, FDY);
 end;
 
 procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
@@ -2397,16 +2405,6 @@ procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
       for C := 0 to Item.Count - 1 do
       begin
         LItem := Item[C];
-        if LItem is TSVGMatrix then
-        begin
-          (*
-          //Fix for transform with rescaling
-          TSVGMatrix(LItem).FCompleteCalculatedMatrix.m31 :=
-            TSVGMatrix(LItem).FCompleteCalculatedMatrix.m31 * FDX;
-          TSVGMatrix(LItem).FCompleteCalculatedMatrix.m32 :=
-            TSVGMatrix(LItem).FCompleteCalculatedMatrix.m32 * FDY;
-          *)
-        end;
         PaintItem(LItem);
       end;
     end;
