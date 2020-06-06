@@ -19,7 +19,7 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png)
 
-65 June 2020: version 1.3 (VCL+FMX)
+06 June 2020: version 1.3 (VCL+FMX)
 - Added property editor for TSVGIconImage.SVGText and TSVGIconItem.SVGText
 - Fixed some drawing problems with transform attribute
 - Fixed rescaling icons when monitor DPI changes
