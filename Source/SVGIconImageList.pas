@@ -49,22 +49,29 @@ uses
   , Messaging
 {$ENDIF}
   , Forms
-  , SVG;
+  , SVG
+  , SVGColor;
 
 const
   SVGIconImageListVersion = '1.3.0';
   DEFAULT_SIZE = 16;
-  ERROR_LOADING_FILES = 'SVG Syntax error loading files:';
+
+resourcestring
+  ERROR_LOADING_FILES = 'SVG error loading files:';
 
 type
   TSVGIconItem = class(TCollectionItem)
   private
     FIconName: string;
     FSVG: TSVG;
+    FFixedColor: TSVGColor;
+    FGrayScale: Boolean;
     procedure SetIconName(const Value: string);
     procedure SetSVG(const Value: TSVG);
     procedure SetSVGText(const Value: string);
     function GetSVGText: string;
+    procedure SetFixedColor(const Value: TSVGColor);
+    procedure SetGrayScale(const Value: Boolean);
   protected
     procedure AssignTo(Dest: TPersistent); override;
   public
@@ -76,6 +83,8 @@ type
   published
     property IconName: string read FIconName write SetIconName;
     property SVGText: string read GetSVGText write SetSVGText;
+    property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
+    property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
   end;
 
   {TSVGIconItems}
@@ -124,9 +133,13 @@ type
     procedure WriteImageData(Stream: TStream);
   private
     FStoreAsText: boolean;
+    FFixedColor: TSVGColor;
+    FGrayScale: Boolean;
     procedure SetSVGIconItems(const Value: TSVGIconItems);
     function GetSize: Integer;
     procedure SetSize(const Value: Integer);
+    procedure SetFixedColor(const Value: TSVGColor);
+    procedure SetGrayScale(const Value: Boolean);
     {$IFDEF HiDPISupport}
     procedure DPIChangedMessageHandler(const Sender: TObject; const Msg: Messaging.TMessage);
     {$ENDIF}
@@ -180,6 +193,8 @@ type
     property Height: Integer read GetHeight write SetHeight default DEFAULT_SIZE;
     property Size: Integer read GetSize write SetSize default DEFAULT_SIZE;
     property StoreAsText: boolean read FStoreAsText write FStoreAsText default False;
+    property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
+    property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
     /// <summary>
     /// Enable and disable scaling with form
     /// </summary>
@@ -207,6 +222,8 @@ begin
   if Source is TSVGIconItem then
   begin
     FIconName := TSVGIconItem(Source).FIconName;
+    FFixedColor := TSVGIconItem(Source).FFixedColor;
+    FGrayScale := TSVGIconItem(Source).FGrayScale;
     FSVG.LoadFromText(TSVGIconItem(Source).FSVG.Source);
   end;
 end;
@@ -245,22 +262,61 @@ begin
   Result := SVG.Source;
 end;
 
+procedure TSVGIconItem.SetFixedColor(const Value: TSVGColor);
+begin
+  if FFixedColor <> Value then
+  begin
+    FFixedColor := Value;
+    if FFixedColor <> inherit_color then
+      FGrayScale := False;
+    TSVGIconItems(Collection).Update(Self);
+  end;
+end;
+
+procedure TSVGIconItem.SetGrayScale(const Value: Boolean);
+begin
+  if FGrayScale <> Value then
+  begin
+    FGrayScale := Value;
+    if FGrayScale then
+      FixedColor := inherit_color;
+    TSVGIconItems(Collection).Update(Self);
+  end;
+end;
+
 procedure TSVGIconItem.SetIconName(const Value: string);
 begin
-  FIconName := Value;
-  TSVGIconItems(Collection).Update(Self);
+  if FIconName <> Value then
+  begin
+    FIconName := Value;
+    TSVGIconItems(Collection).Update(Self);
+  end;
 end;
 
 procedure TSVGIconItem.SetSVG(const Value: TSVG);
 begin
-  FSVG.LoadFromText(Value.Source);
-  TSVGIconItems(Collection).Update(Self);
+  if not Assigned(Value) then
+  begin
+    FSVG.Clear;
+    TSVGIconItems(Collection).Update(Self);
+  end
+  else
+  begin
+    if FSVG.Source <> Value.Source then
+    begin
+      FSVG.LoadFromText(Value.Source);
+      TSVGIconItems(Collection).Update(Self);
+    end;
+  end;
 end;
 
 procedure TSVGIconItem.SetSVGText(const Value: string);
 begin
-  FSVG.LoadFromText(Value);
-  TSVGIconItems(Collection).Update(Self);
+  if FSVG.Source <> Value then
+  begin
+    FSVG.LoadFromText(Value);
+    TSVGIconItems(Collection).Update(Self);
+  end;
 end;
 
 { TSVGIconItems }
@@ -376,6 +432,8 @@ begin
       Height := TSVGIconImageList(Source).Height;
       FOpacity := TSVGIconImageList(Source).FOpacity;
       FStoreAsText := TSVGIconImageList(Source).FStoreAsText;
+      FFixedColor := TSVGIconImageList(Source).FFixedColor;
+      FGrayScale := TSVGIconImageList(Source).FGrayScale;
       FSVGItems.Assign(TSVGIconImageList(Source).FSVGItems);
     finally
       StopDrawing(False);
@@ -417,6 +475,8 @@ begin
   Height := DEFAULT_SIZE;
   FSVGItems := TSVGIconItems.Create(Self);
   FOpacity := 255;
+  FFixedColor := inherit_color;
+  FGrayScale := False;
   {$IFDEF HiDPISupport}
   FScaled := True;
   FDPIChangedMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TChangeScaleMessage, DPIChangedMessageHandler);
@@ -574,10 +634,7 @@ begin
           Inc(Result);
         except
           on E: Exception do
-          begin
-            DeleteFile(PWideChar(LFileName));
-            //LErrors := LErrors + LFileName + sLineBreak;
-          end;
+            LErrors := LErrors + Format('%s (%s)',[E.Message, LFileName]) + sLineBreak;
         end;
       end;
       if LErrors <> '' then
@@ -596,10 +653,21 @@ procedure TSVGIconImageList.PaintTo(const DC: HDC; const Index: Integer;
 var
   R: TGPRectF;
   SVG: TSVG;
+  LItem: TSVGIconItem;
 begin
   if (Index >= 0) and (Index < FSVGItems.Count) then
   begin
-    SVG := FSVGItems[Index].SVG;
+    LItem := FSVGItems[Index];
+    SVG := LItem.SVG;
+    if LItem.FixedColor <> inherit_color then
+      SVG.FixedColor := LItem.FixedColor
+    else
+      SVG.FixedColor := FFixedColor;
+    if LItem.GrayScale <> FGrayScale then
+      SVG.Grayscale := LItem.GrayScale
+    else
+      SVG.Grayscale := FGrayScale;
+    SVG.Grayscale := FGrayScale;
     SVG.SVGOpacity := FOpacity / 255;
     R := CalcRect(MakeRect(X, Y, Width, Height), SVG.Width, SVG.Height, baCenterCenter);
     SVG.PaintTo(DC, R, nil, 0);
@@ -675,6 +743,7 @@ var
   C: Integer;
   SVG: TSVG;
   Icon: HIcon;
+  LItem: TSVGIconItem;
 begin
   if  (FStopDrawing = 0) and
     not (csLoading in ComponentState) and
@@ -688,9 +757,18 @@ begin
 
       for C := 0 to FSVGItems.Count - 1 do
       begin
-        SVG := FSVGItems[C].SVG;
+        LItem := FSVGItems[C];
+        SVG := LItem.SVG;
         if Assigned(SVG) then
         begin
+          if LItem.FixedColor <> inherit_color then
+            SVG.FixedColor := LItem.FixedColor
+          else
+            SVG.FixedColor := FFixedColor;
+          if LItem.GrayScale or FGrayScale then
+            SVG.Grayscale := True
+          else
+            SVG.Grayscale := False;
           Icon := SVGToIcon(SVG);
           ImageList_AddIcon(Handle, Icon);
           DestroyIcon(Icon);
@@ -799,6 +877,28 @@ begin
   Result := FScaled;
 end;
 {$ENDIF}
+
+procedure TSVGIconImageList.SetFixedColor(const Value: TSVGColor);
+begin
+  if FFixedColor <> Value then
+  begin
+    FFixedColor := Value;
+    if FFixedColor <> inherit_color then
+      FGrayScale := False;
+    RecreateBitmaps;
+  end;
+end;
+
+procedure TSVGIconImageList.SetGrayScale(const Value: Boolean);
+begin
+  if FGrayScale <> Value then
+  begin
+    FGrayScale := Value;
+    if FGrayScale then
+      FixedColor := inherit_color;
+    RecreateBitmaps;
+  end;
+end;
 
 procedure TSVGIconImageList.SetImages(Index: Integer; const Value: TSVG);
 begin

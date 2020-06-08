@@ -37,11 +37,19 @@ uses
   StdCtrls, Buttons, StdActns,
   ActnList, ExtCtrls, ComCtrls, ToolWin,
   System.Actions, System.ImageList,
-  Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs;
+  Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs, Vcl.CategoryButtons;
 
 type
   TMainForm = class(TForm)
+    SVGIconImageList1: TSVGIconImageList;
+    CategoryButtons1: TCategoryButtons;
+    Panel1: TPanel;
     SVGIconImage: TSVGIconImage;
+    ToolBar1: TToolBar;
+    ToolButton1: TToolButton;
+    ToolButton2: TToolButton;
+    ToolButton3: TToolButton;
+    ToolButton4: TToolButton;
     procedure FormCreate(Sender: TObject);
     procedure SVGIconImageClick(Sender: TObject);
   private

@@ -41,20 +41,20 @@ object MainForm: TMainForm
       Left = 1
       Top = 1
       Width = 200
-      Height = 345
+      Height = 272
       Align = alClient
       Caption = 'Select Theme/Color'
-      TabOrder = 3
+      TabOrder = 0
       OnClick = SelectThemeRadioGroupClick
     end
-    object GroupBox1: TGroupBox
+    object LoadGroupBox: TGroupBox
       Left = 1
-      Top = 346
+      Top = 273
       Width = 200
       Height = 59
       Align = alBottom
       Caption = 'Load SVG from disk'
-      TabOrder = 0
+      TabOrder = 1
       object BuildFromFilesButton: TButton
         Left = 3
         Top = 23
@@ -67,12 +67,12 @@ object MainForm: TMainForm
     end
     object SliderPanel: TPanel
       Left = 1
-      Top = 446
+      Top = 373
       Width = 200
       Height = 62
       Align = alBottom
       BevelOuter = bvNone
-      TabOrder = 1
+      TabOrder = 3
       object IconSizeLabel: TLabel
         Left = 8
         Top = 3
@@ -97,7 +97,7 @@ object MainForm: TMainForm
     end
     object ButtonsPanel: TPanel
       Left = 1
-      Top = 405
+      Top = 332
       Width = 200
       Height = 41
       Align = alBottom
@@ -120,6 +120,33 @@ object MainForm: TMainForm
         Caption = 'Show Image Editor'
         TabOrder = 1
         OnClick = ShowImageEditorButtonClick
+      end
+    end
+    object ColorGroupBox: TGroupBox
+      Left = 1
+      Top = 435
+      Width = 200
+      Height = 73
+      Align = alBottom
+      Caption = 'Fixed color'
+      TabOrder = 4
+      object FixedColorComboBox: TComboBox
+        Left = 10
+        Top = 19
+        Width = 178
+        Height = 21
+        Style = csDropDownList
+        TabOrder = 0
+        OnSelect = FixedColorComboBoxSelect
+      end
+      object GrayScaleCheckBox: TCheckBox
+        Left = 10
+        Top = 50
+        Width = 97
+        Height = 17
+        Caption = 'GrayScale'
+        TabOrder = 1
+        OnClick = GrayScaleCheckBoxClick
       end
     end
   end
@@ -169,6 +196,7 @@ object MainForm: TMainForm
       Caption = 'Change Color'
       Enabled = False
       ImageIndex = 7
+      OnClick = ChangeColorActionExecute
     end
   end
   object Panel2: TPanel
@@ -306,6 +334,10 @@ object MainForm: TMainForm
       Enabled = False
       ImageIndex = 0
     end
+  end
+  object ColorDialog: TColorDialog
+    Left = 472
+    Top = 136
   end
   object SVGIconImageList: TSVGIconImageList
     Width = 32

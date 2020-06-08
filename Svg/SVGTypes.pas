@@ -25,6 +25,7 @@ uses
 
 const
   INHERIT = -1;
+  SVG_NONE_COLOR = -2;
 
   FontNormal = 0;
   FontItalic = 1;

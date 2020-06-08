@@ -91,6 +91,12 @@ type
     OpacitySpinEdit: TSpinEdit;
     NewButton: TButton;
     TopSplitter: TSplitter;
+    FixedColorComboBox: TComboBox;
+    FixedColorLabel: TLabel;
+    GrayScaleCheckBox: TCheckBox;
+    Label1: TLabel;
+    FixedColorItemComboBox: TComboBox;
+    GrayScaleItemCheckBox: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure ApplyButtonClick(Sender: TObject);
     procedure ClearAllButtonClick(Sender: TObject);
@@ -116,8 +122,12 @@ type
     procedure OpacitySpinEditChange(Sender: TObject);
     procedure StoreAsTextCheckBoxClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure SVGTextExit(Sender: TObject);
     procedure NewButtonClick(Sender: TObject);
+    procedure SVGTextChange(Sender: TObject);
+    procedure GrayScaleCheckBoxClick(Sender: TObject);
+    procedure FixedColorComboBoxSelect(Sender: TObject);
+    procedure FixedColorItemComboBoxSelect(Sender: TObject);
+    procedure GrayScaleItemCheckBoxClick(Sender: TObject);
   private
     FSourceList, FEditingList: TSVGIconImageList;
     FIconIndexLabel: string;
@@ -146,6 +156,7 @@ implementation
 
 uses
   SVG
+  , SVGColor
   , Types
   , GDIPAPI
   , ShellApi
@@ -238,12 +249,18 @@ begin
     IconName.Enabled := LIsItemSelected;
     SVGText.Enabled := LIsItemSelected;
     ImageListGroup.Caption := Format(FTotIconsLabel, [FEditingList.Count]);
+    GrayScaleCheckBox.Checked := SVGIconImageList.GrayScale;
+    FixedColorComboBox.ItemIndex := FixedColorComboBox.Items.IndexOf(SVGColorToSVGColorName(SVGIconImageList.FixedColor));
     if LIsItemSelected then
     begin
       IconImage.ImageIndex := SelectedIcon.Index;
+      IconImage.Invalidate;
       ItemGroupBox.Caption := Format(FIconIndexLabel,[LIconItem.Index]);
       IconName.Text := LIconItem.IconName;
       SVGText.Lines.Text := LIconItem.SVGText;
+      FixedColorItemComboBox.ItemIndex :=
+        FixedColorItemComboBox.Items.IndexOf(SVGColorToSVGColorName(SelectedIcon.FixedColor));
+      GrayScaleItemCheckBox.Checked := SelectedIcon.GrayScale;
     end
     else
     begin
@@ -394,11 +411,10 @@ begin
   FEditingList.StoreAsText := StoreAsTextCheckBox.Checked;
 end;
 
-procedure TSVGIconImageListEditor.SVGTextExit(Sender: TObject);
+procedure TSVGIconImageListEditor.SVGTextChange(Sender: TObject);
 begin
   if FUpdating then Exit;
   SelectedIcon.SVGText := SVGText.Lines.Text;
-  IconImage.Invalidate;
   UpdateGUI;
 end;
 
@@ -450,6 +466,24 @@ begin
   DeleteSelectedItem;
 end;
 
+procedure TSVGIconImageListEditor.FixedColorComboBoxSelect(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    FEditingList.FixedColor := SVGColorNameToSVGColor(FixedColorComboBox.Text);
+    UpdateGUI;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TSVGIconImageListEditor.FixedColorItemComboBoxSelect(Sender: TObject);
+begin
+  if FUpdating then Exit;
+  SelectedIcon.FixedColor := SVGColorNameToSVGColor(FixedColorItemComboBox.Text);
+  UpdateGUI;
+end;
+
 procedure TSVGIconImageListEditor.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
@@ -463,6 +497,8 @@ procedure TSVGIconImageListEditor.FormCreate(Sender: TObject);
 begin
   inherited;
   FEditingList := TSVGIconImageList.Create(Self);
+  AssignSVGColorList(FixedColorComboBox.Items);
+  AssignSVGColorList(FixedColorItemComboBox.Items);
   ImageView.LargeImages := FEditingList;
   IconImage.ImageList := FEditingList;
   FIconIndexLabel := ItemGroupBox.Caption;
@@ -545,6 +581,25 @@ begin
 
   if ImageView.CanFocus then
     ImageView.SetFocus;
+end;
+
+procedure TSVGIconImageListEditor.GrayScaleCheckBoxClick(Sender: TObject);
+begin
+  if FUpdating then Exit;
+  Screen.Cursor := crHourGlass;
+  try
+    FEditingList.GrayScale := GrayScaleCheckBox.Checked;
+    UpdateGUI;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TSVGIconImageListEditor.GrayScaleItemCheckBoxClick(Sender: TObject);
+begin
+  if FUpdating then Exit;
+  SelectedIcon.GrayScale := GrayScaleItemCheckBox.Checked;
+  UpdateGUI;
 end;
 
 procedure TSVGIconImageListEditor.HeightSpinEditChange(Sender: TObject);

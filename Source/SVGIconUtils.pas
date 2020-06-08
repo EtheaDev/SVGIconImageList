@@ -46,6 +46,8 @@ uses
 function UpdateSVGIconListView(const AListView: TListView): Integer;
 function UpdateSVGIconListViewCaptions(const AListView: TListView;
   const AShowCaption: Boolean = True): Integer;
+procedure ChangeSVGColor(var ASVGText: string;
+  const AColor: TColor; ANewColor: TColor);
 
 implementation
 
@@ -107,6 +109,12 @@ begin
   finally
     AListView.Items.EndUpdate;
   end;
+end;
+
+procedure ChangeSVGColor(var ASVGText: string;
+  const AColor: TColor; ANewColor: TColor);
+begin
+  //
 end;
 
 end.

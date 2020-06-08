@@ -69,6 +69,12 @@ type
     SVGText: TMemo;
     NewButton: TButton;
     OpenDialog: TOpenDialog;
+    FixedColorComboBox: TComboBox;
+    FixedColorLabel: TLabel;
+    GrayScaleCheckBox: TCheckBox;
+    GrayScaleItemCheckBox: TCheckBox;
+    FixedColorItemLabel: TLabel;
+    FixedColorItemComboBox: TComboBox;
     procedure ClearAllButtonClick(Sender: TObject);
     procedure DeleteButtonClick(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
@@ -84,8 +90,12 @@ type
     procedure OpacitySpinBoxChange(Sender: TObject);
     procedure SizeChange(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure SVGTextExit(Sender: TObject);
     procedure NewButtonClick(Sender: TObject);
+    procedure FixedColorComboBoxChange(Sender: TObject);
+    procedure GrayScaleCheckBoxChange(Sender: TObject);
+    procedure SVGTextExit(Sender: TObject);
+    procedure GrayScaleItemCheckBoxChange(Sender: TObject);
+    procedure FixedColorItemComboBoxChange(Sender: TObject);
   private
     FIconIndexLabel: string;
     FTotIconsLabel: string;
@@ -111,7 +121,8 @@ implementation
 uses
   Winapi.Messages
   , Winapi.Windows
-  , Winapi.shellApi;
+  , Winapi.shellApi
+  , SVGColor;
 
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
@@ -181,9 +192,6 @@ begin
       //Screen.Cursor := crHourglass;
       try
         FEditinglist.Assign(AImageList);
-        SizeSpinBox.Value := FEditingList.Size;
-        AutoSizeCheckBox.IsChecked := FEditingList.AutoSizeBitmaps;
-        DefaultOpacitySpinBox.Value := FEditingList.Opacity * 100;
         ImageView.Images := FEditinglist;
         UpdateSVGIconListView(ImageView);
         //UpdateGUI;
@@ -270,6 +278,12 @@ begin
     SVGText.Enabled := LIsItemSelected;
     //ShowCharMapButton.Enabled := (FEditingList.FontName <> '');
     IconsGroupBox.Text := Format(FTotIconsLabel, [FEditingList.Count]);
+    SizeSpinBox.Value := FEditingList.Size;
+    AutoSizeCheckBox.IsChecked := FEditingList.AutoSizeBitmaps;
+    DefaultOpacitySpinBox.Value := FEditingList.Opacity * 100;
+    FixedColorComboBox.ItemIndex :=
+      FixedColorComboBox.Items.IndexOf(SVGColorToSVGColorName(FEditingList.FixedColor));
+    GrayScaleCheckBox.IsChecked := FEditingList.GrayScale;
     if LIsItemSelected then
     begin
       ItemGroupBox.Text := Format(FIconIndexLabel,[LSVGIconItem.Index]);
@@ -277,6 +291,9 @@ begin
       SVGText.Lines.Text := LSVGIconItem.SVGText;
       OpacitySpinBox.Value := LSVGIconItem.Opacity * 100;
       IconImage.ImageIndex := LSVGIconItem.Index;
+      FixedColorItemComboBox.ItemIndex :=
+        FixedColorItemComboBox.Items.IndexOf(SVGColorToSVGColorName(LSVGIconItem.FixedColor));
+      GrayScaleItemCheckBox.IsChecked := LSVGIconItem.GrayScale;
       IconImage.Repaint;
     end
     else
@@ -385,6 +402,26 @@ begin
   DeleteSelectedItem;
 end;
 
+procedure TSVGIconImageListEditorFMX.FixedColorComboBoxChange(Sender: TObject);
+begin
+  //Screen.Cursor := crHourGlass;
+  try
+    FEditingList.FixedColor := SVGColorNameToSVGColor(FixedColorComboBox.Selected.Text);
+    UpdateGUI;
+  finally
+    //Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TSVGIconImageListEditorFMX.FixedColorItemComboBoxChange(
+  Sender: TObject);
+begin
+  if FUpdating then Exit;
+  SelectedSVGIcon.FixedColor :=
+    SVGColorNameToSVGColor(FixedColorItemComboBox.Selected.Text);
+  UpdateGUI;
+end;
+
 procedure TSVGIconImageListEditorFMX.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
@@ -402,6 +439,8 @@ begin
   FIconIndexLabel := ItemGroupBox.Text;
   FTotIconsLabel := IconsGroupBox.Text;
   IconImage.Images := FEditingList;
+  AssignSVGColorList(FixedColorComboBox.Items);
+  AssignSVGColorList(FixedColorItemComboBox.Items);
 end;
 
 procedure TSVGIconImageListEditorFMX.FormDestroy(Sender: TObject);
@@ -433,8 +472,8 @@ begin
     //Screen.Cursor := crHourGlass;
     try
       FEditingList.LoadFromFiles(OpenDialog.Files);
-      UpdateSVGIconListView(ImageView);
     finally
+      UpdateSVGIconListView(ImageView);
       //Screen.Cursor := crDefault;
     end;
   end;
@@ -450,6 +489,20 @@ begin
 
   if ImageView.CanFocus then
     ImageView.SetFocus;
+end;
+
+procedure TSVGIconImageListEditorFMX.GrayScaleCheckBoxChange(Sender: TObject);
+begin
+  FEditingList.GrayScale := GrayScaleCheckBox.IsChecked;
+  UpdateGUI;
+end;
+
+procedure TSVGIconImageListEditorFMX.GrayScaleItemCheckBoxChange(
+  Sender: TObject);
+begin
+  if FUpdating then Exit;
+  SelectedSVGIcon.GrayScale := GrayScaleItemCheckBox.IsChecked;
+  UpdateGUI;
 end;
 
 procedure TSVGIconImageListEditorFMX.AddNewItem;

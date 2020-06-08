@@ -33,6 +33,7 @@ type
     Glyph: TGlyph;
     SVGIconImageList: TSVGIconImageList;
     OpenDialog: TOpenDialog;
+    GrayScaleCheckBox: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure NextButtonClick(Sender: TObject);
     procedure RandomButtonClick(Sender: TObject);
@@ -40,6 +41,7 @@ type
     procedure PrevButtonClick(Sender: TObject);
     procedure ShowEditorButtonClick(Sender: TObject);
     procedure SpinBox1Change(Sender: TObject);
+    procedure GrayScaleCheckBoxChange(Sender: TObject);
   private
     procedure UpdateGUI;
   public
@@ -118,6 +120,11 @@ procedure TSVGIconImageListForm.FormCreate(Sender: TObject);
 begin
   {$IFNDEF MSWINDOWS}ShowEditorButton.Visible := False;{$ENDIF}
   UpdateGUI;
+end;
+
+procedure TSVGIconImageListForm.GrayScaleCheckBoxChange(Sender: TObject);
+begin
+  SVGIconImageList.GrayScale := GrayScaleCheckBox.IsChecked;
 end;
 
 initialization
