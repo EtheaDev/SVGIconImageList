@@ -1,6 +1,8 @@
 # SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## An extended ImageList for Delphi (VCL+FMX) to simplify use of SVG Icons (resize, opacity and more...)
+## An extended ImageList for Delphi (VCL+FMX) to simplify use of SVG Icons (resize, opacity, grayscale and more...)
+
+![Delphi 10.4 Sydney Support](/Demo/Images/SupportingDelphi.jpg)
 
 **Sample image of VCL version**
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/Sample.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/Sample.jpg)
@@ -18,6 +20,12 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 **RELEASE NOTES:**
 
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png)
+
+09 June 2020: versione 1.4 (VCL+FMX)
+- Added GrayScale and FixedColor to ImageList for every Icons
+- Added GrayScale and FixedColor for single Icon
+- Added some complex svg demo images
+- Updated demos
 
 06 June 2020: version 1.3 (VCL+FMX)
 - Added property editor for TSVGIconImage.SVGText and TSVGIconItem.SVGText
