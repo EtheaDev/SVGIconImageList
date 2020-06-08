@@ -53,7 +53,7 @@ uses
   , SVGColor;
 
 const
-  SVGIconImageListVersion = '1.3.0';
+  SVGIconImageListVersion = '1.4.0';
   DEFAULT_SIZE = 16;
 
 resourcestring
