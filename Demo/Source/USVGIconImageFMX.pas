@@ -5,7 +5,7 @@ interface
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Variants,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  FMX.Controls.Presentation, FMX.StdCtrls, System.ImageList, FMX.ImgList,
+  FMX.Controls.Presentation, FMX.StdCtrls, FMX.ImgList,
   FMX.Objects, FMX.MultiresBitmap, System.Rtti, System.Messaging,
   FMX.ListBox, FMX.Colors, FMX.SVGIconImage;
 

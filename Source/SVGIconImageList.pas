@@ -53,7 +53,7 @@ uses
   , SVGColor;
 
 const
-  SVGIconImageListVersion = '1.4.0';
+  SVGIconImageListVersion = '1.5.0';
   DEFAULT_SIZE = 16;
 
 resourcestring
@@ -115,6 +115,11 @@ type
     FScaled: Boolean;
     FDPIChangedMessageID: Integer;
     {$ENDIF}
+    FStoreAsText: boolean;
+    FFixedColor: TSVGColor;
+    FGrayScale: Boolean;
+    FDisabledGrayScale: Boolean;
+    FDisabledOpacity: Byte;
     function GetImages(Index: Integer): TSVG;
     function GetNames(Index: Integer): string;
     procedure SetImages(Index: Integer; const Value: TSVG);
@@ -131,15 +136,16 @@ type
     procedure WriteTop(Writer: TWriter);
     procedure ReadImageData(Stream: TStream);
     procedure WriteImageData(Stream: TStream);
-  private
-    FStoreAsText: boolean;
-    FFixedColor: TSVGColor;
-    FGrayScale: Boolean;
     procedure SetSVGIconItems(const Value: TSVGIconItems);
     function GetSize: Integer;
     procedure SetSize(const Value: Integer);
     procedure SetFixedColor(const Value: TSVGColor);
     procedure SetGrayScale(const Value: Boolean);
+    procedure SetDisabledGrayScale(const Value: Boolean);
+    procedure SetDisabledOpacity(const Value: Byte);
+    function StoreWidth: Boolean;
+    function StoreHeight: Boolean;
+    function StoreSize: Boolean;
     {$IFDEF HiDPISupport}
     procedure DPIChangedMessageHandler(const Sender: TObject; const Msg: Messaging.TMessage);
     {$ENDIF}
@@ -168,10 +174,10 @@ type
     function IndexOf(const Name: string): Integer;
     procedure ClearIcons;
     procedure SaveToFile(const AFileName: string);
-    procedure PaintTo(const DC: HDC; const Index: Integer;
-      const X, Y, Width, Height: Double); overload;
-    procedure PaintTo(const DC: HDC; const Name: string;
-      const X, Y, Width, Height: Double); overload;
+    procedure PaintTo(const Canvas: TCanvas; const Index: Integer;
+      const X, Y, Width, Height: Double; Enabled: Boolean = True); overload;
+    procedure PaintTo(const Canvas: TCanvas; const Name: string;
+      const X, Y, Width, Height: Double; Enabled: Boolean = True); overload;
     function LoadFromFiles(const AFileNames: TStrings;
       const AAppend: Boolean = True): Integer;
     {$IFDEF D10_4+}
@@ -189,12 +195,14 @@ type
     //New properties
     property SVGIconItems: TSVGIconItems read FSVGItems write SetSVGIconItems stored FStoreAsText;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
-    property Width: Integer read GetWidth write SetWidth default DEFAULT_SIZE;
-    property Height: Integer read GetHeight write SetHeight default DEFAULT_SIZE;
-    property Size: Integer read GetSize write SetSize default DEFAULT_SIZE;
+    property Width: Integer read GetWidth write SetWidth stored StoreWidth default DEFAULT_SIZE;
+    property Height: Integer read GetHeight write SetHeight stored StoreHeight default DEFAULT_SIZE;
+    property Size: Integer read GetSize write SetSize stored StoreSize default DEFAULT_SIZE;
     property StoreAsText: boolean read FStoreAsText write FStoreAsText default False;
     property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
+    property DisabledGrayScale: Boolean read FDisabledGrayScale write SetDisabledGrayScale default True;
+    property DisabledOpacity: Byte read FDisabledOpacity write SetDisabledOpacity default 125;
     /// <summary>
     /// Enable and disable scaling with form
     /// </summary>
@@ -202,6 +210,7 @@ type
     property Scaled: Boolean read FScaled write FScaled default True;
     {$ENDIF}
   end;
+
 
 implementation
 
@@ -481,6 +490,8 @@ begin
   FScaled := True;
   FDPIChangedMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TChangeScaleMessage, DPIChangedMessageHandler);
   {$ENDIF}
+  FDisabledGrayScale := True;
+  FDisabledOpacity := 125;
 end;
 
 procedure TSVGIconImageList.Delete(const Index: Integer);
@@ -553,7 +564,7 @@ end;
 procedure TSVGIconImageList.DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer;
   Style: Cardinal; Enabled: Boolean);
 begin
-  PaintTo(Canvas.Handle, Index, X, Y, Width, Height);
+  PaintTo(Canvas, Index, X, Y, Width, Height, Enabled);
 end;
 
 function TSVGIconImageList.GetCount: Integer;
@@ -648,12 +659,13 @@ begin
   end;
 end;
 
-procedure TSVGIconImageList.PaintTo(const DC: HDC; const Index: Integer;
-  const X, Y, Width, Height: Double);
+procedure TSVGIconImageList.PaintTo(const Canvas: TCanvas; const Index: Integer;
+  const X, Y, Width, Height: Double; Enabled: Boolean = True);
 var
   R: TGPRectF;
   SVG: TSVG;
   LItem: TSVGIconItem;
+  LOpacity: Byte;
 begin
   if (Index >= 0) and (Index < FSVGItems.Count) then
   begin
@@ -663,25 +675,35 @@ begin
       SVG.FixedColor := LItem.FixedColor
     else
       SVG.FixedColor := FFixedColor;
-    if LItem.GrayScale <> FGrayScale then
-      SVG.Grayscale := LItem.GrayScale
+    LOpacity := FOpacity;
+    if Enabled then
+    begin
+      if LItem.GrayScale <> FGrayScale then
+        SVG.Grayscale := LItem.GrayScale
+      else
+        SVG.Grayscale := FGrayScale;
+    end
     else
-      SVG.Grayscale := FGrayScale;
-    SVG.Grayscale := FGrayScale;
-    SVG.SVGOpacity := FOpacity / 255;
+    begin
+      if FDisabledGrayScale then
+        SVG.Grayscale := True
+      else
+        LOpacity := FDisabledOpacity;
+    end;
+    SVG.SVGOpacity := LOpacity / 255;
     R := CalcRect(MakeRect(X, Y, Width, Height), SVG.Width, SVG.Height, baCenterCenter);
-    SVG.PaintTo(DC, R, nil, 0);
+    SVG.PaintTo(Canvas.Handle, R, nil, 0);
     SVG.SVGOpacity := 1;
   end;
 end;
 
-procedure TSVGIconImageList.PaintTo(const DC: HDC; const Name: string;
-  const X, Y, Width, Height: Double);
+procedure TSVGIconImageList.PaintTo(const Canvas: TCanvas; const Name: string;
+  const X, Y, Width, Height: Double; Enabled: Boolean = True);
 var
   Index: Integer;
 begin
   Index := IndexOf(Name);
-  PaintTo(DC, Index, X, Y, Width, Height);
+  PaintTo(Canvas, Index, X, Y, Width, Height, Enabled);
 end;
 
 
@@ -878,6 +900,24 @@ begin
 end;
 {$ENDIF}
 
+procedure TSVGIconImageList.SetDisabledGrayScale(const Value: Boolean);
+begin
+  if FDisabledGrayScale <> Value then
+  begin
+    FDisabledGrayScale := Value;
+    RecreateBitmaps;
+  end;
+end;
+
+procedure TSVGIconImageList.SetDisabledOpacity(const Value: Byte);
+begin
+  if FDisabledOpacity <> Value then
+  begin
+    FDisabledOpacity := Value;
+    RecreateBitmaps;
+  end;
+end;
+
 procedure TSVGIconImageList.SetFixedColor(const Value: TSVGColor);
 begin
   if FFixedColor <> Value then
@@ -961,6 +1001,21 @@ begin
     Dec(FStopDrawing);
 end;
 
+function TSVGIconImageList.StoreSize: Boolean;
+begin
+  Result := (Width = Height) and (Width <> DEFAULT_SIZE);
+end;
+
+function TSVGIconImageList.StoreWidth: Boolean;
+begin
+  Result := (Width <> Height) and (Width <> DEFAULT_SIZE);
+end;
+
+function TSVGIconImageList.StoreHeight: Boolean;
+begin
+  Result := (Width <> Height) and (Height <> DEFAULT_SIZE);
+end;
+
 procedure PaintToBitmap(SVG: TSVG; Bitmap: TBitmap; Bounds: TGPRectF;
   Rects: PRectArray; RectCount: Integer);
 var
@@ -1001,14 +1056,12 @@ var
 
       PaintToBitmap(SVG, TransparentBitmap, R, nil, 0);
 
-
       ColorBitmap.PixelFormat := pf32bit;
       ColorBitmap.Width := Width;
       ColorBitmap.Height := Height;
       MaskBitmap.PixelFormat := pf32bit;
       MaskBitmap.Width := Width;
       MaskBitmap.Height := Height;
-
 
       ColorBitmap.Canvas.Brush.Color := BkColor;
       ColorBitmap.Canvas.FillRect(Rect(0, 0, Width, Height));

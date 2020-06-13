@@ -54,7 +54,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '1.4.0';
+  SVGIconImageListVersion = '1.5.0';
 
 resourcestring
   ERROR_LOADING_FILES = 'SVG error loading files:';
@@ -152,6 +152,7 @@ type
     FOpacity: single;
     FFixedColor: TSVGColor;
     FGrayScale: Boolean;
+    function StoreOpacity: Boolean;
     procedure SetAutoSizeBitmaps(const Value: Boolean);
     procedure UpdateSourceItems;
     procedure UpdateDestination(Size: TSize; const Index: Integer);
@@ -182,7 +183,7 @@ type
     property OnChanged;
     property Size: Integer read GetSize write SetSize default 32;
     property AutoSizeBitmaps: Boolean read FAutoSizeBitmaps write SetAutoSizeBitmaps default True;
-    property Opacity: single read FOpacity write SetOpacity;
+    property Opacity: single read FOpacity write SetOpacity stored StoreOpacity;
     property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
   end;
@@ -798,6 +799,11 @@ begin
     FSize := Value;
     UpdateSourceItems;
   end;
+end;
+
+function TSVGIconImageList.StoreOpacity: Boolean;
+begin
+  Result := FOpacity <> 1;
 end;
 
 initialization

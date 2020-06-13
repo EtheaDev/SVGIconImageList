@@ -55,27 +55,46 @@ uses
   SysUtils
   , Windows
   , Themes
+  {$IFDEF D10_3}
+  , VirtualImageList
+  {$ENDIF}
   ;
 
 function UpdateSVGIconListView(const AListView: TListView): Integer;
 var
   I: Integer;
   LItem: TSVGIconItem;
+  {$IFDEF D10_3}
+  LVirtualItem: TVirtualImageListItem;
+  {$ENDIF}
   LListItem: TListItem;
-  LSVGIconImageList: TSVGIconImageList;
+  LImageList: TCustomImageList;
 begin
-  LSVGIconImageList := AListView.LargeImages as TSVGIconImageList;
+  LImageList := AListView.LargeImages as TCustomImageList;
   AListView.Items.BeginUpdate;
   try
     AListView.Clear;
-    Result := LSVGIconImageList.SVGIconItems.Count;
+    Result := LImageList.Count;
     for I := 0 to Result -1 do
     begin
-      LItem := LSVGIconImageList.SVGIconItems[I];
-      LListItem := AListView.Items.Add;
-      LListItem.Caption := Format('%d.%s',
-        [LItem.Index, LItem.IconName]);
-      LListItem.ImageIndex := I;
+      if (LImageList is TSVGIconImageList) then
+      begin
+        LItem := TSVGIconImageList(LImageList).SVGIconItems[I];
+        LListItem := AListView.Items.Add;
+        LListItem.Caption := Format('%d.%s',
+          [LItem.Index, LItem.IconName]);
+        LListItem.ImageIndex := I;
+      end;
+  {$IFDEF D10_3}
+      if (LImageList is TVirtualImageList) then
+      begin
+        LVirtualItem := TVirtualImageList(LImageList).Images[I];
+        LListItem := AListView.Items.Add;
+        LListItem.Caption := Format('%d.%s',
+          [LVirtualItem.Index, LVirtualItem.Name]);
+        LListItem.ImageIndex := I;
+      end;
+  {$ENDIF}
     end;
   finally
     AListView.Items.EndUpdate;
@@ -87,24 +106,44 @@ function UpdateSVGIconListViewCaptions(const AListView: TListView;
 var
   I: Integer;
   LItem: TSVGIconItem;
+  {$IFDEF D10_3}
+  LVirtualItem: TVirtualImageListItem;
+  {$ENDIF}
   LListItem: TListItem;
-  LSVGIconImageList: TSVGIconImageList;
+  LImageList: TCustomImageList;
 begin
-  LSVGIconImageList := AListView.LargeImages as TSVGIconImageList;
+  LImageList := AListView.LargeImages as TCustomImageList;
   AListView.Items.BeginUpdate;
   try
-    Result := LSVGIconImageList.SVGIconItems.Count;
+    Result := LImageList.Count;
     for I := 0 to Result -1 do
     begin
-      LItem := LSVGIconImageList.SVGIconItems[I];
-      LListItem := AListView.Items[I];
-      if AShowCaption then
+      if (LImageList is TSVGIconImageList) then
       begin
-        LListItem.Caption := Format('%d.%s',
-          [LItem.Index, LItem.IconName]);
-      end
-      else
-        LListItem.Caption := '';
+        LItem := TSVGIconImageList(LImageList).SVGIconItems[I];
+        LListItem := AListView.Items[I];
+        if AShowCaption then
+        begin
+          LListItem.Caption := Format('%d.%s',
+            [LItem.Index, LItem.IconName]);
+        end
+        else
+          LListItem.Caption := '';
+      end;
+      {$IFDEF D10_3}
+      if (LImageList is TVirtualImageList) then
+      begin
+        LVirtualItem := TVirtualImageList(LImageList).Images.Items[I];
+        LListItem := AListView.Items[I];
+        if AShowCaption then
+        begin
+          LListItem.Caption := Format('%d.%s',
+            [LVirtualItem.Index, LVirtualItem.Name]);
+        end
+        else
+          LListItem.Caption := '';
+      end;
+      {$ENDIF}
     end;
   finally
     AListView.Items.EndUpdate;

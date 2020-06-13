@@ -2379,10 +2379,10 @@ begin
     FHeight := FRootBounds.Height;
 
   if (FWidth > 0) and (FRootBounds.Width <> -1) then
-    FDX := FRootBounds.Width / FWidth;
+    FDX := FRootBounds.Width / (FWidth+2); //Fix: better rendering near right border
 
   if (FHeight > 0) and (FRootBounds.Height <> -1) then
-    FDY := FRootBounds.Height / FHeight;
+    FDY := FRootBounds.Height / (FHeight+2); //Fix: better rendering near bottom border
 
   CalculateMatrices(FViewBox.Top, FViewBox.Left, FDX, FDY);
 end;
