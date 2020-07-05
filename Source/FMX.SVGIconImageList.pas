@@ -253,6 +253,7 @@ begin
       Bitmap.Unmap(BitmapData);
       ABitmap.Canvas.BeginScene;
       Try
+        ABitmap.Clear(0);
         ABitmap.Canvas.DrawBitmap(Bitmap, TRectF.Create(0, 0, ABitmap.Width, ABitmap.Height),
           TRectF.Create(0, 0, ABitmap.Width, ABitmap.Height), 100);
       Finally
