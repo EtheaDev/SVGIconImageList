@@ -96,6 +96,12 @@ type
     procedure SVGTextExit(Sender: TObject);
     procedure GrayScaleItemCheckBoxChange(Sender: TObject);
     procedure FixedColorItemComboBoxChange(Sender: TObject);
+    procedure ImageViewDragOver(Sender: TObject; const Data: TDragObject;
+      const Point: TPointF; var Operation: TDragOperation);
+    procedure ImageViewDragChange(SourceItem, DestItem: TListBoxItem;
+      var Allow: Boolean);
+    procedure ImageViewDragDrop(Sender: TObject; const Data: TDragObject;
+      const Point: TPointF);
   private
     FIconIndexLabel: string;
     FTotIconsLabel: string;
@@ -122,6 +128,7 @@ uses
   Winapi.Messages
   , Winapi.Windows
   , Winapi.shellApi
+  , SVG
   , SVGColor;
 
 var
@@ -136,6 +143,7 @@ var
   LSVGIconImageList: TSVGIconImageList;
 begin
   LSVGIconImageList := AListBox.Images as TSVGIconImageList;
+
   AListBox.Items.BeginUpdate;
   try
     AListBox.Clear;
@@ -145,10 +153,10 @@ begin
       LItem := LSVGIconImageList.Source.Items[I] as TSVGIconSourceItem;
       LListItem := TListBoxItem.Create(AListBox);
       LListItem.StyleLookup := 'CustomListBoxItemStyle';
+      LListItem.Text := Format('%d.%s', [LItem.Index,Litem.IconName]);
+      LListItem.ImageIndex := I;
+
       AListBox.AddObject(LListItem);
-      LListItem.Text :=
-        Format('%d.%s', [LItem.Index,Litem.IconName]);
-       LListItem.ImageIndex := I;
     end;
   finally
     AListBox.Items.EndUpdate;
@@ -372,6 +380,65 @@ begin
   if FUpdating then Exit;
   SetImageIconName(IconName.Text);
   UpdateGUI;
+end;
+
+procedure TSVGIconImageListEditorFMX.ImageViewDragChange(SourceItem,
+  DestItem: TListBoxItem; var Allow: Boolean);
+var
+  LOriginalIcon, LIcon: TSVGIconSourceItem;
+  LNewIndex, LSourceIndex: Integer;
+  LIconName: string;
+begin
+  Allow := False;
+  if SourceItem.Index = DestItem.Index then Exit;
+
+  LSourceIndex := SourceItem.Index;
+  LNewIndex := DestItem.Index;
+  if LNewIndex < 0 then LNewIndex := 0;
+  if LNewIndex > FEditingList.Count then LNewIndex := FEditingList.Count;
+
+  LOriginalIcon := FEditingList.Source.Items[LSourceIndex] as TSVGIconSourceItem;
+  LIconName := LOriginalIcon.IconName;
+
+  if LSourceIndex < LNewIndex then
+  begin
+    LIcon := FEditingList.CloneIcon(LSourceIndex, LNewIndex + 1);
+    FEditingList.DeleteIcon(LSourceIndex);
+  end
+  else
+  begin
+    LIcon := FEditingList.CloneIcon(LSourceIndex, LNewIndex);
+    FEditingList.DeleteIcon(LSourceIndex + 1);
+  end;
+
+  LIcon.IconName := LIconName;
+
+  UpdateSVGIconListView(ImageView);
+end;
+
+procedure TSVGIconImageListEditorFMX.ImageViewDragDrop(Sender: TObject;
+  const Data: TDragObject; const Point: TPointF);
+var
+  LFiles: TStringList;
+begin
+  if Length(Data.Files) <= 0 then Exit;
+
+  LFiles := TStringList.Create;
+  LFiles.AddStrings(TArray<string>(Data.Files));
+  try
+    FEditingList.LoadFromFiles(LFiles);
+  finally
+    FreeAndNil(LFiles);
+  end;
+
+  UpdateSVGIconListView(ImageView);
+end;
+
+procedure TSVGIconImageListEditorFMX.ImageViewDragOver(Sender: TObject;
+  const Data: TDragObject; const Point: TPointF; var Operation: TDragOperation);
+begin
+  if Length(Data.Files) > 0 then Operation := TDragOperation.Copy
+  else Operation := TDragOperation.None;
 end;
 
 procedure TSVGIconImageListEditorFMX.ImageViewSelectItem(Sender: TObject);
