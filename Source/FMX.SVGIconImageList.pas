@@ -171,6 +171,7 @@ type
     procedure DeleteIcon(const AIndex: Integer);
     function InsertIcon(const AIndex: Integer;
       const ASVGText: string; const AIconName: string = ''): TSVGIconSourceItem;
+    function CloneIcon(const AIndex: Integer; const AInsertIndex: Integer = -1): TSVGIconSourceItem;
     //Multiple icons methods
     function LoadFromFiles(const AFileNames: TStrings;
       const AAppend: Boolean = True): Integer;
@@ -251,9 +252,10 @@ begin
       end;
 
       Bitmap.Unmap(BitmapData);
+
       ABitmap.Canvas.BeginScene;
       Try
-        ABitmap.Clear(0);
+        ABitmap.Clear(TAlphaColors.Null);
         ABitmap.Canvas.DrawBitmap(Bitmap, TRectF.Create(0, 0, ABitmap.Width, ABitmap.Height),
           TRectF.Create(0, 0, ABitmap.Width, ABitmap.Height), 100);
       Finally
@@ -586,6 +588,27 @@ begin
     with LDest.Layers.Add do
       Name := LItem.Name;
   end;
+end;
+
+function TSVGIconImageList.CloneIcon(const AIndex: Integer; const AInsertIndex: Integer = -1): TSVGIconSourceItem;
+var
+  LItem: TSVGIconSourceItem;
+  LNewIndex: Integer;
+begin
+  LItem := Self.Source.Items[AIndex] as TSVGIconSourceItem;
+
+  if AInsertIndex >= 0 then LNewIndex := AInsertIndex
+  else LNewIndex := AIndex;
+
+  Result := InsertIcon(LNewIndex, LItem.SVGText);
+  Result.Opacity := LItem.Opacity;
+  Result.FixedColor := LItem.FixedColor;
+  Result.GrayScale := LItem.GrayScale;
+  Result.SVG.LoadFromText(LItem.SVG.Source);
+
+  // Result.Assign(Self.Destination.Items[AIndex]);
+
+  UpdateSourceItems;
 end;
 
 function TSVGIconImageList.LoadFromFiles(const AFileNames: TStrings;
