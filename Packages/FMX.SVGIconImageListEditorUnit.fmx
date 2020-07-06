@@ -328,6 +328,9 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       Size.Height = 268.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
+      OnDragOver = ImageViewDragOver
+      OnDragDrop = ImageViewDragDrop
+      AllowDrag = True
       Columns = 5
       DisableFocusEffect = True
       ItemHeight = 36.000000000000000000
@@ -336,6 +339,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       DefaultItemStyles.GroupHeaderStyle = ''
       DefaultItemStyles.GroupFooterStyle = ''
       OnChange = ImageViewSelectItem
+      OnDragChange = ImageViewDragChange
       Viewport.Width = 620.000000000000000000
       Viewport.Height = 264.000000000000000000
     end
