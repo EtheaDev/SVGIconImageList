@@ -22,7 +22,7 @@ SVGIconImageList, as a TVirtualImageList+TImageCollection, can draw icons in SVG
 
 **UTILITY**
 
-The [SVG Icon Explorer](SVGIconExplorer) utility is useful to explore your svg image collections.
+The [SVG Icon Explorer](https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIconExplorer) utility is useful to explore and preview your svg image collections.
 
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGIconExplorer.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGIconExplorer.jpg)
 
