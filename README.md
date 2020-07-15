@@ -20,6 +20,12 @@ SVGIconImageList, as a TVirtualImageList+TImageCollection, can draw icons in SVG
 **Sample image of the VCL SVGText-property editor**
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg)
 
+**UTILITY**
+
+The [SVG Icon Explorer](SVGIconExplorer) utility is useful to explore your svg image collections.
+
+![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGIconExplorer.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGIconExplorer.jpg)
+
 **DOCUMENTATION**
 
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
@@ -28,6 +34,15 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 
 **RELEASE NOTES:**
 
+15 July 2020: version 1.6 (VCL+FMX)
+ - Fixed rendering on TButton! (VCL)
+ - Fixed "Apply" into ImageEditor (VCL)
+ - Added reformat XML to ImageEditor (VCL)
+ - Added utility to explore icons into disk/folder (SVGExplorer)
+ - Fixed inherited color drawing (SVG)
+ - Fixed storing properties into dfm in binary mode (VCL)
+ - Fixed storing for some properties (don't store default values)
+ 
 13 June 2020: versione 1.5 (VCL+FMX)
  - Added support for DisabledGrayScale and DisabledOpacity as in VirtualImageList
  - Fixed drawing disabled icons also with VCLStyles active
