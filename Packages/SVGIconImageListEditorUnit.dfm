@@ -250,12 +250,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             Width = 72
             Height = 72
             AutoSize = False
-            Center = True
             Proportional = False
-            Stretch = True
-            Opacity = 255
-            Scale = 1.000000000000000000
-            ImageIndex = -1
             Align = alClient
           end
         end
@@ -345,6 +340,15 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         Caption = '&Apply'
         TabOrder = 2
         OnClick = ApplyButtonClick
+      end
+      object ReformatXMLButton: TButton
+        Left = 2
+        Top = 152
+        Width = 75
+        Height = 25
+        Caption = 'Reformat &XML'
+        TabOrder = 4
+        OnClick = ReformatXMLButtonClick
       end
     end
   end

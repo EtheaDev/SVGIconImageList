@@ -53,13 +53,15 @@ uses
   , SVGColor;
 
 const
-  SVGIconImageListVersion = '1.5.0';
+  SVGIconImageListVersion = '1.6.0';
   DEFAULT_SIZE = 16;
 
 resourcestring
   ERROR_LOADING_FILES = 'SVG error loading files:';
 
 type
+  TSVGIconImageList = class;
+
   TSVGIconItem = class(TCollectionItem)
   private
     FIconName: string;
@@ -88,11 +90,13 @@ type
   end;
 
   {TSVGIconItems}
-  TSVGIconItems = class(TCollection)
+  TSVGIconItems = class(TOwnedCollection)
   strict private
     FOwner: TPersistent;
     function GetItem(Index: Integer): TSVGIconItem;
     procedure SetItem(Index: Integer; const Value: TSVGIconItem);
+  private
+    function GetSVGIconImageList: TSVGIconImageList;
   protected
     procedure Update(Item: TCollectionItem); override;
     procedure Notify(Item: TCollectionItem; Action: TCollectionNotification); override;
@@ -103,6 +107,7 @@ type
     procedure Assign(Source: TPersistent); override;
     function GetIconByName(const AIconName: string): TSVGIconItem;
     property Items[index: Integer]: TSVGIconItem read GetItem write SetItem; default;
+    property SVGIconImageList: TSVGIconImageList read GetSVGIconImageList;
   end;
 
   {TSVGIconImageList}
@@ -168,16 +173,18 @@ type
     procedure RecreateBitmaps;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    function Add(const SVG: TSVG; const Name: string): Integer;
+    function Add(const ASVG: TSVG; const AIconName: string;
+       const AGrayScale: Boolean = False;
+       const AFixedColor: TSVGColor = inherit_color): Integer;
     procedure Delete(const Index: Integer);
     procedure Remove(const Name: string);
     function IndexOf(const Name: string): Integer;
     procedure ClearIcons;
     procedure SaveToFile(const AFileName: string);
-    procedure PaintTo(const Canvas: TCanvas; const Index: Integer;
-      const X, Y, Width, Height: Double; Enabled: Boolean = True); overload;
-    procedure PaintTo(const Canvas: TCanvas; const Name: string;
-      const X, Y, Width, Height: Double; Enabled: Boolean = True); overload;
+    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
+      const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True); overload;
+    procedure PaintTo(const ACanvas: TCanvas; const AName: string;
+      const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True); overload;
     function LoadFromFiles(const AFileNames: TStrings;
       const AAppend: Boolean = True): Integer;
     {$IFDEF D10_4+}
@@ -217,8 +224,8 @@ implementation
 uses
   CommCtrl
   , Math
-  , GDIPAPI
-  , GDIPOBJ
+  , Winapi.GDIPAPI
+  , Winapi.GDIPOBJ
   , ComCtrls
   , GDIPUtils
   , SVGTypes;
@@ -341,25 +348,29 @@ var
   Item: TSVGIconItem;
 begin
   inherited;
-
-  if Source is TSVGIconItems then
-  try
-    BeginUpdate;
-    Clear;
-    for C := 0 to TSVGIconItems(Source).Count - 1 do
-    begin
-      Item := Add;
-      Item.Assign(TSVGIconItems(Source)[C]);
+  if (Source is TSVGIconItems) and (SVGIconImageList <> nil) then
+  begin
+    SVGIconImageList.StopDrawing(True);
+    try
+      BeginUpdate;
+      Clear;
+      for C := 0 to TSVGIconItems(Source).Count - 1 do
+      begin
+        Item := Add;
+        Item.Assign(TSVGIconItems(Source)[C]);
+      end;
+    finally
+      EndUpdate;
+      Update(nil);
+      SVGIconImageList.StopDrawing(False);
     end;
-  finally
-    EndUpdate;
-    Update(nil);
+    SVGIconImageList.RecreateBitmaps;
   end;
 end;
 
 constructor TSVGIconItems.Create(AOwner: TPersistent);
 begin
-  inherited Create(TSVGIconItem);
+  inherited Create(AOwner, TSVGIconItem);
   FOwner := AOwner;
 end;
 
@@ -392,12 +403,20 @@ begin
   Result := FOwner;
 end;
 
+function TSVGIconItems.GetSVGIconImageList: TSVGIconImageList;
+begin
+  if Owner is TSVGIconImageList then
+    Result := TSVGIconImageList(Owner)
+  else
+    Result := nil;
+end;
+
 procedure TSVGIconItems.Notify(Item: TCollectionItem;
   Action: TCollectionNotification);
 begin
   inherited;
-  if FOwner is TSVGIconImageList then
-    TSVGIconImageList(FOwner).RecreateBitmaps;
+//  if FOwner is TSVGIconImageList then
+//    TSVGIconImageList(FOwner).RecreateBitmaps;
 end;
 
 procedure TSVGIconItems.SetItem(Index: Integer;
@@ -415,15 +434,18 @@ end;
 
 { TSVGIconImageList }
 
-function TSVGIconImageList.Add(const SVG: TSVG;
-  const Name: string): Integer;
+function TSVGIconImageList.Add(const ASVG: TSVG;
+  const AIconName: string; const AGrayScale: Boolean = False;
+  const AFixedColor: TSVGColor = inherit_color): Integer;
 var
   Item: TSVGIconItem;
 begin
   try
     Item := FSVGItems.Add;
-    Item.SVG := SVG;
-    Item.IconName := Name;
+    Item.SVG := ASVG;
+    Item.IconName := AIconName;
+    Item.FixedColor := AFixedColor;
+    Item.GrayScale := AGrayScale;
   finally
     RecreateBitmaps;
   end;
@@ -447,8 +469,7 @@ begin
     finally
       StopDrawing(False);
     end;
-    if not (csLoading in ComponentState) then
-      RecreateBitmaps;
+    RecreateBitmaps;
   end;
 end;
 
@@ -469,17 +490,17 @@ procedure TSVGIconImageList.ClearIcons;
 begin
   StopDrawing(True);
   try
-    inherited Clear;
     FSVGItems.Clear;
+    inherited Clear;
   finally
     StopDrawing(False);
-    RecreateBitmaps;
   end;
 end;
 
 constructor TSVGIconImageList.Create(AOwner: TComponent);
 begin
   inherited;
+  ColorDepth := cd32Bit;
   Width := DEFAULT_SIZE;
   Height := DEFAULT_SIZE;
   FSVGItems := TSVGIconItems.Create(Self);
@@ -659,29 +680,29 @@ begin
   end;
 end;
 
-procedure TSVGIconImageList.PaintTo(const Canvas: TCanvas; const Index: Integer;
-  const X, Y, Width, Height: Double; Enabled: Boolean = True);
+procedure TSVGIconImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
+  const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True);
 var
   R: TGPRectF;
   SVG: TSVG;
   LItem: TSVGIconItem;
   LOpacity: Byte;
 begin
-  if (Index >= 0) and (Index < FSVGItems.Count) then
+  if (AIndex >= 0) and (AIndex < FSVGItems.Count) then
   begin
-    LItem := FSVGItems[Index];
+    LItem := FSVGItems[AIndex];
     SVG := LItem.SVG;
     if LItem.FixedColor <> inherit_color then
       SVG.FixedColor := LItem.FixedColor
     else
       SVG.FixedColor := FFixedColor;
     LOpacity := FOpacity;
-    if Enabled then
+    if AEnabled then
     begin
-      if LItem.GrayScale <> FGrayScale then
-        SVG.Grayscale := LItem.GrayScale
+      if LItem.GrayScale or FGrayScale then
+        SVG.Grayscale := True
       else
-        SVG.Grayscale := FGrayScale;
+        SVG.Grayscale := False;
     end
     else
     begin
@@ -691,51 +712,83 @@ begin
         LOpacity := FDisabledOpacity;
     end;
     SVG.SVGOpacity := LOpacity / 255;
-    R := CalcRect(MakeRect(X, Y, Width, Height), SVG.Width, SVG.Height, baCenterCenter);
-    SVG.PaintTo(Canvas.Handle, R, nil, 0);
+    R := CalcRect( MakeRect(X, Y, AWidth, AHeight), SVG.Width, SVG.Height, baCenterCenter);
+    SVG.PaintTo(ACanvas.Handle, R, nil, 0);
     SVG.SVGOpacity := 1;
   end;
 end;
 
-procedure TSVGIconImageList.PaintTo(const Canvas: TCanvas; const Name: string;
-  const X, Y, Width, Height: Double; Enabled: Boolean = True);
+procedure TSVGIconImageList.PaintTo(const ACanvas: TCanvas; const AName: string;
+  const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True);
 var
-  Index: Integer;
+  LIndex: Integer;
 begin
-  Index := IndexOf(Name);
-  PaintTo(Canvas, Index, X, Y, Width, Height, Enabled);
+  LIndex := IndexOf(AName);
+  PaintTo(ACanvas, LIndex, X, Y, AWidth, AHeight, AEnabled);
 end;
 
 
 procedure TSVGIconImageList.ReadImageData(Stream: TStream);
 var
-  FStream: TMemoryStream;
-  Count, Size: Integer;
-  SVG: TSVG;
-  Name: string;
+  LStream: TMemoryStream;
+  LCount, LSize: Integer;
+  LSVG: TSVG;
   C: Integer;
+  LPos: Int64;
+  LIconName: string;
+  LTag: TBytes;
+  LFixedColorStr: AnsiString;
+  LGrayScale: Boolean;
+  LFixedColor: TSVGColor;
 begin
   if FStoreAsText then
     Exit;
   try
     StopDrawing(True);
-    FStream := TMemoryStream.Create;
-    Stream.Read(Count, SizeOf(Integer));
-    SVG := TSVG.Create(nil);
-    for C := 0 to Count - 1 do
+    LStream := TMemoryStream.Create;
+    //Read Count of Images
+    Stream.Read(LCount, SizeOf(Integer));
+    LSVG := TSVG.Create(nil);
+    for C := 0 to LCount - 1 do
     begin
-      Stream.Read(Size, SizeOf(Integer));
-      SetLength(Name, Size);
-      Stream.Read(PChar(Name)^, Size * SizeOf(Char));
+      //Read IconName
+      Stream.Read(LSize, SizeOf(Integer));
+      SetLength(LIconName, LSize);
+      Stream.Read(PChar(LIconName)^, LSize * SizeOf(Char));
+      //Read SVG Stream Size
+      Stream.Read(LSize, SizeOf(Integer));
+      LStream.CopyFrom(Stream, LSize);
+      //Read SVG Stream data
+      LSVG.LoadFromStream(LStream);
 
-      Stream.Read(Size, SizeOf(Integer));
-      FStream.CopyFrom(Stream, Size);
-      SVG.LoadFromStream(FStream);
-      FStream.Clear;
-      Add(SVG, Name);
+      //Check for FixedColor attribute
+      LPos := Stream.Position;
+      LFixedColor := SVGColor.inherit_color;
+      SetLength(LTag, 10);
+      Stream.Read(Pointer(LTag)^, 10);
+      SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 10);
+      if LFixedColorStr = 'FixedColor' then
+        //Read Fixed Color value
+        Stream.Read(LFixedColor, SizeOf(Integer))
+      else
+        Stream.Position := LPos;
+
+      //Check for GrayScale attribute
+      LPos := Stream.Position;
+      LGrayScale := False;
+      SetLength(LTag, 9);
+      Stream.Read(Pointer(LTag)^, 9);
+      SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 9);
+      if LFixedColorStr = 'GrayScale' then
+        LGrayScale := True
+      else
+        Stream.Position := LPos;
+
+      Add(LSVG, LIconName, LGrayScale, LFixedColor);
+      LStream.Clear;
     end;
-    FStream.Free;
-    SVG.Free;
+    LStream.Free;
+    LSVG.Free;
   finally
     StopDrawing(False);
     RecreateBitmaps;
@@ -767,10 +820,13 @@ var
   Icon: HIcon;
   LItem: TSVGIconItem;
 begin
-  if  (FStopDrawing = 0) and
-    not (csLoading in ComponentState) and
-    not (csDestroying in ComponentState) then
-  begin
+  if not Assigned(FSVGItems) or
+    (FStopDrawing <> 0) or
+    (csDestroying in ComponentState) or
+    (csLoading in ComponentState) then
+    Exit;
+  StopDrawing(True);
+  try
     ImageList_Remove(Handle, -1);
     if (Width > 0) and (Height > 0) then
     begin
@@ -797,7 +853,10 @@ begin
         end;
       end;
     end;
+  finally
+    StopDrawing(False);
   end;
+  Change;
 end;
 
 procedure TSVGIconImageList.Remove(const Name: string);
@@ -1129,29 +1188,49 @@ procedure TSVGIconImageList.WriteImageData(Stream: TStream);
 var
   Count, Size: Integer;
   SVG: TSVG;
-  Name: string;
+  LIconName: string;
+  LTag: AnsiString;
+  LItem: TSVGIconItem;
   C: Integer;
   SVGStream: TMemoryStream;
 begin
   if FStoreAsText then
     Exit;
   Count := FSVGItems.Count;
+  //Store count
   Stream.Write(Count, SizeOf(Integer));
 
   SVGStream := TMemoryStream.Create;
   for C := 0 to Count - 1 do
   begin
-    Name := FSVGItems[C].IconName;
+    LItem := FSVGItems[C];
+    //Store IconName
+    LIconName := LItem.IconName;
     SVG := FSVGItems[C].SVG;
-    Size := Length(Name);
+    Size := Length(LIconName);
     Stream.Write(Size, SizeOf(Integer));
-    Stream.WriteBuffer(PChar(Name)^, Size * SizeOf(Char));
-
+    Stream.WriteBuffer(PChar(LIconName)^, Size * SizeOf(Char));
+    //Store SVG Stream Size
     SVG.SaveToStream(SVGStream);
     Size := SVGStream.Size;
     Stream.Write(Size, SizeOf(Integer));
     SVGStream.Position := 0;
+    //Store SVG Data
     Stream.CopyFrom(SVGStream, Size);
+    //Store FixedColor (optionally)
+    if LItem.FixedColor <> TSVGColor.inherit_color then
+    begin
+      LTag := 'FixedColor';
+      Stream.WriteBuffer(PAnsiChar(LTag)^, 10);
+      Size := Ord(LItem.FixedColor);
+      Stream.Write(Size, SizeOf(Integer));
+    end;
+    //Store GrayScale (optionally)
+    if LItem.GrayScale then
+    begin
+      LTag := 'GrayScale';
+      Stream.WriteBuffer(PAnsiChar(LTag)^, 9);
+    end;
     SVGStream.Clear;
   end;
   SVGStream.Free;

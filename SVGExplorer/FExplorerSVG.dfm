@@ -1,15 +1,9 @@
-object MainForm: TMainForm
-  Left = 916
-  Top = 169
-  Caption = 
-    'SVG Icon ImageList Demo - Copyright (c) Ethea S.r.l. - Apache 2.' +
-    '0 Open Source License'
-  ClientHeight = 547
-  ClientWidth = 709
+object fmExplorerSVG: TfmExplorerSVG
+  Left = 0
+  Top = 0
+  ClientHeight = 416
+  ClientWidth = 846
   Color = clBtnFace
-  Constraints.MinHeight = 300
-  Constraints.MinWidth = 400
-  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -18,204 +12,148 @@ object MainForm: TMainForm
   OldCreateOrder = False
   ShowHint = True
   OnCreate = FormCreate
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object Splitter: TSplitter
-    Left = 626
-    Top = 38
-    Height = 509
+  object Splitter1: TSplitter
+    Left = 185
+    Top = 0
+    Width = 4
+    Height = 416
+    AutoSnap = False
+    MinSize = 120
+    ExplicitHeight = 393
+  end
+  object Splitter2: TSplitter
+    Left = 752
+    Top = 0
+    Width = 4
+    Height = 416
     Align = alRight
     AutoSnap = False
-    MinSize = 80
-    ExplicitLeft = 9
-    ExplicitTop = 9
-    ExplicitHeight = 427
+    MinSize = 90
+    ExplicitLeft = 701
   end
-  object Panel1: TPanel
-    Left = 0
-    Top = 38
-    Width = 202
-    Height = 509
-    Align = alLeft
-    TabOrder = 0
-    object SelectThemeRadioGroup: TRadioGroup
-      Left = 1
-      Top = 1
-      Width = 200
-      Height = 272
-      Align = alClient
-      Caption = 'Select Theme/Color'
-      TabOrder = 0
-      OnClick = SelectThemeRadioGroupClick
-    end
-    object LoadGroupBox: TGroupBox
-      Left = 1
-      Top = 273
-      Width = 200
-      Height = 59
-      Align = alBottom
-      Caption = 'Load SVG from disk'
-      TabOrder = 1
-      object BuildFromFilesButton: TButton
-        Left = 3
-        Top = 23
-        Width = 189
-        Height = 30
-        Caption = 'Build from files...'
-        TabOrder = 0
-        OnClick = BuildFromFilesButtonClick
-      end
-    end
-    object SliderPanel: TPanel
-      Left = 1
-      Top = 373
-      Width = 200
-      Height = 62
-      Align = alBottom
-      BevelOuter = bvNone
-      TabOrder = 3
-      object IconSizeLabel: TLabel
-        Left = 8
-        Top = 3
-        Width = 51
-        Height = 13
-        Caption = 'Icons size:'
-      end
-      object TrackBar: TTrackBar
-        Left = 0
-        Top = 23
-        Width = 200
-        Height = 39
-        Align = alBottom
-        Max = 128
-        Min = 12
-        Frequency = 8
-        Position = 32
-        PositionToolTip = ptBottom
-        TabOrder = 0
-        OnChange = TrackBarChange
-      end
-    end
-    object ButtonsPanel: TPanel
-      Left = 1
-      Top = 332
-      Width = 200
-      Height = 41
-      Align = alBottom
-      BevelOuter = bvNone
-      TabOrder = 2
-      object ClearButton: TButton
-        Left = 5
-        Top = 5
-        Width = 76
-        Height = 30
-        Caption = 'Clear Icons'
-        TabOrder = 0
-        OnClick = ClearButtonClick
-      end
-      object ShowImageEditorButton: TButton
-        Left = 86
-        Top = 5
-        Width = 106
-        Height = 30
-        Caption = 'Show Image Editor'
-        TabOrder = 1
-        OnClick = ShowImageEditorButtonClick
-      end
-    end
-    object ColorGroupBox: TGroupBox
-      Left = 1
-      Top = 435
-      Width = 200
-      Height = 73
-      Align = alBottom
-      Caption = 'Fixed color'
-      TabOrder = 4
-      object FixedColorComboBox: TComboBox
-        Left = 10
-        Top = 19
-        Width = 178
-        Height = 21
-        Style = csDropDownList
-        TabOrder = 0
-        OnSelect = FixedColorComboBoxSelect
-      end
-      object GrayScaleCheckBox: TCheckBox
-        Left = 10
-        Top = 50
-        Width = 97
-        Height = 17
-        Caption = 'GrayScale'
-        TabOrder = 1
-        OnClick = GrayScaleCheckBoxClick
-      end
-    end
-  end
-  object TopToolBar: TToolBar
+  object paDir: TPanel
     Left = 0
     Top = 0
-    Width = 709
-    Height = 38
-    AutoSize = True
-    ButtonHeight = 38
-    ButtonWidth = 39
-    Images = SVGIconImageList
-    TabOrder = 1
-    Transparent = False
-    object ToolButton1: TToolButton
-      Left = 0
-      Top = 0
-      Action = DisabledAction
+    Width = 185
+    Height = 416
+    Align = alLeft
+    TabOrder = 0
+    object DirSelection: TDirectoryListBox
+      Left = 1
+      Top = 41
+      Width = 183
+      Height = 374
+      Align = alClient
+      TabOrder = 0
+      OnChange = DirSelectionChange
     end
-    object ToolButton2: TToolButton
-      Left = 39
-      Top = 0
-      Action = DeleteIconAction
-    end
-    object ToolButton3: TToolButton
-      Left = 78
-      Top = 0
-      ImageIndex = 2
-    end
-    object ToolButton4: TToolButton
-      Left = 117
-      Top = 0
-      ImageIndex = 3
-    end
-    object ToolButton5: TToolButton
-      Left = 156
-      Top = 0
-      ImageIndex = 4
-    end
-    object ToolButton6: TToolButton
-      Left = 195
-      Top = 0
-      Action = ChangeIconAction
-      ImageIndex = 100
-    end
-    object ToolButton7: TToolButton
-      Left = 234
-      Top = 0
-      Caption = 'Change Color'
-      Enabled = False
-      ImageIndex = 7
-      OnClick = ChangeColorActionExecute
+    object DrivePanel: TPanel
+      Left = 1
+      Top = 1
+      Width = 183
+      Height = 40
+      Align = alTop
+      BevelOuter = bvNone
+      TabOrder = 1
+      object DriveComboBox: TDriveComboBox
+        Left = 1
+        Top = 10
+        Width = 178
+        Height = 19
+        DirList = DirSelection
+        TabOrder = 0
+      end
     end
   end
-  object paButtons: TPanel
-    Left = 629
-    Top = 38
-    Width = 80
-    Height = 509
+  object PaList: TPanel
+    Left = 189
+    Top = 0
+    Width = 563
+    Height = 416
+    Align = alClient
+    TabOrder = 1
+    object ImageListLabel: TLabel
+      Left = 1
+      Top = 42
+      Width = 561
+      Height = 16
+      Align = alTop
+      Alignment = taCenter
+      Caption = 'SVG image'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      ExplicitWidth = 63
+    end
+    object paRicerca: TPanel
+      Left = 1
+      Top = 1
+      Width = 561
+      Height = 41
+      Align = alTop
+      TabOrder = 0
+      DesignSize = (
+        561
+        41)
+      object SearchBox: TSearchBox
+        Left = 10
+        Top = 10
+        Width = 544
+        Height = 21
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 0
+        TextHint = 'Insert filter with wildcards to search icons by name...'
+        OnInvokeSearch = SearchBoxInvokeSearch
+      end
+    end
+    object ImageView: TListView
+      Left = 1
+      Top = 58
+      Width = 561
+      Height = 338
+      Align = alClient
+      Columns = <>
+      IconOptions.AutoArrange = True
+      LargeImages = SVGIconImageList
+      PopupMenu = PopupMenu
+      SmallImages = SVGIconImageList
+      TabOrder = 1
+      OnKeyDown = ImageViewKeyDown
+      OnSelectItem = ImageViewSelectItem
+    end
+    object StatusBar: TStatusBar
+      Left = 1
+      Top = 396
+      Width = 561
+      Height = 19
+      Panels = <>
+      SimplePanel = True
+    end
+  end
+  object paPreview: TPanel
+    Left = 756
+    Top = 0
+    Width = 90
+    Height = 416
     Align = alRight
     TabOrder = 2
-    OnResize = paButtonsResize
+    OnResize = paPreviewResize
+    DesignSize = (
+      90
+      416)
     object SVGIconImage: TSVGIconImage
       Left = 1
-      Top = 428
-      Width = 78
-      Height = 80
-      Hint = 'Click left - right mouse button to change icon into SVGIconImage'
+      Top = 1
+      Width = 88
+      Height = 88
+      Cursor = crSizeAll
+      Hint = 'Left click to enlarge. Right click to shrink'
       Margins.Left = 10
       Margins.Top = 10
       Margins.Right = 10
@@ -223,126 +161,33 @@ object MainForm: TMainForm
       AutoSize = False
       Proportional = False
       ImageList = SVGIconImageList
-      ImageIndex = 100
-      Align = alBottom
+      Align = alTop
       OnMouseDown = SVGIconImageMouseDown
-      ExplicitWidth = 80
+      ExplicitTop = 323
     end
-    object DeleteButton: TButton
-      Left = 2
-      Top = 5
-      Width = 73
-      Height = 60
-      Action = DeleteIconAction
-      ImageAlignment = iaTop
-      Images = SVGIconImageList
-      TabOrder = 0
-    end
-    object ChangeIconButton: TButton
-      Left = 3
-      Top = 71
-      Width = 73
-      Height = 60
-      Action = ChangeIconAction
-      ImageAlignment = iaTop
-      Images = SVGIconImageList
+    object btDelete: TButton
+      Left = 6
+      Top = 385
+      Width = 75
+      Height = 25
+      Action = DeleteAction
+      Anchors = [akLeft, akRight, akBottom]
       TabOrder = 1
     end
-  end
-  object ClientPanel: TPanel
-    Left = 202
-    Top = 38
-    Width = 424
-    Height = 509
-    Align = alClient
-    TabOrder = 3
-    object ImageListLabel: TLabel
-      Left = 1
-      Top = 209
-      Width = 422
-      Height = 13
-      Align = alTop
-      Alignment = taCenter
-      Caption = 'Image List Icons Preview'
-      ExplicitWidth = 119
-    end
-    object TreeView: TTreeView
-      Left = 1
-      Top = 1
-      Width = 422
-      Height = 208
-      Align = alTop
-      Images = SVGIconImageList
-      Indent = 35
+    object BtRename: TButton
+      Left = 6
+      Top = 354
+      Width = 75
+      Height = 25
+      Action = RenameAction
+      Anchors = [akLeft, akRight, akBottom]
       TabOrder = 0
-      Items.NodeData = {
-        0303000000240000000100000001000000FFFFFFFFFFFFFFFF00000000000000
-        000100000001036F006E0065002C0000000400000004000000FFFFFFFFFFFFFF
-        FF00000000000000000000000001076F006E0065002D006F006E006500240000
-        000200000002000000FFFFFFFFFFFFFFFF000000000000000002000000010374
-        0077006F002C0000000500000005000000FFFFFFFFFFFFFFFF00000000000000
-        00000000000107740077006F0020006F006E0065002C00000006000000070000
-        0000000000FFFFFFFF0000000000000000000000000107740077006F00200074
-        0077006F00280000000300000003000000FFFFFFFFFFFFFFFF00000000000000
-        0000000000010574006800720065006500}
     end
-    object ImageView: TListView
-      Left = 1
-      Top = 222
-      Width = 422
-      Height = 286
-      Align = alClient
-      Columns = <>
-      IconOptions.AutoArrange = True
-      Items.ItemData = {
-        05CC0000000500000000000000FFFFFFFFFFFFFFFF00000000FFFFFFFF000000
-        00034D0061006E0001000000FFFFFFFFFFFFFFFF00000000FFFFFFFF00000000
-        0557006F006D0061006E0002000000FFFFFFFFFFFFFFFF00000000FFFFFFFF00
-        00000008430061006C0065006E0064006100720003000000FFFFFFFFFFFFFFFF
-        00000000FFFFFFFF000000000B49006E0066006F0072006D006100740069006F
-        006E0004000000FFFFFFFFFFFFFFFF00000000FFFFFFFF000000000A43006100
-        6C00630075006C00610074006F007200}
-      LargeImages = SVGIconImageList
-      SmallImages = SVGIconImageList
-      TabOrder = 1
-      OnSelectItem = ImageViewSelectItem
-      ExplicitLeft = 5
-      ExplicitTop = 242
-      ExplicitWidth = 423
-      ExplicitHeight = 272
-    end
-  end
-  object ActionList: TActionList
-    Images = SVGIconImageList
-    Left = 248
-    Top = 424
-    object ChangeIconAction: TAction
-      Category = 'Edit'
-      Caption = 'Change icon'
-      ImageIndex = 255
-      OnExecute = ChangeIconActionExecute
-    end
-    object DeleteIconAction: TAction
-      Category = 'Edit'
-      Caption = 'Delete Icon'
-      ImageIndex = 39
-      OnExecute = DeleteIconActionExecute
-    end
-    object DisabledAction: TAction
-      Category = 'Edit'
-      Caption = 'Disabled'
-      Enabled = False
-      ImageIndex = 0
-    end
-  end
-  object ColorDialog: TColorDialog
-    Left = 472
-    Top = 136
   end
   object SVGIconImageList: TSVGIconImageList
     Size = 32
-    Left = 384
-    Top = 432
+    Left = 264
+    Top = 157
     Images = {
       1B0100000B00000062007500730069006E006500730073006D0061006E009D03
       00003C7376672076657273696F6E3D22312220786D6C6E733D22687474703A2F
@@ -7611,10 +7456,28 @@ object MainForm: TMainForm
       6E20706F696E74733D2233362C32392033392C32352033332C3235222F3E0D0A
       202020203C2F673E0D0A3C2F7376673E0D0A}
   end
-  object OpenDialog: TOpenPictureDialog
-    Filter = 'Scalable Vector Graphics (*.svg)|*.svg'
-    Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
-    Left = 472
-    Top = 72
+  object PopupMenu: TPopupMenu
+    Left = 480
+    Top = 160
+    object Rename1: TMenuItem
+      Action = RenameAction
+    end
+    object Delete1: TMenuItem
+      Action = DeleteAction
+    end
+  end
+  object ActionList: TActionList
+    Left = 480
+    Top = 240
+    object DeleteAction: TAction
+      Caption = 'Delete...'
+      OnExecute = DeleteActionExecute
+      OnUpdate = ActionUpdate
+    end
+    object RenameAction: TAction
+      Caption = 'Rename...'
+      OnExecute = RenameActionExecute
+      OnUpdate = ActionUpdate
+    end
   end
 end

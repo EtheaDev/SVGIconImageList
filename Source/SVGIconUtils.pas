@@ -43,7 +43,8 @@ uses
   , Graphics
   , ComCtrls;
 
-function UpdateSVGIconListView(const AListView: TListView): Integer;
+function UpdateSVGIconListView(const AListView: TListView;
+  const AIncludeIndex: Boolean = True): Integer;
 function UpdateSVGIconListViewCaptions(const AListView: TListView;
   const AShowCaption: Boolean = True): Integer;
 procedure ChangeSVGColor(var ASVGText: string;
@@ -60,15 +61,21 @@ uses
   {$ENDIF}
   ;
 
-function UpdateSVGIconListView(const AListView: TListView): Integer;
+function UpdateSVGIconListView(const AListView: TListView;
+  const AIncludeIndex: Boolean = True): Integer;
 var
   I: Integer;
   LItem: TSVGIconItem;
-  {$IFDEF D10_3}
-  LVirtualItem: TVirtualImageListItem;
-  {$ENDIF}
   LListItem: TListItem;
   LImageList: TCustomImageList;
+
+  function GetItemCaption: string;
+  begin
+    if AIncludeIndex then
+      Result := Format('%d.%s', [LItem.Index, LItem.IconName])
+    else
+      Result := Format('%s', [LItem.IconName]);
+  end;
 begin
   LImageList := AListView.LargeImages as TCustomImageList;
   AListView.Items.BeginUpdate;
@@ -81,20 +88,9 @@ begin
       begin
         LItem := TSVGIconImageList(LImageList).SVGIconItems[I];
         LListItem := AListView.Items.Add;
-        LListItem.Caption := Format('%d.%s',
-          [LItem.Index, LItem.IconName]);
+        LListItem.Caption := GetItemCaption;
         LListItem.ImageIndex := I;
       end;
-  {$IFDEF D10_3}
-      if (LImageList is TVirtualImageList) then
-      begin
-        LVirtualItem := TVirtualImageList(LImageList).Images[I];
-        LListItem := AListView.Items.Add;
-        LListItem.Caption := Format('%d.%s',
-          [LVirtualItem.Index, LVirtualItem.Name]);
-        LListItem.ImageIndex := I;
-      end;
-  {$ENDIF}
     end;
   finally
     AListView.Items.EndUpdate;

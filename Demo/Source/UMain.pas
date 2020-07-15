@@ -53,9 +53,9 @@ type
     ToolButton5: TToolButton;
     ToolButton6: TToolButton;
     ToolButton7: TToolButton;
-    Panel2: TPanel;
-    DeleteButton: TBitBtn;
-    ChangeIconButton: TBitBtn;
+    paButtons: TPanel;
+    DeleteButton: TButton;
+    ChangeIconButton: TButton;
     ClientPanel: TPanel;
     TreeView: TTreeView;
     ImageView: TListView;
@@ -74,7 +74,7 @@ type
     SVGIconImageList: TSVGIconImageList;
     OpenDialog: TOpenPictureDialog;
     SVGIconImage: TSVGIconImage;
-    Splitter1: TSplitter;
+    Splitter: TSplitter;
     ColorGroupBox: TGroupBox;
     FixedColorComboBox: TComboBox;
     GrayScaleCheckBox: TCheckBox;
@@ -91,7 +91,7 @@ type
     procedure BuildFromFilesButtonClick(Sender: TObject);
     procedure SVGIconImageMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure Panel2Resize(Sender: TObject);
+    procedure paButtonsResize(Sender: TObject);
     procedure GrayScaleCheckBoxClick(Sender: TObject);
     procedure FixedColorComboBoxSelect(Sender: TObject);
   private
@@ -287,7 +287,7 @@ begin
   SVGIconImage.ImageIndex := Item.Index;
 end;
 
-procedure TMainForm.Panel2Resize(Sender: TObject);
+procedure TMainForm.paButtonsResize(Sender: TObject);
 begin
   SVGIconImage.Height := SVGIconImage.width;
 end;
@@ -321,6 +321,7 @@ begin
     TopToolBar.ButtonWidth := LSize + 2;
     TopToolBar.Height := LSize + 6;
     TreeView.Indent := LSize;
+    Splitter.MinSize := DeleteButton.Width + 8;
 
     UpdateButtons;
     UpdateListView;

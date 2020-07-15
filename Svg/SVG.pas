@@ -1655,6 +1655,8 @@ var
 begin
   Result := nil;
   Color := FillColor;
+  if Color = INHERIT then
+    Color := 0;
   Opacity := Round(255 * FillOpacity);
 
   if FFillURI <> '' then
@@ -1678,7 +1680,7 @@ begin
   if Assigned(SVG) then
     Result := TSVGBasic(SVG).FFillColor
   else
-    Result := 0;
+    Result := INHERIT;
 end;
 
 function TSVGBasic.GetStrokeBrush: TGPBrush;
@@ -2379,10 +2381,10 @@ begin
     FHeight := FRootBounds.Height;
 
   if (FWidth > 0) and (FRootBounds.Width <> -1) then
-    FDX := FRootBounds.Width / (FWidth+2); //Fix: better rendering near right border
+    FDX := FRootBounds.Width / (FWidth); //Fix: better rendering near right border
 
   if (FHeight > 0) and (FRootBounds.Height <> -1) then
-    FDY := FRootBounds.Height / (FHeight+2); //Fix: better rendering near bottom border
+    FDY := FRootBounds.Height / (FHeight); //Fix: better rendering near bottom border
 
   CalculateMatrices(FViewBox.Top, FViewBox.Left, FDX, FDY);
 end;
