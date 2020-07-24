@@ -35,7 +35,7 @@ interface
 uses
   Winapi.Windows, Winapi.GDIPOBJ, Winapi.GDIPAPI,
   System.Classes, System.Math,
-  {$IF CompilerVersion > 28}System.NetEncoding,{$ELSE}IdCoderMIME,{$IFEND}
+  {$IF CompilerVersion > 27}System.NetEncoding,{$ELSE}IdCoderMIME,{$IFEND}
   System.Math.Vectors, System.Types,
   Xml.XmlIntf,
   GDIPOBJ2, GDIPKerning, GDIPPathText,
@@ -3531,7 +3531,7 @@ var
   S: string;
   SA: TStreamAdapter;
 
-  {$IF CompilerVersion < 29}
+  {$IF CompilerVersion < 28}
   Decoder64: TIdDecoderMIME;
   {$IFEND}
 
@@ -3566,7 +3566,7 @@ begin
     SS := TStringStream.Create(S);
     try
       FStream := TMemoryStream.Create;
-      {$IF CompilerVersion > 28}
+      {$IF CompilerVersion > 27}
       TNetEncoding.Base64.Decode(SS, FStream);
       {$ELSE}
         Decoder64 := TIdDecoderMIME.Create(nil);
