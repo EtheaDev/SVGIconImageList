@@ -18,19 +18,15 @@ type
     FCollection : TSVGIconImageCollection;
     FStopDrawing: Integer;
     FOpacity: Byte;
-    {$IFDEF HiDPISupport}
-    FScaled: Boolean;
-    FDPIChangedMessageID: Integer;
-    {$ENDIF}
-    FStoreAsText: boolean;
     FFixedColor: TSVGColor;
     FGrayScale: Boolean;
     FDisabledGrayScale: Boolean;
     FDisabledOpacity: Byte;
 
-  {$IFDEF HiDPISupport}
+    {$IFDEF HiDPISupport}
+    FScaled: Boolean;
     FDPIChangedMessageID: Integer;
-  {$ENDIF}
+    {$ENDIF}
     FStopDrawingMessageID : Integer;
     FRecreateBitmapsMessageID : integer;
 
@@ -52,6 +48,12 @@ type
     function StoreHeight: Boolean;
     function StoreSize: Boolean;
 
+    procedure ReadLeft(Reader: TReader);
+    procedure ReadTop(Reader: TReader);
+    procedure WriteLeft(Writer: TWriter);
+    procedure WriteTop(Writer: TWriter);
+
+
 
   {$IFDEF HiDPISupport}
     procedure DPIChangedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
@@ -63,6 +65,8 @@ type
     procedure RecreateBitmaps;
     procedure Change; override;
     procedure Loaded; override;
+    procedure DefineProperties(Filer: TFiler); override;
+
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -75,7 +79,6 @@ type
     property Width: Integer read GetWidth write SetWidth stored StoreWidth default DEFAULT_SIZE;
     property Height: Integer read GetHeight write SetHeight stored StoreHeight default DEFAULT_SIZE;
     property Size: Integer read GetSize write SetSize stored StoreSize default DEFAULT_SIZE;
-    property StoreAsText: boolean read FStoreAsText write FStoreAsText default False;
     property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
     property DisabledGrayScale: Boolean read FDisabledGrayScale write SetDisabledGrayScale default True;
@@ -94,6 +97,7 @@ implementation
 
 uses
   System.Math,
+  System.SysUtils,
   Vcl.Forms,
   Vcl.ImgList;
 
@@ -150,6 +154,20 @@ begin
 
 end;
 
+procedure TSVGIconVirtualImageList.DefineProperties(Filer: TFiler);
+var
+  Ancestor: TComponent;
+  Info: Longint;
+begin
+  Info := 0;
+  Ancestor := TComponent(Filer.Ancestor);
+  if Ancestor <> nil then
+    Info := Ancestor.DesignInfo;
+  Filer.DefineProperty('Left', ReadLeft, WriteLeft, LongRec(DesignInfo).Lo <> LongRec(Info).Lo);
+  Filer.DefineProperty('Top', ReadTop, WriteTop, LongRec(DesignInfo).Hi <> LongRec(Info).Hi);
+
+end;
+
 destructor TSVGIconVirtualImageList.Destroy;
 begin
   FCollection := nil;
@@ -180,6 +198,24 @@ procedure TSVGIconVirtualImageList.Loaded;
 begin
   inherited;
   RecreateBitmaps;
+end;
+
+procedure TSVGIconVirtualImageList.ReadLeft(Reader: TReader);
+var
+  FDesignInfo: LongInt;
+begin
+  FDesignInfo := DesignInfo;
+  LongRec(FDesignInfo).Lo := Reader.ReadInteger;
+  DesignInfo := FDesignInfo;
+end;
+
+procedure TSVGIconVirtualImageList.ReadTop(Reader: TReader);
+var
+  FDesignInfo: LongInt;
+begin
+  FDesignInfo := DesignInfo;
+  LongRec(FDesignInfo).Hi := Reader.ReadInteger;
+  DesignInfo := FDesignInfo;
 end;
 
 procedure TSVGIconVirtualImageList.RecreateBitmaps;
@@ -332,6 +368,16 @@ end;
 function TSVGIconVirtualImageList.StoreWidth: Boolean;
 begin
   Result := (Width <> Height) and (Width <> DEFAULT_SIZE);
+end;
+
+procedure TSVGIconVirtualImageList.WriteLeft(Writer: TWriter);
+begin
+
+end;
+
+procedure TSVGIconVirtualImageList.WriteTop(Writer: TWriter);
+begin
+
 end;
 
 end.
