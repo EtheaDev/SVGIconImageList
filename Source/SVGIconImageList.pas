@@ -120,8 +120,7 @@ type
     {$IFEND}
     procedure DefineProperties(Filer: TFiler); override;
     procedure AssignTo(Dest: TPersistent); override;
-    procedure DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer;
-      Style: Cardinal; Enabled: Boolean = True); override;
+    procedure DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer; Style: Cardinal; Enabled: Boolean = True); override;
     procedure Loaded; override;
   public
     procedure Assign(Source: TPersistent); override;
