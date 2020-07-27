@@ -71,6 +71,8 @@ uses
   , Windows
   , SVGIconImage
   , SVGIconImageList
+  , SVGIconImageVirtualList
+  , SVGIconImageCollection
   , SVGIconImageListEditorUnit
   , SVGTextPropertyEditorUnit;
 
@@ -169,10 +171,11 @@ procedure Register;
 begin
   RegisterComponents('Ethea',
     [TSVGIconImage,
-     TSVGIconImageList]);
+     TSVGIconImageList, TSVGIconVirtualImageList, TSVGIconImageCollection]);
 
   RegisterComponentEditor(TSVGIconImageList, TSVGIconImageListCompEditor);
   RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageList, 'SVGIconItems', TSVGIconImageListProperty);
+  RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageCollection, 'SVGIconItems', TSVGIconImageListProperty);
   RegisterPropertyEditor(TypeInfo(string), TSVGIconItem, 'SVGText', TSVGTextProperty);
   RegisterPropertyEditor(TypeInfo(string), TSVGIconImage, 'SVGText', TSVGTextProperty);
 end;
