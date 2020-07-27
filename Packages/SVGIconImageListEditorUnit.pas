@@ -52,6 +52,8 @@ uses
   , Spin
   , SVGIconImage
   , SVGIconImageList
+  , SVGIconImageListBase
+  , SVGIconImageCollection
   ;
 
 resourcestring
@@ -155,6 +157,7 @@ type
   end;
 
 function EditSVGIconImageList(const AImageList: TSVGIconImageList): Boolean;
+function EditSVGIconImageCollection(const AImageCollection: TSVGIconImageCollection): Boolean;
 
 implementation
 
@@ -208,6 +211,46 @@ begin
     end;
   end;
 end;
+
+function EditSVGIconImageCollection(const AImageCollection: TSVGIconImageCollection): Boolean;
+var
+  LEditor: TSVGIconImageListEditor;
+begin
+  LEditor := TSVGIconImageListEditor.Create(nil);
+  with LEditor do
+  begin
+    try
+      Screen.Cursor := crHourglass;
+      try
+        FSourceList := TSVGIconImageList.Create(LEditor);
+        FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
+        FEditingList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
+        OpacitySpinEdit.Value := FSourceList.Opacity;
+        StoreAsTextCheckBox.Checked := AImageCollection.StoreAsText;
+        UpdateGUI;
+      finally
+        Screen.Cursor := crDefault;
+      end;
+      Result := ShowModal = mrOk;
+      if Result then
+      begin
+        Screen.Cursor := crHourglass;
+        try
+          AImageCollection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
+          AImageCollection.StoreAsText := StoreAsTextCheckBox.Checked;
+        finally
+          Screen.Cursor := crDefault;
+        end;
+      end;
+      SavedBounds := BoundsRect;
+      paTopHeight := paTop.Height;
+    finally
+      Free;
+    end;
+  end;
+
+end;
+
 
 { TSVGIconImageListEditor }
 

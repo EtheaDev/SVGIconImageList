@@ -23,16 +23,16 @@ resourcestring
 type
   TSVGIconImageListBase = class(TDragImageList)
   private
-    FOpacity: Byte;
     {$IFDEF HiDPISupport}
     FScaled: Boolean;
     FDPIChangedMessageID: Integer;
     {$ENDIF}
+  protected
+    FOpacity: Byte;
     FFixedColor: TSVGColor;
     FGrayScale: Boolean;
     FDisabledGrayScale: Boolean;
     FDisabledOpacity: Byte;
-  protected
     FStopDrawing: Integer;
     function GetHeight: Integer;
     function GetWidth: Integer;
@@ -81,8 +81,6 @@ type
     {$IFDEF D10_4+}
     function IsImageNameAvailable: Boolean; override;
     function IsScaled: Boolean; override;
-//    function GetIndexByName(const AName: TImageName): TImageIndex; override;
-//    function GetNameByIndex(AIndex: TImageIndex): TImageName; override;
     {$ENDIF}
 
 
@@ -90,8 +88,7 @@ type
     procedure DoAssign(const Source: TPersistent); virtual;
 
   public
-    procedure Assign(Source: TPersistent); override;
-
+    constructor Create(AOwner : TComponent);override;
 
     property Count: Integer read GetCount;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
@@ -118,35 +115,15 @@ uses
   System.SysUtils,
   Winapi.GDIPAPI,
   Winapi.GDIPOBJ,
-  ComCtrls,
+  Vcl.ComCtrls,
+  Vcl.ImgList,
   GDIPUtils,
-  SVGTypes;
+  SVGTypes,
+  SVGIconItems;
 
 { TSVGIconImageListBase }
 
 
-procedure TSVGIconImageListBase.Assign(Source: TPersistent);
-begin
-  inherited;
-  if Source is TSVGIconImageListBase then
-  begin
-    StopDrawing(True);
-    try
-      Width := TSVGIconImageListBase(Source).Width;
-      Height := TSVGIconImageListBase(Source).Height;
-      FOpacity := TSVGIconImageListBase(Source).FOpacity;
-      FFixedColor := TSVGIconImageListBase(Source).FFixedColor;
-      FGrayScale := TSVGIconImageListBase(Source).FGrayScale;
-      DoAssign(Source);
-      //TODO : move to TSVGIconImageList
-      //FSVGItems.Assign(TSVGIconImageList(Source).FSVGItems);
-      //FStoreAsText := TSVGIconImageList(Source).FStoreAsText;
-    finally
-      StopDrawing(False);
-    end;
-    RecreateBitmaps;
-  end;
-end;
 
 procedure TSVGIconImageListBase.AssignTo(Dest: TPersistent);
 begin
@@ -157,7 +134,6 @@ begin
     TSVGIconImageListBase(Dest).FOpacity := FOpacity;
     TSVGIconImageListBase(Dest).Width := Width;
     TSVGIconImageListBase(Dest).Height := Height;
-//    FSVGItems.AssignTo(TSVGIconImageList(Dest).FSVGItems);
   end;
 
 end;
@@ -173,6 +149,24 @@ end;
 procedure TSVGIconImageListBase.ClearIcons;
 begin
   //do nothing
+end;
+
+constructor TSVGIconImageListBase.Create(AOwner: TComponent);
+begin
+  inherited;
+  ColorDepth := cd32Bit;
+  Width := DEFAULT_SIZE;
+  Height := DEFAULT_SIZE;
+  FOpacity := 255;
+  FFixedColor := inherit_color;
+  FGrayScale := False;
+  {$IFDEF HiDPISupport}
+  FScaled := True;
+  FDPIChangedMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TChangeScaleMessage, DPIChangedMessageHandler);
+  {$ENDIF}
+  FDisabledGrayScale := True;
+  FDisabledOpacity := 125;
+
 end;
 
 procedure TSVGIconImageListBase.DefineProperties(Filer: TFiler);

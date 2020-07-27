@@ -8,6 +8,7 @@ uses
   System.Classes,
   System.Messaging,
   Vcl.Controls,
+  Vcl.Graphics,
   SVG,
   SVGColor,
   SVGIconImageListBase,
@@ -33,6 +34,9 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
+      const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True); override;
+
   published
     //Publishing properties of Custom Class
     property OnChange;
@@ -60,8 +64,10 @@ uses
   System.SysUtils,
   WinApi.Windows,
   Winapi.CommCtrl,
+  Winapi.GDIPAPI,
   Vcl.Forms,
-  Vcl.ImgList;
+  Vcl.ImgList,
+  GDIPUtils;
 
 { TSVGIconVirtualImageList }
 
@@ -93,6 +99,44 @@ begin
 
 end;
 
+
+procedure TSVGIconVirtualImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Double; AEnabled: Boolean);
+var
+  R: TGPRectF;
+  SVG: TSVG;
+  LItem: TSVGIconItem;
+  LOpacity: Byte;
+begin
+  if (FCollection <> nil) and (AIndex >= 0) and (AIndex < FCollection.SVGIconItems.Count) then
+  begin
+    LItem := FCollection.SVGIconItems[AIndex];
+    SVG := LItem.SVG;
+    if LItem.FixedColor <> inherit_color then
+      SVG.FixedColor := LItem.FixedColor
+    else
+      SVG.FixedColor := FFixedColor;
+    LOpacity := FOpacity;
+    if AEnabled then
+    begin
+      if LItem.GrayScale or FGrayScale then
+        SVG.Grayscale := True
+      else
+        SVG.Grayscale := False;
+    end
+    else
+    begin
+      if FDisabledGrayScale then
+        SVG.Grayscale := True
+      else
+        LOpacity := FDisabledOpacity;
+    end;
+    SVG.SVGOpacity := LOpacity / 255;
+    R := CalcRect( MakeRect(X, Y, AWidth, AHeight), SVG.Width, SVG.Height, baCenterCenter);
+    SVG.PaintTo(ACanvas.Handle, R, nil, 0);
+    SVG.SVGOpacity := 1;
+  end;
+
+end;
 
 procedure TSVGIconVirtualImageList.RecreateBitmaps;
 var

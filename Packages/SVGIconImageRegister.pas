@@ -47,12 +47,29 @@ type
     procedure Edit; override;
   end;
 
+  TSVGIconImageCollectionCompEditor = class(TComponentEditor)
+  public
+    function GetVerbCount: Integer; override;
+    function GetVerb(Index: Integer): string; override;
+    procedure ExecuteVerb(Index: Integer); override;
+    procedure Edit; override;
+  end;
+
+
   TSVGIconImageListProperty = class(TClassProperty)
   public
     procedure Edit; override;
     function GetAttributes: TPropertyAttributes; override;
     function GetValue: string; override;
   end;
+
+  TSVGIconCollectionListProperty = class(TClassProperty)
+  public
+    procedure Edit; override;
+    function GetAttributes: TPropertyAttributes; override;
+    function GetValue: string; override;
+  end;
+
 
   TSVGTextProperty = class(TClassProperty)
   public
@@ -70,6 +87,7 @@ uses
   , ShellApi
   , Windows
   , SVGIconImage
+  , SVGIconImageListBase
   , SVGIconImageList
   , SVGIconImageVirtualList
   , SVGIconImageCollection
@@ -132,6 +150,30 @@ begin
   Result := 'SVGImages';
 end;
 
+
+{ TSVGIconCollectionListProperty }
+
+procedure TSVGIconCollectionListProperty.Edit;
+var
+  SVGImageCollection: TSVGIconImageCollection;
+begin
+  SVGImageCollection := TSVGIconImageCollection(GetComponent(0));
+  if EditSVGIconImageCollection(SVGImageCollection) then
+    Modified;
+end;
+
+function TSVGIconCollectionListProperty.GetAttributes: TPropertyAttributes;
+begin
+  Result := inherited GetAttributes + [paDialog];
+end;
+
+function TSVGIconCollectionListProperty.GetValue: string;
+begin
+  Result := 'SVGImageCollection';
+end;
+
+
+
 { TSVGTextProperty }
 
 procedure TSVGTextProperty.Edit;
@@ -174,10 +216,50 @@ begin
      TSVGIconImageList, TSVGIconVirtualImageList, TSVGIconImageCollection]);
 
   RegisterComponentEditor(TSVGIconImageList, TSVGIconImageListCompEditor);
+  RegisterComponentEditor(TSVGIconImageCollection, TSVGIconImageCollectionCompEditor);
   RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageList, 'SVGIconItems', TSVGIconImageListProperty);
-  RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageCollection, 'SVGIconItems', TSVGIconImageListProperty);
+  RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageCollection, 'SVGIconItems', TSVGIconCollectionListProperty);
   RegisterPropertyEditor(TypeInfo(string), TSVGIconItem, 'SVGText', TSVGTextProperty);
   RegisterPropertyEditor(TypeInfo(string), TSVGIconImage, 'SVGText', TSVGTextProperty);
+end;
+
+{ TSVGIconImageCollectionCompEditor }
+
+procedure TSVGIconImageCollectionCompEditor.Edit;
+begin
+  inherited;
+
+end;
+
+procedure TSVGIconImageCollectionCompEditor.ExecuteVerb(Index: Integer);
+begin
+  inherited;
+  if Index = 0 then
+  begin
+    if EditSVGIconImageCollection(Component as TSVGIconImageCollection) then
+      Designer.Modified;
+  end
+  else if Index = 1 then
+  begin
+    ShellExecute(0, 'open',
+      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Home'), nil, nil,
+      SW_SHOWNORMAL)
+  end;
+
+end;
+
+function TSVGIconImageCollectionCompEditor.GetVerb(Index: Integer): string;
+begin
+  Result := '';
+  case Index of
+    0: Result := 'SVG I&con ImageCollection Editor...';
+    1: Result := Format('Ver. %s - (c) Ethea S.r.l. - show help...',[SVGIconImageListVersion]);
+  end;
+end;
+
+function TSVGIconImageCollectionCompEditor.GetVerbCount: Integer;
+begin
+  Result := 2;
 end;
 
 end.

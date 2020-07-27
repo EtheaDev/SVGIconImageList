@@ -116,6 +116,7 @@ constructor TSVGIconImageCollection.Create(AOwner: TComponent);
 begin
   inherited;
   FSVGItems := TSVGIconItems.Create(Self);
+  FStoreAsText := false;
 end;
 
 procedure TSVGIconImageCollection.DefineProperties(Filer: TFiler);
@@ -334,6 +335,7 @@ end;
 
 constructor TSVGStopDrawingMessage.Create(const collection : TSVGIconImageCollection; const state: boolean);
 begin
+  inherited Create;
   FCollection := collection;
   FState := state;
 end;
@@ -342,6 +344,7 @@ end;
 
 constructor TSVGRecreateBitmapsMessage.Create(const collection: TSVGIconImageCollection);
 begin
+  inherited Create;
   FCollection := collection;
 end;
 

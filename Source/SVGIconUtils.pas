@@ -146,8 +146,7 @@ begin
   end;
 end;
 
-procedure ChangeSVGColor(var ASVGText: string;
-  const AColor: TColor; ANewColor: TColor);
+procedure ChangeSVGColor(var ASVGText: string;  const AColor: TColor; ANewColor: TColor);
 begin
   //
 end;
