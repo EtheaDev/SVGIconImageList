@@ -23,7 +23,6 @@ resourcestring
 type
   TSVGIconImageListBase = class(TDragImageList)
   private
-    FStopDrawing: Integer;
     FOpacity: Byte;
     {$IFDEF HiDPISupport}
     FScaled: Boolean;
@@ -34,6 +33,7 @@ type
     FDisabledGrayScale: Boolean;
     FDisabledOpacity: Byte;
   protected
+    FStopDrawing: Integer;
     function GetHeight: Integer;
     function GetWidth: Integer;
     procedure SetHeight(const Value: Integer);
@@ -41,6 +41,11 @@ type
     procedure SetOpacity(const Value: Byte);
     function GetSize: Integer;
 
+    function GetImages(Index: Integer): TSVG; virtual; abstract;
+    function GetNames(Index: Integer): string; virtual; abstract;
+
+    procedure SetImages(Index: Integer; const Value: TSVG); virtual; abstract;
+    procedure SetNames(Index: Integer; const Value: string); virtual; abstract;
     procedure SetSize(const Value: Integer);
     procedure SetFixedColor(const Value: TSVGColor);
     procedure SetGrayScale(const Value: Boolean);
@@ -101,6 +106,9 @@ type
     {$IFDEF HiDPISupport}
     property Scaled: Boolean read FScaled write FScaled default True;
     {$ENDIF}
+    property Images[Index: Integer]: TSVG read GetImages write SetImages;
+    property Names[Index: Integer]: string read GetNames write SetNames;
+
   end;
 
 implementation
@@ -232,7 +240,6 @@ procedure TSVGIconImageListBase.Loaded;
 begin
   inherited;
   RecreateBitmaps;
-
 end;
 
 procedure TSVGIconImageListBase.PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Double; AEnabled: Boolean);

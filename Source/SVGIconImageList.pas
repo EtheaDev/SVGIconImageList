@@ -795,6 +795,7 @@ end;
 
 procedure TSVGIconImageList.SetSVGIconItems(const Value: TSVGIconItems);
 begin
+  //Shouldn't this use assign?
   FSVGItems := Value;
 end;
 

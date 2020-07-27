@@ -48,7 +48,7 @@ type
   {TSVGIconItems}
   TSVGIconItems = class(TOwnedCollection)
   strict private
-    FOwner: TPersistent;
+    FOwner: TComponent;
     function GetItem(Index: Integer): TSVGIconItem;
     procedure SetItem(Index: Integer; const Value: TSVGIconItem);
   private
@@ -59,7 +59,7 @@ type
     procedure StopDrawing(const value : boolean);
     procedure RecreateBitmaps;
   public
-    constructor Create(AOwner: TPersistent);
+    constructor Create(AOwner: TComponent);
     procedure AssignTo(Dest: TPersistent); override;
     function Add: TSVGIconItem;
     procedure Assign(Source: TPersistent); override;
@@ -219,7 +219,7 @@ begin
 
 end;
 
-constructor TSVGIconItems.Create(AOwner: TPersistent);
+constructor TSVGIconItems.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner, TSVGIconItem);
   FOwner := AOwner;
@@ -265,14 +265,14 @@ end;
 
 procedure TSVGIconItems.RecreateBitmaps;
 begin
-  if FOwner <> nil then  //TODO : should FOWner be TComponent? Why does it need to be TPersistant;
-     (TComponent(FOwner) as ISVGNotifyOwner).RecreateBitmaps;
+  if FOwner <> nil then
+     (FOwner as ISVGNotifyOwner).RecreateBitmaps;
 end;
 
 procedure TSVGIconItems.StopDrawing(const value : boolean);
 begin
   if FOwner <> nil then
-     (TComponent(FOwner) as ISVGNotifyOwner).StopDrawing(value);
+     (FOwner as ISVGNotifyOwner).StopDrawing(value);
 end;
 
 procedure TSVGIconItems.SetItem(Index: Integer;

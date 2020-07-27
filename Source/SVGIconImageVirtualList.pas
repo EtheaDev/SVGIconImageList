@@ -8,6 +8,7 @@ uses
   System.Classes,
   System.Messaging,
   Vcl.Controls,
+  SVG,
   SVGColor,
   SVGIconImageListBase,
   SVGIconImageCollection;
@@ -28,10 +29,7 @@ type
     procedure StopDrawingMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
 
     procedure RecreateBitmaps;override;
-    procedure DefineProperties(Filer: TFiler); override;
-
     procedure DoAssign(const source : TPersistent);override;
-
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -47,7 +45,6 @@ type
     property GrayScale;
     property DisabledGrayScale;
     property DisabledOpacity;
-
     property Collection : TSVGIconImageCollection read FCollection write SetCollection;
 
     {$IFDEF HiDPISupport}
@@ -61,6 +58,8 @@ implementation
 uses
   System.Math,
   System.SysUtils,
+  WinApi.Windows,
+  Winapi.CommCtrl,
   Vcl.Forms,
   Vcl.ImgList;
 
@@ -72,20 +71,6 @@ begin
   inherited;
   FStopDrawingMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TSVGStopDrawingMessage, StopDrawingMessageHandler) ;
   FRecreateBitmapsMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TSVGRecreateBitmapsMessage, RecreateBitmapsMessageHandler);
-
-end;
-
-procedure TSVGIconVirtualImageList.DefineProperties(Filer: TFiler);
-var
-  Ancestor: TComponent;
-  Info: Longint;
-begin
-  Info := 0;
-  Ancestor := TComponent(Filer.Ancestor);
-  if Ancestor <> nil then
-    Info := Ancestor.DesignInfo;
-  Filer.DefineProperty('Left', ReadLeft, WriteLeft, LongRec(DesignInfo).Lo <> LongRec(Info).Lo);
-  Filer.DefineProperty('Top', ReadTop, WriteTop, LongRec(DesignInfo).Hi <> LongRec(Info).Hi);
 
 end;
 
@@ -110,8 +95,49 @@ end;
 
 
 procedure TSVGIconVirtualImageList.RecreateBitmaps;
+var
+  C: Integer;
+  SVG: TSVG;
+  Icon: HIcon;
+  LItem: TSVGIconItem;
 begin
+  if not Assigned(FCollection) or
+    (FStopDrawing <> 0) or
+    (csDestroying in ComponentState) or
+    (csLoading in ComponentState) then
+    Exit;
+  StopDrawing(True);
+  try
+    ImageList_Remove(Handle, -1);
+    if (Width > 0) and (Height > 0) then
+    begin
+      Handle := ImageList_Create(Width, Height,
+        ILC_COLOR32 or (Integer(Masked) * ILC_MASK), 0, AllocBy);
 
+      for C := 0 to FCollection.SVGIconItems.Count - 1 do
+      begin
+        LItem := FCollection.SVGIconItems[C];
+        SVG := LItem.SVG;
+        if Assigned(SVG) then
+        begin
+          if LItem.FixedColor <> inherit_color then
+            SVG.FixedColor := LItem.FixedColor
+          else
+            SVG.FixedColor := FixedColor;
+          if LItem.GrayScale or GrayScale then
+            SVG.Grayscale := True
+          else
+            SVG.Grayscale := False;
+          Icon := SVGToIcon(SVG);
+          ImageList_AddIcon(Handle, Icon);
+          DestroyIcon(Icon);
+        end;
+      end;
+    end;
+  finally
+    StopDrawing(False);
+  end;
+  Change;
 end;
 
 procedure TSVGIconVirtualImageList.RecreateBitmapsMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
