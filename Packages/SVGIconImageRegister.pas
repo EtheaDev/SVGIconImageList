@@ -47,6 +47,15 @@ type
     procedure Edit; override;
   end;
 
+  TSVGIconVirtualImageListCompEditor = class(TComponentEditor)
+  public
+    function GetVerbCount: Integer; override;
+    function GetVerb(Index: Integer): string; override;
+    procedure ExecuteVerb(Index: Integer); override;
+    procedure Edit; override;
+  end;
+
+
   TSVGIconImageCollectionCompEditor = class(TComponentEditor)
   public
     function GetVerbCount: Integer; override;
@@ -89,7 +98,7 @@ uses
   , SVGIconImage
   , SVGIconImageListBase
   , SVGIconImageList
-  , SVGIconImageVirtualList
+  , SVGIconVirtualImageList
   , SVGIconImageCollection
   , SVGIconImageListEditorUnit
   , SVGTextPropertyEditorUnit;
@@ -216,6 +225,7 @@ begin
      TSVGIconImageList, TSVGIconVirtualImageList, TSVGIconImageCollection]);
 
   RegisterComponentEditor(TSVGIconImageList, TSVGIconImageListCompEditor);
+  RegisterComponentEditor(TSVGIconVirtualImageList, TSVGIconVirtualImageListCompEditor);
   RegisterComponentEditor(TSVGIconImageCollection, TSVGIconImageCollectionCompEditor);
   RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageList, 'SVGIconItems', TSVGIconImageListProperty);
   RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageCollection, 'SVGIconItems', TSVGIconCollectionListProperty);
@@ -260,6 +270,44 @@ end;
 function TSVGIconImageCollectionCompEditor.GetVerbCount: Integer;
 begin
   Result := 2;
+end;
+
+{ TSVGIconVirtualImageListCompEditor }
+
+procedure TSVGIconVirtualImageListCompEditor.Edit;
+begin
+  inherited;
+
+end;
+
+procedure TSVGIconVirtualImageListCompEditor.ExecuteVerb(Index: Integer);
+begin
+  inherited;
+  if Index = 0 then
+  begin
+    if EditSVGIconVirtualImageList(Component as TSVGIconVirtualImageList) then
+      Designer.Modified;
+  end
+  else if Index = 1 then
+  begin
+    ShellExecute(0, 'open',
+      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Home'), nil, nil,
+      SW_SHOWNORMAL)
+  end;
+end;
+
+function TSVGIconVirtualImageListCompEditor.GetVerb(Index: Integer): string;
+begin
+  Result := '';
+  case Index of
+    0: Result := 'SVG I&con VirtualImageList Editor...';
+    1: Result := Format('Ver. %s - (c) Ethea S.r.l. - show help...',[SVGIconImageListVersion]);
+  end;
+end;
+
+function TSVGIconVirtualImageListCompEditor.GetVerbCount: Integer;
+begin
+  result := 2;
 end;
 
 end.

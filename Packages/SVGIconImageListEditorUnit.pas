@@ -51,9 +51,10 @@ uses
   , ExtDlgs
   , Spin
   , SVGIconImage
-  , SVGIconImageList
   , SVGIconImageListBase
+  , SVGIconImageList
   , SVGIconImageCollection
+  , SVGIconVirtualImageList
   ;
 
 resourcestring
@@ -157,6 +158,9 @@ type
   end;
 
 function EditSVGIconImageList(const AImageList: TSVGIconImageList): Boolean;
+
+function EditSVGIconVirtualImageList(const AImageList: TSVGIconVirtualImageList): Boolean;
+
 function EditSVGIconImageCollection(const AImageCollection: TSVGIconImageCollection): Boolean;
 
 implementation
@@ -210,6 +214,52 @@ begin
       Free;
     end;
   end;
+end;
+
+function EditSVGIconVirtualImageList(const AImageList: TSVGIconVirtualImageList): Boolean;
+var
+  LEditor: TSVGIconImageListEditor;
+begin
+  if AImageList.Collection = nil then
+    exit(false);
+  LEditor := TSVGIconImageListEditor.Create(nil);
+  with LEditor do
+  begin
+    try
+      Screen.Cursor := crHourglass;
+      try
+        FSourceList := TSVGIconImageList.Create(LEditor);
+        FSourceList.Assign(AImageList);
+        FEditingList.Assign(AImageList);
+        OpacitySpinEdit.Value := FSourceList.Opacity;
+        StoreAsTextCheckBox.Checked := AImageList.Collection.StoreAsText;
+        OpacitySpinEdit.Value := AImageList.Opacity;
+        StoreAsTextCheckBox.Checked := FSourceList.StoreAsText;
+        UpdateGUI;
+      finally
+        Screen.Cursor := crDefault;
+      end;
+      Result := ShowModal = mrOk;
+      if Result then
+      begin
+        Screen.Cursor := crHourglass;
+        try
+          AImageList.Collection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
+          AImageList.Collection.StoreAsText := StoreAsTextCheckBox.Checked;
+          AImageList.Assign(LEditor.FEditingList);
+        finally
+          Screen.Cursor := crDefault;
+        end;
+      end;
+      SavedBounds := BoundsRect;
+      paTopHeight := paTop.Height;
+    finally
+      Free;
+    end;
+  end;
+
+
+
 end;
 
 function EditSVGIconImageCollection(const AImageCollection: TSVGIconImageCollection): Boolean;

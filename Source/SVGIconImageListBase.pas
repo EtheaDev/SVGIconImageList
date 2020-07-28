@@ -89,7 +89,7 @@ type
 
   public
     constructor Create(AOwner : TComponent);override;
-
+    procedure Assign(Source: TPersistent); override;
     property Count: Integer read GetCount;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
     property Width: Integer read GetWidth write SetWidth stored StoreWidth default DEFAULT_SIZE;
@@ -124,6 +124,27 @@ uses
 { TSVGIconImageListBase }
 
 
+
+procedure TSVGIconImageListBase.Assign(Source: TPersistent);
+begin
+  if Source is TSVGIconImageListBase then
+  begin
+    StopDrawing(True);
+    try
+      Width := TSVGIconImageListBase(Source).Width;
+      Height := TSVGIconImageListBase(Source).Height;
+      FOpacity := TSVGIconImageListBase(Source).FOpacity;
+      FFixedColor := TSVGIconImageListBase(Source).FFixedColor;
+      FGrayScale := TSVGIconImageListBase(Source).FGrayScale;
+      DoAssign(Source);
+    finally
+      StopDrawing(False);
+    end;
+
+    RecreateBitmaps;
+  end;
+
+end;
 
 procedure TSVGIconImageListBase.AssignTo(Dest: TPersistent);
 begin

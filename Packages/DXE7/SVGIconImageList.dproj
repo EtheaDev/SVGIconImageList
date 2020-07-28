@@ -101,7 +101,7 @@
         <DCCReference Include="..\..\Source\SVGIconUtils.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageCollection.pas"/>
         <DCCReference Include="..\..\Source\SVGIconItems.pas"/>
-        <DCCReference Include="..\..\Source\SVGIconImageVirtualList.pas"/>
+        <DCCReference Include="..\..\Source\SVGIconVirtualImageList.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageListBase.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

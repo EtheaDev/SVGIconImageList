@@ -79,7 +79,6 @@ type
     procedure AssignTo(Dest: TPersistent); override;
     procedure DoAssign(const Source: TPersistent); override;
   public
-    procedure Assign(Source: TPersistent); override;
     procedure StopDrawing(const AStop: Boolean);
     procedure RecreateBitmaps;override;
     constructor Create(AOwner: TComponent); override;
@@ -135,7 +134,8 @@ uses
   , Math
   , Winapi.GDIPAPI
   , ComCtrls
-  , GDIPUtils;
+  , GDIPUtils
+  , SVGIconVirtualImageList;
 
 
 { TSVGIconImageList }
@@ -158,27 +158,6 @@ begin
   Result := FSVGItems.Count - 1;
 end;
 
-procedure TSVGIconImageList.Assign(Source: TPersistent);
-begin
-  inherited;
-  if Source is TSVGIconImageList then
-  begin
-    StopDrawing(True);
-    try
-      Width := TSVGIconImageList(Source).Width;
-      Height := TSVGIconImageList(Source).Height;
-      FOpacity := TSVGIconImageList(Source).FOpacity;
-      FStoreAsText := TSVGIconImageList(Source).FStoreAsText;
-      FFixedColor := TSVGIconImageList(Source).FFixedColor;
-      FGrayScale := TSVGIconImageList(Source).FGrayScale;
-      FSVGItems.Assign(TSVGIconImageList(Source).FSVGItems);
-    finally
-      StopDrawing(False);
-    end;
-
-    RecreateBitmaps;
-  end;
-end;
 
 procedure TSVGIconImageList.AssignTo(Dest: TPersistent);
 begin
@@ -261,12 +240,23 @@ end;
 {$ENDIF}
 
 procedure TSVGIconImageList.DoAssign(const Source: TPersistent);
+var
+  virtualList : TSVGIconVirtualImageList;
 begin
   inherited;
   if Source is TSVGIconImageList then
   begin
     FSVGItems.Assign(TSVGIconImageList(Source).FSVGItems);
     FStoreAsText := TSVGIconImageList(Source).FStoreAsText;
+  end
+  else if Source is TSVGIconVirtualImageList then
+  begin
+    virtualList := TSVGIconVirtualImageList(Source);
+    if virtualList.Collection <> nil then
+    begin
+      FSVGItems.Assign(virtualList.Collection.SVGIconItems);
+      FStoreAsText := virtualList.Collection.StoreAsText;
+    end;
   end;
 end;
 
