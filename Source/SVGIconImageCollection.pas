@@ -20,22 +20,25 @@ type
   TSVGIconImageCollection = class;
 
 
-  TSVGStopDrawingMessage = class(System.Messaging.TMessage)
-  private
-    FState : boolean;
-    FCollection : TSVGIconImageCollection;
-  public
-    constructor Create(const collection : TSVGIconImageCollection; const state : boolean);
-    property Collection : TSVGIconImageCollection read FCollection;
-    property State : boolean read FState;
-  end;
-
-  TSVGRecreateBitmapsMessage = class(System.Messaging.TMessage)
+  TSVGCollectionMessage = class(System.Messaging.TMessage)
     FCollection : TSVGIconImageCollection;
   public
     constructor Create(const collection : TSVGIconImageCollection);
     property Collection : TSVGIconImageCollection read FCollection;
   end;
+
+  TSVGStopDrawingMessage = class(TSVGCollectionMessage)
+  private
+    FState : boolean;
+  public
+    constructor Create(const collection : TSVGIconImageCollection; const state : boolean);
+    property State : boolean read FState;
+  end;
+
+  TSVGRecreateBitmapsMessage = class(TSVGCollectionMessage);
+
+  TSVGCollectionDestroyedMessage = class(TSVGCollectionMessage);
+
 
   TSVGIconImageCollection = class(TComponent, ISVGNotifyOwner)
   private
@@ -147,6 +150,7 @@ end;
 
 destructor TSVGIconImageCollection.Destroy;
 begin
+  System.Messaging.TMessageManager.DefaultManager.SendMessage(Self,TSVGCollectionDestroyedMessage.Create(Self));
   FSVGItems.Free;
   inherited;
 end;
@@ -359,16 +363,15 @@ end;
 
 constructor TSVGStopDrawingMessage.Create(const collection : TSVGIconImageCollection; const state: boolean);
 begin
-  inherited Create;
-  FCollection := collection;
+  inherited Create(collection);
   FState := state;
 end;
 
-{ TSVGRecreateBitmapsMessage }
 
-constructor TSVGRecreateBitmapsMessage.Create(const collection: TSVGIconImageCollection);
+{ TSVGCollectionMessage }
+
+constructor TSVGCollectionMessage.Create(const collection: TSVGIconImageCollection);
 begin
-  inherited Create;
   FCollection := collection;
 end;
 

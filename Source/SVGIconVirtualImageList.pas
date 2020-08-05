@@ -20,14 +20,13 @@ type
     FCollection : TSVGIconImageCollection;
     FStopDrawingMessageID : Integer;
     FRecreateBitmapsMessageID : integer;
+    FCollectionDestroyedMessageID : integer;
   protected
     procedure SetCollection(const value: TSVGIconImageCollection);
 
-  {$IFDEF HiDPISupport}
-    procedure DPIChangedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
-  {$ENDIF}
     procedure RecreateBitmapsMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
     procedure StopDrawingMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
+    procedure CollectionDestroyedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
 
     procedure RecreateBitmaps;override;
     procedure DoAssign(const source : TPersistent);override;
@@ -72,22 +71,34 @@ uses
 { TSVGIconVirtualImageList }
 
 
+procedure TSVGIconVirtualImageList.CollectionDestroyedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
+begin
+  if FCollection <> nil then
+  begin
+    if TSVGCollectionDestroyedMessage(Msg).Collection = FCollection then
+    begin
+      StopDrawing(True);
+      FCollection := nil;
+      StopDrawing(False);
+    end;
+  end;
+end;
+
 constructor TSVGIconVirtualImageList.Create(AOwner: TComponent);
 begin
   inherited;
   FStopDrawingMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TSVGStopDrawingMessage, StopDrawingMessageHandler) ;
   FRecreateBitmapsMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TSVGRecreateBitmapsMessage, RecreateBitmapsMessageHandler);
+  FCollectionDestroyedMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TSVGCollectionDestroyedMessage, CollectionDestroyedMessageHandler);
 
 end;
 
 destructor TSVGIconVirtualImageList.Destroy;
 begin
   FCollection := nil;
-{$IFDEF HiDPISupport}
-  TMessageManager.DefaultManager.Unsubscribe(TChangeScaleMessage, FDPIChangedMessageID);
-{$ENDIF}
   TMessageManager.DefaultManager.Unsubscribe(TSVGStopDrawingMessage, FStopDrawingMessageID);
   TMessageManager.DefaultManager.Unsubscribe(TSVGRecreateBitmapsMessage, FRecreateBitmapsMessageID);
+  TMessageManager.DefaultManager.Unsubscribe(TSVGCollectionDestroyedMessage, FCollectionDestroyedMessageID);
   inherited;
 end;
 
@@ -198,24 +209,6 @@ begin
     RecreateBitmaps;
 end;
 
-{$IFDEF HiDPISupport}
-procedure TSVGIconVirtualImageList.DPIChangedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
-var
-  W, H: Integer;
-begin
-  if FScaled and (TChangeScaleMessage(Msg).Sender = Owner) then
-  begin
-    W := MulDiv(Width, TChangeScaleMessage(Msg).M, TChangeScaleMessage(Msg).D);
-    H := MulDiv(Height, TChangeScaleMessage(Msg).M, TChangeScaleMessage(Msg).D);
-    FScaling := True;
-    try
-      SetSize(W, H);
-    finally
-      FScaling := False;
-    end;
-  end;
-end;
-{$ENDIF}
 
 procedure TSVGIconVirtualImageList.SetCollection(const value: TSVGIconImageCollection);
 begin

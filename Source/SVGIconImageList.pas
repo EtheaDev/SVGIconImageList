@@ -194,9 +194,6 @@ end;
 
 destructor TSVGIconImageList.Destroy;
 begin
-  {$IFDEF HiDPISupport}
-  TMessageManager.DefaultManager.Unsubscribe(TChangeScaleMessage, FDPIChangedMessageID);
-  {$ENDIF}
   FreeAndNil(FSVGItems);
   inherited;
 end;
@@ -208,35 +205,6 @@ begin
   Filer.DefineBinaryProperty('Images', ReadImageData, WriteImageData, True);
 end;
 
-{$IFDEF HiDPISupport}
-procedure TSVGIconImageList.DPIChangedMessageHandler(const Sender: TObject;
-  const Msg: Messaging.TMessage);
-var
-  LWidthScaled, LHeightScaled: Integer;
-begin
-  if FScaled and (TChangeScaleMessage(Msg).Sender = Owner) then
-  begin
-    LWidthScaled := MulDiv(Width, TChangeScaleMessage(Msg).M, TChangeScaleMessage(Msg).D);
-    LHeightScaled := MulDiv(Height, TChangeScaleMessage(Msg).M, TChangeScaleMessage(Msg).D);
-    FScaling := True;
-    try
-      if (Width <> LWidthScaled) or (Height <> LHeightScaled) then
-      begin
-        StopDrawing(True);
-        try
-          Width := LWidthScaled;
-          Height := LHeightScaled;
-        finally
-          StopDrawing(False);
-        end;
-        RecreateBitmaps;
-      end;
-    finally
-      FScaling := False;
-    end;
-  end;
-end;
-{$ENDIF}
 
 procedure TSVGIconImageList.DoAssign(const Source: TPersistent);
 var

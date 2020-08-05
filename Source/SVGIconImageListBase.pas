@@ -72,16 +72,16 @@ type
     function GetCount: Integer;    {$IF CompilerVersion > 29} override; {$ELSE}  virtual;abstract; {$ENDIF}
 
     procedure StopDrawing(const AStop: Boolean);
-    procedure Change; override;
     procedure RecreateBitmaps;virtual;abstract;
     procedure ClearIcons;virtual;
 
     function SVGToIcon(const SVG: TSVG): HICON;
 
-    {$IFDEF D10_4+}
-    function IsImageNameAvailable: Boolean; override;
-    function IsScaled: Boolean; override;
-    {$ENDIF}
+
+  {$IFDEF HiDPISupport}
+    procedure DPIChangedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
+  {$ENDIF}
+
 
 
     procedure AssignTo(Dest: TPersistent); override;
@@ -89,7 +89,16 @@ type
     procedure DPIChanged(Sender: TObject; const OldDPI, NewDPI: Integer); virtual;
   public
     constructor Create(AOwner : TComponent);override;
+    destructor Destroy;override;
     procedure Assign(Source: TPersistent); override;
+    procedure Change; override;
+
+    {$IFDEF D10_4+}
+    function IsImageNameAvailable: Boolean; override;
+    function IsScaled: Boolean; override;
+    {$ENDIF}
+
+
     property Count: Integer read GetCount;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
     property Width: Integer read GetWidth write SetWidth stored StoreWidth default DEFAULT_SIZE;
@@ -117,6 +126,7 @@ uses
   Winapi.GDIPOBJ,
   Vcl.ComCtrls,
   Vcl.ImgList,
+  Vcl.Forms,
   GDIPUtils,
   SVGTypes,
   SVGIconItems;
@@ -202,6 +212,14 @@ begin
   Filer.DefineProperty('Left', ReadLeft, WriteLeft, LongRec(DesignInfo).Lo <> LongRec(Info).Lo);
   Filer.DefineProperty('Top', ReadTop, WriteTop, LongRec(DesignInfo).Hi <> LongRec(Info).Hi);
 
+end;
+
+destructor TSVGIconImageListBase.Destroy;
+begin
+  {$IFDEF HiDPISupport}
+  TMessageManager.DefaultManager.Unsubscribe(TChangeScaleMessage, FDPIChangedMessageID);
+  {$ENDIF}
+  inherited;
 end;
 
 procedure TSVGIconImageListBase.DoAssign(const Source: TPersistent);
@@ -552,5 +570,35 @@ procedure TSVGIconImageListBase.WriteTop(Writer: TWriter);
 begin
   Writer.WriteInteger(LongRec(DesignInfo).Hi);
 end;
+
+{$IFDEF HiDPISupport}
+procedure TSVGIconImageListBase.DPIChangedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
+var
+  LWidthScaled, LHeightScaled: Integer;
+begin
+  if FScaled and (TChangeScaleMessage(Msg).Sender = Owner) then
+  begin
+    LWidthScaled := MulDiv(Width, TChangeScaleMessage(Msg).M, TChangeScaleMessage(Msg).D);
+    LHeightScaled := MulDiv(Height, TChangeScaleMessage(Msg).M, TChangeScaleMessage(Msg).D);
+    FScaling := True;
+    try
+      if (Width <> LWidthScaled) or (Height <> LHeightScaled) then
+      begin
+        StopDrawing(True);
+        try
+          Width := LWidthScaled;
+          Height := LHeightScaled;
+        finally
+          StopDrawing(False);
+        end;
+        RecreateBitmaps;
+      end;
+    finally
+      FScaling := False;
+    end;
+  end;
+end;
+{$ENDIF}
+
 
 end.
