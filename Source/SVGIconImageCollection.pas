@@ -70,6 +70,9 @@ type
     function IndexOf(const Name: string): Integer;
     procedure ClearIcons;
 
+
+    procedure LoadFromResource(const hInstance : THandle; const resourceName : string; const iconName : string);
+
   published
     property SVGIconItems: TSVGIconItems read FSVGItems write SetSVGIconItems stored FStoreAsText;
 
@@ -80,6 +83,7 @@ type
 implementation
 
 uses
+  System.Types,
   System.SysUtils;
 
 
@@ -153,6 +157,26 @@ begin
     if FSVGItems[Result].IconName = Name then
       Exit;
   Result := -1;
+end;
+
+procedure TSVGIconImageCollection.LoadFromResource(const hInstance: THandle; const resourceName, iconName: string);
+var
+  resStream: TResourceStream;
+  svg : TSVG;
+begin
+  resStream := TResourceStream.Create(hInstance, resourceName, RT_RCDATA);
+  try
+    svg := TSVG.Create;
+    try
+      svg.LoadFromStream(resStream);
+      Add(svg, iconName);
+    except
+      svg.Free;
+      raise;
+    end;
+  finally
+    resStream.Free;
+  end;
 end;
 
 procedure TSVGIconImageCollection.ReadImageData(Stream: TStream);
