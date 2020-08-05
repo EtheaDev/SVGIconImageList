@@ -240,7 +240,7 @@ var
   Percent: Boolean;
   Help: string;
 begin
-  Result := -1;
+  Result := INHERIT;
   Help := '0' + S;
   Percent := False;
   if Help[Length(Help)] = '%' then
@@ -249,13 +249,13 @@ begin
     Percent := True;
   end;
 
-  C := -1;
+  C := INHERIT;
   if IsDecimal(Help) then
     C := StrToInt(Help)
   else
     if IsHex(Help) then
       C := StrToInt('$' + Help);
-  if C = -1 then
+  if C = INHERIT then
     Exit;
   if C > 255 then
     C := 255;
@@ -274,7 +274,7 @@ var
   RGB: string;
   R, B, G: Integer;
 begin
-  Result := -1;
+  Result := INHERIT;
   if not ((Copy(S, 1, 4) = 'rgb(') and (S[Length(S)] = ')')) then
     Exit;
 
@@ -348,7 +348,12 @@ var
 begin
   if ASVGColorName = '' then
   begin
-    Result := -1;
+    Result := INHERIT;
+    Exit;
+  end;
+  if SameText(ASVGColorName, 'none') then
+  begin
+    Result := SVG_NONE_COLOR;
     Exit;
   end;
   for C := 0 to SVG_MAX_COLORS do

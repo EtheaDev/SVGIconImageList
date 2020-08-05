@@ -1149,9 +1149,9 @@ begin
 
   if (Root.FixedColor <> inherit_color) then
     begin
-      if (FillColor <> INHERIT) and (FillColor <> SVG_NONE_COLOR) then
+      if (FillColor <> SVG_NONE_COLOR) then
         FillColor := SVGColorToColor(Root.FixedColor);
-      if (StrokeColor <> INHERIT) and (StrokeColor <> SVG_NONE_COLOR) then
+      if (StrokeColor <> SVG_NONE_COLOR) then
         StrokeColor := SVGColorToColor(Root.FixedColor);
     end;
 
@@ -2105,16 +2105,14 @@ end;
 
 procedure TSVG.LoadFromStream(Stream: TStream);
 var
-  SL: TStringList;
+  Size: Integer;
+  Buffer: TBytes;
 begin
-  SL := TstringList.Create;
-  try
-    Stream.Position := 0;
-    SL.LoadFromStream(Stream, TEncoding.UTF8);
-    LoadFromText(SL.Text);
-  finally
-    SL.Free;
-  end;
+  Stream.Position := 0;
+  Size := Stream.Size;
+  SetLength(Buffer, Size);
+  Stream.Read(Buffer, 0, Size);
+  LoadFromText(TEncoding.UTF8.GetString(Buffer));
 end;
 
 procedure TSVG.SaveToFile(const FileName: string);
@@ -2131,15 +2129,10 @@ end;
 
 procedure TSVG.SaveToStream(Stream: TStream);
 var
-  SL: TstringList;
+  Buffer: TBytes;
 begin
-  SL := TstringList.Create;
-  try
-    SL.Text := FSource;
-    SL.SaveToStream(Stream);
-  finally
-    SL.Free;
-  end;
+  Buffer := TEncoding.UTF8.GetBytes(FSource);
+  Stream.WriteBuffer(Buffer, Length(Buffer));
 end;
 
 function TSVG.SaveToNode(const Parent: IXMLNode; Left, Top, Width, Height: TFloat): IXMLNode;
@@ -2261,6 +2254,8 @@ var
   M: TGPMatrix;
   MA: Winapi.GDIPOBJ.TMatrixArray;
 begin
+  Bounds.Width := Bounds.Width -1; //Fix: better rendering near right border
+  Bounds.Height := Bounds.Height -1; //Fix: better rendering near bottom border
   M := TGPMatrix.Create;
   try
     Graphics.GetTransform(M);
@@ -2381,10 +2376,10 @@ begin
     FHeight := FRootBounds.Height;
 
   if (FWidth > 0) and (FRootBounds.Width <> -1) then
-    FDX := FRootBounds.Width / (FWidth); //Fix: better rendering near right border
+    FDX := FRootBounds.Width / FWidth;
 
   if (FHeight > 0) and (FRootBounds.Height <> -1) then
-    FDY := FRootBounds.Height / (FHeight); //Fix: better rendering near bottom border
+    FDY := FRootBounds.Height / FHeight;
 
   CalculateMatrices(FViewBox.Top, FViewBox.Left, FDX, FDY);
 end;
@@ -2563,7 +2558,7 @@ begin
     Graphics := TGPGraphics.Create(Bitmap);
     try
       Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-      R := CalcRect(MakeRect(0.0, 0, Width, Height), FWidth, FHeight, baCenterCenter);
+      R := CalcRect(MakeRect(0.0, 0.0, Width, Height), FWidth, FHeight, baCenterCenter);
       PaintTo(Graphics, R, nil, 0);
     finally
       Graphics.Free;

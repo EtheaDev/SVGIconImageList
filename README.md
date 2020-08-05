@@ -33,6 +33,15 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png)
 
 **RELEASE NOTES:**
+05 Aug 2020: version 1.7 (VCL+FMX)
+ - Added DPIChanged method
+ - Enhanced SVGExplorer
+ - Fixed issue #20: replaced Double with Single
+ - Fixed issue #19 and 18#: Load/SaveToStream inefficient and encoding inconsistency
+ - Fixed issue #17: Wrong conversion from pt to px
+ - Fixed issue #14: scaling problem
+ - Fixed issue #11: Incompatible with Drag-Drop of TImageList
+ - Fixed issue #6: Rendering of some SVG images is incorrect
 
 15 July 2020: version 1.6 (VCL+FMX)
  - Fixed rendering on TButton! (VCL)

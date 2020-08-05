@@ -11,17 +11,17 @@ type
     baCenterLeft, baCenterCenter, baCenterRight,
     baBottomLeft, baBottomCenter, baBottomRight);
 
-function CalcRect(const Bounds: TGPRectF; const Width, Height: Double;
+function CalcRect(const Bounds: TGPRectF; const Width, Height: Single;
   const Alignment: TBoxAlignment): TGPRectF;
 
 function GetGPMatrix(const Matrix: TMatrix): TGPMatrix;
 
 implementation
 
-function CalcRect(const Bounds: TGPRectF; const Width, Height: Double;
+function CalcRect(const Bounds: TGPRectF; const Width, Height: Single;
   const Alignment: TBoxAlignment): TGPRectF;
 var
-  R: Double;
+  R: Single;
 begin
   if Height > 0 then
     R :=  Width / Height

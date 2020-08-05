@@ -340,6 +340,7 @@ object MainForm: TMainForm
     Top = 136
   end
   object SVGIconImageList: TSVGIconImageList
+    ColorDepth = cd32Bit
     Size = 32
     Left = 384
     Top = 432
