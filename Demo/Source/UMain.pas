@@ -37,7 +37,7 @@ uses
   StdCtrls, Buttons, StdActns,
   ActnList, ExtCtrls, ComCtrls, ToolWin,
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
-  System.Actions;
+  System.Actions, System.ImageList;
 
 type
   TMainForm = class(TForm)

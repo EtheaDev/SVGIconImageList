@@ -48,12 +48,13 @@ uses
 {$IFDEF HiDPISupport}
   , Messaging
 {$ENDIF}
+  , Controls
   , Forms
   , SVG
   , SVGColor;
 
 const
-  SVGIconImageListVersion = '1.6.0';
+  SVGIconImageListVersion = '1.7.0';
   DEFAULT_SIZE = 16;
 
 resourcestring
@@ -111,7 +112,7 @@ type
   end;
 
   {TSVGIconImageList}
-  TSVGIconImageList = class(TCustomImageList)
+  TSVGIconImageList = class(TDragImageList)
   private
     FStopDrawing: Integer;
     FSVGItems: TSVGIconItems;
@@ -182,9 +183,9 @@ type
     procedure ClearIcons;
     procedure SaveToFile(const AFileName: string);
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
-      const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True); overload;
+      const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload;
     procedure PaintTo(const ACanvas: TCanvas; const AName: string;
-      const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True); overload;
+      const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload;
     function LoadFromFiles(const AFileNames: TStrings;
       const AAppend: Boolean = True): Integer;
     {$IFDEF D10_4+}
@@ -196,6 +197,7 @@ type
     property Images[Index: Integer]: TSVG read GetImages write SetImages;
     property Names[Index: Integer]: string read GetNames write SetNames;
     property Count: Integer read GetCount;
+    procedure DPIChanged(Sender: TObject; const OldDPI, NewDPI: Integer); virtual;
   published
     //Publishing properties of Custom Class
     property OnChange;
@@ -588,6 +590,51 @@ begin
   PaintTo(Canvas, Index, X, Y, Width, Height, Enabled);
 end;
 
+procedure TSVGIconImageList.DPIChanged(Sender: TObject; const OldDPI,
+  NewDPI: Integer);
+var
+  LSizeScaled: Integer;
+  LWidthScaled, LHeightScaled: Integer;
+begin
+  if Width = Height then
+  begin
+    LSizeScaled := MulDiv(Size, NewDPI, OldDPI);
+    {$IFDEF D10_3+}
+    FScaling := True;
+    try
+      SetSize(LSizeScaled);
+    finally
+      FScaling := False;
+    end;
+    {$ELSE}
+      SetSize(LSizeScaled);
+    {$ENDIF}
+  end
+  else
+  begin
+    LWidthScaled := MulDiv(Width, NewDPI, OldDPI);
+    LHeightScaled := MulDiv(Height, NewDPI, OldDPI);
+    {$IFDEF D10_3+}
+    FScaling := True;
+    try
+      if (Width <> LWidthScaled) or (Height <> LHeightScaled) then
+      begin
+        Width := LWidthScaled;
+        Height := LHeightScaled;
+      end;
+    finally
+      FScaling := False;
+    end;
+    {$ELSE}
+       if (Width <> LWidthScaled) or (Height <> LHeightScaled) then
+       begin
+         Width := LWidthScaled;
+         Height := LHeightScaled;
+       end;
+    {$ENDIF}
+  end;
+end;
+
 function TSVGIconImageList.GetCount: Integer;
 begin
   Result := FSVGItems.Count;
@@ -681,7 +728,7 @@ begin
 end;
 
 procedure TSVGIconImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
-  const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True);
+  const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True);
 var
   R: TGPRectF;
   SVG: TSVG;
@@ -719,7 +766,7 @@ begin
 end;
 
 procedure TSVGIconImageList.PaintTo(const ACanvas: TCanvas; const AName: string;
-  const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True);
+  const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True);
 var
   LIndex: Integer;
 begin
@@ -895,7 +942,7 @@ var
 
   procedure CalcDimensions(ACount: Integer; var AWidth, AHeight: Integer);
   var
-    X: Double;
+    X: Single;
   begin
     X := Sqrt(ACount);
     AWidth := Trunc(X);

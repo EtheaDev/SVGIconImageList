@@ -218,7 +218,7 @@ function GetFactor(const SVGUnit: TSVGUnit): TFloat;
 begin
   case SVGUnit of
     suPX: Result := 1;
-    suPT: Result := 1.25;
+    suPT: Result := 1.3333;
     suPC: Result := 15;
     suMM: Result := 10;
     suCM: Result := 100;

@@ -44,7 +44,7 @@ type
     FLastFont: WideString;
     FLastWeight: Integer;
     FLastStyle: Integer;
-    FFontSizeFactor: Double;
+    FFontSizeFactor: Single;
 
     FFont: HFont;
     FOldFont: HFont;
@@ -171,8 +171,8 @@ end;
 procedure TGPKerningText.AddStrikeOut(const Path: TGPGraphicsPath;
   const Left, Top, Width: Single; const Font: TGPFont);
 var
-  YPos: Double;
-  Height: Double;
+  YPos: Single;
+  Height: Single;
 begin
   YPos := Top + Font.GetSize / 2;
   Height := Font.GetSize / 10;
@@ -559,8 +559,8 @@ end;
 procedure TGPKerningText.AddUnderline(const Path: TGPGraphicsPath;
   const Left, Top, Width: Single; const Font: TGPFont);
 var
-  YPos: Double;
-  Height: Double;
+  YPos: Single;
+  Height: Single;
 begin
   YPos := Top + Font.GetSize;
   Height := Font.GetSize / 10;

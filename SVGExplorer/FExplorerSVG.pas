@@ -12,13 +12,13 @@ type
   TfmExplorerSVG = class(TForm)
     paDir: TPanel;
     DirSelection: TDirectoryListBox;
-    Splitter1: TSplitter;
+    spVertical: TSplitter;
     PaList: TPanel;
     ImageListLabel: TLabel;
     SVGIconImageList: TSVGIconImageList;
     paRicerca: TPanel;
     paPreview: TPanel;
-    Splitter2: TSplitter;
+    spRight: TSplitter;
     SVGIconImage: TSVGIconImage;
     ImageView: TListView;
     btDelete: TButton;
@@ -33,6 +33,10 @@ type
     RenameAction: TAction;
     Delete1: TMenuItem;
     Rename1: TMenuItem;
+    paSVGText: TPanel;
+    SVGMemo: TMemo;
+    spBottom: TSplitter;
+    ShowTextCheckBox: TCheckBox;
     procedure DirSelectionChange(Sender: TObject);
     procedure ImageViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
@@ -47,10 +51,14 @@ type
     procedure DeleteActionExecute(Sender: TObject);
     procedure RenameActionExecute(Sender: TObject);
     procedure ActionUpdate(Sender: TObject);
+    procedure ShowTextCheckBoxClick(Sender: TObject);
   private
     fpaPreviewSize: Integer;
     procedure LoadFilesDir(const APath: string; const AFilter: string = '');
     procedure UpdateStatusBar(Index: Integer);
+    procedure SetSVGIconImage(const AIndex: Integer);
+  protected
+    procedure Loaded; override;
   public
     { Public declarations }
     procedure UpdateListView;
@@ -77,6 +85,7 @@ end;
 procedure TfmExplorerSVG.DeleteActionExecute(Sender: TObject);
 var
   LFileName: string;
+  LOldImageIndex: Integer;
 begin
   LFileName := IncludeTrailingPathDelimiter(DirSelection.Directory)+
     SVGIconImageList.Names[ImageView.Selected.ImageIndex]+'.svg';
@@ -86,8 +95,14 @@ begin
     Screen.Cursor := crHourGlass;
     try
       DeleteFile(LFileName);
-      SVGIconImageList.Delete(ImageView.Selected.ImageIndex);
-      SVGIconImage.Repaint;
+      LOldImageIndex := ImageView.Selected.ImageIndex;
+      SVGIconImageList.Delete(LOldImageIndex);
+      LoadFilesDir(DirSelection.Directory, SearchBox.Text);
+      if LOldImageIndex < ImageView.Items.Count then
+        ImageView.ItemIndex := LOldImageIndex
+      else
+        ImageView.ItemIndex := LOldImageIndex-1;
+      SetSVGIconImage(ImageView.ItemIndex);
     finally
       Screen.Cursor := crDefault;
     end;
@@ -96,6 +111,7 @@ end;
 
 procedure TfmExplorerSVG.DirSelectionChange(Sender: TObject);
 begin
+  SearchBox.Text := '';
   LoadFilesDir(DirSelection.Directory);
 end;
 
@@ -121,25 +137,49 @@ begin
   if (Key = VK_DELETE) then btDelete.Click();
 end;
 
+procedure TfmExplorerSVG.SetSVGIconImage(const AIndex: Integer);
+begin
+  if AIndex >= 0 then
+  begin
+    SVGIconImage.ImageIndex := AIndex;
+    SVGIconImage.Repaint;
+    SVGMemo.Text := SVGIconImageList.SVGIconItems[AIndex].SVGText;
+  end
+  else
+    SVGMemo.Text := '';
+end;
+
+procedure TfmExplorerSVG.ShowTextCheckBoxClick(Sender: TObject);
+begin
+  paSVGText.Visible := ShowTextCheckBox.Checked;
+  spBottom.Visible := paSVGText.Visible;
+  spBottom.Top := paSVGText.Top -1;
+end;
+
 procedure TfmExplorerSVG.UpdateStatusBar(Index: Integer);
 begin
   if Index >= 0 then
   begin
-    StatusBar.SimpleText := DirSelection.Directory+
+    StatusBar.SimpleText := IncludeTrailingPathDelimiter(DirSelection.Directory)+
       SVGIconImageList.SVGIconItems[Index].IconName+'.svg';
   end
   else
   begin
     StatusBar.SimpleText := DirSelection.Directory;
   end;
-  SVGIconImage.ImageIndex := Index;
-  SVGIconImage.Repaint;
+  SetSVGIconImage(Index);
 end;
 
 procedure TfmExplorerSVG.ImageViewSelectItem(Sender: TObject; Item: TListItem;
   Selected: Boolean);
 begin
   UpdateStatusBar(Item.Index);
+end;
+
+procedure TfmExplorerSVG.Loaded;
+begin
+  Font.Assign(Screen.IconFont);
+  inherited;
 end;
 
 procedure TfmExplorerSVG.LoadFilesDir(const APath, AFilter: string);

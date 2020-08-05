@@ -15,7 +15,7 @@ object fmExplorerSVG: TfmExplorerSVG
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object Splitter1: TSplitter
+  object spVertical: TSplitter
     Left = 185
     Top = 0
     Width = 4
@@ -24,7 +24,7 @@ object fmExplorerSVG: TfmExplorerSVG
     MinSize = 120
     ExplicitHeight = 393
   end
-  object Splitter2: TSplitter
+  object spRight: TSplitter
     Left = 752
     Top = 0
     Width = 4
@@ -91,6 +91,18 @@ object fmExplorerSVG: TfmExplorerSVG
       ParentFont = False
       ExplicitWidth = 63
     end
+    object spBottom: TSplitter
+      Left = 1
+      Top = 293
+      Width = 561
+      Height = 3
+      Cursor = crVSplit
+      Align = alBottom
+      AutoSnap = False
+      MinSize = 100
+      ExplicitTop = 58
+      ExplicitWidth = 238
+    end
     object paRicerca: TPanel
       Left = 1
       Top = 1
@@ -116,7 +128,7 @@ object fmExplorerSVG: TfmExplorerSVG
       Left = 1
       Top = 58
       Width = 561
-      Height = 338
+      Height = 235
       Align = alClient
       Columns = <>
       IconOptions.AutoArrange = True
@@ -126,6 +138,9 @@ object fmExplorerSVG: TfmExplorerSVG
       TabOrder = 1
       OnKeyDown = ImageViewKeyDown
       OnSelectItem = ImageViewSelectItem
+      ExplicitLeft = 2
+      ExplicitTop = 52
+      ExplicitHeight = 338
     end
     object StatusBar: TStatusBar
       Left = 1
@@ -134,6 +149,33 @@ object fmExplorerSVG: TfmExplorerSVG
       Height = 19
       Panels = <>
       SimplePanel = True
+    end
+    object paSVGText: TPanel
+      Left = 1
+      Top = 296
+      Width = 561
+      Height = 100
+      Hint = 'SVG Text content'
+      Align = alBottom
+      TabOrder = 3
+      ExplicitLeft = 0
+      ExplicitTop = 290
+      object SVGMemo: TMemo
+        Left = 1
+        Top = 1
+        Width = 559
+        Height = 98
+        Align = alClient
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Courier New'
+        Font.Style = []
+        ParentFont = False
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 0
+      end
     end
   end
   object paPreview: TPanel
@@ -182,6 +224,18 @@ object fmExplorerSVG: TfmExplorerSVG
       Action = RenameAction
       Anchors = [akLeft, akRight, akBottom]
       TabOrder = 0
+    end
+    object ShowTextCheckBox: TCheckBox
+      Left = 6
+      Top = 327
+      Width = 71
+      Height = 17
+      Anchors = [akLeft, akBottom]
+      Caption = 'Show Text'
+      Checked = True
+      State = cbChecked
+      TabOrder = 2
+      OnClick = ShowTextCheckBoxClick
     end
   end
   object SVGIconImageList: TSVGIconImageList
