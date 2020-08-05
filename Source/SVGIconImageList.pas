@@ -91,8 +91,7 @@ type
     function IndexOf(const Name: string): Integer;override;
     procedure ClearIcons;override;
     procedure SaveToFile(const AFileName: string);
-    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
-      const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True); override;
+    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
     function LoadFromFiles(const AFileNames: TStrings;
       const AAppend: Boolean = True): Integer;
     {$IFDEF D10_4+}
@@ -333,8 +332,7 @@ begin
   end;
 end;
 
-procedure TSVGIconImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
-  const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True);
+procedure TSVGIconImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True);
 var
   R: TGPRectF;
   SVG: TSVG;
@@ -522,7 +520,7 @@ var
 
   procedure CalcDimensions(ACount: Integer; var AWidth, AHeight: Integer);
   var
-    X: Double;
+    X: Single;
   begin
     X := Sqrt(ACount);
     AWidth := Trunc(X);

@@ -14,7 +14,7 @@ uses
   SVGColor;
 
 const
-  SVGIconImageListVersion = '1.6.0';
+  SVGIconImageListVersion = '1.7.0';
   DEFAULT_SIZE = 16;
 
 resourcestring
@@ -62,8 +62,8 @@ type
 
     function IndexOf(const Name: string): Integer;virtual;abstract;
 
-    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True); overload; virtual; abstract;
-    procedure PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True); overload;
+    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload; virtual; abstract;
+    procedure PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload;
 
 
     procedure DefineProperties(Filer: TFiler); override;
@@ -86,7 +86,7 @@ type
 
     procedure AssignTo(Dest: TPersistent); override;
     procedure DoAssign(const Source: TPersistent); virtual;
-
+    procedure DPIChanged(Sender: TObject; const OldDPI, NewDPI: Integer); virtual;
   public
     constructor Create(AOwner : TComponent);override;
     procedure Assign(Source: TPersistent); override;
@@ -216,6 +216,50 @@ begin
 end;
 
 
+procedure TSVGIconImageListBase.DPIChanged(Sender: TObject; const OldDPI, NewDPI: Integer);
+var
+  LSizeScaled: Integer;
+  LWidthScaled, LHeightScaled: Integer;
+begin
+  if Width = Height then
+  begin
+    LSizeScaled := MulDiv(Size, NewDPI, OldDPI);
+    {$IFDEF D10_3+}
+    FScaling := True;
+    try
+      SetSize(LSizeScaled);
+    finally
+      FScaling := False;
+    end;
+    {$ELSE}
+      SetSize(LSizeScaled);
+    {$ENDIF}
+  end
+  else
+  begin
+    LWidthScaled := MulDiv(Width, NewDPI, OldDPI);
+    LHeightScaled := MulDiv(Height, NewDPI, OldDPI);
+    {$IFDEF D10_3+}
+    FScaling := True;
+    try
+      if (Width <> LWidthScaled) or (Height <> LHeightScaled) then
+      begin
+        Width := LWidthScaled;
+        Height := LHeightScaled;
+      end;
+    finally
+      FScaling := False;
+    end;
+    {$ELSE}
+       if (Width <> LWidthScaled) or (Height <> LHeightScaled) then
+       begin
+         Width := LWidthScaled;
+         Height := LHeightScaled;
+       end;
+    {$ENDIF}
+  end;
+end;
+
 {$IF CompilerVersion > 29}
 function TSVGIconImageListBase.GetCount: Integer;
 begin
@@ -257,7 +301,7 @@ begin
   RecreateBitmaps;
 end;
 
-procedure TSVGIconImageListBase.PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Double; AEnabled: Boolean);
+procedure TSVGIconImageListBase.PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean);
 var
   LIndex: Integer;
 begin

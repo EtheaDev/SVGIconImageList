@@ -34,8 +34,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
-      const X, Y, AWidth, AHeight: Double; AEnabled: Boolean = True); override;
+    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
 
   published
     //Publishing properties of Custom Class
@@ -109,7 +108,7 @@ begin
 end;
 
 
-procedure TSVGIconVirtualImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Double; AEnabled: Boolean);
+procedure TSVGIconVirtualImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean);
 var
   R: TGPRectF;
   SVG: TSVG;
