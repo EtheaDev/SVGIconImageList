@@ -38,6 +38,10 @@ requires
 contains
   SVGIconImage in '..\..\Source\SVGIconImage.pas',
   SVGIconImageList in '..\..\Source\SVGIconImageList.pas',
-  SVGIconUtils in '..\..\Source\SVGIconUtils.pas';
+  SVGIconUtils in '..\..\Source\SVGIconUtils.pas',
+  SVGIconImageCollection in '..\..\Source\SVGIconImageCollection.pas',
+  SVGIconItems in '..\..\Source\SVGIconItems.pas',
+  SVGIconVirtualImageList in '..\..\Source\SVGIconVirtualImageList.pas',
+  SVGIconImageListBase in '..\..\Source\SVGIconImageListBase.pas';
 
 end.
