@@ -72,10 +72,6 @@ type
     procedure ReadImageData(Stream: TStream);
     procedure WriteImageData(Stream: TStream);
     function GetCount: Integer;override;
-    function GetImages(Index: Integer): TSVG;override;
-    function GetNames(Index: Integer): string;override;
-    procedure SetImages(Index: Integer; const Value: TSVG);override;
-    procedure SetNames(Index: Integer; const Value: string);override;
     procedure DefineProperties(Filer: TFiler); override;
     procedure AssignTo(Dest: TPersistent); override;
     procedure DoAssign(const Source: TPersistent); override;
@@ -89,20 +85,15 @@ type
        const AFixedColor: TSVGColor = inherit_color): Integer;
     procedure Delete(const Index: Integer);
     procedure Remove(const Name: string);
-    function IndexOf(const Name: string): Integer;override;
     procedure ClearIcons;override;
     procedure SaveToFile(const AFileName: string);
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
     function LoadFromFiles(const AFileNames: TStrings;
       const AAppend: Boolean = True): Integer;
     {$IFDEF D10_4+}
-    function IsImageNameAvailable: Boolean; override;
-    function IsScaled: Boolean; override;
     function GetIndexByName(const AName: TImageName): TImageIndex; override;
     function GetNameByIndex(AIndex: TImageIndex): TImageName; override;
     {$ENDIF}
-    property Images[Index: Integer]: TSVG read GetImages write SetImages;
-    property Names[Index: Integer]: string read GetNames write SetNames;
     property Count: Integer read GetCount;
   published
     //Publishing properties of Custom Class
@@ -233,31 +224,6 @@ begin
   Result := FSVGItems.Count;
 end;
 
-
-function TSVGIconImageList.GetImages(Index: Integer): TSVG;
-begin
-  if (Index >= 0) and (Index < FSVGItems.Count) then
-    Result := FSVGItems[Index].SVG
-  else
-    Result := nil;
-end;
-
-function TSVGIconImageList.GetNames(Index: Integer): string;
-begin
-  if (Index >= 0) and (Index < FSVGItems.Count) then
-    Result := FSVGItems[Index].IconName
-  else
-    Result := '';
-end;
-
-
-function TSVGIconImageList.IndexOf(const Name: string): Integer;
-begin
-  for Result := 0 to FSVGItems.Count - 1 do
-    if FSVGItems[Result].IconName = Name then
-      Exit;
-  Result := -1;
-end;
 
 function TSVGIconImageList.LoadFromFiles(const AFileNames: TStrings;
   const AAppend: Boolean): Integer;
@@ -533,44 +499,13 @@ function TSVGIconImageList.GetNameByIndex(AIndex: TImageIndex): TImageName;
 begin
   Result := SVGIconItems.Items[AIndex].IconName;
 end;
-
-function TSVGIconImageList.IsImageNameAvailable: Boolean;
-begin
-  Result := True;
-end;
-
-function TSVGIconImageList.IsScaled: Boolean;
-begin
-  Result := FScaled;
-end;
 {$ENDIF}
 
-
-procedure TSVGIconImageList.SetImages(Index: Integer; const Value: TSVG);
-begin
-  if (Index >= 0) and (Index < FSVGItems.Count) then
-  begin
-    if FSVGItems[Index].SVG <> Value then
-      FSVGItems[Index].SVG := Value;
-  end;
-end;
-
-procedure TSVGIconImageList.SetNames(Index: Integer; const Value: string);
-begin
-  if (Index >= 0) and (Index < FSVGItems.Count) then
-    FSVGItems[Index].IconName := Value;
-end;
 
 function TSVGIconImageList.GetSVGIconItems: TSVGIconItems;
 begin
   Result := fSVGItems;
 end;
-
-//procedure TSVGIconImageList.SetSVGIconItems(const Value: TSVGIconItems);
-//begin
-//  //Shouldn't this use assign?
-//  FSVGItems := Value;
-//end;
 
 procedure TSVGIconImageList.StopDrawing(const AStop: Boolean);
 begin
