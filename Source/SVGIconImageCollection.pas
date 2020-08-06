@@ -21,6 +21,7 @@ type
 
 
   TSVGCollectionMessage = class(System.Messaging.TMessage)
+  private
     FCollection : TSVGIconImageCollection;
   public
     constructor Create(const collection : TSVGIconImageCollection);
