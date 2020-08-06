@@ -219,10 +219,11 @@ procedure TSVGIconVirtualImageList.SetCollection(const value: TSVGIconImageColle
 begin
   if FCollection <> Value then
   begin
+    if FCollection <> nil then
+      FICollection.RemoveFreeNotification(Self);
     FCollection := Value;
     if FCollection <> nil then
-      FCollection.FreeNotification(Self);
-
+      FICollection.FreeNotification(Self);
     if not (csLoading in ComponentState) then
       RecreateBitmaps;
   end;
