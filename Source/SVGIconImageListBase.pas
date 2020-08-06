@@ -97,6 +97,8 @@ type
     destructor Destroy;override;
     procedure Assign(Source: TPersistent); override;
     procedure Change; override;
+    function LoadFromFiles(const AFileNames: TStrings;
+      const AAppend: Boolean = True): Integer; virtual;
 
     {$IFDEF D10_4+}
     function IsImageNameAvailable: Boolean; override;
@@ -369,6 +371,52 @@ procedure TSVGIconImageListBase.Loaded;
 begin
   inherited;
   RecreateBitmaps;
+end;
+
+function TSVGIconImageListBase.LoadFromFiles(const AFileNames: TStrings;
+  const AAppend: Boolean): Integer;
+Var
+  Items: TSVGIconItems;
+  LIndex: Integer;
+  LSVG: TSVG;
+  LFileName: string;
+  LItem: TSVGIconItem;
+  LErrors: string;
+begin
+  Result := 0;
+  Items := SVGIconItems;
+  if not Assigned(Items) then Exit;
+
+  StopDrawing(True);
+  try
+    LErrors := '';
+    LSVG := TSVG.Create;
+    try
+      if not AAppend then
+        ClearIcons;
+      for LIndex := 0 to AFileNames.Count - 1 do
+      begin
+        LFileName := AFileNames[LIndex];
+        try
+          LSVG.LoadFromFile(LFileName);
+          LItem := Items.Add;
+          LItem.IconName := ChangeFileExt(ExtractFileName(LFileName), '');
+          LItem.SVG := LSVG;
+          Inc(Result);
+        except
+          on E: Exception do
+            LErrors := LErrors + Format('%s (%s)',[E.Message, LFileName]) + sLineBreak;
+        end;
+      end;
+      if LErrors <> '' then
+        raise Exception.Create(ERROR_LOADING_FILES+sLineBreak+LErrors);
+    finally
+      LSVG.Free;
+    end;
+  finally
+    StopDrawing(False);
+    RecreateBitmaps;
+  end;
 end;
 
 procedure TSVGIconImageListBase.PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean);

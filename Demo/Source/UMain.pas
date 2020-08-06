@@ -72,7 +72,6 @@ type
     ShowImageEditorButton: TButton;
     ColorDialog: TColorDialog;
     DisabledAction: TAction;
-    SVGIconImageList: TSVGIconImageList;
     OpenDialog: TOpenPictureDialog;
     SVGIconImage: TSVGIconImage;
     Splitter: TSplitter;
@@ -151,7 +150,7 @@ begin
     Screen.Cursor := crHourGlass;
     try
       LStart := GetTickCount;
-      LCount := SVGIconImageList.LoadFromFiles(OpenDialog.Files);
+      LCount := SVGIconVirtualImageList.LoadFromFiles(OpenDialog.Files);
       LStop := GetTickCount;
     finally
       Screen.Cursor := crDefault;
@@ -186,7 +185,7 @@ end;
 procedure TMainForm.ClearButtonClick(Sender: TObject);
 begin
   //Clear Collection
-  SVGIconImageList.ClearIcons;
+  SVGIconImageCollection.ClearIcons;
   UpdateGUI;
 end;
 
@@ -297,7 +296,7 @@ end;
 
 procedure TMainForm.ShowImageEditorButtonClick(Sender: TObject);
 begin
-  if EditSVGIconImageList(SVGIconImageList) then
+  if EditSVGIconImageCollection(SVGIconImageCollection) then
     UpdateGUI;
 end;
 

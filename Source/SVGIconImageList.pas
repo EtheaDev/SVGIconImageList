@@ -87,8 +87,6 @@ type
     procedure ClearIcons;override;
     procedure SaveToFile(const AFileName: string);
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
-    function LoadFromFiles(const AFileNames: TStrings;
-      const AAppend: Boolean = True): Integer;
   published
     //Publishing properties of Custom Class
     property OnChange;
@@ -210,48 +208,6 @@ begin
       FSVGItems.Assign(virtualList.Collection.SVGIconItems);
       FStoreAsText := virtualList.Collection.StoreAsText;
     end;
-  end;
-end;
-
-function TSVGIconImageList.LoadFromFiles(const AFileNames: TStrings;
-  const AAppend: Boolean): Integer;
-var
-  LIndex: Integer;
-  LSVG: TSVG;
-  LFileName: string;
-  LItem: TSVGIconItem;
-  LErrors: string;
-begin
-  Result := 0;
-  StopDrawing(True);
-  try
-    LErrors := '';
-    LSVG := TSVG.Create;
-    try
-      if not AAppend then
-        ClearIcons;
-      for LIndex := 0 to AFileNames.Count - 1 do
-      begin
-        LFileName := AFileNames[LIndex];
-        try
-          LSVG.LoadFromFile(LFileName);
-          LItem := SVGIconItems.Add;
-          LItem.IconName := ChangeFileExt(ExtractFileName(LFileName), '');
-          LItem.SVG := LSVG;
-          Inc(Result);
-        except
-          on E: Exception do
-            LErrors := LErrors + Format('%s (%s)',[E.Message, LFileName]) + sLineBreak;
-        end;
-      end;
-      if LErrors <> '' then
-        raise Exception.Create(ERROR_LOADING_FILES+sLineBreak+LErrors);
-    finally
-      LSVG.Free;
-    end;
-  finally
-    StopDrawing(False);
-    RecreateBitmaps;
   end;
 end;
 

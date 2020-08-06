@@ -257,9 +257,6 @@ begin
       Free;
     end;
   end;
-
-
-
 end;
 
 function EditSVGIconImageCollection(const AImageCollection: TSVGIconImageCollection): Boolean;
