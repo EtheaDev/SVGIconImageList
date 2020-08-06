@@ -38,8 +38,6 @@ type
 
   TSVGRecreateBitmapsMessage = class(TSVGCollectionMessage);
 
-  TSVGCollectionDestroyedMessage = class(TSVGCollectionMessage);
-
 
   TSVGIconImageCollection = class(TComponent, ISVGNotifyOwner)
   private
@@ -151,7 +149,6 @@ end;
 
 destructor TSVGIconImageCollection.Destroy;
 begin
-  System.Messaging.TMessageManager.DefaultManager.SendMessage(Self,TSVGCollectionDestroyedMessage.Create(Self));
   FSVGItems.Free;
   inherited;
 end;
