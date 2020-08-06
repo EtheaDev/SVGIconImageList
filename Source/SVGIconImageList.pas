@@ -71,7 +71,6 @@ type
     //procedure SetSVGIconItems(const Value: TSVGIconItems); override;
     procedure ReadImageData(Stream: TStream);
     procedure WriteImageData(Stream: TStream);
-    function GetCount: Integer;override;
     procedure DefineProperties(Filer: TFiler); override;
     procedure AssignTo(Dest: TPersistent); override;
     procedure DoAssign(const Source: TPersistent); override;
@@ -90,11 +89,6 @@ type
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
     function LoadFromFiles(const AFileNames: TStrings;
       const AAppend: Boolean = True): Integer;
-    {$IFDEF D10_4+}
-    function GetIndexByName(const AName: TImageName): TImageIndex; override;
-    function GetNameByIndex(AIndex: TImageIndex): TImageName; override;
-    {$ENDIF}
-    property Count: Integer read GetCount;
   published
     //Publishing properties of Custom Class
     property OnChange;
@@ -218,12 +212,6 @@ begin
     end;
   end;
 end;
-
-function TSVGIconImageList.GetCount: Integer;
-begin
-  Result := FSVGItems.Count;
-end;
-
 
 function TSVGIconImageList.LoadFromFiles(const AFileNames: TStrings;
   const AAppend: Boolean): Integer;
@@ -480,27 +468,6 @@ begin
     LImageStrip.Free;
   end;
 end;
-
-
-{$IFDEF D10_4+}
-function TSVGIconImageList.GetIndexByName(
-  const AName: TImageName): TImageIndex;
-var
-  LIconFontItem: TSVGIconItem;
-begin
-  LIconFontItem := SVGIconItems.GetIconByName(AName);
-  if Assigned(LIconFontItem) then
-    Result := LIconFontItem.Index
-  else
-    Result := -1;
-end;
-
-function TSVGIconImageList.GetNameByIndex(AIndex: TImageIndex): TImageName;
-begin
-  Result := SVGIconItems.Items[AIndex].IconName;
-end;
-{$ENDIF}
-
 
 function TSVGIconImageList.GetSVGIconItems: TSVGIconItems;
 begin

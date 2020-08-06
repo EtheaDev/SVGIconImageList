@@ -285,8 +285,14 @@ end;
 
 {$IF CompilerVersion > 29}
 function TSVGIconImageListBase.GetCount: Integer;
+Var
+  Items: TSVGIconItems;
 begin
-  raise ENotImplemented.Create('must be overridden.');
+  Items := SVGIconItems;
+  if Assigned(Items) then
+    Result := Items.Count
+  else
+    Result := 0;
 end;
 {$ENDIF}
 
@@ -330,14 +336,16 @@ end;
 function TSVGIconImageListBase.IndexOf(const Name: string): Integer;
 Var
   Items: TSVGIconItems;
+  Item: TSVGIconItem;
 begin
   Items := SVGIconItems;
   if not Assigned(Items) then Exit(-1);
 
-  for Result := 0 to Items.Count - 1 do
-    if Items[Result].IconName = Name then
-      Exit;
-  Result := -1;
+  Item := Items.GetIconByName(Name);
+  if Assigned(Item) then
+    Result := Item.Index
+  else
+    Result := -1;
 end;
 
 {$IFDEF D10_4+}
