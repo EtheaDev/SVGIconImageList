@@ -281,7 +281,7 @@ end;
 {$IF CompilerVersion > 29}
 function TSVGIconImageListBase.GetCount: Integer;
 begin
-  raise ENotImplemented.Create('needed to be overridden.');
+  raise ENotImplemented.Create('must be overridden.');
 end;
 {$ENDIF}
 
