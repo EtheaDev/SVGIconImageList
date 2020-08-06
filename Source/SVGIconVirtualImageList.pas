@@ -221,8 +221,6 @@ begin
   begin
     FCollection := Value;
     if FCollection <> nil then
-      FCollection.FreeNotification(Self);
-    if FCollection <> nil then
       FICollection.RemoveFreeNotification(Self);
     FCollection := Value;
     if FCollection <> nil then
