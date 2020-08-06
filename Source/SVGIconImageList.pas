@@ -121,7 +121,7 @@ type
     /// Enable and disable scaling with form
     /// </summary>
     {$IFDEF HiDPISupport}
-    property Scaled: Boolean read FScaled write FScaled default True;
+    property Scaled;
     {$ENDIF}
   end;
 
