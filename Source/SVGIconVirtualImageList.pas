@@ -30,6 +30,8 @@ type
 
     procedure RecreateBitmaps;override;
     procedure DoAssign(const source : TPersistent);override;
+    function GetCount: Integer;override;
+
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -118,6 +120,14 @@ begin
 
 end;
 
+
+function TSVGIconVirtualImageList.GetCount: Integer;
+begin
+  if FCollection <> nil then
+    result := FCollection.SVGIconItems.Count
+  else
+    result := 0;
+end;
 
 procedure TSVGIconVirtualImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean);
 var
