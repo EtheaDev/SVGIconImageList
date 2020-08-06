@@ -67,7 +67,8 @@ type
     FSVGItems: TSVGIconItems;
     FStoreAsText: boolean;
   protected
-    procedure SetSVGIconItems(const Value: TSVGIconItems);
+    function GetSVGIconItems: TSVGIconItems; override;
+    //procedure SetSVGIconItems(const Value: TSVGIconItems); override;
     procedure ReadImageData(Stream: TStream);
     procedure WriteImageData(Stream: TStream);
     function GetCount: Integer;override;
@@ -107,11 +108,11 @@ type
     //Publishing properties of Custom Class
     property OnChange;
     //New properties
-    property SVGIconItems: TSVGIconItems read FSVGItems write SetSVGIconItems stored FStoreAsText;
+    property SVGIconItems stored FStoreAsText;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
-    property Width: Integer read GetWidth write SetWidth stored StoreWidth default DEFAULT_SIZE;
-    property Height: Integer read GetHeight write SetHeight stored StoreHeight default DEFAULT_SIZE;
-    property Size: Integer read GetSize write SetSize stored StoreSize default DEFAULT_SIZE;
+    property Width;
+    property Height;
+    property Size;
     property StoreAsText: boolean read FStoreAsText write FStoreAsText default False;
     property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
@@ -560,13 +561,16 @@ begin
     FSVGItems[Index].IconName := Value;
 end;
 
-
-procedure TSVGIconImageList.SetSVGIconItems(const Value: TSVGIconItems);
+function TSVGIconImageList.GetSVGIconItems: TSVGIconItems;
 begin
-  //Shouldn't this use assign?
-  FSVGItems := Value;
+  Result := fSVGItems;
 end;
 
+//procedure TSVGIconImageList.SetSVGIconItems(const Value: TSVGIconItems);
+//begin
+//  //Shouldn't this use assign?
+//  FSVGItems := Value;
+//end;
 
 procedure TSVGIconImageList.StopDrawing(const AStop: Boolean);
 begin

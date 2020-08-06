@@ -21,6 +21,14 @@ type
     FStopDrawingMessageID : Integer;
     FRecreateBitmapsMessageID : integer;
   protected
+    // ovrride abstract methods
+    function GetImages(Index: Integer): TSVG; override;
+    function GetNames(Index: Integer): string; override;
+    procedure SetImages(Index: Integer; const Value: TSVG); override;
+    procedure SetNames(Index: Integer; const Value: string); override;
+    function IndexOf(const Name: string): Integer;override;
+    function GetSVGIconItems: TSVGIconItems; override;
+
     procedure SetCollection(const value: TSVGIconImageCollection);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure RecreateBitmapsMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
@@ -111,6 +119,40 @@ begin
     result := FCollection.SVGIconItems.Count
   else
     result := 0;
+end;
+
+function TSVGIconVirtualImageList.GetImages(Index: Integer): TSVG;
+begin
+  if Assigned(FCollection) and (Index >= 0) and (Index < FCollection.SVGIconItems.Count) then
+    Result := FCollection.SVGIconItems[Index].SVG
+  else
+    Result := nil;
+
+end;
+
+function TSVGIconVirtualImageList.GetNames(Index: Integer): string;
+begin
+  if Assigned(FCollection) and (Index >= 0) and (Index < FCollection.SVGIconItems.Count) then
+    Result := FCollection.SVGIconItems[Index].IconName
+  else
+    Result := '';
+end;
+
+function TSVGIconVirtualImageList.GetSVGIconItems: TSVGIconItems;
+begin
+  if Assigned(FCollection) then
+    Result := FCollection.SVGIconItems
+  else
+    Result := nil;
+end;
+
+function TSVGIconVirtualImageList.IndexOf(const Name: string): Integer;
+begin
+  if not Assigned(FCollection) then Exit(-1);
+  for Result := 0 to FCollection.SVGIconItems.Count - 1 do
+    if FCollection.SVGIconItems[Result].IconName = Name then
+      Exit;
+  Result := -1;
 end;
 
 procedure TSVGIconVirtualImageList.Notification(AComponent: TComponent; Operation: TOperation);
@@ -220,15 +262,31 @@ begin
   if FCollection <> Value then
   begin
     if FCollection <> nil then
-      FICollection.RemoveFreeNotification(Self);
+      FCollection.RemoveFreeNotification(Self);
     FCollection := Value;
     if FCollection <> nil then
-      FICollection.FreeNotification(Self);
+      FCollection.FreeNotification(Self);
     if not (csLoading in ComponentState) then
       RecreateBitmaps;
   end;
 end;
 
+
+procedure TSVGIconVirtualImageList.SetImages(Index: Integer; const Value: TSVG);
+begin
+  if Assigned(FCollection) and (Index >= 0) and (Index < FCollection.SVGIconItems.Count) then
+  begin
+    if FCollection.SVGIconItems[Index].SVG <> Value then
+      FCollection.SVGIconItems[Index].SVG := Value;
+  end;
+end;
+
+procedure TSVGIconVirtualImageList.SetNames(Index: Integer;
+  const Value: string);
+begin
+  if Assigned(FCollection) and (Index >= 0) and (Index < FCollection.SVGIconItems.Count) then
+    FCollection.SVGIconItems[Index].IconName := Value;
+end;
 
 procedure TSVGIconVirtualImageList.StopDrawingMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
 begin

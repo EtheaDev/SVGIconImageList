@@ -11,7 +11,8 @@ uses
   Vcl.Controls,
   Vcl.Graphics,
   SVG,
-  SVGColor;
+  SVGColor,
+  SVGIconItems;
 
 const
   SVGIconImageListVersion = '1.7.0';
@@ -40,6 +41,9 @@ type
     procedure SetWidth(const Value: Integer);
     procedure SetOpacity(const Value: Byte);
     function GetSize: Integer;
+
+    function GetSVGIconItems: TSVGIconItems; virtual; abstract;
+    procedure SetSVGIconItems(const Value: TSVGIconItems); virtual;
 
     function GetImages(Index: Integer): TSVG; virtual; abstract;
     function GetNames(Index: Integer): string; virtual; abstract;
@@ -98,7 +102,7 @@ type
     function IsScaled: Boolean; override;
     {$ENDIF}
 
-
+    property SVGIconItems: TSVGIconItems read GetSVGIconItems write SetSVGIconItems;
     property Count: Integer read GetCount;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
     property Width: Integer read GetWidth write SetWidth stored StoreWidth default DEFAULT_SIZE;
@@ -128,8 +132,7 @@ uses
   Vcl.ImgList,
   Vcl.Forms,
   GDIPUtils,
-  SVGTypes,
-  SVGIconItems;
+  SVGTypes;
 
 { TSVGIconImageListBase }
 
@@ -298,7 +301,6 @@ end;
 function TSVGIconImageListBase.GetWidth: Integer;
 begin
   Result := inherited Width;
-
 end;
 
 {$IFDEF D10_4+}
@@ -417,6 +419,12 @@ begin
     end;
     RecreateBitmaps;
   end;
+end;
+
+procedure TSVGIconImageListBase.SetSVGIconItems(const Value: TSVGIconItems);
+begin
+  if Assigned(SvgIconItems) then
+    SvgIconItems.Assign(Value);
 end;
 
 procedure TSVGIconImageListBase.SetWidth(const Value: Integer);
