@@ -9,6 +9,7 @@ object MainForm: TMainForm
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 400
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -19,8 +20,8 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object Splitter1: TSplitter
-    Left = 624
+  object Splitter: TSplitter
+    Left = 626
     Top = 38
     Height = 509
     Align = alRight
@@ -41,20 +42,20 @@ object MainForm: TMainForm
       Left = 1
       Top = 1
       Width = 200
-      Height = 345
+      Height = 272
       Align = alClient
       Caption = 'Select Theme/Color'
-      TabOrder = 3
+      TabOrder = 0
       OnClick = SelectThemeRadioGroupClick
     end
-    object GroupBox1: TGroupBox
+    object LoadGroupBox: TGroupBox
       Left = 1
-      Top = 346
+      Top = 273
       Width = 200
       Height = 59
       Align = alBottom
       Caption = 'Load SVG from disk'
-      TabOrder = 0
+      TabOrder = 1
       object BuildFromFilesButton: TButton
         Left = 3
         Top = 23
@@ -67,12 +68,12 @@ object MainForm: TMainForm
     end
     object SliderPanel: TPanel
       Left = 1
-      Top = 446
+      Top = 373
       Width = 200
       Height = 62
       Align = alBottom
       BevelOuter = bvNone
-      TabOrder = 1
+      TabOrder = 3
       object IconSizeLabel: TLabel
         Left = 8
         Top = 3
@@ -97,7 +98,7 @@ object MainForm: TMainForm
     end
     object ButtonsPanel: TPanel
       Left = 1
-      Top = 405
+      Top = 332
       Width = 200
       Height = 41
       Align = alBottom
@@ -122,6 +123,33 @@ object MainForm: TMainForm
         OnClick = ShowImageEditorButtonClick
       end
     end
+    object ColorGroupBox: TGroupBox
+      Left = 1
+      Top = 435
+      Width = 200
+      Height = 73
+      Align = alBottom
+      Caption = 'Fixed color'
+      TabOrder = 4
+      object FixedColorComboBox: TComboBox
+        Left = 10
+        Top = 19
+        Width = 178
+        Height = 21
+        Style = csDropDownList
+        TabOrder = 0
+        OnSelect = FixedColorComboBoxSelect
+      end
+      object GrayScaleCheckBox: TCheckBox
+        Left = 10
+        Top = 50
+        Width = 97
+        Height = 17
+        Caption = 'GrayScale'
+        TabOrder = 1
+        OnClick = GrayScaleCheckBoxClick
+      end
+    end
   end
   object TopToolBar: TToolBar
     Left = 0
@@ -133,6 +161,7 @@ object MainForm: TMainForm
     ButtonWidth = 39
     Images = SVGIconImageList
     TabOrder = 1
+    Transparent = False
     object ToolButton1: TToolButton
       Left = 0
       Top = 0
@@ -162,6 +191,7 @@ object MainForm: TMainForm
       Left = 195
       Top = 0
       Action = ChangeIconAction
+      ImageIndex = 100
     end
     object ToolButton7: TToolButton
       Left = 234
@@ -169,20 +199,21 @@ object MainForm: TMainForm
       Caption = 'Change Color'
       Enabled = False
       ImageIndex = 7
+      OnClick = ChangeColorActionExecute
     end
   end
-  object Panel2: TPanel
-    Left = 627
+  object paButtons: TPanel
+    Left = 629
     Top = 38
-    Width = 82
+    Width = 80
     Height = 509
     Align = alRight
     TabOrder = 2
-    OnResize = Panel2Resize
+    OnResize = paButtonsResize
     object SVGIconImage: TSVGIconImage
       Left = 1
       Top = 428
-      Width = 80
+      Width = 78
       Height = 80
       Hint = 'Click left - right mouse button to change icon into SVGIconImage'
       Margins.Left = 10
@@ -190,48 +221,45 @@ object MainForm: TMainForm
       Margins.Right = 10
       Margins.Bottom = 10
       AutoSize = False
-      Center = True
       Proportional = False
-      Stretch = True
-      Opacity = 255
-      Scale = 1.000000000000000000
       ImageList = SVGIconImageList
       ImageIndex = 100
       Align = alBottom
       OnMouseDown = SVGIconImageMouseDown
+      ExplicitWidth = 80
     end
-    object DeleteButton: TBitBtn
-      Left = 5
+    object DeleteButton: TButton
+      Left = 2
       Top = 5
       Width = 73
       Height = 60
       Action = DeleteIconAction
-      Caption = 'Delete Icon'
-      Layout = blGlyphTop
+      ImageAlignment = iaTop
+      Images = SVGIconImageList
       TabOrder = 0
     end
-    object ChangeIconButton: TBitBtn
-      Left = 5
+    object ChangeIconButton: TButton
+      Left = 3
       Top = 71
       Width = 73
       Height = 60
       Action = ChangeIconAction
-      Caption = 'Change icon'
-      Layout = blGlyphTop
+      ImageAlignment = iaTop
+      Images = SVGIconImageList
       TabOrder = 1
     end
   end
   object ClientPanel: TPanel
     Left = 202
     Top = 38
-    Width = 422
+    Width = 424
     Height = 509
     Align = alClient
     TabOrder = 3
     object ImageListLabel: TLabel
       Left = 1
       Top = 209
-      Width = 420
+      Width = 422
       Height = 13
       Align = alTop
       Alignment = taCenter
@@ -241,7 +269,7 @@ object MainForm: TMainForm
     object TreeView: TTreeView
       Left = 1
       Top = 1
-      Width = 420
+      Width = 422
       Height = 208
       Align = alTop
       Images = SVGIconImageList
@@ -261,7 +289,7 @@ object MainForm: TMainForm
     object ImageView: TListView
       Left = 1
       Top = 222
-      Width = 420
+      Width = 422
       Height = 286
       Align = alClient
       Columns = <>
@@ -307,9 +335,12 @@ object MainForm: TMainForm
       ImageIndex = 0
     end
   end
+  object ColorDialog: TColorDialog
+    Left = 472
+    Top = 136
+  end
   object SVGIconImageList: TSVGIconImageList
-    Width = 32
-    Height = 32
+    ColorDepth = cd32Bit
     Size = 32
     Left = 384
     Top = 432

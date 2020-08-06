@@ -37,7 +37,7 @@ uses
   StdCtrls, Buttons, StdActns,
   ActnList, ExtCtrls, ComCtrls, ToolWin,
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
-  System.Actions;
+  System.Actions, System.ImageList;
 
 type
   TMainForm = class(TForm)
@@ -53,14 +53,14 @@ type
     ToolButton5: TToolButton;
     ToolButton6: TToolButton;
     ToolButton7: TToolButton;
-    Panel2: TPanel;
-    DeleteButton: TBitBtn;
-    ChangeIconButton: TBitBtn;
+    paButtons: TPanel;
+    DeleteButton: TButton;
+    ChangeIconButton: TButton;
     ClientPanel: TPanel;
     TreeView: TTreeView;
     ImageView: TListView;
     ImageListLabel: TLabel;
-    GroupBox1: TGroupBox;
+    LoadGroupBox: TGroupBox;
     BuildFromFilesButton: TButton;
     DeleteIconAction: TAction;
     SliderPanel: TPanel;
@@ -69,11 +69,15 @@ type
     ButtonsPanel: TPanel;
     ClearButton: TButton;
     ShowImageEditorButton: TButton;
+    ColorDialog: TColorDialog;
     DisabledAction: TAction;
     SVGIconImageList: TSVGIconImageList;
     OpenDialog: TOpenPictureDialog;
     SVGIconImage: TSVGIconImage;
-    Splitter1: TSplitter;
+    Splitter: TSplitter;
+    ColorGroupBox: TGroupBox;
+    FixedColorComboBox: TComboBox;
+    GrayScaleCheckBox: TCheckBox;
     procedure ChangeIconActionExecute(Sender: TObject);
     procedure SelectThemeRadioGroupClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -81,13 +85,17 @@ type
     procedure TrackBarChange(Sender: TObject);
     procedure ClearButtonClick(Sender: TObject);
     procedure DeleteIconActionExecute(Sender: TObject);
+    procedure ChangeColorActionExecute(Sender: TObject);
     procedure ImageViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure BuildFromFilesButtonClick(Sender: TObject);
     procedure SVGIconImageMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure Panel2Resize(Sender: TObject);
+    procedure paButtonsResize(Sender: TObject);
+    procedure GrayScaleCheckBoxClick(Sender: TObject);
+    procedure FixedColorComboBoxSelect(Sender: TObject);
   private
+    FUpdating: Boolean;
     FSVGIconImageListHot: TSVGIconImageList;
     FSVGIconImageListDisabled: TSVGIconImageList;
     {$IFDEF HiDPISupport}
@@ -112,6 +120,7 @@ uses
   {$IFDEF DXE3+}
   , UITypes
   {$ENDIF}
+  , SVGColor
   , SVGIconUtils
   , SVGIconImageListEditorUnit;
 
@@ -147,6 +156,14 @@ begin
     MessageDlg(Format('Built %d Icons in %d milliseconds!',
       [LCount, LStop - LStart]), mtInformation, [mbOK], 0);
   end;
+  UpdateGUI;
+end;
+
+procedure TMainForm.ChangeColorActionExecute(Sender: TObject);
+begin
+  ColorDialog.Color := SVGColorToColor(SVGIconImageList.FixedColor);
+  if ColorDialog.Execute then
+    SVGIconImageList.FixedColor := ColorToSVGColor(ColorDialog.Color);
   UpdateGUI;
 end;
 
@@ -186,10 +203,24 @@ begin
 end;
 {$ENDIF}
 
+procedure TMainForm.FixedColorComboBoxSelect(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    SVGIconImageList.FixedColor := SVGColorNameToSVGColor(FixedColorComboBox.Text);
+    UpdateGUI;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
 procedure TMainForm.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
+  FixedColorComboBox.Sorted := False;
+  AssignSVGColorList(FixedColorComboBox.Items);
+
   FSVGIconImageListHot := TSVGIconImageList.Create(Self);
   FSVGIconImageListDisabled := TSVGIconImageList.Create(Self);
 
@@ -219,6 +250,17 @@ begin
   TrackBarChange(TrackBar);
 end;
 
+procedure TMainForm.GrayScaleCheckBoxClick(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    SVGIconImageList.GrayScale := GrayScaleCheckBox.Checked;
+    UpdateGUI;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
 procedure TMainForm.SelectThemeRadioGroupClick(Sender: TObject);
 var
   LStyleName: string;
@@ -245,7 +287,7 @@ begin
   SVGIconImage.ImageIndex := Item.Index;
 end;
 
-procedure TMainForm.Panel2Resize(Sender: TObject);
+procedure TMainForm.paButtonsResize(Sender: TObject);
 begin
   SVGIconImage.Height := SVGIconImage.width;
 end;
@@ -269,16 +311,26 @@ procedure TMainForm.updateGUI;
 var
   LSize: Integer;
 begin
-  LSize := SVGIconImageList.Height;
-  IconSizeLabel.Caption := Format('Icons size: %d',[LSize]);
-  TopToolBar.ButtonHeight := LSize + 2;
-  TopToolBar.ButtonWidth := LSize + 2;
-  TopToolBar.Height := LSize + 6;
-  TreeView.Indent := LSize;
+  if FUpdating then
+    Exit;
+  FUpdating := True;
+  try
+    LSize := SVGIconImageList.Height;
+    IconSizeLabel.Caption := Format('Icons size: %d',[LSize]);
+    TopToolBar.ButtonHeight := LSize + 2;
+    TopToolBar.ButtonWidth := LSize + 2;
+    TopToolBar.Height := LSize + 6;
+    TreeView.Indent := LSize;
+    Splitter.MinSize := DeleteButton.Width + 8;
 
-  UpdateButtons;
-  UpdateListView;
-  UpdateTreeView;
+    UpdateButtons;
+    UpdateListView;
+    UpdateTreeView;
+    GrayScaleCheckBox.Checked := SVGIconImageList.GrayScale;
+    FixedColorComboBox.ItemIndex := FixedColorComboBox.Items.IndexOf(SVGColorToSVGColorName(SVGIconImageList.FixedColor));
+  finally
+    FUpdating := False;
+  end;
 end;
 
 procedure TMainForm.UpdateTreeView;

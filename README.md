@@ -1,6 +1,15 @@
 # SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## An extended ImageList for Delphi (VCL+FMX) to simplify use of SVG Icons (resize, opacity and more...)
+## An extended ImageList for Delphi (VCL+FMX) to simplify use of SVG Icons (resize, opacity, grayscale and more...)
+
+| Component | Description |
+| - | - |
+| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png) | **SVGIconImageList is an extended ImageList for Delphi (VCL+FMX) to simplify use of SVG Icons (resize, opacity, grayscale and more...)** |
+| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageComponentIcon.png) | **SVGIconImage is an extended Image component for Delphi (VCL+FMX) to show any SVG image directly or included into a an SVGIconImageList with all functionality (stretch, opacity, grayscale and more...)** |
+
+SVGIconImageList, as a TVirtualImageList+TImageCollection, can draw icons in SVG format at any resolution. The ImageList scales automatically when DPI changed. You can use those components from Delphi DXE6 to actual version.
+
+![Delphi 10.4 Sydney Support](/Demo/Images/SupportingDelphi.jpg)
 
 **Sample image of VCL version**
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/Sample.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/Sample.jpg)
@@ -11,15 +20,49 @@
 **Sample image of the VCL SVGText-property editor**
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg)
 
+**UTILITY**
+
+The [SVG Icon Explorer](https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIconExplorer) utility is useful to explore and preview your svg image collections.
+
+![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGIconExplorer.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGIconExplorer.jpg)
+
 **DOCUMENTATION**
 
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
-**RELEASE NOTES:**
-
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png)
 
-05 June 2020: version 1.3 (VCL+FMX)
+**RELEASE NOTES:**
+05 Aug 2020: version 1.7 (VCL+FMX)
+ - Added DPIChanged method
+ - Enhanced SVGExplorer
+ - Fixed issue #20: replaced Double with Single
+ - Fixed issue #19 and 18#: Load/SaveToStream inefficient and encoding inconsistency
+ - Fixed issue #17: Wrong conversion from pt to px
+ - Fixed issue #14: scaling problem
+ - Fixed issue #11: Incompatible with Drag-Drop of TImageList
+ - Fixed issue #6: Rendering of some SVG images is incorrect
+
+15 July 2020: version 1.6 (VCL+FMX)
+ - Fixed rendering on TButton! (VCL)
+ - Fixed "Apply" into ImageEditor (VCL)
+ - Added reformat XML to ImageEditor (VCL)
+ - Added utility to explore icons into disk/folder (SVGExplorer)
+ - Fixed inherited color drawing (SVG)
+ - Fixed storing properties into dfm in binary mode (VCL)
+ - Fixed storing for some properties (don't store default values)
+ 
+13 June 2020: versione 1.5 (VCL+FMX)
+ - Added support for DisabledGrayScale and DisabledOpacity as in VirtualImageList
+ - Fixed drawing disabled icons also with VCLStyles active
+
+09 June 2020: versione 1.4 (VCL+FMX)
+- Added GrayScale and FixedColor to ImageList for every Icons
+- Added GrayScale and FixedColor for single Icon
+- Added some complex svg demo images
+- Updated demos
+
+06 June 2020: version 1.3 (VCL+FMX)
 - Added property editor for TSVGIconImage.SVGText and TSVGIconItem.SVGText
 - Fixed some drawing problems with transform attribute
 - Fixed rescaling icons when monitor DPI changes

@@ -19,7 +19,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   TextHeight = 13
   object TopSplitter: TSplitter
     Left = 0
-    Top = 170
+    Top = 183
     Width = 679
     Height = 4
     Cursor = crVSplit
@@ -32,9 +32,9 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   end
   object ImageListGroup: TGroupBox
     Left = 0
-    Top = 174
+    Top = 187
     Width = 679
-    Height = 319
+    Height = 306
     Align = alClient
     Caption = '%d Icons of Imagelist'
     TabOrder = 1
@@ -42,7 +42,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Left = 2
       Top = 15
       Width = 675
-      Height = 302
+      Height = 289
       Align = alClient
       Columns = <>
       DragMode = dmAutomatic
@@ -62,7 +62,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
     Left = 0
     Top = 0
     Width = 679
-    Height = 170
+    Height = 183
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
@@ -70,7 +70,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Left = 0
       Top = 0
       Width = 596
-      Height = 170
+      Height = 183
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
@@ -118,6 +118,15 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Caption = 'Opacity (255-0)'
           Transparent = True
         end
+        object FixedColorLabel: TLabel
+          Left = 354
+          Top = 15
+          Width = 63
+          Height = 13
+          AutoSize = False
+          Caption = 'Fixed Color'
+          Transparent = True
+        end
         object SizeSpinEdit: TSpinEdit
           Left = 8
           Top = 30
@@ -131,8 +140,8 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           OnChange = SizeSpinEditChange
         end
         object StoreAsTextCheckBox: TCheckBox
-          Left = 368
-          Top = 32
+          Left = 505
+          Top = 13
           Width = 85
           Height = 17
           Caption = 'StoreAsText'
@@ -175,18 +184,36 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Value = 0
           OnChange = OpacitySpinEditChange
         end
+        object FixedColorComboBox: TComboBox
+          Left = 354
+          Top = 30
+          Width = 136
+          Height = 21
+          Style = csDropDownList
+          TabOrder = 5
+          OnSelect = FixedColorComboBoxSelect
+        end
+        object GrayScaleCheckBox: TCheckBox
+          Left = 505
+          Top = 32
+          Width = 85
+          Height = 17
+          Caption = 'GrayScale'
+          TabOrder = 6
+          OnClick = GrayScaleCheckBoxClick
+        end
       end
       object ItemGroupBox: TGroupBox
         Left = 0
         Top = 62
         Width = 596
-        Height = 108
+        Height = 121
         Align = alClient
         Caption = 'Properties of Selected Icon n.%d'
         TabOrder = 1
         DesignSize = (
           596
-          108)
+          121)
         object IconNameLabel: TLabel
           Left = 94
           Top = 19
@@ -194,6 +221,15 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Height = 13
           AutoSize = False
           Caption = 'IconName'
+          Transparent = True
+        end
+        object Label1: TLabel
+          Left = 94
+          Top = 55
+          Width = 63
+          Height = 13
+          AutoSize = False
+          Caption = 'Fixed Color'
           Transparent = True
         end
         object IconPanel: TPanel
@@ -214,34 +250,47 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             Width = 72
             Height = 72
             AutoSize = False
-            Center = True
             Proportional = False
-            Stretch = True
-            Opacity = 255
-            Scale = 1.000000000000000000
-            ImageIndex = -1
             Align = alClient
           end
         end
         object IconName: TEdit
           Left = 94
           Top = 34
-          Width = 158
+          Width = 136
           Height = 21
           Hint = 'Icon Name'
           TabOrder = 1
           OnExit = IconNameExit
         end
         object SVGText: TMemo
-          Left = 258
+          Left = 236
           Top = 10
-          Width = 332
-          Height = 93
+          Width = 353
+          Height = 106
           Hint = 'SVG Text'
           Anchors = [akLeft, akTop, akRight, akBottom]
           ScrollBars = ssBoth
+          TabOrder = 4
+          OnChange = SVGTextChange
+        end
+        object FixedColorItemComboBox: TComboBox
+          Left = 94
+          Top = 70
+          Width = 136
+          Height = 21
+          Style = csDropDownList
           TabOrder = 2
-          OnExit = SVGTextExit
+          OnSelect = FixedColorItemComboBoxSelect
+        end
+        object GrayScaleItemCheckBox: TCheckBox
+          Left = 94
+          Top = 97
+          Width = 85
+          Height = 17
+          Caption = 'GrayScale'
+          TabOrder = 3
+          OnClick = GrayScaleItemCheckBoxClick
         end
       end
     end
@@ -249,7 +298,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Left = 596
       Top = 0
       Width = 83
-      Height = 170
+      Height = 183
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 1
@@ -291,6 +340,15 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         Caption = '&Apply'
         TabOrder = 2
         OnClick = ApplyButtonClick
+      end
+      object ReformatXMLButton: TButton
+        Left = 2
+        Top = 152
+        Width = 75
+        Height = 25
+        Caption = 'Reformat &XML'
+        TabOrder = 4
+        OnClick = ReformatXMLButtonClick
       end
     end
   end
@@ -363,14 +421,14 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   object OpenDialog: TOpenPictureDialog
     Filter = 'Scalable Vector Graphics (*.svg)|*.svg'
     Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
-    Left = 464
-    Top = 16
+    Left = 328
+    Top = 96
   end
   object SaveDialog: TSavePictureDialog
     DefaultExt = 'svg'
     Filter = 'Bitmaps (*.bmp)|*.bmp'
     Options = [ofOverwritePrompt, ofPathMustExist, ofEnableSizing]
-    Left = 528
-    Top = 16
+    Left = 392
+    Top = 96
   end
 end

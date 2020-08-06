@@ -1,19 +1,19 @@
-      {******************************************************************}
-      { Parse of SVG property values                                     }
-      {                                                                  }
-      { home page : http://www.mwcs.de                                   }
-      { email     : martin.walter@mwcs.de                                }
-      {                                                                  }
-      { date      : 05-04-2008                                           }
-      {                                                                  }
-      { Use of this file is permitted for commercial and non-commercial  }
-      { use, as long as the author is credited.                          }
-      { This file (c) 2005, 2008 Martin Walter                           }
-      {                                                                  }
-      { This Software is distributed on an "AS IS" basis, WITHOUT        }
-      { WARRANTY OF ANY KIND, either express or implied.                 }
-      {                                                                  }
-      { *****************************************************************}
+{******************************************************************}
+{ Parse of SVG property values                                     }
+{                                                                  }
+{ home page : http://www.mwcs.de                                   }
+{ email     : martin.walter@mwcs.de                                }
+{                                                                  }
+{ date      : 05-04-2008                                           }
+{                                                                  }
+{ Use of this file is permitted for commercial and non-commercial  }
+{ use, as long as the author is credited.                          }
+{ This file (c) 2005, 2008 Martin Walter                           }
+{                                                                  }
+{ This Software is distributed on an "AS IS" basis, WITHOUT        }
+{ WARRANTY OF ANY KIND, either express or implied.                 }
+{                                                                  }
+{ *****************************************************************}
 
 unit SVGParse;
 
@@ -218,7 +218,7 @@ function GetFactor(const SVGUnit: TSVGUnit): TFloat;
 begin
   case SVGUnit of
     suPX: Result := 1;
-    suPT: Result := 1.25;
+    suPT: Result := 1.3333;
     suPC: Result := 15;
     suMM: Result := 10;
     suCM: Result := 100;
@@ -345,18 +345,24 @@ var
   SL: TStrings;
   X, Y, Angle: TFloat;
 begin
+  X := 0;
+  Y := 0;
+  Angle := 0;
   SL := GetValues(S, ',');
   try
-    Angle := ParseAngle(SL[0]);
+    if SL.Count > 0 then
+    begin
+      Angle := ParseAngle(SL[0]);
 
-    if SL.Count = 3 then
-    begin
-      X := StrToTFloat(SL[1]);
-      Y := StrToTFloat(SL[2]);
-    end else
-    begin
-      X := 0;
-      Y := 0;
+      if SL.Count = 3 then
+      begin
+        X := StrToTFloat(SL[1]);
+        Y := StrToTFloat(SL[2]);
+      end else
+      begin
+        X := 0;
+        Y := 0;
+      end;
     end;
   finally
     SL.Free;

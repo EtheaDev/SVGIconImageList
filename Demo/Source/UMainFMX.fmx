@@ -60,7 +60,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       IsChecked = True
       Position.X = 8.000000000000000000
       Position.Y = 88.000000000000000000
-      TabOrder = 6
+      TabOrder = 7
       Text = 'AutoSize'
       OnChange = AutoSizeCheckBoxChange
     end
@@ -86,7 +86,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
     end
     object SpinBox1: TSpinBox
       Touch.InteractiveGestures = [LongTap, DoubleTap]
-      TabOrder = 7
+      TabOrder = 8
       Cursor = crIBeam
       DecimalDigits = 0
       Max = 1200.000000000000000000
@@ -94,6 +94,13 @@ object SVGIconImageListForm: TSVGIconImageListForm
       Position.X = 208.000000000000000000
       Position.Y = 16.000000000000000000
       OnChange = SpinBox1Change
+    end
+    object GrayScaleCheckBox: TCheckBox
+      Position.X = 121.000000000000000000
+      Position.Y = 88.000000000000000000
+      TabOrder = 6
+      Text = 'GrayScale'
+      OnChange = GrayScaleCheckBoxChange
     end
   end
   object ImageView: TListBox

@@ -61,6 +61,7 @@ type
     FOwnerCollection: TSVGIconFixedMultiResBitmap;
     FIconName: string;
     FSVG: TSVG;
+    function StoreOpacity: Boolean;
     procedure SetBitmap(const AValue: TBitmapOfItem);
     function GetBitmap: TBitmapOfItem;
     procedure SetSize(const AValue: Integer);
@@ -78,7 +79,7 @@ type
     property SVG: TSVG read FSVG;
   published
     property Bitmap: TBitmapOfItem read GetBitmap write SetBitmap stored False;
-    property Opacity: Single read FOpacity write SetOpacity;
+    property Opacity: Single read FOpacity write SetOpacity stored StoreOpacity;
     property Size: Integer read FSize write SetSize;
     property IconName: string read FIconName write SetIconName;
     property SVGText: string read GetSVGText write SetSVGText;
@@ -236,6 +237,11 @@ end;
 procedure TSVGIconFixedBitmapItem.SetSVGText(const Value: string);
 begin
   FSVG.LoadFromText(Value);
+end;
+
+function TSVGIconFixedBitmapItem.StoreOpacity: Boolean;
+begin
+  Result := FOpacity <> 1;
 end;
 
 { TSVGIconImage }

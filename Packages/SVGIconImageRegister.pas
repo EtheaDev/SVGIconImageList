@@ -122,7 +122,7 @@ end;
 
 function TSVGIconImageListProperty.GetAttributes: TPropertyAttributes;
 begin
-  Result := inherited GetAttributes + [paDialog, paReadOnly];
+  Result := inherited GetAttributes + [paDialog];
 end;
 
 function TSVGIconImageListProperty.GetValue: string;
@@ -172,7 +172,7 @@ begin
      TSVGIconImageList]);
 
   RegisterComponentEditor(TSVGIconImageList, TSVGIconImageListCompEditor);
-  RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageList, 'IconItems', TSVGIconImageListProperty);
+  RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageList, 'SVGIconItems', TSVGIconImageListProperty);
   RegisterPropertyEditor(TypeInfo(string), TSVGIconItem, 'SVGText', TSVGTextProperty);
   RegisterPropertyEditor(TypeInfo(string), TSVGIconImage, 'SVGText', TSVGTextProperty);
 end;

@@ -50,10 +50,14 @@ uses
   , FMX.Graphics
   , FMX.Objects
   , SVG
+  , SVGColor
   ;
 
 const
-  SVGIconImageListVersion = '1.3.0';
+  SVGIconImageListVersion = '1.7.0';
+
+resourcestring
+  ERROR_LOADING_FILES = 'SVG error loading files:';
 
 type
   TSVGIconMultiResBitmap = class;
@@ -71,6 +75,8 @@ type
     function GetOpacity: single;
     function GetSize: Integer;
     function GetSVG: TSVG;
+    function GetGrayScale: Boolean;
+    function GetSVGColor: TSVGColor;
   protected
     function BitmapStored: Boolean; override;
     function GetDisplayName: string; override;
@@ -83,6 +89,8 @@ type
     property Size: Integer read GetSize write SetSize default 32;
     //Readonly properties from Source Item
     property Opacity: single read GetOpacity stored false;
+    property FixedColor: TSVGColor read GetSVGColor stored false;
+    property GrayScale: Boolean read GetGrayScale stored false;
   end;
 
   TSVGIconBitmapItemClass = class of TSVGIconBitmapItem;
@@ -96,11 +104,14 @@ type
   public
   end;
 
+  {TSVGIconSourceItem}
   TSVGIconSourceItem = class(TCustomSourceItem)
   private
     FOwnerImageList: TSVGIconImageList;
-    FOpacity: single;
     FSVG: TSVG;
+    FOpacity: single;
+    FFixedColor: TSVGColor;
+    FGrayScale: Boolean;
     procedure UpdateAllItems;
     procedure SetOpacity(const AValue: single);
     procedure AutoSizeBitmap(const ASize: Integer);
@@ -109,8 +120,12 @@ type
     function GetOpacity: single;
     function GetDestinationItem: TCustomDestinationItem;
     procedure SetSVG(const Value: TSVG);
-    function GetSVGText: string;
     procedure SetSVGText(const Value: string);
+    function GetSVGText: string;
+    procedure SetFixedColor(const Value: TSVGColor);
+    procedure SetGrayScale(const Value: Boolean);
+    function GetFixedColor: TSVGColor;
+    function GetGrayScale: Boolean;
   protected
     function GetDisplayName: string; override;
     function CreateMultiResBitmap: TMultiResBitmap; override;
@@ -125,19 +140,27 @@ type
     property IconName: string read GetIconName write SetIconName;
     property Opacity: single read GetOpacity write SetOpacity stored StoreOpacity;
     property SVGText: string read GetSVGText write SetSVGText;
+    property FixedColor: TSVGColor read GetFixedColor write SetFixedColor default TSVGColor.inherit_color;
+    property GrayScale: Boolean read GetGrayScale write SetGrayScale default False;
   end;
 
+  {TSVGIconImageList}
   TSVGIconImageList = class(TCustomImageList)
   private
     FSize: Integer;
     FAutoSizeBitmaps: Boolean;
     FOpacity: single;
+    FFixedColor: TSVGColor;
+    FGrayScale: Boolean;
+    function StoreOpacity: Boolean;
     procedure SetAutoSizeBitmaps(const Value: Boolean);
     procedure UpdateSourceItems;
     procedure UpdateDestination(Size: TSize; const Index: Integer);
     procedure SetOpacity(const Value: single);
     function GetSize: Integer;
     procedure SetSize(const Value: Integer);
+    procedure SetFixedColor(const Value: TSVGColor);
+    procedure SetGrayScale(const Value: Boolean);
   protected
     procedure Loaded; override;
     function CreateSource: TSourceCollection; override;
@@ -148,6 +171,7 @@ type
     procedure DeleteIcon(const AIndex: Integer);
     function InsertIcon(const AIndex: Integer;
       const ASVGText: string; const AIconName: string = ''): TSVGIconSourceItem;
+    function CloneIcon(const AIndex: Integer; const AInsertIndex: Integer = -1): TSVGIconSourceItem;
     //Multiple icons methods
     function LoadFromFiles(const AFileNames: TStrings;
       const AAppend: Boolean = True): Integer;
@@ -160,7 +184,9 @@ type
     property OnChanged;
     property Size: Integer read GetSize write SetSize default 32;
     property AutoSizeBitmaps: Boolean read FAutoSizeBitmaps write SetAutoSizeBitmaps default True;
-    property Opacity: single read FOpacity write SetOpacity;
+    property Opacity: single read FOpacity write SetOpacity stored StoreOpacity;
+    property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
+    property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
   end;
 
 procedure PaintToBitmap(const ABitmap: TBitmap; const ASVG: TSVG);
@@ -226,8 +252,10 @@ begin
       end;
 
       Bitmap.Unmap(BitmapData);
+
       ABitmap.Canvas.BeginScene;
       Try
+        ABitmap.Clear(TAlphaColors.Null);
         ABitmap.Canvas.DrawBitmap(Bitmap, TRectF.Create(0, 0, ABitmap.Width, ABitmap.Height),
           TRectF.Create(0, 0, ABitmap.Width, ABitmap.Height), 100);
       Finally
@@ -269,6 +297,8 @@ begin
   LBitmap.Width  := LBitmapSize;
   LBitmap.Height := LBitmapSize;
   SVG.SVGOpacity := Opacity;
+  SVG.FixedColor := FixedColor;
+  SVG.Grayscale := GrayScale;
   PaintToBitmap(LBitmap, SVG);
 end;
 
@@ -285,6 +315,11 @@ begin
      Size, Size, FloatToStr(Scale)]);
 end;
 
+function TSVGIconBitmapItem.GetGrayScale: Boolean;
+begin
+  Result := FOwnerMultiResBitmap.FOwnerSourceItem.GrayScale;
+end;
+
 function TSVGIconBitmapItem.GetOpacity: single;
 begin
   Result := FOwnerMultiResBitmap.FOwnerSourceItem.Opacity;
@@ -298,6 +333,11 @@ end;
 function TSVGIconBitmapItem.GetSVG: TSVG;
 begin
   Result := FOwnerMultiResBitmap.FOwnerSourceItem.SVG;
+end;
+
+function TSVGIconBitmapItem.GetSVGColor: TSVGColor;
+begin
+  Result := FOwnerMultiResBitmap.FOwnerSourceItem.FixedColor;
 end;
 
 procedure TSVGIconBitmapItem.SetBitmap(const AValue: TBitmapOfItem);
@@ -353,6 +393,8 @@ begin
   if Source is TSVGIconSourceItem then
   begin
     FOpacity := TSVGIconSourceItem(Source).FOpacity;
+    FFixedColor := TSVGIconSourceItem(Source).FFixedColor;
+    FGrayScale := TSVGIconSourceItem(Source).FGrayScale;
     FSVG.LoadFromText(TSVGIconSourceItem(Source).SVG.Source);
   end;
   inherited;
@@ -372,8 +414,10 @@ end;
 constructor TSVGIconSourceItem.Create(Collection: TCollection);
 begin
   inherited Create(Collection);
-  FOpacity := -1;
   FSVG := TSVG.Create;
+  FOpacity := -1;
+  FixedColor := inherit_color;
+  FGrayScale := False;
   UpdateAllItems;
 end;
 
@@ -392,6 +436,22 @@ end;
 function TSVGIconSourceItem.GetDisplayName: string;
 begin
   Result := Format('%d.%s', [Index, Name])
+end;
+
+function TSVGIconSourceItem.GetFixedColor: TSVGColor;
+begin
+  if FFixedColor = inherit_color then
+    Result := FOwnerImageList.FixedColor
+  else
+    Result := FFixedColor;
+end;
+
+function TSVGIconSourceItem.GetGrayScale: Boolean;
+begin
+  if not FGrayScale then
+    Result := FOwnerImageList.FGrayScale
+  else
+    Result := FGrayScale;
 end;
 
 function TSVGIconSourceItem.GetIconName: string;
@@ -423,6 +483,24 @@ begin
     if (LDest.LayersCount > 0) and
       SameText(LDest.Layers[0].Name, IconName) then
       Result := LDest;
+  end;
+end;
+
+procedure TSVGIconSourceItem.SetFixedColor(const Value: TSVGColor);
+begin
+  if FFixedColor <> Value then
+  begin
+    FFixedColor := Value;
+    UpdateAllItems;
+  end;
+end;
+
+procedure TSVGIconSourceItem.SetGrayScale(const Value: Boolean);
+begin
+  if FGrayScale <> Value then
+  begin
+    FGrayScale := Value;
+    UpdateAllItems;
   end;
 end;
 
@@ -502,11 +580,35 @@ begin
   Result := LItem;
   LItem.MultiResBitmap.Add;
   LItem.SVGText := ASVGText;
-  if AIconName <> '' then
-    LItem.Name := AIconName;
   LDest := Self.Destination.Insert(AIndex);
-  with LDest.Layers.Add do
-    Name := LItem.Name;
+  try
+    if AIconName <> '' then
+      LItem.Name := AIconName;
+  finally
+    with LDest.Layers.Add do
+      Name := LItem.Name;
+  end;
+end;
+
+function TSVGIconImageList.CloneIcon(const AIndex: Integer; const AInsertIndex: Integer = -1): TSVGIconSourceItem;
+var
+  LItem: TSVGIconSourceItem;
+  LNewIndex: Integer;
+begin
+  LItem := Self.Source.Items[AIndex] as TSVGIconSourceItem;
+
+  if AInsertIndex >= 0 then LNewIndex := AInsertIndex
+  else LNewIndex := AIndex;
+
+  Result := InsertIcon(LNewIndex, LItem.SVGText);
+  Result.Opacity := LItem.Opacity;
+  Result.FixedColor := LItem.FixedColor;
+  Result.GrayScale := LItem.GrayScale;
+  Result.SVG.LoadFromText(LItem.SVG.Source);
+
+  // Result.Assign(Self.Destination.Items[AIndex]);
+
+  UpdateSourceItems;
 end;
 
 function TSVGIconImageList.LoadFromFiles(const AFileNames: TStrings;
@@ -516,29 +618,31 @@ var
   LSVG: TSVG;
   LIconName, LFileName: string;
   LItem: TSVGIconSourceItem;
+  LErrors: string;
 begin
   Result := 0;
-  //StopDrawing(True);
+  LSVG := TSVG.Create;
   try
-    LSVG := TSVG.Create;
-    try
-      if not AAppend then
-        ClearIcons;
-      for LIndex := 0 to AFileNames.Count - 1 do
-      begin
-        LFileName := AFileNames[LIndex];
-        LSVG.LoadFromFile(LFileName);
-        LIconName := ChangeFileExt(ExtractFileName(LFileName), '');
+    if not AAppend then
+      ClearIcons;
+    for LIndex := 0 to AFileNames.Count - 1 do
+    begin
+      LFileName := AFileNames[LIndex];
+      LSVG.LoadFromFile(LFileName);
+      LIconName := ChangeFileExt(ExtractFileName(LFileName), '');
+      try
         LItem := InsertIcon(Source.Count, LSVG.Source, LIconName);
         LItem.SVG := LSVG;
         Inc(Result);
+      except
+        on E: Exception do
+          LErrors := LErrors + Format('%s (%s)',[E.Message, LFileName]) + sLineBreak;
       end;
-    finally
-      LSVG.Free;
     end;
+    if LErrors <> '' then
+      raise Exception.Create(ERROR_LOADING_FILES+sLineBreak+LErrors);
   finally
-    //StopDrawing(False);
-    //RecreateBitmaps;
+    LSVG.Free;
   end;
 end;
 
@@ -548,6 +652,8 @@ begin
   begin
     FSize := TSVGIconImageList(Source).FSize;
     Opacity := TSVGIconImageList(Source).Opacity;
+    FFixedColor := TSVGIconImageList(Source).FFixedColor;
+    FGrayScale := TSVGIconImageList(Source).FGrayScale;
     FAutoSizeBitmaps := TSVGIconImageList(Source).FAutoSizeBitmaps;
   end;
   inherited;
@@ -565,6 +671,8 @@ begin
   FAutoSizeBitmaps := True;
   FOpacity := 1;
   FSize := 32;
+  FixedColor := inherit_color;
+  FGrayScale := False;
 end;
 
 function TSVGIconImageList.CreateSource: TSourceCollection;
@@ -663,6 +771,24 @@ begin
     UpdateSourceItems;
 end;
 
+procedure TSVGIconImageList.SetFixedColor(const Value: TSVGColor);
+begin
+  if FFixedColor <> Value then
+  begin
+    FFixedColor := Value;
+    UpdateSourceItems;
+  end;
+end;
+
+procedure TSVGIconImageList.SetGrayScale(const Value: Boolean);
+begin
+  if FGrayScale <> Value then
+  begin
+    FGrayScale := Value;
+    UpdateSourceItems;
+  end;
+end;
+
 procedure TSVGIconImageList.UpdateSourceItems;
 var
   I: Integer;
@@ -673,6 +799,10 @@ begin
     LSourceItem := Source[I] as TSVGIconSourceItem;
     if LSourceItem.FOpacity = -1 then
       LSourceItem.Opacity := FOpacity;
+    if not LSourceItem.GrayScale then
+      LSourceItem.GrayScale := FGrayScale;
+    if LSourceItem.FixedColor = inherit_color then
+      LSourceItem.FixedColor := FFixedColor;
     LSourceItem.UpdateAllItems;
   end;
 end;
@@ -693,6 +823,11 @@ begin
     FSize := Value;
     UpdateSourceItems;
   end;
+end;
+
+function TSVGIconImageList.StoreOpacity: Boolean;
+begin
+  Result := FOpacity <> 1;
 end;
 
 initialization

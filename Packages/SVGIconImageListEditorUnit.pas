@@ -54,6 +54,10 @@ uses
   , SVGIconImageList
   ;
 
+resourcestring
+  SELECT_DIR = 'Select directory';
+  FILES_SAVED = '%d File(s) saved into "%s" folder';
+
 type
   TSVGIconImageListEditor = class(TForm)
     OKButton: TButton;
@@ -91,6 +95,13 @@ type
     OpacitySpinEdit: TSpinEdit;
     NewButton: TButton;
     TopSplitter: TSplitter;
+    FixedColorComboBox: TComboBox;
+    FixedColorLabel: TLabel;
+    GrayScaleCheckBox: TCheckBox;
+    Label1: TLabel;
+    FixedColorItemComboBox: TComboBox;
+    GrayScaleItemCheckBox: TCheckBox;
+    ReformatXMLButton: TButton;
     procedure FormCreate(Sender: TObject);
     procedure ApplyButtonClick(Sender: TObject);
     procedure ClearAllButtonClick(Sender: TObject);
@@ -116,8 +127,13 @@ type
     procedure OpacitySpinEditChange(Sender: TObject);
     procedure StoreAsTextCheckBoxClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure SVGTextExit(Sender: TObject);
     procedure NewButtonClick(Sender: TObject);
+    procedure SVGTextChange(Sender: TObject);
+    procedure GrayScaleCheckBoxClick(Sender: TObject);
+    procedure FixedColorComboBoxSelect(Sender: TObject);
+    procedure FixedColorItemComboBoxSelect(Sender: TObject);
+    procedure GrayScaleItemCheckBoxClick(Sender: TObject);
+    procedure ReformatXMLButtonClick(Sender: TObject);
   private
     FSourceList, FEditingList: TSVGIconImageList;
     FIconIndexLabel: string;
@@ -146,9 +162,11 @@ implementation
 
 uses
   SVG
+  , SVGColor
   , Types
-  , GDIPAPI
   , ShellApi
+  , FileCtrl
+  , XMLDoc
   , SVGIconUtils;
 
 var
@@ -214,6 +232,8 @@ begin
     try
       FEditingList.LoadFromFiles(OpenDialog.Files);
       BuildList(MaxInt);
+      FChanged := True;
+      UpdateGUI;
     finally
       Screen.Cursor := crDefault;
     end;
@@ -231,19 +251,26 @@ begin
     LIconItem := SelectedIcon;
     LIsItemSelected := LIconItem <> nil;
     ClearAllButton.Enabled := FEditingList.Count > 0;
-    ExportButton.Enabled := FEditingList.Count > 0;
+    ExportButton.Enabled := LIsItemSelected;
     DeleteButton.Enabled := LIsItemSelected;
+    ReformatXMLButton.Enabled := LIsItemSelected;
     ReplaceButton.Enabled := LIsItemSelected;
     ApplyButton.Enabled := FChanged;
     IconName.Enabled := LIsItemSelected;
     SVGText.Enabled := LIsItemSelected;
     ImageListGroup.Caption := Format(FTotIconsLabel, [FEditingList.Count]);
+    GrayScaleCheckBox.Checked := SVGIconImageList.GrayScale;
+    FixedColorComboBox.ItemIndex := FixedColorComboBox.Items.IndexOf(SVGColorToSVGColorName(SVGIconImageList.FixedColor));
     if LIsItemSelected then
     begin
       IconImage.ImageIndex := SelectedIcon.Index;
+      IconImage.Invalidate;
       ItemGroupBox.Caption := Format(FIconIndexLabel,[LIconItem.Index]);
       IconName.Text := LIconItem.IconName;
       SVGText.Lines.Text := LIconItem.SVGText;
+      FixedColorItemComboBox.ItemIndex :=
+        FixedColorItemComboBox.Items.IndexOf(SVGColorToSVGColorName(SelectedIcon.FixedColor));
+      GrayScaleItemCheckBox.Checked := SelectedIcon.GrayScale;
     end
     else
     begin
@@ -327,6 +354,11 @@ begin
   end;
 end;
 
+procedure TSVGIconImageListEditor.ReformatXMLButtonClick(Sender: TObject);
+begin
+  SVGText.Lines.Text := xmlDoc.FormatXMLData(SVGText.Lines.Text);
+end;
+
 procedure TSVGIconImageListEditor.ReplaceButtonClick(Sender: TObject);
 var
   LIndex: Integer;
@@ -358,7 +390,7 @@ begin
         FEditingList.RecreateBitmaps;
         SVG.Free;
       end;
-      BuildList(MaxInt);
+      BuildList(ImageView.ItemIndex);
     finally
       Screen.Cursor := crDefault;
     end;
@@ -394,11 +426,10 @@ begin
   FEditingList.StoreAsText := StoreAsTextCheckBox.Checked;
 end;
 
-procedure TSVGIconImageListEditor.SVGTextExit(Sender: TObject);
+procedure TSVGIconImageListEditor.SVGTextChange(Sender: TObject);
 begin
   if FUpdating then Exit;
   SelectedIcon.SVGText := SVGText.Lines.Text;
-  IconImage.Invalidate;
   UpdateGUI;
 end;
 
@@ -450,6 +481,24 @@ begin
   DeleteSelectedItem;
 end;
 
+procedure TSVGIconImageListEditor.FixedColorComboBoxSelect(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    FEditingList.FixedColor := SVGColorNameToSVGColor(FixedColorComboBox.Text);
+    UpdateGUI;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TSVGIconImageListEditor.FixedColorItemComboBoxSelect(Sender: TObject);
+begin
+  if FUpdating then Exit;
+  SelectedIcon.FixedColor := SVGColorNameToSVGColor(FixedColorItemComboBox.Text);
+  UpdateGUI;
+end;
+
 procedure TSVGIconImageListEditor.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
@@ -463,6 +512,8 @@ procedure TSVGIconImageListEditor.FormCreate(Sender: TObject);
 begin
   inherited;
   FEditingList := TSVGIconImageList.Create(Self);
+  AssignSVGColorList(FixedColorComboBox.Items);
+  AssignSVGColorList(FixedColorItemComboBox.Items);
   ImageView.LargeImages := FEditingList;
   IconImage.ImageList := FEditingList;
   FIconIndexLabel := ItemGroupBox.Caption;
@@ -505,17 +556,57 @@ begin
 end;
 
 procedure TSVGIconImageListEditor.ExportButtonClick(Sender: TObject);
-begin
-  if SaveDialog.Execute then
+var
+  FDir: string;
+
+  procedure SaveIconsToFiles(const AOutDir: string);
+  var
+    I, C: Integer;
+    LItem: TSVGIconItem;
+    LFileName: string;
   begin
     Screen.Cursor := crHourGlass;
     try
-      FEditingList.SaveToFile(SaveDialog.FileName);
-      //FEditingList.SVGIconItems[ImageView.ItemIndex].SVG.SaveToFile(SaveDialog.FileName);
+      C := 0;
+      for I := 0 to ImageView.Items.Count-1 do
+      begin
+        if ImageView.Items[I].Selected then
+        begin
+          LItem := FEditingList.SVGIconItems.Items[I];
+          if LItem.IconName <> '' then
+            LFileName := AOutDir+LItem.IconName+'.svg'
+          else
+            LFileName := AOutDir+IntToStr(I)+'.svg';
+          LItem.SVG.SaveToFile(LFileName);
+          Inc(C);
+        end;
+      end;
+      ShowMessageFmt(FILES_SAVED, [C, AOutDir]);
+
     finally
       Screen.Cursor := crDefault;
     end;
   end;
+
+begin
+  FDir := ExtractFilePath(OpenDialog.FileName);
+  if Win32MajorVersion >= 6 then
+    with TFileOpenDialog.Create(nil) do
+      try
+        Title := SELECT_DIR;
+        Options := [fdoPickFolders, fdoPathMustExist, fdoForceFileSystem];
+        DefaultFolder := FDir;
+        FileName := FDir;
+        if Execute then
+          SaveIconsToFiles(IncludeTrailingPathDelimiter(FileName));
+      finally
+        Free;
+      end
+  else
+    if SelectDirectory(SELECT_DIR,
+      ExtractFileDrive(FDir), FDir,
+      [sdNewUI, sdNewFolder]) then
+    SaveIconsToFiles(IncludeTrailingPathDelimiter(FDir));
 end;
 
 procedure TSVGIconImageListEditor.FormDestroy(Sender: TObject);
@@ -545,6 +636,25 @@ begin
 
   if ImageView.CanFocus then
     ImageView.SetFocus;
+end;
+
+procedure TSVGIconImageListEditor.GrayScaleCheckBoxClick(Sender: TObject);
+begin
+  if FUpdating then Exit;
+  Screen.Cursor := crHourGlass;
+  try
+    FEditingList.GrayScale := GrayScaleCheckBox.Checked;
+    UpdateGUI;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TSVGIconImageListEditor.GrayScaleItemCheckBoxClick(Sender: TObject);
+begin
+  if FUpdating then Exit;
+  SelectedIcon.GrayScale := GrayScaleItemCheckBox.Checked;
+  UpdateGUI;
 end;
 
 procedure TSVGIconImageListEditor.HeightSpinEditChange(Sender: TObject);

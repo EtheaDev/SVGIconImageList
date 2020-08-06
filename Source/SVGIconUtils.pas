@@ -43,9 +43,12 @@ uses
   , Graphics
   , ComCtrls;
 
-function UpdateSVGIconListView(const AListView: TListView): Integer;
+function UpdateSVGIconListView(const AListView: TListView;
+  const AIncludeIndex: Boolean = True): Integer;
 function UpdateSVGIconListViewCaptions(const AListView: TListView;
   const AShowCaption: Boolean = True): Integer;
+procedure ChangeSVGColor(var ASVGText: string;
+  const AColor: TColor; ANewColor: TColor);
 
 implementation
 
@@ -53,27 +56,41 @@ uses
   SysUtils
   , Windows
   , Themes
+  {$IFDEF D10_3}
+  , VirtualImageList
+  {$ENDIF}
   ;
 
-function UpdateSVGIconListView(const AListView: TListView): Integer;
+function UpdateSVGIconListView(const AListView: TListView;
+  const AIncludeIndex: Boolean = True): Integer;
 var
   I: Integer;
   LItem: TSVGIconItem;
   LListItem: TListItem;
-  LSVGIconImageList: TSVGIconImageList;
+  LImageList: TCustomImageList;
+
+  function GetItemCaption: string;
+  begin
+    if AIncludeIndex then
+      Result := Format('%d.%s', [LItem.Index, LItem.IconName])
+    else
+      Result := Format('%s', [LItem.IconName]);
+  end;
 begin
-  LSVGIconImageList := AListView.LargeImages as TSVGIconImageList;
+  LImageList := AListView.LargeImages as TCustomImageList;
   AListView.Items.BeginUpdate;
   try
     AListView.Clear;
-    Result := LSVGIconImageList.SVGIconItems.Count;
+    Result := LImageList.Count;
     for I := 0 to Result -1 do
     begin
-      LItem := LSVGIconImageList.SVGIconItems[I];
-      LListItem := AListView.Items.Add;
-      LListItem.Caption := Format('%d.%s',
-        [LItem.Index, LItem.IconName]);
-      LListItem.ImageIndex := I;
+      if (LImageList is TSVGIconImageList) then
+      begin
+        LItem := TSVGIconImageList(LImageList).SVGIconItems[I];
+        LListItem := AListView.Items.Add;
+        LListItem.Caption := GetItemCaption;
+        LListItem.ImageIndex := I;
+      end;
     end;
   finally
     AListView.Items.EndUpdate;
@@ -85,28 +102,54 @@ function UpdateSVGIconListViewCaptions(const AListView: TListView;
 var
   I: Integer;
   LItem: TSVGIconItem;
+  {$IFDEF D10_3}
+  LVirtualItem: TVirtualImageListItem;
+  {$ENDIF}
   LListItem: TListItem;
-  LSVGIconImageList: TSVGIconImageList;
+  LImageList: TCustomImageList;
 begin
-  LSVGIconImageList := AListView.LargeImages as TSVGIconImageList;
+  LImageList := AListView.LargeImages as TCustomImageList;
   AListView.Items.BeginUpdate;
   try
-    Result := LSVGIconImageList.SVGIconItems.Count;
+    Result := LImageList.Count;
     for I := 0 to Result -1 do
     begin
-      LItem := LSVGIconImageList.SVGIconItems[I];
-      LListItem := AListView.Items[I];
-      if AShowCaption then
+      if (LImageList is TSVGIconImageList) then
       begin
-        LListItem.Caption := Format('%d.%s',
-          [LItem.Index, LItem.IconName]);
-      end
-      else
-        LListItem.Caption := '';
+        LItem := TSVGIconImageList(LImageList).SVGIconItems[I];
+        LListItem := AListView.Items[I];
+        if AShowCaption then
+        begin
+          LListItem.Caption := Format('%d.%s',
+            [LItem.Index, LItem.IconName]);
+        end
+        else
+          LListItem.Caption := '';
+      end;
+      {$IFDEF D10_3}
+      if (LImageList is TVirtualImageList) then
+      begin
+        LVirtualItem := TVirtualImageList(LImageList).Images.Items[I];
+        LListItem := AListView.Items[I];
+        if AShowCaption then
+        begin
+          LListItem.Caption := Format('%d.%s',
+            [LVirtualItem.Index, LVirtualItem.Name]);
+        end
+        else
+          LListItem.Caption := '';
+      end;
+      {$ENDIF}
     end;
   finally
     AListView.Items.EndUpdate;
   end;
+end;
+
+procedure ChangeSVGColor(var ASVGText: string;
+  const AColor: TColor; ANewColor: TColor);
+begin
+  //
 end;
 
 end.

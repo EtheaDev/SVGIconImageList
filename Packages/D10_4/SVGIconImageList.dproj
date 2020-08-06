@@ -96,6 +96,7 @@
         </DelphiCompile>
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="SVGIconPackage.dcp"/>
+        <DCCReference Include="vclwinx.dcp"/>
         <DCCReference Include="..\..\Source\SVGIconImage.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageList.pas"/>
         <DCCReference Include="..\..\Source\SVGIconUtils.pas"/>

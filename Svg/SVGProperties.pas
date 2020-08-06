@@ -52,7 +52,7 @@ procedure LoadGradientUnits(const Node: IXMLNode; var Units: TGradientUnits);
 implementation
 
 uses
-  SVGCommon, SVGParse, Variants;
+  SVGCommon, SVGParse, System.Variants;
 
 procedure LoadLength(const Node: IXMLNode; const S: string;
   var X: TFloat);

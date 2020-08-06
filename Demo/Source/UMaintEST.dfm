@@ -4,8 +4,8 @@ object MainForm: TMainForm
   Caption = 
     'SVG Icon ImageList Demo - Copyright (c) Ethea S.r.l. - Apache 2.' +
     '0 Open Source License'
-  ClientHeight = 200
-  ClientWidth = 200
+  ClientHeight = 371
+  ClientWidth = 502
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,40 +17,130 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object SVGIconImage: TSVGIconImage
+  object CategoryButtons1: TCategoryButtons
+    Left = 120
+    Top = 119
+    Width = 169
+    Height = 187
+    ButtonFlow = cbfVertical
+    ButtonHeight = 25
+    ButtonWidth = 25
+    ButtonOptions = [boFullSize, boShowCaptions, boCaptionOnlyBorder]
+    Categories = <
+      item
+        Caption = 'Category 1'
+        Color = 15466474
+        Collapsed = False
+        Items = <
+          item
+            Caption = 'caption 1'
+            ImageIndex = 0
+          end
+          item
+            Caption = 'Caption 2'
+            ImageIndex = 1
+          end>
+      end>
+    Images = SVGIconImageList1
+    RegularButtonColor = clWhite
+    SelectedButtonColor = 15132390
+    TabOrder = 0
+  end
+  object Panel1: TPanel
+    Left = 8
+    Top = 124
+    Width = 102
+    Height = 102
+    Caption = 'Panel1'
+    TabOrder = 1
+    object SVGIconImage: TSVGIconImage
+      Left = 1
+      Top = 1
+      Width = 100
+      Height = 100
+      Hint = 'Click to show SVGText property editor'
+      AutoSize = False
+      Center = False
+      Proportional = True
+      Stretch = True
+      Opacity = 255
+      Scale = 1.000000000000000000
+      ImageList = SVGIconImageList1
+      ImageIndex = 0
+      Align = alClient
+      OnClick = SVGIconImageClick
+      ExplicitLeft = 0
+      ExplicitTop = 10
+      ExplicitWidth = 50
+      ExplicitHeight = 50
+    end
+  end
+  object ToolBar1: TToolBar
     Left = 0
     Top = 0
-    Width = 200
-    Height = 200
-    Hint = 'Click to show SVGText property editor'
-    AutoSize = False
-    Center = True
-    Proportional = True
-    Stretch = True
-    Opacity = 255
-    Scale = 1.000000000000000000
-    ImageIndex = -1
-    SVGText = 
-      '<svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0' +
-      ' 48 48" enable-background="new 0 0 48 48">'#13#10'    <g fill="#FFA726' +
-      '">'#13#10'        <circle cx="10" cy="26" r="4"/>'#13#10'        <circle cx=' +
-      '"38" cy="26" r="4"/>'#13#10'    </g>'#13#10'    <path fill="#FFB74D" d="M39,' +
-      '19c0-12.7-30-8.3-30,0c0,1.8,0,8.2,0,10c0,8.3,6.7,15,15,15s15-6.7' +
-      ',15-15C39,27.2,39,20.8,39,19z"/>'#13#10'    <path fill="#FF5722" d="M2' +
-      '4,3C14.6,3,7,10.6,7,20c0,1.2,0,3.4,0,3.4L9,25v-3l21-9.8l9,9.8v3l' +
-      '2-1.6c0,0,0-2.1,0-3.4 C41,12,35.3,3,24,3z"/>'#13#10'    <g fill="#7847' +
-      '19">'#13#10'        <circle cx="31" cy="26" r="2"/>'#13#10'        <circle c' +
-      'x="17" cy="26" r="2"/>'#13#10'    </g>'#13#10'    <path fill="#757575" d="M4' +
-      '3,24c-0.6,0-1,0.4-1,1v-7c0-8.8-7.2-16-16-16h-7c-0.6,0-1,0.4-1,1s' +
-      '0.4,1,1,1h7c7.7,0,14,6.3,14,14v10 c0,0.6,0.4,1,1,1s1-0.4,1-1v2c0' +
-      ',3.9-3.1,7-7,7H24c-0.6,0-1,0.4-1,1s0.4,1,1,1h11c5,0,9-4,9-9v-5C4' +
-      '4,24.4,43.6,24,43,24z"/>'#13#10'    <g fill="#37474F">'#13#10'        <path ' +
-      'd="M43,22h-1c-1.1,0-2,0.9-2,2v4c0,1.1,0.9,2,2,2h1c1.1,0,2-0.9,2-' +
-      '2v-4C45,22.9,44.1,22,43,22z"/>'#13#10'        <circle cx="24" cy="38" ' +
-      'r="2"/>'#13#10'    </g>'#13#10'</svg>'#13#10
-    Align = alClient
-    OnClick = SVGIconImageClick
-    ExplicitWidth = 258
-    ExplicitHeight = 234
+    Width = 502
+    Height = 31
+    AutoSize = True
+    ButtonHeight = 31
+    ButtonWidth = 32
+    Caption = 'ToolBar1'
+    Images = SVGIconImageList1
+    TabOrder = 2
+    object ToolButton1: TToolButton
+      Left = 0
+      Top = 0
+      Caption = 'ToolButton1'
+      ImageIndex = 0
+    end
+    object ToolButton2: TToolButton
+      Left = 32
+      Top = 0
+      Caption = 'ToolButton2'
+      ImageIndex = 0
+    end
+    object ToolButton3: TToolButton
+      Left = 64
+      Top = 0
+      Caption = 'ToolButton3'
+      ImageIndex = 0
+    end
+    object ToolButton4: TToolButton
+      Left = 96
+      Top = 0
+      Caption = 'ToolButton4'
+      ImageIndex = 0
+    end
+  end
+  object SVGIconImageList1: TSVGIconImageList
+    Width = 25
+    Height = 25
+    Size = 25
+    Left = 384
+    Top = 160
+    Images = {
+      0200000000000000980000003C7376672076696577426F783D22302030203130
+      30203130302220786D6C6E733D22687474703A2F2F7777772E77332E6F72672F
+      323030302F737667223E0D0A20203C636972636C652063783D22353022206379
+      3D2235302220723D22343822207374726F6B653D22626C61636B22207374726F
+      6B652D77696474683D2234222066696C6C3D2272656422202F3E0D0A3C2F7376
+      673E0D0A00000000420200003C7376672076696577426F783D22302030203130
+      30203130302220786D6C6E733D22687474703A2F2F7777772E77332E6F72672F
+      323030302F737667223E0D0A20203C212D2D204E6F207472616E736C6174696F
+      6E202D2D3E0D0A20203C7265637420783D22352220793D223522207769647468
+      3D22343022206865696768743D223430222066696C6C3D22677265656E22202F
+      3E0D0A200D0A20203C212D2D20486F72697A6F6E74616C207472616E736C6174
+      696F6E202D2D3E0D0A20203C7265637420783D22352220793D22352220776964
+      74683D22343022206865696768743D223430222066696C6C3D22626C7565220D
+      0A20202020202020207472616E73666F726D3D227472616E736C617465283530
+      2922202F3E0D0A200D0A20203C212D2D20566572746963616C207472616E736C
+      6174696F6E202D2D3E0D0A20203C7265637420783D22352220793D2235222077
+      696474683D22343022206865696768743D223430222066696C6C3D2272656422
+      0D0A20202020202020207472616E73666F726D3D227472616E736C6174652830
+      2035302922202F3E0D0A200D0A20203C212D2D20426F746820686F72697A6F6E
+      74616C20616E6420766572746963616C207472616E736C6174696F6E202D2D3E
+      0D0A20203C7265637420783D22352220793D2235222077696474683D22343022
+      206865696768743D223430222066696C6C3D2279656C6C6F77220D0A20202020
+      20202020207472616E73666F726D3D227472616E736C6174652835302C353029
+      22202F3E0D0A3C2F7376673E0D0A}
   end
 end

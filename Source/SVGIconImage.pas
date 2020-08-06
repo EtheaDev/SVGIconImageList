@@ -76,6 +76,7 @@ type
   private
     function GetSVGText: string;
     procedure SetSVGText(const AValue: string);
+    function StoreScale: Boolean;
     function UsingSVGText: Boolean;
     procedure SetImageList(const Value: TSVGIconImageList);
   protected
@@ -95,14 +96,14 @@ type
     property SVG: TSVG read FSVG;
   published
     property AutoSize: Boolean read FAutoSize write SetAutoSizeImage;
-    property Center: Boolean read FCenter write SetCenter;
+    property Center: Boolean read FCenter write SetCenter default True;
     property Proportional: Boolean read FProportional write SetProportional;
-    property Stretch: Boolean read FStretch write SetStretch;
-    property Opacity: Byte read FOpacity write SetOpacity;
-    property Scale: Double read FScale write SetScale;
+    property Stretch: Boolean read FStretch write SetStretch default True;
+    property Opacity: Byte read FOpacity write SetOpacity default 255;
+    property Scale: Double read FScale write SetScale stored StoreScale;
     property FileName: TFileName read FFileName write SetFileName;
     property ImageList: TSVGIconImageList read FImageList write SetImageList;
-    property ImageIndex: Integer read FImageIndex write SetImageIndex;
+    property ImageIndex: Integer read FImageIndex write SetImageIndex default -1;
     property SVGText: string read GetSVGText write SetSVGText stored UsingSVGText;
     property Enabled;
     property Visible;
@@ -170,7 +171,6 @@ function TGPImageToBitmap(Image: TGPImage): TBitmap;
 implementation
 
 uses
-  Vcl.Dialogs,
   Winapi.GDIPAPI;
 
 function TGPImageToBitmap(Image: TGPImage): TBitmap;
@@ -454,6 +454,11 @@ begin
   Repaint;
 end;
 
+function TSVGIconImage.StoreScale: Boolean;
+begin
+  Result := FScale <> 1;
+end;
+
 procedure TSVGIconImage.SetOpacity(Value: Byte);
 begin
   if Value = FOpacity then
@@ -470,37 +475,20 @@ begin
   LoadFromFile(Value);
 end;
 
-(*
-procedure TSVGIconImage.DefineProperties(Filer: TFiler);
+procedure TSVGIconImage.SetImageIndex(const Value: Integer);
 begin
-  Filer.DefineBinaryProperty('Data', ReadData, WriteData, True);
+  if FImageIndex = Value then
+    Exit;
+  FImageIndex := Value;
+  CheckAutoSize;
+  Repaint;
 end;
 
-procedure TSVGIconImage.ReadData(Stream: TStream);
-var
-  Size: LongInt;
+procedure TSVGIconImage.SetImageList(const Value: TSVGIconImageList);
 begin
-  if UsingSVGText then
-    Exit;
-  Stream.Read(Size, SizeOf(Size));
-  FStream.Clear;
-  if Size > 0 then
-  begin
-    FStream.CopyFrom(Stream, Size);
-    FSVG.LoadFromStream(FStream);
-  end else
-    FSVG.Clear;
+  FImageList := Value;
+  SVGText := '';
 end;
-
-procedure TSVGIconImage.WriteData(Stream: TStream);
-var
-  Size: LongInt;
-begin
-  if UsingSVGText then
-    Exit;
-  FSVG.SaveToStream(Stream);
-end;
-*)
 
 constructor TSVGGraphic.Create;
 begin
@@ -674,21 +662,6 @@ begin
   FStream.SaveToStream(Stream);
 end;
 
-
-procedure TSVGIconImage.SetImageIndex(const Value: Integer);
-begin
-  if FImageIndex = Value then
-    Exit;
-  FImageIndex := Value;
-  CheckAutoSize;
-  Repaint;
-end;
-
-procedure TSVGIconImage.SetImageList(const Value: TSVGIconImageList);
-begin
-  FImageList := Value;
-  SVGText := '';
-end;
 
 initialization
   TPicture.RegisterFileFormat('SVG', 'Scalable Vector Graphics', TSVGGraphic);
