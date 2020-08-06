@@ -219,7 +219,6 @@ procedure TSVGIconVirtualImageList.SetCollection(const value: TSVGIconImageColle
 begin
   if FCollection <> Value then
   begin
-    FCollection := Value;
     if FCollection <> nil then
       FICollection.RemoveFreeNotification(Self);
     FCollection := Value;
