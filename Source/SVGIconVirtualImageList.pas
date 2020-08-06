@@ -220,10 +220,10 @@ begin
   if FCollection <> Value then
   begin
     if FCollection <> nil then
-      FICollection.RemoveFreeNotification(Self);
+      FCollection.RemoveFreeNotification(Self);
     FCollection := Value;
     if FCollection <> nil then
-      FICollection.FreeNotification(Self);
+      FCollection.FreeNotification(Self);
     if not (csLoading in ComponentState) then
       RecreateBitmaps;
   end;
