@@ -21,6 +21,9 @@ type
     FStopDrawingMessageID : Integer;
     FRecreateBitmapsMessageID : integer;
   protected
+    // override abstract methods
+    function GetSVGIconItems: TSVGIconItems; override;
+
     procedure SetCollection(const value: TSVGIconImageCollection);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure RecreateBitmapsMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
@@ -111,6 +114,14 @@ begin
     result := FCollection.SVGIconItems.Count
   else
     result := 0;
+end;
+
+function TSVGIconVirtualImageList.GetSVGIconItems: TSVGIconItems;
+begin
+  if Assigned(FCollection) then
+    Result := FCollection.SVGIconItems
+  else
+    Result := nil;
 end;
 
 procedure TSVGIconVirtualImageList.Notification(AComponent: TComponent; Operation: TOperation);
@@ -228,7 +239,6 @@ begin
       RecreateBitmaps;
   end;
 end;
-
 
 procedure TSVGIconVirtualImageList.StopDrawingMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
 begin

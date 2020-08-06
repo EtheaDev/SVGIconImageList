@@ -10,8 +10,11 @@ uses
   WinApi.Windows,
   Vcl.Controls,
   Vcl.Graphics,
+  Vcl.ImgList,
+  System.UITypes,   // after ImgList to avoid deprecation warnings
   SVG,
-  SVGColor;
+  SVGColor,
+  SVGIconItems;
 
 const
   SVGIconImageListVersion = '1.7.0';
@@ -22,12 +25,13 @@ resourcestring
 
 type
   TSVGIconImageListBase = class(TDragImageList)
-  private
+  protected
     {$IFDEF HiDPISupport}
+    {$IFNDEF D10_4+}
     FScaled: Boolean;
+    {$ENDIF}
     FDPIChangedMessageID: Integer;
     {$ENDIF}
-  protected
     FOpacity: Byte;
     FFixedColor: TSVGColor;
     FGrayScale: Boolean;
@@ -41,11 +45,14 @@ type
     procedure SetOpacity(const Value: Byte);
     function GetSize: Integer;
 
-    function GetImages(Index: Integer): TSVG; virtual; abstract;
-    function GetNames(Index: Integer): string; virtual; abstract;
+    function GetSVGIconItems: TSVGIconItems; virtual; abstract;
+    procedure SetSVGIconItems(const Value: TSVGIconItems); virtual;
 
-    procedure SetImages(Index: Integer; const Value: TSVG); virtual; abstract;
-    procedure SetNames(Index: Integer; const Value: string); virtual; abstract;
+    function GetImages(Index: Integer): TSVG; virtual;
+    function GetNames(Index: Integer): string; virtual;
+
+    procedure SetImages(Index: Integer; const Value: TSVG); virtual;
+    procedure SetNames(Index: Integer; const Value: string); virtual;
     procedure SetSize(const Value: Integer);
     procedure SetFixedColor(const Value: TSVGColor);
     procedure SetGrayScale(const Value: Boolean);
@@ -60,7 +67,7 @@ type
     procedure WriteLeft(Writer: TWriter);
     procedure WriteTop(Writer: TWriter);
 
-    function IndexOf(const Name: string): Integer;virtual;abstract;
+    function IndexOf(const Name: string): Integer;virtual;
 
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload; virtual; abstract;
     procedure PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload;
@@ -82,8 +89,6 @@ type
     procedure DPIChangedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
   {$ENDIF}
 
-
-
     procedure AssignTo(Dest: TPersistent); override;
     procedure DoAssign(const Source: TPersistent); virtual;
     procedure DPIChanged(Sender: TObject; const OldDPI, NewDPI: Integer); virtual;
@@ -92,13 +97,16 @@ type
     destructor Destroy;override;
     procedure Assign(Source: TPersistent); override;
     procedure Change; override;
+    function LoadFromFiles(const AFileNames: TStrings;
+      const AAppend: Boolean = True): Integer; virtual;
 
     {$IFDEF D10_4+}
     function IsImageNameAvailable: Boolean; override;
-    function IsScaled: Boolean; override;
+    function GetIndexByName(const AName: TImageName): TImageIndex; override;
+    function GetNameByIndex(AIndex: TImageIndex): TImageName; override;
     {$ENDIF}
 
-
+    property SVGIconItems: TSVGIconItems read GetSVGIconItems write SetSVGIconItems;
     property Count: Integer read GetCount;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
     property Width: Integer read GetWidth write SetWidth stored StoreWidth default DEFAULT_SIZE;
@@ -110,7 +118,9 @@ type
     property DisabledOpacity: Byte read FDisabledOpacity write SetDisabledOpacity default 125;
 
     {$IFDEF HiDPISupport}
+    {$IFNDEF D10_4+}
     property Scaled: Boolean read FScaled write FScaled default True;
+    {$ENDIF}
     {$ENDIF}
     property Images[Index: Integer]: TSVG read GetImages write SetImages;
     property Names[Index: Integer]: string read GetNames write SetNames;
@@ -125,11 +135,9 @@ uses
   Winapi.GDIPAPI,
   Winapi.GDIPOBJ,
   Vcl.ComCtrls,
-  Vcl.ImgList,
   Vcl.Forms,
   GDIPUtils,
-  SVGTypes,
-  SVGIconItems;
+  SVGTypes;
 
 { TSVGIconImageListBase }
 
@@ -211,7 +219,6 @@ begin
     Info := Ancestor.DesignInfo;
   Filer.DefineProperty('Left', ReadLeft, WriteLeft, LongRec(DesignInfo).Lo <> LongRec(Info).Lo);
   Filer.DefineProperty('Top', ReadTop, WriteTop, LongRec(DesignInfo).Hi <> LongRec(Info).Hi);
-
 end;
 
 destructor TSVGIconImageListBase.Destroy;
@@ -280,14 +287,42 @@ end;
 
 {$IF CompilerVersion > 29}
 function TSVGIconImageListBase.GetCount: Integer;
+Var
+  Items: TSVGIconItems;
 begin
-  raise ENotImplemented.Create('must be overridden.');
+  Items := SVGIconItems;
+  if Assigned(Items) then
+    Result := Items.Count
+  else
+    Result := 0;
 end;
 {$ENDIF}
 
 function TSVGIconImageListBase.GetHeight: Integer;
 begin
   Result := inherited Height;
+end;
+
+function TSVGIconImageListBase.GetImages(Index: Integer): TSVG;
+Var
+  Items: TSVGIconItems;
+begin
+  Items := SVGIconItems;
+  if Assigned(Items) and (Index >= 0) and (Index < Items.Count) then
+    Result := Items[Index].SVG
+  else
+    Result := nil;
+end;
+
+function TSVGIconImageListBase.GetNames(Index: Integer): string;
+Var
+  Items: TSVGIconItems;
+begin
+  Items := SVGIconItems;
+  if Assigned(Items) and (Index >= 0) and (Index < Items.Count) then
+    Result := Items[Index].IconName
+  else
+    Result := '';
 end;
 
 function TSVGIconImageListBase.GetSize: Integer;
@@ -298,18 +333,37 @@ end;
 function TSVGIconImageListBase.GetWidth: Integer;
 begin
   Result := inherited Width;
+end;
 
+function TSVGIconImageListBase.IndexOf(const Name: string): Integer;
+Var
+  Items: TSVGIconItems;
+  Item: TSVGIconItem;
+begin
+  Items := SVGIconItems;
+  if not Assigned(Items) then Exit(-1);
+
+  Item := Items.GetIconByName(Name);
+  if Assigned(Item) then
+    Result := Item.Index
+  else
+    Result := -1;
 end;
 
 {$IFDEF D10_4+}
 function TSVGIconImageListBase.IsImageNameAvailable: Boolean;
 begin
-  result := true;
+  Result := true;
 end;
 
-function TSVGIconImageListBase.IsScaled: Boolean;
+function TSVGIconImageListBase.GetIndexByName(const AName: TImageName): TImageIndex;
 begin
-  result := FScaled;
+  Result := IndexOf(AName);
+end;
+
+function TSVGIconImageListBase.GetNameByIndex(AIndex: TImageIndex): TImageName;
+begin
+  Result := GetNames(AIndex);
 end;
 {$ENDIF}
 
@@ -317,6 +371,52 @@ procedure TSVGIconImageListBase.Loaded;
 begin
   inherited;
   RecreateBitmaps;
+end;
+
+function TSVGIconImageListBase.LoadFromFiles(const AFileNames: TStrings;
+  const AAppend: Boolean): Integer;
+Var
+  Items: TSVGIconItems;
+  LIndex: Integer;
+  LSVG: TSVG;
+  LFileName: string;
+  LItem: TSVGIconItem;
+  LErrors: string;
+begin
+  Result := 0;
+  Items := SVGIconItems;
+  if not Assigned(Items) then Exit;
+
+  StopDrawing(True);
+  try
+    LErrors := '';
+    LSVG := TSVG.Create;
+    try
+      if not AAppend then
+        ClearIcons;
+      for LIndex := 0 to AFileNames.Count - 1 do
+      begin
+        LFileName := AFileNames[LIndex];
+        try
+          LSVG.LoadFromFile(LFileName);
+          LItem := Items.Add;
+          LItem.IconName := ChangeFileExt(ExtractFileName(LFileName), '');
+          LItem.SVG := LSVG;
+          Inc(Result);
+        except
+          on E: Exception do
+            LErrors := LErrors + Format('%s (%s)',[E.Message, LFileName]) + sLineBreak;
+        end;
+      end;
+      if LErrors <> '' then
+        raise Exception.Create(ERROR_LOADING_FILES+sLineBreak+LErrors);
+    finally
+      LSVG.Free;
+    end;
+  finally
+    StopDrawing(False);
+    RecreateBitmaps;
+  end;
 end;
 
 procedure TSVGIconImageListBase.PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean);
@@ -395,6 +495,27 @@ begin
   end;
 end;
 
+procedure TSVGIconImageListBase.SetImages(Index: Integer; const Value: TSVG);
+Var
+  Items: TSVGIconItems;
+begin
+  Items := SVGIconItems;
+  if Assigned(Items) and (Index >= 0) and (Index < Items.Count) then
+  begin
+    if Items[Index].SVG <> Value then
+      Items[Index].SVG := Value;
+  end;
+end;
+
+procedure TSVGIconImageListBase.SetNames(Index: Integer; const Value: string);
+Var
+  Items: TSVGIconItems;
+begin
+  Items := SVGIconItems;
+  if Assigned(Items) and (Index >= 0) and (Index < Items.Count) then
+    Items[Index].IconName := Value;
+end;
+
 procedure TSVGIconImageListBase.SetOpacity(const Value: Byte);
 begin
   if FOpacity <> Value then
@@ -417,6 +538,12 @@ begin
     end;
     RecreateBitmaps;
   end;
+end;
+
+procedure TSVGIconImageListBase.SetSVGIconItems(const Value: TSVGIconItems);
+begin
+  if Assigned(SvgIconItems) then
+    SvgIconItems.Assign(Value);
 end;
 
 procedure TSVGIconImageListBase.SetWidth(const Value: Integer);

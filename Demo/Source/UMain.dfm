@@ -159,7 +159,7 @@ object MainForm: TMainForm
     AutoSize = True
     ButtonHeight = 38
     ButtonWidth = 39
-    Images = SVGIconImageList
+    Images = SVGIconVirtualImageList
     TabOrder = 1
     Transparent = False
     object ToolButton1: TToolButton
@@ -175,30 +175,30 @@ object MainForm: TMainForm
     object ToolButton3: TToolButton
       Left = 78
       Top = 0
-      ImageIndex = 2
+      ImageName = 'calendar'
     end
     object ToolButton4: TToolButton
       Left = 117
       Top = 0
-      ImageIndex = 3
+      ImageName = 'about'
     end
     object ToolButton5: TToolButton
       Left = 156
       Top = 0
-      ImageIndex = 4
+      ImageName = 'calculator'
     end
     object ToolButton6: TToolButton
       Left = 195
       Top = 0
       Action = ChangeIconAction
-      ImageIndex = 100
+      ImageName = 'Delphi_Product icon'
     end
     object ToolButton7: TToolButton
       Left = 234
       Top = 0
       Caption = 'Change Color'
       Enabled = False
-      ImageIndex = 7
+      ImageName = 'advertising'
       OnClick = ChangeColorActionExecute
     end
   end
@@ -210,6 +210,8 @@ object MainForm: TMainForm
     Align = alRight
     TabOrder = 2
     OnResize = paButtonsResize
+    ExplicitLeft = 631
+    ExplicitTop = 44
     object SVGIconImage: TSVGIconImage
       Left = 1
       Top = 428
@@ -222,7 +224,7 @@ object MainForm: TMainForm
       Margins.Bottom = 10
       AutoSize = False
       Proportional = False
-      ImageList = SVGIconImageList
+      ImageList = SVGIconVirtualImageList
       ImageIndex = 100
       Align = alBottom
       OnMouseDown = SVGIconImageMouseDown
@@ -235,7 +237,7 @@ object MainForm: TMainForm
       Height = 60
       Action = DeleteIconAction
       ImageAlignment = iaTop
-      Images = SVGIconImageList
+      Images = SVGIconVirtualImageList
       TabOrder = 0
     end
     object ChangeIconButton: TButton
@@ -245,7 +247,7 @@ object MainForm: TMainForm
       Height = 60
       Action = ChangeIconAction
       ImageAlignment = iaTop
-      Images = SVGIconImageList
+      Images = SVGIconVirtualImageList
       TabOrder = 1
     end
   end
@@ -272,7 +274,7 @@ object MainForm: TMainForm
       Width = 422
       Height = 208
       Align = alTop
-      Images = SVGIconImageList
+      Images = SVGIconVirtualImageList
       Indent = 35
       TabOrder = 0
       Items.NodeData = {
@@ -302,48 +304,57 @@ object MainForm: TMainForm
         00000000FFFFFFFF000000000B49006E0066006F0072006D006100740069006F
         006E0004000000FFFFFFFFFFFFFFFF00000000FFFFFFFF000000000A43006100
         6C00630075006C00610074006F007200}
-      LargeImages = SVGIconImageList
-      SmallImages = SVGIconImageList
+      LargeImages = SVGIconVirtualImageList
+      SmallImages = SVGIconVirtualImageList
       TabOrder = 1
       OnSelectItem = ImageViewSelectItem
-      ExplicitLeft = 5
-      ExplicitTop = 242
-      ExplicitWidth = 423
-      ExplicitHeight = 272
+      ExplicitLeft = -1
+      ExplicitTop = 215
     end
   end
   object ActionList: TActionList
-    Images = SVGIconImageList
+    Images = SVGIconVirtualImageList
     Left = 248
     Top = 424
     object ChangeIconAction: TAction
       Category = 'Edit'
       Caption = 'Change icon'
-      ImageIndex = 255
+      ImageName = 'synchronize'
       OnExecute = ChangeIconActionExecute
     end
     object DeleteIconAction: TAction
       Category = 'Edit'
       Caption = 'Delete Icon'
-      ImageIndex = 39
+      ImageName = 'cancel'
       OnExecute = DeleteIconActionExecute
     end
     object DisabledAction: TAction
       Category = 'Edit'
       Caption = 'Disabled'
       Enabled = False
-      ImageIndex = 0
+      ImageName = 'businessman'
     end
   end
   object ColorDialog: TColorDialog
     Left = 472
     Top = 136
   end
-  object SVGIconImageList: TSVGIconImageList
+  object OpenDialog: TOpenPictureDialog
+    Filter = 'Scalable Vector Graphics (*.svg)|*.svg'
+    Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+    Left = 472
+    Top = 72
+  end
+  object SVGIconVirtualImageList: TSVGIconVirtualImageList
     ColorDepth = cd32Bit
     Size = 32
-    Left = 384
-    Top = 432
+    Collection = SVGIconImageCollection
+    Left = 424
+    Top = 336
+  end
+  object SVGIconImageCollection: TSVGIconImageCollection
+    Left = 304
+    Top = 336
     Images = {
       1B0100000B00000062007500730069006E006500730073006D0061006E009D03
       00003C7376672076657273696F6E3D22312220786D6C6E733D22687474703A2F
@@ -7611,11 +7622,5 @@ object MainForm: TMainForm
       3222206865696768743D2235222F3E0D0A20202020202020203C706F6C79676F
       6E20706F696E74733D2233362C32392033392C32352033332C3235222F3E0D0A
       202020203C2F673E0D0A3C2F7376673E0D0A}
-  end
-  object OpenDialog: TOpenPictureDialog
-    Filter = 'Scalable Vector Graphics (*.svg)|*.svg'
-    Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
-    Left = 472
-    Top = 72
   end
 end
