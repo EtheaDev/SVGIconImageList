@@ -222,7 +222,11 @@ begin
     FCollection := Value;
     if FCollection <> nil then
       FCollection.FreeNotification(Self);
-
+    if FCollection <> nil then
+      FICollection.RemoveFreeNotification(Self);
+    FCollection := Value;
+    if FCollection <> nil then
+      FICollection.FreeNotification(Self);
     if not (csLoading in ComponentState) then
       RecreateBitmaps;
   end;
