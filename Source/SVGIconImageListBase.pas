@@ -209,6 +209,7 @@ begin
   {$IFDEF HiDPISupport}
   TMessageManager.DefaultManager.Unsubscribe(TChangeScaleMessage, FDPIChangedMessageID);
   {$ENDIF}
+  TMessageManager.DefaultManager.Unsubscribe(TSVGItemsUpdateMessage, FSVGItemsUpdateMessageID);
   inherited;
 end;
 
@@ -662,8 +663,11 @@ end;
 
 procedure TSVGIconImageListBase.SVGItemsUpdateMessageHandler(const Sender: TObject;
   const Msg: System.Messaging.TMessage);
+var
+  items : TSVGIconItems;
 begin
-  if TObject(SVGIconItems) = Sender then
+  items := SVGIconItems;
+  if TObject(items) = Sender then
     Change;
 end;
 
