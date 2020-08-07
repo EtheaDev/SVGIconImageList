@@ -6,17 +6,15 @@ interface
 
 uses
   System.Classes,
+  System.Messaging,
   SVG,
-  SVGColor  ;
+  SVGColor;
 
 type
-  ISVGNotifyOwner = interface
-  ['{15CE1D87-5351-44FA-9350-B5F1009161EA}']
-    procedure RecreateBitmaps;
-    procedure StopDrawing(const value : boolean);
-  end;
-
   TSVGIconItems = class;
+
+  TSVGItemsUpdateMessage = class(System.Messaging.TMessage)
+  end;
 
   TSVGIconItem = class(TCollectionItem)
   private
@@ -30,8 +28,6 @@ type
     function GetSVGText: string;
     procedure SetFixedColor(const Value: TSVGColor);
     procedure SetGrayScale(const Value: Boolean);
-  protected
-    procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Assign(Source: TPersistent); override;
     function GetDisplayName: string; override;
@@ -47,26 +43,19 @@ type
 
   {TSVGIconItems}
   TSVGIconItems = class(TOwnedCollection)
-  strict private
-    FOwner: TComponent;
+  private
     function GetItem(Index: Integer): TSVGIconItem;
     procedure SetItem(Index: Integer; const Value: TSVGIconItem);
-  private
   protected
     procedure Update(Item: TCollectionItem); override;
-    procedure Notify(Item: TCollectionItem; Action: TCollectionNotification); override;
-    function GetOwner: TPersistent; override;
-    procedure StopDrawing(const value : boolean);
-    procedure RecreateBitmaps;
   public
     constructor Create(AOwner: TComponent);
-    procedure AssignTo(Dest: TPersistent); override;
     function Add: TSVGIconItem;
     procedure Assign(Source: TPersistent); override;
     function GetIconByName(const AIconName: string): TSVGIconItem;
-    property Items[index: Integer]: TSVGIconItem read GetItem write SetItem; default;
+    function LoadFromFiles(const AFileNames: TStrings; const AAppend: Boolean = True): Integer;
+    property Items[Index: Integer]: TSVGIconItem read GetItem write SetItem; default;
   end;
-
 
 implementation
 
@@ -75,27 +64,21 @@ uses
   SVGIconImageList,
   SVGIconImageCollection;
 
+resourcestring
+  ERROR_LOADING_FILES = 'SVG error loading files:';
+
 { TSVGIconItem }
 
 procedure TSVGIconItem.Assign(Source: TPersistent);
 begin
-  inherited;
   if Source is TSVGIconItem then
   begin
     FIconName := TSVGIconItem(Source).FIconName;
     FFixedColor := TSVGIconItem(Source).FFixedColor;
     FGrayScale := TSVGIconItem(Source).FGrayScale;
     FSVG.LoadFromText(TSVGIconItem(Source).FSVG.Source);
-  end;
-end;
-
-procedure TSVGIconItem.AssignTo(Dest: TPersistent);
-begin
-  if Dest is TSVGIconItem then
-  begin
-    TSVGIconItem(Dest).FIconName := FIconName;
-    TSVGIconItem(Dest).FSVG.LoadFromText(FSVG.Source);
-  end;
+  end else
+    inherited;
 end;
 
 constructor TSVGIconItem.Create(Collection: TCollection);
@@ -192,12 +175,10 @@ var
   C: Integer;
   Item: TSVGIconItem;
 begin
-  inherited;
-  if (Source is TSVGIconItems) and (FOwner <> nil) then
+  if (Source is TSVGIconItems) and (Owner <> nil) then
   begin
-    StopDrawing(True);
+    BeginUpdate;
     try
-      BeginUpdate;
       Clear;
       for C := 0 to TSVGIconItems(Source).Count - 1 do
       begin
@@ -206,23 +187,14 @@ begin
       end;
     finally
       EndUpdate;
-      Update(nil);
-      StopDrawing(False);
     end;
-    RecreateBitmaps;
-  end;
-end;
-
-procedure TSVGIconItems.AssignTo(Dest: TPersistent);
-begin
-  inherited;
-
+  end else
+    inherited;
 end;
 
 constructor TSVGIconItems.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner, TSVGIconItem);
-  FOwner := AOwner;
 end;
 
 function TSVGIconItems.GetIconByName(const AIconName: string): TSVGIconItem;
@@ -249,30 +221,45 @@ begin
   Result := TSVGIconItem(inherited GetItem(Index));
 end;
 
-function TSVGIconItems.GetOwner: TPersistent;
+function TSVGIconItems.LoadFromFiles(const AFileNames: TStrings;
+  const AAppend: Boolean): Integer;
+Var
+  LIndex: Integer;
+  LSVG: TSVG;
+  LFileName: string;
+  LItem: TSVGIconItem;
+  LErrors: string;
 begin
-  Result := FOwner;
-end;
-
-procedure TSVGIconItems.Notify(Item: TCollectionItem;
-  Action: TCollectionNotification);
-begin
-  inherited;
-  //this was commented out before so leaving it here.
-//  if FOwner is TSVGIconImageList then
-//    TSVGIconImageList(FOwner).RecreateBitmaps;
-end;
-
-procedure TSVGIconItems.RecreateBitmaps;
-begin
-  if FOwner <> nil then
-     (FOwner as ISVGNotifyOwner).RecreateBitmaps;
-end;
-
-procedure TSVGIconItems.StopDrawing(const value : boolean);
-begin
-  if FOwner <> nil then
-     (FOwner as ISVGNotifyOwner).StopDrawing(value);
+  Result := 0;
+  BeginUpdate;
+  try
+    LErrors := '';
+    LSVG := TSVG.Create;
+    try
+      if not AAppend then
+        Clear;
+      for LIndex := 0 to AFileNames.Count - 1 do
+      begin
+        LFileName := AFileNames[LIndex];
+        try
+          LSVG.LoadFromFile(LFileName);
+          LItem := Add;
+          LItem.IconName := ChangeFileExt(ExtractFileName(LFileName), '');
+          LItem.SVG := LSVG;
+          Inc(Result);
+        except
+          on E: Exception do
+            LErrors := LErrors + Format('%s (%s)',[E.Message, LFileName]) + sLineBreak;
+        end;
+      end;
+      if LErrors <> '' then
+        raise Exception.Create(ERROR_LOADING_FILES+sLineBreak+LErrors);
+    finally
+      LSVG.Free;
+    end;
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TSVGIconItems.SetItem(Index: Integer;
@@ -284,10 +271,8 @@ end;
 procedure TSVGIconItems.Update(Item: TCollectionItem);
 begin
   inherited;
-  if FOwner <> nil then
-    RecreateBitmaps;
-end;
-
-
+  System.Messaging.TMessageManager.DefaultManager.SendMessage(Self,
+    TSVGItemsUpdateMessage.Create);
+  end;
 
 end.

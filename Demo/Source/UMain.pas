@@ -150,7 +150,7 @@ begin
     Screen.Cursor := crHourGlass;
     try
       LStart := GetTickCount;
-      LCount := SVGIconVirtualImageList.LoadFromFiles(OpenDialog.Files);
+      LCount := SVGIconVirtualImageList.SVGIconItems.LoadFromFiles(OpenDialog.Files);
       LStop := GetTickCount;
     finally
       Screen.Cursor := crDefault;

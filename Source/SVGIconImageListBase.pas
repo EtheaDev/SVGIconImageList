@@ -20,9 +20,6 @@ const
   SVGIconImageListVersion = '1.7.0';
   DEFAULT_SIZE = 16;
 
-resourcestring
-  ERROR_LOADING_FILES = 'SVG error loading files:';
-
 type
   TSVGIconImageListBase = class(TDragImageList)
   protected
@@ -32,12 +29,12 @@ type
     {$ENDIF}
     FDPIChangedMessageID: Integer;
     {$ENDIF}
+    FSVGItemsUpdateMessageID: Integer;
     FOpacity: Byte;
     FFixedColor: TSVGColor;
     FGrayScale: Boolean;
     FDisabledGrayScale: Boolean;
     FDisabledOpacity: Byte;
-    FStopDrawing: Integer;
     function GetHeight: Integer;
     function GetWidth: Integer;
     procedure SetHeight(const Value: Integer);
@@ -78,16 +75,16 @@ type
     procedure Loaded; override;
     function GetCount: Integer;    {$IF CompilerVersion > 29} override; {$ELSE}  virtual;abstract; {$ENDIF}
 
-    procedure StopDrawing(const AStop: Boolean);
     procedure RecreateBitmaps;virtual;abstract;
+    procedure DoChange; override;
     procedure ClearIcons;virtual;
 
     function SVGToIcon(const SVG: TSVG): HICON;
 
-
   {$IFDEF HiDPISupport}
     procedure DPIChangedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
   {$ENDIF}
+    procedure SVGItemsUpdateMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
 
     procedure AssignTo(Dest: TPersistent); override;
     procedure DoAssign(const Source: TPersistent); virtual;
@@ -96,9 +93,6 @@ type
     constructor Create(AOwner : TComponent);override;
     destructor Destroy;override;
     procedure Assign(Source: TPersistent); override;
-    procedure Change; override;
-    function LoadFromFiles(const AFileNames: TStrings;
-      const AAppend: Boolean = True): Integer; virtual;
 
     {$IFDEF D10_4+}
     function IsImageNameAvailable: Boolean; override;
@@ -124,7 +118,6 @@ type
     {$ENDIF}
     property Images[Index: Integer]: TSVG read GetImages write SetImages;
     property Names[Index: Integer]: string read GetNames write SetNames;
-
   end;
 
 implementation
@@ -147,7 +140,7 @@ procedure TSVGIconImageListBase.Assign(Source: TPersistent);
 begin
   if Source is TSVGIconImageListBase then
   begin
-    StopDrawing(True);
+    BeginUpdate;
     try
       Width := TSVGIconImageListBase(Source).Width;
       Height := TSVGIconImageListBase(Source).Height;
@@ -156,33 +149,22 @@ begin
       FGrayScale := TSVGIconImageListBase(Source).FGrayScale;
       DoAssign(Source);
     finally
-      StopDrawing(False);
+     EndUpdate;
     end;
-
-    RecreateBitmaps;
-  end;
-
+  end else if Source is TSVGIconItems then begin
+    if Assigned(SVGIconItems) then
+      SVGIconItems.Assign(Source);
+  end else
+    inherited;
 end;
 
 procedure TSVGIconImageListBase.AssignTo(Dest: TPersistent);
 begin
-  ClearIcons;
-  inherited;
-  if Dest is TSVGIconImageListBase then
-  begin
-    TSVGIconImageListBase(Dest).FOpacity := FOpacity;
-    TSVGIconImageListBase(Dest).Width := Width;
-    TSVGIconImageListBase(Dest).Height := Height;
-  end;
-
-end;
-
-procedure TSVGIconImageListBase.Change;
-begin
-  //Optimization: Do not notify to components during redrawing of icons
-  if FStopDrawing = 0 then
+  if (Dest is TSVGIconItems) then begin
+    if Assigned(SVGIconItems) then
+      Dest.Assign(SVGIconItems)
+  end else
     inherited;
-
 end;
 
 procedure TSVGIconImageListBase.ClearIcons;
@@ -203,6 +185,7 @@ begin
   FScaled := True;
   FDPIChangedMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TChangeScaleMessage, DPIChangedMessageHandler);
   {$ENDIF}
+  FSVGItemsUpdateMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TSVGItemsUpdateMessage, SVGItemsUpdateMessageHandler);
   FDisabledGrayScale := True;
   FDisabledOpacity := 125;
 
@@ -232,14 +215,18 @@ end;
 procedure TSVGIconImageListBase.DoAssign(const Source: TPersistent);
 begin
   //do nothing.. TSVGIconImageList will override;
+end;
 
+procedure TSVGIconImageListBase.DoChange;
+begin
+  inherited;
+  RecreateBitmaps;
 end;
 
 procedure TSVGIconImageListBase.DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer; Style: Cardinal; Enabled: Boolean);
 begin
   PaintTo(Canvas, Index, X, Y, Width, Height, Enabled);
 end;
-
 
 procedure TSVGIconImageListBase.DPIChanged(Sender: TObject; const OldDPI, NewDPI: Integer);
 var
@@ -370,53 +357,7 @@ end;
 procedure TSVGIconImageListBase.Loaded;
 begin
   inherited;
-  RecreateBitmaps;
-end;
-
-function TSVGIconImageListBase.LoadFromFiles(const AFileNames: TStrings;
-  const AAppend: Boolean): Integer;
-Var
-  Items: TSVGIconItems;
-  LIndex: Integer;
-  LSVG: TSVG;
-  LFileName: string;
-  LItem: TSVGIconItem;
-  LErrors: string;
-begin
-  Result := 0;
-  Items := SVGIconItems;
-  if not Assigned(Items) then Exit;
-
-  StopDrawing(True);
-  try
-    LErrors := '';
-    LSVG := TSVG.Create;
-    try
-      if not AAppend then
-        ClearIcons;
-      for LIndex := 0 to AFileNames.Count - 1 do
-      begin
-        LFileName := AFileNames[LIndex];
-        try
-          LSVG.LoadFromFile(LFileName);
-          LItem := Items.Add;
-          LItem.IconName := ChangeFileExt(ExtractFileName(LFileName), '');
-          LItem.SVG := LSVG;
-          Inc(Result);
-        except
-          on E: Exception do
-            LErrors := LErrors + Format('%s (%s)',[E.Message, LFileName]) + sLineBreak;
-        end;
-      end;
-      if LErrors <> '' then
-        raise Exception.Create(ERROR_LOADING_FILES+sLineBreak+LErrors);
-    finally
-      LSVG.Free;
-    end;
-  finally
-    StopDrawing(False);
-    RecreateBitmaps;
-  end;
+  Change;
 end;
 
 procedure TSVGIconImageListBase.PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean);
@@ -451,7 +392,7 @@ begin
   if FDisabledGrayScale <> Value then
   begin
     FDisabledGrayScale := Value;
-    RecreateBitmaps;
+    Change;
   end;
 end;
 
@@ -460,7 +401,7 @@ begin
   if FDisabledOpacity <> Value then
   begin
     FDisabledOpacity := Value;
-    RecreateBitmaps;
+    Change;
   end;
 end;
 
@@ -471,7 +412,7 @@ begin
     FFixedColor := Value;
     if FFixedColor <> inherit_color then
       FGrayScale := False;
-    RecreateBitmaps;
+    Change;
   end;
 end;
 
@@ -482,7 +423,7 @@ begin
     FGrayScale := Value;
     if FGrayScale then
       FixedColor := inherit_color;
-    RecreateBitmaps;
+    Change;
   end;
 end;
 
@@ -491,7 +432,7 @@ begin
   if Height <> Value then
   begin
     inherited Height := Value;
-    RecreateBitmaps;
+    Change;
   end;
 end;
 
@@ -521,7 +462,7 @@ begin
   if FOpacity <> Value then
   begin
     FOpacity := Value;
-    RecreateBitmaps;
+    Change;
   end;
 end;
 
@@ -529,14 +470,14 @@ procedure TSVGIconImageListBase.SetSize(const Value: Integer);
 begin
   if (Height <> Value) or (Width <> Value) then
   begin
-    StopDrawing(True);
+    BeginUpdate;
     try
       Width := Value;
       Height := Value;
     finally
-      StopDrawing(False);
+      EndUpdate;
     end;
-    RecreateBitmaps;
+    Change;
   end;
 end;
 
@@ -551,16 +492,8 @@ begin
   if Width <> Value then
   begin
     inherited Width := Value;
-    RecreateBitmaps;
+    Change;
   end;
-end;
-
-procedure TSVGIconImageListBase.StopDrawing(const AStop: Boolean);
-begin
-  if AStop then
-    Inc(FStopDrawing)
-  else
-    Dec(FStopDrawing);
 end;
 
 function TSVGIconImageListBase.StoreHeight: Boolean;
@@ -711,14 +644,14 @@ begin
     try
       if (Width <> LWidthScaled) or (Height <> LHeightScaled) then
       begin
-        StopDrawing(True);
+        BeginUpdate;
         try
           Width := LWidthScaled;
           Height := LHeightScaled;
         finally
-          StopDrawing(False);
+          EndUpdate;
         end;
-        RecreateBitmaps;
+        Change;
       end;
     finally
       FScaling := False;
@@ -726,6 +659,13 @@ begin
   end;
 end;
 {$ENDIF}
+
+procedure TSVGIconImageListBase.SVGItemsUpdateMessageHandler(const Sender: TObject;
+  const Msg: System.Messaging.TMessage);
+begin
+  if TObject(SVGIconItems) = Sender then
+    Change;
+end;
 
 
 end.
