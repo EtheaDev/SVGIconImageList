@@ -320,7 +320,7 @@ begin
   begin
     Screen.Cursor := crHourGlass;
     try
-      FEditingList.LoadFromFiles(OpenDialog.Files);
+      FEditingList.SvgIconItems.LoadFromFiles(OpenDialog.Files);
       BuildList(MaxInt);
       FChanged := True;
       UpdateGUI;
@@ -459,9 +459,9 @@ begin
   if OpenDialog.Execute then
   begin
     Screen.Cursor := crHourGlass;
+    FEditingList.BeginUpdate;
     try
       SVG := TSVG.Create;
-      FEditingList.StopDrawing(True);
       try
         for LIndex := 0 to OpenDialog.Files.Count - 1 do
         begin
@@ -476,12 +476,11 @@ begin
           end;
         end;
       finally
-        FEditingList.StopDrawing(False);
-        FEditingList.RecreateBitmaps;
         SVG.Free;
       end;
       BuildList(ImageView.ItemIndex);
     finally
+      FEditingList.EndUpdate;
       Screen.Cursor := crDefault;
     end;
   end;
@@ -525,12 +524,11 @@ end;
 
 procedure TSVGIconImageListEditor.BuildList(Selected: Integer);
 begin
-  FEditingList.StopDrawing(True);
+  FEditingList.BeginUpdate;
   try
     UpdateSVGIconListView(ImageView);
   finally
-    FEditingList.StopDrawing(False);
-    FEditingList.RecreateBitmaps;
+    FEditingList.EndUpdate;
   end;
 
   if Selected < -1 then
@@ -550,14 +548,13 @@ begin
   Screen.Cursor := crHourGlass;
   try
     Selected := ImageView.ItemIndex;
-    FEditingList.StopDrawing(True);
+    FEditingList.BeginUpdate;
     try
       for LIndex := ImageView.Items.Count - 1 downto 0 do
         if ImageView.Items[LIndex].Selected then
           FEditingList.SVGIconItems.Delete(LIndex);
     finally
-      FEditingList.StopDrawing(False);
-      FEditingList.RecreateBitmaps;
+      FEditingList.EndUpdate;
     end;
     FChanged := True;
     BuildList(Selected);
@@ -620,14 +617,13 @@ begin
     Exit;
   Screen.Cursor := crHourGlass;
   try
-    FSourceList.StopDrawing(True);
+    FSourceList.BeginUpdate;
     Try
       FSourceList.Assign(FEditingList);
       FChanged := False;
       FModified := True;
     Finally
-      FSourceList.StopDrawing(False);
-      FSourceList.RecreateBitmaps;
+      FSourceList.EndUpdate;
     End;
   finally
     Screen.Cursor := crDefault;

@@ -6,7 +6,6 @@ interface
 
 uses
   System.Classes,
-  System.Messaging,
   SVG,
   SVGColor,
   SVGIconItems;
@@ -19,38 +18,13 @@ type
 type
   TSVGIconImageCollection = class;
 
-
-  TSVGCollectionMessage = class(System.Messaging.TMessage)
-  private
-    FCollection : TSVGIconImageCollection;
-  public
-    constructor Create(const collection : TSVGIconImageCollection);
-    property Collection : TSVGIconImageCollection read FCollection;
-  end;
-
-  TSVGStopDrawingMessage = class(TSVGCollectionMessage)
-  private
-    FState : boolean;
-  public
-    constructor Create(const collection : TSVGIconImageCollection; const state : boolean);
-    property State : boolean read FState;
-  end;
-
-  TSVGRecreateBitmapsMessage = class(TSVGCollectionMessage);
-
-
-  TSVGIconImageCollection = class(TComponent, ISVGNotifyOwner)
+  TSVGIconImageCollection = class(TComponent)
   private
     FSVGItems: TSVGIconItems;
     FStoreAsText : boolean;
     procedure SetSVGIconItems(const Value: TSVGIconItems);
 
   protected
-    //todo - these 2 should not be public, hide behind interface!
-    procedure RecreateBitmaps;
-    procedure StopDrawing(const value : boolean);
-
-
     procedure ReadLeft(Reader: TReader);
     procedure ReadTop(Reader: TReader);
     procedure WriteLeft(Writer: TWriter);
@@ -88,13 +62,13 @@ uses
   System.Types,
   System.SysUtils;
 
-
 { TSVGIconImageCollection }
 
 function TSVGIconImageCollection.Add(const ASVG: TSVG; const AIconName: string; const AGrayScale: Boolean; const AFixedColor: TSVGColor): Integer;
 var
   Item: TSVGIconItem;
 begin
+  FSVGItems.BeginUpdate;
   try
     Item := FSVGItems.Add;
     Item.SVG := ASVG;
@@ -102,20 +76,14 @@ begin
     Item.FixedColor := AFixedColor;
     Item.GrayScale := AGrayScale;
   finally
-    RecreateBitmaps;
+    FSVGItems.EndUpdate;
   end;
   Result := FSVGItems.Count - 1;
 end;
 
 procedure TSVGIconImageCollection.ClearIcons;
 begin
-  StopDrawing(True);
-  try
-    FSVGItems.Clear;
-  finally
-    StopDrawing(False);
-    RecreateBitmaps;
-  end;
+  FSVGItems.Clear;
 end;
 
 constructor TSVGIconImageCollection.Create(AOwner: TComponent);
@@ -196,8 +164,9 @@ var
 begin
   if FStoreAsText then
     Exit;
+
+  FSVGItems.BeginUpdate;
   try
-    StopDrawing(True);
     LStream := TMemoryStream.Create;
     //Read Count of Images
     Stream.Read(LCount, SizeOf(Integer));
@@ -243,8 +212,7 @@ begin
     LStream.Free;
     LSVG.Free;
   finally
-    StopDrawing(False);
-    RecreateBitmaps;
+    FSVGItems.EndUpdate;
   end;
 end;
 
@@ -266,13 +234,6 @@ begin
   DesignInfo := FDesignInfo;
 end;
 
-procedure TSVGIconImageCollection.RecreateBitmaps;
-begin
-  //Notify TSVGIconVirtualImageList to recreate bitmaps due to change.
-  System.Messaging.TMessageManager.DefaultManager.SendMessage(Self, TSVGRecreateBitmapsMessage.Create(Self));
-
-end;
-
 procedure TSVGIconImageCollection.Remove(const Name: string);
 begin
   Delete(IndexOf(Name));
@@ -287,12 +248,6 @@ begin
   begin
     FSVGItems.Assign(Value);
   end;
-end;
-
-procedure TSVGIconImageCollection.StopDrawing(const value: boolean);
-begin
-  //Notify TSVGIconVirtualImageList to stop/start painting
-  System.Messaging.TMessageManager.DefaultManager.SendMessage(Self,TSVGStopDrawingMessage.Create(Self, value));
 end;
 
 procedure TSVGIconImageCollection.WriteImageData(Stream: TStream);
@@ -355,22 +310,6 @@ end;
 procedure TSVGIconImageCollection.WriteTop(Writer: TWriter);
 begin
   Writer.WriteInteger(LongRec(DesignInfo).Hi);
-end;
-
-{ TSVGDrawStopMessage }
-
-constructor TSVGStopDrawingMessage.Create(const collection : TSVGIconImageCollection; const state: boolean);
-begin
-  inherited Create(collection);
-  FState := state;
-end;
-
-
-{ TSVGCollectionMessage }
-
-constructor TSVGCollectionMessage.Create(const collection: TSVGIconImageCollection);
-begin
-  FCollection := collection;
 end;
 
 end.

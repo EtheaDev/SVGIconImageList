@@ -62,7 +62,7 @@ type
 
 
   {TSVGIconImageList}
-  TSVGIconImageList = class(TSVGIconImageListBase, ISVGNotifyOwner)
+  TSVGIconImageList = class(TSVGIconImageListBase)
   private
     FSVGItems: TSVGIconItems;
     FStoreAsText: boolean;
@@ -75,7 +75,6 @@ type
     procedure AssignTo(Dest: TPersistent); override;
     procedure DoAssign(const Source: TPersistent); override;
   public
-    procedure StopDrawing(const AStop: Boolean);
     procedure RecreateBitmaps;override;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -129,6 +128,7 @@ function TSVGIconImageList.Add(const ASVG: TSVG;
 var
   Item: TSVGIconItem;
 begin
+  FSVGItems.BeginUpdate;
   try
     Item := FSVGItems.Add;
     Item.SVG := ASVG;
@@ -136,7 +136,7 @@ begin
     Item.FixedColor := AFixedColor;
     Item.GrayScale := AGrayScale;
   finally
-    RecreateBitmaps;
+    FSVGItems.EndUpdate;
   end;
   Result := FSVGItems.Count - 1;
 end;
@@ -154,12 +154,12 @@ end;
 
 procedure TSVGIconImageList.ClearIcons;
 begin
-  StopDrawing(True);
+  BeginUpdate;
   try
     FSVGItems.Clear;
     inherited Clear;
   finally
-    StopDrawing(False);
+    EndUpdate;
   end;
 end;
 
@@ -167,6 +167,7 @@ constructor TSVGIconImageList.Create(AOwner: TComponent);
 begin
   inherited;
   FSVGItems := TSVGIconItems.Create(Self);
+  FSVGItems.OnUpdate := OnItemsUpdate;
 end;
 
 procedure TSVGIconImageList.Delete(const Index: Integer);
@@ -265,8 +266,9 @@ var
 begin
   if FStoreAsText then
     Exit;
+
+  BeginUpdate;
   try
-    StopDrawing(True);
     LStream := TMemoryStream.Create;
     //Read Count of Images
     Stream.Read(LCount, SizeOf(Integer));
@@ -312,8 +314,7 @@ begin
     LStream.Free;
     LSVG.Free;
   finally
-    StopDrawing(False);
-    RecreateBitmaps;
+    EndUpdate;
   end;
 end;
 
@@ -325,42 +326,34 @@ var
   LItem: TSVGIconItem;
 begin
   if not Assigned(FSVGItems) or
-    (FStopDrawing <> 0) or
-    (csDestroying in ComponentState) or
-    (csLoading in ComponentState) then
+    ([csLoading, csDestroying, csUpdating] * ComponentState <> [])
+  then
     Exit;
-  StopDrawing(True);
-  try
-    ImageList_Remove(Handle, -1);
-    if (Width > 0) and (Height > 0) then
-    begin
-      Handle := ImageList_Create(Width, Height,
-        ILC_COLOR32 or (Integer(Masked) * ILC_MASK), 0, AllocBy);
 
-      for C := 0 to FSVGItems.Count - 1 do
+  ImageList_Remove(Handle, -1);
+  if (Width > 0) and (Height > 0) then
+  begin
+    HandleNeeded;
+    for C := 0 to FSVGItems.Count - 1 do
+    begin
+      LItem := FSVGItems[C];
+      SVG := LItem.SVG;
+      if Assigned(SVG) then
       begin
-        LItem := FSVGItems[C];
-        SVG := LItem.SVG;
-        if Assigned(SVG) then
-        begin
-          if LItem.FixedColor <> inherit_color then
-            SVG.FixedColor := LItem.FixedColor
-          else
-            SVG.FixedColor := FFixedColor;
-          if LItem.GrayScale or FGrayScale then
-            SVG.Grayscale := True
-          else
-            SVG.Grayscale := False;
-          Icon := SVGToIcon(SVG);
-          ImageList_AddIcon(Handle, Icon);
-          DestroyIcon(Icon);
-        end;
+        if LItem.FixedColor <> inherit_color then
+          SVG.FixedColor := LItem.FixedColor
+        else
+          SVG.FixedColor := FFixedColor;
+        if LItem.GrayScale or FGrayScale then
+          SVG.Grayscale := True
+        else
+          SVG.Grayscale := False;
+        Icon := SVGToIcon(SVG);
+        ImageList_AddIcon(Handle, Icon);
+        DestroyIcon(Icon);
       end;
     end;
-  finally
-    StopDrawing(False);
   end;
-  Change;
 end;
 
 procedure TSVGIconImageList.Remove(const Name: string);
@@ -428,14 +421,6 @@ end;
 function TSVGIconImageList.GetSVGIconItems: TSVGIconItems;
 begin
   Result := fSVGItems;
-end;
-
-procedure TSVGIconImageList.StopDrawing(const AStop: Boolean);
-begin
-  if AStop then
-    Inc(FStopDrawing)
-  else
-    Dec(FStopDrawing);
 end;
 
 procedure TSVGIconImageList.WriteImageData(Stream: TStream);
