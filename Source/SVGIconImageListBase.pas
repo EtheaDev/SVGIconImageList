@@ -29,6 +29,7 @@ type
     {$ENDIF}
     FDPIChangedMessageID: Integer;
     {$ENDIF}
+    FSVGItemsUpdateMessageID: Integer;
     FOpacity: Byte;
     FFixedColor: TSVGColor;
     FGrayScale: Boolean;
@@ -83,11 +84,11 @@ type
   {$IFDEF HiDPISupport}
     procedure DPIChangedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
   {$ENDIF}
+    procedure SVGItemsUpdateMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
 
     procedure AssignTo(Dest: TPersistent); override;
     procedure DoAssign(const Source: TPersistent); virtual;
     procedure DPIChanged(Sender: TObject; const OldDPI, NewDPI: Integer); virtual;
-    procedure OnItemsUpdate(Sender: TObject);
   public
     constructor Create(AOwner : TComponent);override;
     destructor Destroy;override;
@@ -186,6 +187,7 @@ begin
   FScaled := True;
   FDPIChangedMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TChangeScaleMessage, DPIChangedMessageHandler);
   {$ENDIF}
+  FSVGItemsUpdateMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TSVGItemsUpdateMessage, SVGItemsUpdateMessageHandler);
   FDisabledGrayScale := True;
   FDisabledOpacity := 125;
 
@@ -358,11 +360,6 @@ end;
 procedure TSVGIconImageListBase.Loaded;
 begin
   inherited;
-  Change;
-end;
-
-procedure TSVGIconImageListBase.OnItemsUpdate(Sender: TObject);
-begin
   Change;
 end;
 
@@ -665,6 +662,13 @@ begin
   end;
 end;
 {$ENDIF}
+
+procedure TSVGIconImageListBase.SVGItemsUpdateMessageHandler(const Sender: TObject;
+  const Msg: System.Messaging.TMessage);
+begin
+  if TObject(SVGIconItems) = Sender then
+    Change;
+end;
 
 
 end.

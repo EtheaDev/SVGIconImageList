@@ -6,11 +6,15 @@ interface
 
 uses
   System.Classes,
+  System.Messaging,
   SVG,
   SVGColor;
 
 type
   TSVGIconItems = class;
+
+  TSVGItemsUpdateMessage = class(System.Messaging.TMessage)
+  end;
 
   TSVGIconItem = class(TCollectionItem)
   private
@@ -42,7 +46,6 @@ type
   {TSVGIconItems}
   TSVGIconItems = class(TOwnedCollection)
   private
-    FOnUpdate: TNotifyEvent;
     function GetItem(Index: Integer): TSVGIconItem;
     procedure SetItem(Index: Integer; const Value: TSVGIconItem);
   protected
@@ -55,7 +58,6 @@ type
     function GetIconByName(const AIconName: string): TSVGIconItem;
     function LoadFromFiles(const AFileNames: TStrings; const AAppend: Boolean = True): Integer;
     property Items[Index: Integer]: TSVGIconItem read GetItem write SetItem; default;
-    property OnUpdate: TNotifyEvent read FOnUpdate write FOnUpdate;
   end;
 
 implementation
@@ -286,8 +288,8 @@ end;
 procedure TSVGIconItems.Update(Item: TCollectionItem);
 begin
   inherited;
-  if Assigned(FOnUpdate) then
-    FOnUpdate(Self);
-end;
+  System.Messaging.TMessageManager.DefaultManager.SendMessage(Self,
+    TSVGItemsUpdateMessage.Create);
+  end;
 
 end.

@@ -191,16 +191,10 @@ begin
   if FCollection <> Value then
   begin
     if FCollection <> nil then
-    begin
       FCollection.RemoveFreeNotification(Self);
-      FCollection.SVGIconItems.OnUpdate := nil;
-    end;
     FCollection := Value;
     if FCollection <> nil then
-    begin
       FCollection.FreeNotification(Self);
-      FCollection.SVGIconItems.OnUpdate := OnItemsUpdate;
-    end;
     Change;
   end;
 end;

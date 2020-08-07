@@ -167,7 +167,6 @@ constructor TSVGIconImageList.Create(AOwner: TComponent);
 begin
   inherited;
   FSVGItems := TSVGIconItems.Create(Self);
-  FSVGItems.OnUpdate := OnItemsUpdate;
 end;
 
 procedure TSVGIconImageList.Delete(const Index: Integer);
