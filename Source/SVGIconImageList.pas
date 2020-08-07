@@ -72,7 +72,6 @@ type
     procedure ReadImageData(Stream: TStream);
     procedure WriteImageData(Stream: TStream);
     procedure DefineProperties(Filer: TFiler); override;
-    procedure AssignTo(Dest: TPersistent); override;
     procedure DoAssign(const Source: TPersistent); override;
   public
     procedure RecreateBitmaps;override;
@@ -141,16 +140,6 @@ begin
   Result := FSVGItems.Count - 1;
 end;
 
-
-procedure TSVGIconImageList.AssignTo(Dest: TPersistent);
-begin
-  inherited;
-  if Dest is TSVGIconImageList then
-    FSVGItems.AssignTo(TSVGIconImageList(Dest).FSVGItems);
-
-  if Dest is TSVGIconItems then
-    FSVGItems.AssignTo(TSVGIconItems(Dest));
-end;
 
 procedure TSVGIconImageList.ClearIcons;
 begin

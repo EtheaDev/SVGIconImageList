@@ -28,8 +28,6 @@ type
     function GetSVGText: string;
     procedure SetFixedColor(const Value: TSVGColor);
     procedure SetGrayScale(const Value: Boolean);
-  protected
-    procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Assign(Source: TPersistent); override;
     function GetDisplayName: string; override;
@@ -51,7 +49,6 @@ type
   protected
     procedure Update(Item: TCollectionItem); override;
   public
-    procedure AssignTo(Dest: TPersistent); override;
     constructor Create(AOwner: TComponent);
     function Add: TSVGIconItem;
     procedure Assign(Source: TPersistent); override;
@@ -74,23 +71,14 @@ resourcestring
 
 procedure TSVGIconItem.Assign(Source: TPersistent);
 begin
-  inherited;
   if Source is TSVGIconItem then
   begin
     FIconName := TSVGIconItem(Source).FIconName;
     FFixedColor := TSVGIconItem(Source).FFixedColor;
     FGrayScale := TSVGIconItem(Source).FGrayScale;
     FSVG.LoadFromText(TSVGIconItem(Source).FSVG.Source);
-  end;
-end;
-
-procedure TSVGIconItem.AssignTo(Dest: TPersistent);
-begin
-  if Dest is TSVGIconItem then
-  begin
-    TSVGIconItem(Dest).FIconName := FIconName;
-    TSVGIconItem(Dest).FSVG.LoadFromText(FSVG.Source);
-  end;
+  end else
+    inherited;
 end;
 
 constructor TSVGIconItem.Create(Collection: TCollection);
@@ -187,7 +175,6 @@ var
   C: Integer;
   Item: TSVGIconItem;
 begin
-  inherited;
   if (Source is TSVGIconItems) and (Owner <> nil) then
   begin
     BeginUpdate;
@@ -201,12 +188,8 @@ begin
     finally
       EndUpdate;
     end;
-  end;
-end;
-
-procedure TSVGIconItems.AssignTo(Dest: TPersistent);
-begin
-  inherited;
+  end else
+    inherited;
 end;
 
 constructor TSVGIconItems.Create(AOwner: TComponent);

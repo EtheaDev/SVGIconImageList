@@ -38,6 +38,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
     function Add(const ASVG: TSVG; const AIconName: string;
        const AGrayScale: Boolean = False;
        const AFixedColor: TSVGColor = inherit_color): Integer;
@@ -45,7 +46,6 @@ type
     procedure Remove(const Name: string);
     function IndexOf(const Name: string): Integer;
     procedure ClearIcons;
-
 
     procedure LoadFromResource(const hInstance : THandle; const resourceName : string; const iconName : string);
 
@@ -79,6 +79,19 @@ begin
     FSVGItems.EndUpdate;
   end;
   Result := FSVGItems.Count - 1;
+end;
+
+procedure TSVGIconImageCollection.Assign(Source: TPersistent);
+begin
+  if Source is TSVGIconImageCollection then
+  begin
+    FStoreAsText := TSVGIconImageCollection(Source).StoreAsText;
+    FSVGItems.Assign(TSVGIconImageCollection(Source).SVGIconItems)
+  end
+  else if Source is TSVGIconItems then
+    FSVGItems.Assign(Source)
+  else
+    inherited;
 end;
 
 procedure TSVGIconImageCollection.ClearIcons;

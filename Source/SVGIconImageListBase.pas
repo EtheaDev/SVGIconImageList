@@ -118,7 +118,6 @@ type
     {$ENDIF}
     property Images[Index: Integer]: TSVG read GetImages write SetImages;
     property Names[Index: Integer]: string read GetNames write SetNames;
-
   end;
 
 implementation
@@ -152,21 +151,20 @@ begin
     finally
      EndUpdate;
     end;
-  end;
-
+  end else if Source is TSVGIconItems then begin
+    if Assigned(SVGIconItems) then
+      SVGIconItems.Assign(Source);
+  end else
+    inherited;
 end;
 
 procedure TSVGIconImageListBase.AssignTo(Dest: TPersistent);
 begin
-  ClearIcons;
-  inherited;
-  if Dest is TSVGIconImageListBase then
-  begin
-    TSVGIconImageListBase(Dest).FOpacity := FOpacity;
-    TSVGIconImageListBase(Dest).Width := Width;
-    TSVGIconImageListBase(Dest).Height := Height;
-  end;
-
+  if (Dest is TSVGIconItems) then begin
+    if Assigned(SVGIconItems) then
+      Dest.Assign(SVGIconItems)
+  end else
+    inherited;
 end;
 
 procedure TSVGIconImageListBase.ClearIcons;
@@ -217,7 +215,6 @@ end;
 procedure TSVGIconImageListBase.DoAssign(const Source: TPersistent);
 begin
   //do nothing.. TSVGIconImageList will override;
-
 end;
 
 procedure TSVGIconImageListBase.DoChange;
