@@ -961,8 +961,21 @@ end;
 
 procedure TSVGBasic.BeforePaint(const Graphics: TGPGraphics;
   const Brush: TGPBrush; const Pen: TGPPen);
+Var
+  SolidBrush : TGPBrush;
 begin
-end;
+  if (Brush is TGPPathGradientBrush) and (FPath <> nil) and (FFillColor <> INHERIT) then
+  begin
+    // Fill with solid color
+    SolidBrush :=  TGPSolidBrush.Create(TGPColor(FFillColor));
+    try
+      Graphics.FillPath(SolidBrush, FPath);
+    finally
+      SolidBrush.Free;
+      FFillColor := INHERIT;
+    end;
+  end;
+ end;
 
 procedure TSVGBasic.CalcClipPath;
 begin
@@ -4289,7 +4302,11 @@ end;
 {$REGION 'TSVGTSpan'}
 procedure TSVGTSpan.ReadTextNodes(const Node: IXMLNode);
 begin
-  FText := Node.Text;
+  // empty text nodes would raise exception
+  try
+    FText := Node.Text;
+  except
+  end;
   SetSize;
   ConstructPath;
 

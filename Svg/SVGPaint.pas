@@ -281,7 +281,6 @@ var
   Brush: TGPLinearGradientBrush;
   TGP: TGPMatrix;
   Colors: TColors;
-  i: integer;
 begin
   if Assigned(DestObject) and (FGradientUnits = guObjectBoundingBox) then
     Brush := TGPLinearGradientBrush.Create(MakePoint(DestObject.X, DestObject.Y),
@@ -323,9 +322,9 @@ procedure TSVGRadialGradient.Clear;
 begin
   inherited;
 
-  FCX := 0.5;
-  FCY := 0.5;
-  FR := 0.5;
+  FCX := INHERIT;
+  FCY := INHERIT;
+  FR := INHERIT;
   FFX := FCX;
   FFY := FCY;
 end;
@@ -350,7 +349,8 @@ var
   i: integer;
 begin
   Path := TGPGraphicsPath.Create;
-  if Assigned(DestObject) and (FGradientUnits = guObjectBoundingBox) then
+  if (Assigned(DestObject) and (FGradientUnits = guObjectBoundingBox)) or
+    ((FR = INHERIT) or (FCX = INHERIT) or (FCY = INHERIT)) then
     Path.AddEllipse(DestObject.X, DestObject.Y, DestObject.Width, DestObject.Height)
   else
     Path.AddEllipse(FCX - FR, FCY - FR, 2 * FR, 2 * FR);
@@ -368,10 +368,14 @@ begin
     RevColors.Colors[i] := Colors.Colors[Colors.Count - 1 - i];
     RevColors.Positions[i] := 1 - Colors.Positions[Colors.Count - 1 - i];
   end;
+  if Colors.Count > 0 then
+    // Temporarily store last color. Used in TSVGBasic.BeforePaint
+    DestObject.FillColor := Integer(RevColors.Colors[0]);
 
   Brush.SetInterpolationColors(PARGB(RevColors.Colors), PSingle(RevColors.Positions), Colors.Count);
 
-  Brush.SetCenterPoint(MakePoint(FFX, FFY));
+  if (FCX <> INHERIT) and (FCY <> INHERIT) then
+    Brush.SetCenterPoint(MakePoint(FFX, FFY));
 
   if PureMatrix.m33 = 1 then
   begin
