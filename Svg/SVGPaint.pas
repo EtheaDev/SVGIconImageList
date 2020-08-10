@@ -214,6 +214,7 @@ procedure TSVGGradient.ReadIn(const Node: IXMLNode);
 var
   C: Integer;
   Stop: TSVGStop;
+  Matrix: TMatrix;
 begin
   inherited;
 
@@ -227,12 +228,24 @@ begin
    end;
 
   FURI := Style['xlink:href'];
+  if FURI = '' then
+    FURI := Style['href'];
+  if FURI = '' then
+    LoadString(Node, 'xlink:href', FURI);
+  if FURI = '' then
+    LoadString(Node, 'href', FURI);
+
+
   if FURI <> '' then
   begin
     FURI := Trim(FURI);
     if (FURI <> '') and (FURI[1] = '#') then
       FURI := Copy(FURI, 2, MaxInt);
   end;
+
+  FillChar(Matrix, SizeOf(Matrix), 0);
+  LoadTransform(Node, 'gradientTransform', Matrix);
+  PureMatrix := Matrix;
 end;
 
 // TSVGLinearGradient
@@ -243,18 +256,12 @@ begin
 end;
 
 procedure TSVGLinearGradient.ReadIn(const Node: IXMLNode);
-var
-  Matrix: TMatrix;
 begin
   inherited;
   LoadLength(Node, 'x1', FX1);
   LoadLength(Node, 'y1', FY1);
   LoadLength(Node, 'x2', FX2);
   LoadLength(Node, 'y2', FY2);
-
-  FillChar(Matrix, SizeOf(Matrix), 0);
-  LoadTransform(Node, 'gradientTransform', Matrix);
-  PureMatrix := Matrix;
 end;
 
 procedure TSVGLinearGradient.AssignTo(Dest: TPersistent);
@@ -274,6 +281,7 @@ var
   Brush: TGPLinearGradientBrush;
   TGP: TGPMatrix;
   Colors: TColors;
+  i: integer;
 begin
   if Assigned(DestObject) and (FGradientUnits = guObjectBoundingBox) then
     Brush := TGPLinearGradientBrush.Create(MakePoint(DestObject.X, DestObject.Y),
@@ -285,8 +293,6 @@ begin
 
   Brush.SetInterpolationColors(PGPColor(Colors.Colors),
     PSingle(Colors.Positions), Colors.Count);
-
-  Finalize(Colors);
 
   if PureMatrix.m33 = 1 then
   begin
@@ -327,7 +333,6 @@ end;
 procedure TSVGRadialGradient.ReadIn(const Node: IXMLNode);
 begin
   inherited;
-
   LoadLength(Node, 'cx', FCX);
   LoadLength(Node, 'cy', FCY);
   LoadLength(Node, 'r', FR);
@@ -341,9 +346,10 @@ var
   Path: TGPGraphicsPath;
   TGP: TGPMatrix;
   Colors: TColors;
+  RevColors: TColors;
+  i: integer;
 begin
   Path := TGPGraphicsPath.Create;
-
   if Assigned(DestObject) and (FGradientUnits = guObjectBoundingBox) then
     Path.AddEllipse(DestObject.X, DestObject.Y, DestObject.Width, DestObject.Height)
   else
@@ -353,9 +359,17 @@ begin
   Path.Free;
 
   Colors := GetColors(Alpha);
-  Brush.SetInterpolationColors(PARGB(Colors.Colors), PSingle(Colors.Positions), Colors.Count);
 
-  Finalize(Colors);
+  SetLength(RevColors.Colors, Colors.Count);
+  SetLength(RevColors.Positions, Colors.Count);
+  // Reverse colors! TGPPathGradientBrush uses colors from outside to inside unlike svg
+  for i := 0 to Colors.Count - 1 do
+  begin
+    RevColors.Colors[i] := Colors.Colors[Colors.Count - 1 - i];
+    RevColors.Positions[i] := 1 - Colors.Positions[Colors.Count - 1 - i];
+  end;
+
+  Brush.SetInterpolationColors(PARGB(RevColors.Colors), PSingle(RevColors.Positions), Colors.Count);
 
   Brush.SetCenterPoint(MakePoint(FFX, FFY));
 

@@ -81,7 +81,7 @@ type
     function IndexOf(Item: TSVGObject): Integer;
     function FindByID(const Name: string): TSVGObject;
     function FindByType(Typ: TClass; Previous: TSVGObject = nil): TSVGObject;
-    procedure CalculateMatrices(const AX, AY, ADX, ADY: TFloat);
+    procedure CalculateMatrices;
 
     procedure PaintToGraphics(Graphics: TGPGraphics); virtual; abstract;
     procedure PaintToPath(Path: TGPGraphicsPath); virtual; abstract;
@@ -105,7 +105,7 @@ type
     FCompleteCalculatedMatrix: TMatrix;
     FCalculatedMatrix: TMatrix;
     procedure SetPureMatrix(const Value: TMatrix);
-    procedure CalcMatrix(const AX, AY, ADX, ADY: TFloat);
+    procedure CalcMatrix;
 
     function Transform(const P: TPointF): TPointF; overload;
     function Transform(const X, Y: TFloat): TPointF; overload;
@@ -565,7 +565,7 @@ procedure TSVGObject.CalcObjectBounds;
 begin
 end;
 
-procedure TSVGObject.CalculateMatrices(const AX, AY, ADX, ADY: TFloat);
+procedure TSVGObject.CalculateMatrices;
 var
   C: Integer;
 begin
@@ -574,7 +574,7 @@ begin
     if Self is TSVG then
       TSVG(Self).CalcRootMatrix
     else
-      TSVGMatrix(Self).CalcMatrix(AX, AY, ADX, ADY);
+      TSVGMatrix(Self).CalcMatrix;
 
     if Self is TSVGBasic then
       TSVGBasic(Self).CalcClipPath;
@@ -584,7 +584,7 @@ begin
 
   for C := 0 to FItems.Count - 1 do
   begin
-    TSVGObject(FItems[C]).CalculateMatrices(AX, AY, ADX, ADY);
+    TSVGObject(FItems[C]).CalculateMatrices;
   end;
 end;
 
@@ -832,7 +832,7 @@ begin
   end;
 end;
 
-procedure TSVGMatrix.CalcMatrix(const AX, AY, ADX, ADY: TFloat);
+procedure TSVGMatrix.CalcMatrix;
 var
   C: Integer;
   List: TList;
@@ -869,8 +869,8 @@ begin
         begin
           NewMatrix := TSVGMatrix(SVG).FPureMatrix;
           //Fix for transform:translate with rescaling
-          NewMatrix.m31 := NewMatrix.m31 * ADX;
-          NewMatrix.m32 := NewMatrix.m32 * ADY;
+//          NewMatrix.m31 := NewMatrix.m31 * ADX;
+//          NewMatrix.m32 := NewMatrix.m32 * ADY;
           //LScaleMatrix := TMatrix.CreateScaling(, NewMatrix.m12 * ADY);
           //NewMatrix := NewMatrix * LScaleMatrix;
           //NewMatrix.m11 := NewMatrix.m11 * ADX;
@@ -882,7 +882,7 @@ begin
           if CompleteMatrix.m33 = 0 then
             CompleteMatrix := NewMatrix
           else
-            CompleteMatrix := CompleteMatrix * NewMatrix;
+            CompleteMatrix :=  NewMatrix * CompleteMatrix;
 
           //Fix
           //LTranslationMatrix := TMatrix.CreateTranslation(-AX, -AY);
@@ -893,7 +893,7 @@ begin
             if LMatrix.m33 = 0 then
               LMatrix := NewMatrix
             else
-              LMatrix := LMatrix * NewMatrix;
+              LMatrix := NewMatrix * LMatrix;
           end;
         end;
       end;
@@ -910,6 +910,8 @@ procedure TSVGMatrix.Clear;
 begin
   inherited;
   FillChar(FPureMatrix, SizeOf(FPureMatrix), 0);
+  FillChar(FCalculatedMatrix, SizeOf(FCalculatedMatrix), 0);
+  FillChar(FCompleteCalculatedMatrix, SizeOf(FCompleteCalculatedMatrix), 0);
 end;
 
 procedure TSVGMatrix.ReadIn(const Node: IXMLNode);
@@ -926,7 +928,7 @@ procedure TSVGMatrix.SetPureMatrix(const Value: TMatrix);
 begin
   FPureMatrix := Value;
 
-  CalcMatrix(0,0,1,1);
+  CalcMatrix;
 end;
 
 function TSVGMatrix.Transform(const P: TPointF): TPointF;
@@ -2375,13 +2377,13 @@ begin
   if FHeight = 0 then
     FHeight := FRootBounds.Height;
 
-  if (FWidth > 0) and (FRootBounds.Width <> -1) then
-    FDX := FRootBounds.Width / FWidth;
+  if (FViewBox.Width > 0) and (FRootBounds.Width > 0) then
+    FDX := FRootBounds.Width / FViewBox.Width;
 
-  if (FHeight > 0) and (FRootBounds.Height <> -1) then
-    FDY := FRootBounds.Height / FHeight;
+  if (FViewBox.Height > 0) and (FRootBounds.Height > 0) then
+    FDY := FRootBounds.Height / FViewBox.Height;
 
-  CalculateMatrices(FViewBox.Top, FViewBox.Left, FDX, FDY);
+  CalculateMatrices;
 end;
 
 procedure TSVG.ReloadFromText;
@@ -2860,6 +2862,8 @@ procedure TSVGUse.ReadIn(const Node: IXMLNode);
 begin
   inherited;
   LoadString(Node, 'xlink:href', FReference);
+  if FReference = '' then
+    LoadString(Node, 'href', FReference);
 end;
 
 {$REGION 'TSVGRect'}
@@ -3555,6 +3559,8 @@ begin
   inherited;
 
   LoadString(Node, 'xlink:href', S);
+  if S = '' then
+    LoadString(Node, 'href', S);
 
   if IsValid(S) then
   begin
@@ -4241,6 +4247,8 @@ begin
     FSpacing := tpsExact;
 
   LoadString(Node, 'xlink:href', FPathRef);
+  if FPathRef = '' then
+    LoadString(Node, 'href', FPathRef);
 
   ReadTextNodes(Node);
 end;
