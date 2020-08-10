@@ -140,6 +140,7 @@ type
     FTextDecoration: TTextDecoration;
 
     FPath: TGPGraphicsPath2;
+    FFillMode: TFillMode;
     FClipPath: TGPGraphicsPath;
     FX: TFloat;
     FY: TFloat;
@@ -210,6 +211,7 @@ type
     property Root: TSVG read GetRoot;
 
     property FillColor: Integer read GetFillColor write FFillColor;
+    property FillMode: TFillMode read fFillMode write fFillMode;
     property StrokeColor: Integer read GetStrokeColor write FStrokeColor;
     property FillOpacity: TFloat read GetFillOpacity write FFillOpacity;
     property StrokeOpacity: TFloat read GetStrokeOpacity write FStrokeOpacity;
@@ -950,6 +952,8 @@ constructor TSVGBasic.Create;
 begin
   inherited;
   FPath := nil;
+  // default SVG fill-rule is nonzero
+  fFillMode := FillModeWinding;
   SetLength(FStrokeDashArray, 0);
   FStyle.OnChange := OnStyleChanged;
   FClipPath := nil;
@@ -1423,6 +1427,12 @@ begin
   Value := Style.Values['stroke-dasharray'];
   if Value <> '' then
     SetStrokeDashArray(Value);
+
+  Value := Style.Values['fill-rule'];
+  if SameText(Value, 'evenodd') then
+    fFillMode := FillModeAlternate
+  else
+    fFillMode := FillModeWinding;
 
   Value := Style['font-family'];
   if Value <> '' then
@@ -2036,6 +2046,7 @@ end;
 procedure TSVGBasic.ConstructPath;
 begin
   FreeAndNil(FPath);
+  FPath := TGPGraphicsPath2.Create(FFillMode);
 end;
 
 function TSVGBasic.GetClipPath: TGPGraphicsPath;
@@ -2900,7 +2911,6 @@ end;
 procedure TSVGRect.ConstructPath;
 begin
   inherited;
-  FPath := TGPGraphicsPath2.Create;
 
   if (FRX <= 0) and (FRY <= 0) then
     FPath.AddRectangle(MakeRect(FX, FY, FWidth, FHeight))
@@ -2946,7 +2956,6 @@ end;
 procedure TSVGLine.ConstructPath;
 begin
   inherited;
-  FPath := TGPGraphicsPath2.Create;
   FPath.AddLine(X, Y, Width, Height);
 end;
 {$ENDREGION}
@@ -3079,11 +3088,9 @@ procedure TSVGPolyLine.ConstructPath;
 var
   C: Integer;
 begin
-  inherited;
   if FPoints = nil then
     Exit;
-
-  FPath := TGPGraphicsPath2.Create;
+  inherited;
 
   for C := 1 to FPointCount - 1 do
     FPath.AddLine(FPoints[C - 1].X, FPoints[C - 1].Y, FPoints[C].X, FPoints[C].Y);
@@ -3098,10 +3105,9 @@ end;
 
 procedure TSVGPolygon.ConstructPath;
 begin
-  inherited;
-
   if FPoints = nil then
     Exit;
+  inherited;
 
   FPath.CloseFigure;
 end;
@@ -3147,7 +3153,6 @@ end;
 procedure TSVGEllipse.ConstructPath;
 begin
   inherited;
-  FPath := TGPGraphicsPath2.Create;
   FPath.AddEllipse(X - Width, Y - Height, 2 * Width, 2 * Height);
 end;
 {$ENDREGION}
@@ -3202,7 +3207,6 @@ var
 begin
   inherited;
 
-  FPath := TGPGraphicsPath2.Create(FillModeWinding);
   for C := 0 to Count - 1 do
   begin
     Element := TSVGPathElement(Items[C]);
@@ -3866,7 +3870,6 @@ var
   SF: TGPStringFormat;
   TD: TTextDecoration;
 begin
-  inherited;
   FreeAndNil(FUnderlinePath);
   FreeAndNil(FStrikeOutPath);
 
@@ -3875,7 +3878,8 @@ begin
 
   if FText = '' then
     Exit;
-  FPath := TGPGraphicsPath2.Create;
+
+  inherited;
 
   FF := GetFontFamily(GetFontName);
 
