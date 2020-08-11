@@ -4048,14 +4048,9 @@ procedure TSVGCustomText.ReadTextNodes(const Node: IXMLNode);
 var
   C: Integer;
 begin
-  if Node.nodeType = TNodeType.ntText then
-  begin
-    FText := Node.xml;
-    SetSize;
-    ConstructPath;
-  end
-  else if (Node.NodeType = TNodeType.ntElement) and (Node.NodeName = 'text')
-  and (Node.ChildNodes.Count = 1) and (Node.ChildNodes[0].NodeType = TNodeType.ntText) then
+  if (Node.nodeType = TNodeType.ntText) or
+    ((Node.NodeName = 'text') and Node.IsTextElement)
+  then
   begin
     FText := Node.Text;
     SetSize;
@@ -4274,9 +4269,9 @@ procedure TSVGTextPath.ReadTextNodes(const Node: IXMLNode);
 var
   C: Integer;
 begin
-  if Node.nodeType = TNodeType.ntText then
+  if (Node.nodeType = TNodeType.ntText) or Node.IsTextElement then
   begin
-    FText := Node.xml;
+    FText := Node.Text;
     SetSize;
   end
   else
@@ -4302,56 +4297,11 @@ end;
 {$REGION 'TSVGTSpan'}
 procedure TSVGTSpan.ReadTextNodes(const Node: IXMLNode);
 begin
-  // empty text nodes would raise exception
-  try
+  if Node.IsTextElement then
     FText := Node.Text;
-  except
-  end;
   SetSize;
   ConstructPath;
-
-  // Again with only child
-  if (Node.childNodes.count = 1) then
-  begin
-    ReadTextNodes(Node.childNodes[0]);
-  end;
 end;
 {$ENDREGION}
 
-procedure PatchINT3; 
-var 
-  NOP: Byte;
-  NTDLL: THandle;
-  BytesWritten: SIZE_T;
-  Address: Pointer;
-begin
-  if Win32Platform <> VER_PLATFORM_WIN32_NT then
-    Exit;
-  NTDLL := GetModuleHandle('NTDLL.DLL');
-  if NTDLL = 0 then
-    Exit;
-  Address := GetProcAddress(NTDLL, 'DbgBreakPoint');
-  if Address = nil then
-    Exit;
-  try
-    if Char(Address^) <> #$CC then
-      Exit;
-
-    NOP := $90;
-    if WriteProcessMemory(GetCurrentProcess, Address, @NOP, 1, BytesWritten) and
-       (BytesWritten = 1) then
-      FlushInstructionCache(GetCurrentProcess, Address, 1);
-  except
-    //Do not panic if you see an EAccessViolation here, it is perfectly harmless!
-    on EAccessViolation do ;
-    else raise;
-  end;
-end;
-
-initialization
-  {$WARN SYMBOL_PLATFORM OFF}
-// nur wenn ein Debugger vorhanden, den Patch ausführen
-  if DebugHook <> 0 then
-    PatchINT3;
-  {$WARN SYMBOL_PLATFORM ON}
 end.
