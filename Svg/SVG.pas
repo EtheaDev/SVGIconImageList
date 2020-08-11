@@ -2441,27 +2441,6 @@ end;
 procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
   RectCount: Integer);
 
-  procedure PaintBounds(const Item: TSVGObject);
-  var
-    Pen: TGPPen;
-  begin
-    Graphics.ResetTransform;
-    Pen := TGPPen.Create(MakeColor(0, 0, 0), 2);
-    Graphics.DrawLine(Pen, Item.ObjectBounds.TopLeft.X, Item.ObjectBounds.TopLeft.Y,
-      Item.ObjectBounds.TopRight.X, Item.ObjectBounds.TopRight.Y);
-
-    Graphics.DrawLine(Pen, Item.ObjectBounds.TopRight.X, Item.ObjectBounds.TopRight.Y,
-      Item.ObjectBounds.BottomRight.X, Item.ObjectBounds.BottomRight.Y);
-
-    Graphics.DrawLine(Pen, Item.ObjectBounds.BottomRight.X, Item.ObjectBounds.BottomRight.Y,
-      Item.ObjectBounds.BottomLeft.X, Item.ObjectBounds.BottomLeft.Y);
-
-    Graphics.DrawLine(Pen, Item.ObjectBounds.BottomLeft.X, Item.ObjectBounds.BottomLeft.Y,
-      Item.ObjectBounds.TopLeft.X, Item.ObjectBounds.TopLeft.Y);
-
-    Pen.Free;
-  end;
-
   function InBounds(Item: TSVGObject): Boolean;
   var
     C: Integer;
