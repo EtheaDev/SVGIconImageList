@@ -102,7 +102,6 @@ type
   TSVGMatrix = class(TSVGObject)
   private
     FPureMatrix: TMatrix;
-    FCompleteCalculatedMatrix: TMatrix;
     FCalculatedMatrix: TMatrix;
     procedure SetPureMatrix(const Value: TMatrix);
     procedure CalcMatrix;
@@ -114,7 +113,7 @@ type
   public
     procedure Clear; override;
     procedure ReadIn(const Node: IXMLNode); override;
-    property Matrix: TMatrix read FCompleteCalculatedMatrix;
+    property Matrix: TMatrix read FCalculatedMatrix;
     property PureMatrix: TMatrix read FPureMatrix write SetPureMatrix;
   end;
 
@@ -840,9 +839,7 @@ var
   List: TList;
   SVG: TSVGObject;
   CompleteMatrix: TMatrix;
-  LMatrix: TMatrix;
   NewMatrix: TMatrix;
-  //LTranslationMatrix: TMatrix;
 begin
   List := TList.Create;
 
@@ -856,8 +853,6 @@ begin
     end;
 
     FillChar(CompleteMatrix, SizeOf(CompleteMatrix), 0);
-    FillChar(LMatrix, SizeOf(LMatrix), 0);
-    //FillChar(LTranslationMatrix, SizeOf(LMatrix), 0);
     for C := 0 to List.Count - 1 do
     begin
       SVG := TSVGMatrix(List[C]);
@@ -870,13 +865,6 @@ begin
         else
         begin
           NewMatrix := TSVGMatrix(SVG).FPureMatrix;
-          //Fix for transform:translate with rescaling
-//          NewMatrix.m31 := NewMatrix.m31 * ADX;
-//          NewMatrix.m32 := NewMatrix.m32 * ADY;
-          //LScaleMatrix := TMatrix.CreateScaling(, NewMatrix.m12 * ADY);
-          //NewMatrix := NewMatrix * LScaleMatrix;
-          //NewMatrix.m11 := NewMatrix.m11 * ADX;
-          //NewMatrix.m12 := NewMatrix.m12 * ADY;
         end;
 
         if NewMatrix.m33 = 1 then
@@ -885,18 +873,6 @@ begin
             CompleteMatrix := NewMatrix
           else
             CompleteMatrix :=  NewMatrix * CompleteMatrix;
-
-          //Fix
-          //LTranslationMatrix := TMatrix.CreateTranslation(-AX, -AY);
-          //CompleteMatrix := CompleteMatrix * LTranslationMatrix;
-
-          if not (SVG is TSVG) then
-          begin
-            if LMatrix.m33 = 0 then
-              LMatrix := NewMatrix
-            else
-              LMatrix := NewMatrix * LMatrix;
-          end;
         end;
       end;
     end;
@@ -904,8 +880,7 @@ begin
     List.Free;
   end;
 
-  FCompleteCalculatedMatrix := CompleteMatrix;
-  FCalculatedMatrix := LMatrix;
+  FCalculatedMatrix := CompleteMatrix;
 end;
 
 procedure TSVGMatrix.Clear;
@@ -913,7 +888,6 @@ begin
   inherited;
   FillChar(FPureMatrix, SizeOf(FPureMatrix), 0);
   FillChar(FCalculatedMatrix, SizeOf(FCalculatedMatrix), 0);
-  FillChar(FCompleteCalculatedMatrix, SizeOf(FCompleteCalculatedMatrix), 0);
 end;
 
 procedure TSVGMatrix.ReadIn(const Node: IXMLNode);
