@@ -196,7 +196,7 @@ function SVGColorToColor(const ASVGColor: TSVGColor): TColor;
 function SVGColorNameToSVGColor(const AColorName: string): TSVGColor;
 function SVGColorToSVGColorName(const AColor: TSVGColor): string;
 function ColorToSVGColor(const AColor: TColor): TSVGColor;
-function ConvertColor(Color: TColor; Alpha: Byte): Cardinal;
+function ConvertColor(Color: TColor; Alpha: Byte): Cardinal; inline;
 procedure AssignSVGColorList(AList: TStrings);
 
 implementation
@@ -445,13 +445,9 @@ begin
 end;
 
 function ConvertColor(Color: TColor; Alpha: Byte): Cardinal;
-var
-  R, G, B: Byte;
 begin
-  R := (Color and $000000FF);
-  G := (Color and $0000FF00) shr 8;
-  B := (Color and $00FF0000) shr 16;
-  Result := MakeColor(Alpha, R, G, B);
+  with TColors(Color) do
+    Result := Winapi.GDIPAPI.MakeColor(Alpha, R, G, B);
 end;
 
 procedure AssignSVGColorList(AList: TStrings);
