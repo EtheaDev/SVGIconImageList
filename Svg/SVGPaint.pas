@@ -92,9 +92,6 @@ type
   end;
 
   TSVGRadialGradient = class(TSVGGradient)
-  {
-    FX, FY not used.  Not sure they can be implemented with GDI+
-  }
   private
     FCX: TFloat;
     FCY: TFloat;
@@ -323,6 +320,10 @@ begin
   LoadLength(Node, 'r', FR);
   LoadLength(Node, 'fx', FFX);
   LoadLength(Node, 'fy', FFY);
+  if FFX = INHERIT then
+    FFX := FCX;
+  if FFY = INHERIT then
+    FFY := FCY;
 end;
 
 function TSVGRadialGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush;
@@ -361,8 +362,8 @@ begin
 
   Brush.SetInterpolationColors(PARGB(RevColors.Colors), PSingle(RevColors.Positions), Colors.Count);
 
-  if (FCX <> INHERIT) and (FCY <> INHERIT) then
-    Brush.SetCenterPoint(MakePoint(FCX, FCY));
+  if (FFX <> INHERIT) and (FFY <> INHERIT) then
+    Brush.SetCenterPoint(MakePoint(FFX, FFY));
 
   if PureMatrix.m33 = 1 then
   begin

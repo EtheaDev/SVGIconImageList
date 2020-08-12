@@ -104,11 +104,11 @@ type
     FPureMatrix: TMatrix;
     FCalculatedMatrix: TMatrix;
     procedure SetPureMatrix(const Value: TMatrix);
-    procedure CalcMatrix;
 
     function Transform(const P: TPointF): TPointF; overload;
     function Transform(const X, Y: TFloat): TPointF; overload;
   protected
+    procedure CalcMatrix; virtual;
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
@@ -243,7 +243,6 @@ type
     FSource: string;
     FAngle: TFloat;
     FAngleMatrix: TMatrix;
-    FRootMatrix: TMatrix;
     FViewBox: TRectF;
     FFileName: string;
     FSize: TSizeF;
@@ -261,14 +260,13 @@ type
     FDX: TFloat;
     FDY: TFloat;
     FStyles: TStyleList;
-    procedure CalcRootMatrix;
     procedure SetFixedColor(const Value: TSVGColor);
     procedure ReloadFromText;
     procedure SetGrayscale(const Value: boolean);
   protected
+    procedure CalcMatrix; override;
     procedure AssignTo(Dest: TPersistent); override;
     procedure ReadStyles(const Node: IXMLNode);
-    property RootMatrix: TMatrix read FRootMatrix;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -555,15 +553,10 @@ var
 begin
   if Self is TSVGMatrix then
   begin
-    if Self is TSVG then
-      TSVG(Self).CalcRootMatrix
-    else
-      TSVGMatrix(Self).CalcMatrix;
+    TSVGMatrix(Self).CalcMatrix;
 
     if Self is TSVGBasic then
       TSVGBasic(Self).CalcClipPath;
-
-    CalcObjectBounds;
   end;
 
   for C := 0 to FItems.Count - 1 do
@@ -826,52 +819,26 @@ end;
 
 procedure TSVGMatrix.CalcMatrix;
 var
-  C: Integer;
-  List: TList;
   SVG: TSVGObject;
-  CompleteMatrix: TMatrix;
-  NewMatrix: TMatrix;
 begin
-  List := TList.Create;
-
-  try
-    SVG := Self;
-
-    while Assigned(SVG) do
-    begin
-      List.Insert(0, SVG);
-      SVG := SVG.FParent;
-    end;
-
-    FillChar(CompleteMatrix, SizeOf(CompleteMatrix), 0);
-    for C := 0 to List.Count - 1 do
-    begin
-      SVG := TSVGMatrix(List[C]);
-      if (SVG is TSVGMatrix) then
-      begin
-        if SVG is TSVG then
-        begin
-          NewMatrix := TSVG(SVG).RootMatrix;
-        end
-        else
-        begin
-          NewMatrix := TSVGMatrix(SVG).FPureMatrix;
-        end;
-
-        if NewMatrix.m33 = 1 then
-        begin
-          if CompleteMatrix.m33 = 0 then
-            CompleteMatrix := NewMatrix
-          else
-            CompleteMatrix :=  NewMatrix * CompleteMatrix;
-        end;
-      end;
-    end;
-  finally
-    List.Free;
+  SVG := Parent;
+  while Assigned(SVG) do
+  begin
+    if SVG is TSVGMatrix then break;
+    SVG := SVG.FParent;
   end;
 
-  FCalculatedMatrix := CompleteMatrix;
+  if Assigned(SVG) and (TSVGMatrix(SVG).Matrix.m33 = 1) then
+    FCalculatedMatrix := TSVGMatrix(SVG).Matrix
+  else
+    FillChar(FCalculatedMatrix, SizeOf(FCalculatedMatrix), 0);
+
+  if FPureMatrix.m33 = 1 then begin
+    if FCalculatedMatrix.m33 = 1 then
+      FCalculatedMatrix := FPureMatrix * FCalculatedMatrix
+    else
+      FCalculatedMatrix := FPureMatrix;
+  end;
 end;
 
 procedure TSVGMatrix.Clear;
@@ -894,8 +861,6 @@ end;
 procedure TSVGMatrix.SetPureMatrix(const Value: TMatrix);
 begin
   FPureMatrix := Value;
-
-  CalcMatrix;
 end;
 
 function TSVGMatrix.Transform(const P: TPointF): TPointF;
@@ -1133,9 +1098,9 @@ begin
 
   if (Root.FixedColor <> inherit_color) then
     begin
-      if (FillColor <> SVG_NONE_COLOR) then
+      if (FillColor <> INHERIT) and (FillColor <> SVG_NONE_COLOR) then
         FillColor := SVGColorToColor(Root.FixedColor);
-      if (StrokeColor <> SVG_NONE_COLOR) then
+      if (StrokeColor <> INHERIT) and (StrokeColor <> SVG_NONE_COLOR) then
         StrokeColor := SVGColorToColor(Root.FixedColor);
     end;
 
@@ -2360,10 +2325,14 @@ begin
     FHeight := FRootBounds.Height;
 
   if (FViewBox.Width > 0) and (FRootBounds.Width > 0) then
-    FDX := FRootBounds.Width / FViewBox.Width;
+    FDX := FRootBounds.Width / FViewBox.Width
+  else
+    FDX := 1;
 
   if (FViewBox.Height > 0) and (FRootBounds.Height > 0) then
-    FDY := FRootBounds.Height / FViewBox.Height;
+    FDY := FRootBounds.Height / FViewBox.Height
+  else
+    FDY := 1;
 
   CalculateMatrices;
 end;
@@ -2570,7 +2539,7 @@ begin
   Walk(Self);
 end;
 
-procedure TSVG.CalcRootMatrix;
+procedure TSVG.CalcMatrix;
 var
   ViewBoxMatrix: TMatrix;
   BoundsMatrix: TMatrix;
@@ -2582,21 +2551,21 @@ begin
 
   if FInitialMatrix.m33 = 1 then
   begin
-    FRootMatrix := FInitialMatrix
+    FCalculatedMatrix := FInitialMatrix
   end
   else
   begin
-    FRootMatrix := TMatrix.Identity;
+    FCalculatedMatrix := TMatrix.Identity;
   end;
 
-  FRootMatrix := BoundsMatrix * FRootMatrix;
-  FRootMatrix := ViewBoxMatrix * FRootMatrix;
-  FRootMatrix := ScaleMatrix * FRootMatrix;
+  FCalculatedMatrix := BoundsMatrix * FCalculatedMatrix;
+  FCalculatedMatrix := ViewBoxMatrix * FCalculatedMatrix;
+  FCalculatedMatrix := ScaleMatrix * FCalculatedMatrix;
   if FAngleMatrix.m33 = 1 then
-    FRootMatrix := FAngleMatrix * FRootMatrix;
+    FCalculatedMatrix := FAngleMatrix * FCalculatedMatrix;
 
   if FPureMatrix.m33 = 1 then
-    FRootMatrix := FPureMatrix * FRootMatrix;
+    FCalculatedMatrix := FPureMatrix * FCalculatedMatrix;
 end;
 
 procedure TSVG.ReadIn(const Node: IXMLNode);
