@@ -376,10 +376,15 @@ type
 
   TSVGEllipse = class(TSVGBasic)
   protected
+    FCX: TFloat;
+    FCY: TFloat;
     procedure ConstructPath; override;
     procedure CalcObjectBounds; override;
   public
+    procedure Clear; override;
     procedure ReadIn(const Node: IXMLNode); override;
+    property CX: TFloat read FCX write FCX;
+    property CY: TFloat read FCY write FCY;
   end;
 
   TSVGPath = class(TSVGBasic)
@@ -2976,17 +2981,22 @@ procedure TSVGEllipse.ReadIn(const Node: IXMLNode);
 begin
   inherited;
 
-  LoadLength(Node, 'cx', FX);
-  LoadLength(Node, 'cy', FY);
+  LoadLength(Node, 'cx', FCX);
+  LoadLength(Node, 'cy', FCY);
 
   if Node.NodeName = 'circle' then
   begin
-    LoadLength(Node, 'r', FWidth);
-    FHeight := FWidth;
-  end else
-  begin
-    LoadLength(Node, 'rx', FWidth);
-    LoadLength(Node, 'ry', FHeight);
+    LoadLength(Node, 'r', FRX);
+    FRY := FRX;
+  end;
+
+  if FRX <> INHERIT then begin
+    FWidth := 2 * FRX;
+    FHeight := 2 * FRY;
+    if FCX <> INHERIT then
+      FX := FCX - FRX;
+    if FCY <> INHERIT then
+      FX := FCX - FRX;
   end;
 
   ConstructPath;
@@ -2997,14 +3007,21 @@ var
   SW: TFloat;
 begin
   SW := Max(0, GetStrokeWidth) / 2;
-  FBounds.TopLeft := Transform(X - Width - SW, Y - Height - SW);
-  FBounds.BottomRight := Transform(X + Width + SW, Y + Height + SW);
+  FBounds.TopLeft := Transform(FCX - FRX - SW, FCY - FRY - SW);
+  FBounds.BottomRight := Transform(FCX + FRX + SW, FCY + FRY + SW);
+end;
+
+procedure TSVGEllipse.Clear;
+begin
+  inherited;
+  FCX := INHERIT;
+  FCY := INHERIT;
 end;
 
 procedure TSVGEllipse.ConstructPath;
 begin
   inherited;
-  FPath.AddEllipse(X - Width, Y - Height, 2 * Width, 2 * Height);
+  FPath.AddEllipse(FCX - FRX, FCY - FRY, 2 * FRX, 2 * FRY);
 end;
 {$ENDREGION}
 
