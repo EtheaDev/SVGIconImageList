@@ -64,8 +64,8 @@ type
     function GetObjectBounds: TRectF;
     function GetVisible: Integer;
   protected
+    class function New(Parent: TSVGObject): TSVGObject;
     procedure AssignTo(Dest: TPersistent); override;
-    function New(Parent: TSVGObject): TSVGObject; virtual; abstract;
     procedure CalcObjectBounds; virtual;
 
     function GetRoot: TSVG;
@@ -185,7 +185,6 @@ type
     FColorRendering: TFloat;
 
     procedure AssignTo(Dest: TPersistent); override;
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure ReadStyle(Style: TStyle); virtual;
     procedure ConstructPath; virtual;
     function GetClipPath: TGPGraphicsPath;
@@ -268,7 +267,6 @@ type
     procedure SetGrayscale(const Value: boolean);
   protected
     procedure AssignTo(Dest: TPersistent); override;
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure ReadStyles(const Node: IXMLNode);
     property RootMatrix: TMatrix read FRootMatrix;
   public
@@ -312,22 +310,16 @@ type
   end;
 
   TSVGContainer = class(TSVGBasic)
-  protected
-    function New(Parent: TSVGObject): TSVGObject; override;
   public
     procedure ReadIn(const Node: IXMLNode); override;
   end;
 
   TSVGSwitch = class(TSVGBasic)
-  protected
-    function New(Parent: TSVGObject): TSVGObject; override;
   public
     procedure ReadIn(const Node: IXMLNode); override;
   end;
 
   TSVGDefs = class(TSVGBasic)
-  protected
-    function New(Parent: TSVGObject): TSVGObject; override;
   public
     procedure ReadIn(const Node: IXMLNode); override;
   end;
@@ -337,7 +329,6 @@ type
     FReference: string;
   protected
     procedure AssignTo(Dest: TPersistent); override;
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure Construct;
   public
     procedure PaintToPath(Path: TGPGraphicsPath); override;
@@ -348,8 +339,6 @@ type
 
   TSVGRect = class(TSVGBasic)
   protected
-    function New(Parent: TSVGObject): TSVGObject; override;
-  protected
     procedure ConstructPath; override;
     procedure CalcObjectBounds; override;
   public
@@ -357,9 +346,7 @@ type
   end;
 
   TSVGLine = class(TSVGBasic)
-  private
   protected
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure ConstructPath; override;
     procedure CalcObjectBounds; override;
   public
@@ -373,7 +360,6 @@ type
     procedure ConstructPoints(const S: string);
   protected
     procedure AssignTo(Dest: TPersistent); override;
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure ConstructPath; override;
     procedure CalcObjectBounds; override;
   public
@@ -383,17 +369,13 @@ type
   end;
 
   TSVGPolygon = class(TSVGPolyLine)
-  private
   protected
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure ConstructPath; override;
   public
   end;
 
   TSVGEllipse = class(TSVGBasic)
-  private
   protected
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure ConstructPath; override;
     procedure CalcObjectBounds; override;
   public
@@ -406,7 +388,6 @@ type
     function SeparateValues(const ACommand: Char; const S: string): TStrings;
     function Split(const S: string): TStrings;
   protected
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure ConstructPath; override;
     procedure CalcObjectBounds; override;
   public
@@ -420,7 +401,6 @@ type
     FStream: TMemoryStream;
   protected
     procedure AssignTo(Dest: TPersistent); override;
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure CalcObjectBounds; override;
   public
     constructor Create; override;
@@ -451,7 +431,6 @@ type
     function IsInTextPath: Boolean;
   protected
     procedure AssignTo(Dest: TPersistent); override;
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure ConstructPath; override;
     procedure ParseNode(const Node: IXMLNode); virtual;
     procedure CalcObjectBounds; override;
@@ -504,7 +483,6 @@ type
   private
     FClipPath: TGPGraphicsPath;
   protected
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure ConstructClipPath;
   public
     destructor Destroy; override;
@@ -647,6 +625,14 @@ end;
 function TSVGObject.IndexOf(Item: TSVGObject): Integer;
 begin
   Result := FItems.IndexOf(Item);
+end;
+
+class function TSVGObject.New(Parent: TSVGObject): TSVGObject;
+begin
+  // Create(Parent) will call the virtual Create and the appropriate \
+  // constructor will be used.
+  // You call New from an instance of a type
+  Result := Self.Create(Parent);
 end;
 
 function TSVGObject.FindByID(const Name: string): TSVGObject;
@@ -1235,11 +1221,6 @@ begin
     TSVGBasic(Dest).FWidth := Width;
     TSVGBasic(Dest).FHeight := Height;
   end;
-end;
-
-function TSVGBasic.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGBasic.Create(Parent);
 end;
 
 procedure TSVGBasic.ReadStyle(Style: TStyle);
@@ -2478,11 +2459,6 @@ begin
   end;
 end;
 
-function TSVG.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVG.Create(Parent);
-end;
-
 procedure TSVG.ReadStyles(const Node: IXMLNode);
 var
   C: Integer;
@@ -2684,11 +2660,6 @@ end;
 
 // TSVGContainer
 
-function TSVGContainer.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGContainer.Create(Parent);
-end;
-
 procedure TSVGContainer.ReadIn(const Node: IXMLNode);
 begin
   inherited;
@@ -2696,11 +2667,6 @@ begin
 end;
 
 // TSVGSwitch
-
-function TSVGSwitch.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGSwitch.Create(Parent);
-end;
 
 procedure TSVGSwitch.ReadIn(const Node: IXMLNode);
 begin
@@ -2710,11 +2676,6 @@ end;
 
 // TSVGDefs
 
-function TSVGDefs.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGDefs.Create(Parent);
-end;
-
 procedure TSVGDefs.ReadIn(const Node: IXMLNode);
 begin
   inherited;
@@ -2723,11 +2684,6 @@ begin
 end;
 
 // TSVGDefs
-
-function TSVGUse.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGUse.Create(Parent);
-end;
 
 procedure TSVGUse.PaintToGraphics(Graphics: TGPGraphics);
 begin
@@ -2820,11 +2776,6 @@ begin
   ConstructPath;
 end;
 
-function TSVGRect.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGRect.Create(Parent);
-end;
-
 procedure TSVGRect.CalcObjectBounds;
 var
   SW: TFloat;
@@ -2856,11 +2807,6 @@ begin
   LoadLength(Node, 'y2', FHeight);
 
   ConstructPath;
-end;
-
-function TSVGLine.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGLine.Create(Parent);
 end;
 
 procedure TSVGLine.CalcObjectBounds;
@@ -2950,11 +2896,6 @@ begin
   end;
 end;
 
-function TSVGPolyLine.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGPolyLine.Create(Parent);
-end;
-
 procedure TSVGPolyLine.ConstructPoints(const S: string);
 var
   SL: TStrings;
@@ -3020,11 +2961,6 @@ end;
 {$ENDREGION}
 
 {$REGION 'TSVGPolygon'}
-function TSVGPolygon.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGPolygon.Create(Parent);
-end;
-
 procedure TSVGPolygon.ConstructPath;
 begin
   if FPoints = nil then
@@ -3054,11 +2990,6 @@ begin
   end;
 
   ConstructPath;
-end;
-
-function TSVGEllipse.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGEllipse.Create(Parent);
 end;
 
 procedure TSVGEllipse.CalcObjectBounds;
@@ -3130,11 +3061,6 @@ begin
     Element := TSVGPathElement(Items[C]);
     Element.AddToPath(FPath);
   end;
-end;
-
-function TSVGPath.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGPath.Create(Parent);
 end;
 
 procedure TSVGPath.PrepareMoveLineCurveArc(const ACommand: Char; SL: TStrings);
@@ -3396,11 +3322,6 @@ begin
       FImage := TGPImage.Create(SA);
     end;
   end;
-end;
-
-function TSVGImage.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGImage.Create(Parent);
 end;
 
 procedure TSVGImage.PaintToGraphics(Graphics: TGPGraphics);
@@ -3772,11 +3693,6 @@ begin
   end;
 end;
 
-function TSVGCustomText.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGCustomText.Create(Parent);
-end;
-
 procedure TSVGCustomText.ConstructPath;
 var
   FF: TGPFontFamily;
@@ -4011,11 +3927,6 @@ begin
   if not Assigned(FClipPath) then
     ConstructClipPath;
   Result := FClipPath;
-end;
-
-function TSVGClipPath.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGClipPath.Create(Parent);
 end;
 
 procedure TSVGClipPath.ReadIn(const Node: IXMLNode);

@@ -39,7 +39,6 @@ type
     FOpacity: TFloat;
 
   protected
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure ReadIn(const Node: IXMLNode); override;
@@ -53,9 +52,6 @@ type
   end;
 
   TSVGFiller = class(TSVGMatrix)
-  private
-  protected
-    function New(Parent: TSVGObject): TSVGObject; override;
   public
     procedure ReadIn(const Node: IXMLNode); override;
     function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; virtual; abstract;
@@ -64,6 +60,10 @@ type
   end;
 
   TSVGGradient = class(TSVGFiller)
+  {
+    SpreadMethod is not implemented
+    Assumed to be Repeat for LinearGradient and pad for RadialGradient
+  }
   private
     FURI: string;
     FGradientUnits: TGradientUnits;
@@ -80,7 +80,6 @@ type
     FX2: TFloat;
     FY2: TFloat;
   protected
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure ReadIn(const Node: IXMLNode); override;
@@ -93,6 +92,9 @@ type
   end;
 
   TSVGRadialGradient = class(TSVGGradient)
+  {
+    FX, FY not used.  Not sure they can be implemented with GDI+
+  }
   private
     FCX: TFloat;
     FCY: TFloat;
@@ -100,7 +102,6 @@ type
     FFX: TFloat;
     FFY: TFloat;
   protected
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
@@ -178,11 +179,6 @@ begin
   end;
 end;
 
-function TSVGStop.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGStop.Create(Parent);
-end;
-
 procedure TSVGStop.PaintToGraphics(Graphics: TGPGraphics);
 begin
 end;
@@ -197,11 +193,6 @@ procedure TSVGFiller.ReadIn(const Node: IXMLNode);
 begin
   inherited;
   Display := 0;
-end;
-
-function TSVGFiller.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := nil;
 end;
 
 procedure TSVGFiller.PaintToGraphics(Graphics: TGPGraphics);
@@ -249,11 +240,6 @@ begin
 end;
 
 // TSVGLinearGradient
-
-function TSVGLinearGradient.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGLinearGradient.Create(Parent);
-end;
 
 procedure TSVGLinearGradient.ReadIn(const Node: IXMLNode);
 begin
@@ -350,7 +336,8 @@ var
 begin
   Path := TGPGraphicsPath.Create;
   if (Assigned(DestObject) and (FGradientUnits = guObjectBoundingBox)) or
-    ((FR = INHERIT) or (FCX = INHERIT) or (FCY = INHERIT)) then
+    ((FR = INHERIT) or (FCX = INHERIT) or (FCY = INHERIT))
+  then
     Path.AddEllipse(DestObject.X, DestObject.Y, DestObject.Width, DestObject.Height)
   else
     Path.AddEllipse(FCX - FR, FCY - FR, 2 * FR, 2 * FR);
@@ -375,7 +362,7 @@ begin
   Brush.SetInterpolationColors(PARGB(RevColors.Colors), PSingle(RevColors.Positions), Colors.Count);
 
   if (FCX <> INHERIT) and (FCY <> INHERIT) then
-    Brush.SetCenterPoint(MakePoint(FFX, FFY));
+    Brush.SetCenterPoint(MakePoint(FCX, FCY));
 
   if PureMatrix.m33 = 1 then
   begin
@@ -385,11 +372,6 @@ begin
   end;
 
   Result := Brush;
-end;
-
-function TSVGRadialGradient.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGRadialGradient.Create(Parent);
 end;
 
 function TSVGGradient.GetColors(Alpha: Byte): TColors;

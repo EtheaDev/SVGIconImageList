@@ -33,7 +33,6 @@ type
     FStopY: TFloat;
   protected
     procedure AssignTo(Dest: TPersistent); override;
-    function New(Parent: TSVGObject): TSVGObject; override;
   public
     function GetBounds: TRectF; virtual; abstract;
     procedure AddToPath(Path: TGPGraphicsPath); virtual; abstract;
@@ -50,9 +49,6 @@ type
   end;
 
   TSVGPathMove = class(TSVGPathElement)
-  private
-  protected
-    function New(Parent: TSVGObject): TSVGObject; override;
   public
     function GetBounds: TRectF; override;
     procedure AddToPath(Path: TGPGraphicsPath); override;
@@ -61,9 +57,6 @@ type
   end;
 
   TSVGPathLine = class(TSVGPathElement)
-  private
-  protected
-    function New(Parent: TSVGObject): TSVGObject; override;
   public
     function GetBounds: TRectF; override;
     procedure AddToPath(Path: TGPGraphicsPath); override;
@@ -79,7 +72,6 @@ type
     FControl2Y: TFloat;
   protected
     procedure AssignTo(Dest: TPersistent); override;
-    function New(Parent: TSVGObject): TSVGObject; override;
   public
     function GetBounds: TRectF; override;
     procedure AddToPath(Path: TGPGraphicsPath); override;
@@ -101,7 +93,6 @@ type
     FSweep: Integer;
   protected
     procedure AssignTo(Dest: TPersistent); override;
-    function New(Parent: TSVGObject): TSVGObject; override;
   public
     function GetBounds: TRectF; override;
     procedure AddToPath(Path: TGPGraphicsPath); override;
@@ -118,8 +109,6 @@ type
   TSVGPathClose = class(TSVGPathElement)
   private
     function FindLastMoveTo: TSVGPathMove;
-  protected
-    function New(Parent: TSVGObject): TSVGObject; override;
   public
     function GetBounds: TRectF; override;
     procedure AddToPath(Path: TGPGraphicsPath); override;
@@ -155,11 +144,6 @@ begin
   end;
 end;
 
-function TSVGPathElement.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := nil;
-end;
-
 procedure TSVGPathElement.Read(SL: TStrings; var Position: Integer;
   Previous: TSVGPathElement);
 begin
@@ -186,11 +170,6 @@ begin
   Result.Top := 0;
   Result.Width := 0;
   Result.Height := 0;
-end;
-
-function TSVGPathMove.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGPathMove.Create(Parent);
 end;
 
 procedure TSVGPathMove.AddToPath(Path: TGPGraphicsPath);
@@ -225,11 +204,6 @@ begin
   Result.Top := Min(FStartY, FStopY);
   Result.Width := Abs(FStartX - FStopX);
   Result.Height := Abs(FStartY - FStopY);
-end;
-
-function TSVGPathLine.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGPathLine.Create(Parent);
 end;
 
 procedure TSVGPathLine.AddToPath(Path: TGPGraphicsPath);
@@ -311,11 +285,6 @@ begin
   Bottom := Max(FStartY, Max(FStopY, Max(FControl1Y, FControl2Y)));
   Result.Width := Right - Result.Left;
   Result.Height := Bottom - Result.Top;
-end;
-
-function TSVGPathCurve.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGPathCurve.Create(Parent);
 end;
 
 procedure TSVGPathCurve.AddToPath(Path: TGPGraphicsPath);
@@ -446,11 +415,6 @@ begin
   Result.Top := Min(FStartY, FStopY);
   Result.Width := Abs(FStartX - FStopX);
   Result.Height := Abs(FStartY - FStopY);
-end;
-
-function TSVGPathEllipticArc.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGPathEllipticArc.Create(Parent);
 end;
 
 procedure TSVGPathEllipticArc.AddToPath(Path: TGPGraphicsPath);
@@ -667,11 +631,6 @@ begin
   Result.Top := 0;
   Result.Width := 0;
   Result.Height := 0;
-end;
-
-function TSVGPathClose.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGPathClose.Create(Parent);
 end;
 
 procedure TSVGPathClose.Read(SL: TStrings; var Position: Integer;

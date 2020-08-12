@@ -50,6 +50,14 @@ type
 
   TGradientUnits = (guObjectBoundingBox, guUserSpaceOnUse);
 
+function ToGPRect(R: TRectF): TGPRectF; inline;
+
 implementation
+
+function ToGPRect(R: TRectF): TGPRectF;
+begin
+  with R do
+    Result := WinApi.GDIPAPI.MakeRect(Left, Top, Width, Height);
+end;
 
 end.
