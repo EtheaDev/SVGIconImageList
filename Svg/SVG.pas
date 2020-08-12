@@ -49,7 +49,7 @@ type
     FItems: TList;
     FVisible: Integer;
     FDisplay: Integer;
-    FBounds: TBounds;
+    FBounds: TRectF;
     FParent: TSVGObject;
     FStyle: TStyle;
     FID: string;
@@ -61,7 +61,7 @@ type
     function GetItem(const Index: Integer): TSVGObject;
 
     function GetDisplay: Integer;
-    function GetObjectBounds: TBounds;
+    function GetObjectBounds: TRectF;
     function GetVisible: Integer;
   protected
     procedure AssignTo(Dest: TPersistent); override;
@@ -92,7 +92,7 @@ type
 
     property Display: Integer read GetDisplay write FDisplay;
     property Visible: Integer read GetVisible write FVisible;
-    property ObjectBounds: TBounds read GetObjectBounds;
+    property ObjectBounds: TRectF read GetObjectBounds;
     property Parent: TSVGObject read FParent;
     property Style: TStyle read FStyle;
     property ID: string read FID;
@@ -247,7 +247,7 @@ type
     FRootMatrix: TMatrix;
     FViewBox: TRectF;
     FFileName: string;
-    FSize: TGPRectF;
+    FSize: TSizeF;
     FGrayscale: Boolean;
     FFixedColor: TSVGColor;
 
@@ -744,7 +744,7 @@ begin
     Result := nil;
 end;
 
-function TSVGObject.GetObjectBounds: TBounds;
+function TSVGObject.GetObjectBounds: TRectF;
 begin
   Result := FBounds;
 end;
@@ -2320,8 +2320,6 @@ begin
   FWidth := 0;
   FHeight := 0;
 
-  FSize := MakeRect(0.0, 0, 0, 0);
-
   FRX := 0;
   FRY := 0;
 
@@ -2418,7 +2416,7 @@ procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
   function InBounds(Item: TSVGObject): Boolean;
   var
     C: Integer;
-    Bounds: TBounds;
+    Bounds: TRectF;
   begin
     Result := True;
     if RectCount > 0 then
@@ -2426,7 +2424,7 @@ procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
       for C := 0 to RectCount - 1 do
       begin
         Bounds := Item.ObjectBounds;
-        if Intersect(Bounds, Rects^[C]) then
+        if Bounds.IntersectsWith(Rects^[C]) then
           Exit;
       end;
       Result := False;
@@ -2576,50 +2574,12 @@ end;
 
 procedure TSVG.CalcCompleteSize;
 
-  function GetLeft(const Bounds: TBounds): TFloat;
-  begin
-    Result := Min(Bounds.TopLeft.X,
-      Min(Bounds.TopRight.X,
-        Min(Bounds.BottomLeft.X, Bounds.BottomRight.X)));
-  end;
-
-  function GetTop(const Bounds: TBounds): TFloat;
-  begin
-    Result := Min(Bounds.TopLeft.Y,
-      Min(Bounds.TopRight.Y,
-        Min(Bounds.BottomLeft.Y, Bounds.BottomRight.Y)));
-  end;
-
-  function GetRight(const Bounds: TBounds): TFloat;
-  begin
-    Result := Max(Bounds.TopLeft.X,
-      Max(Bounds.TopRight.X,
-        Max(Bounds.BottomLeft.X, Bounds.BottomRight.X)));
-  end;
-
-  function GetBottom(const Bounds: TBounds): TFloat;
-  begin
-    Result := Max(Bounds.TopLeft.Y,
-      Max(Bounds.TopRight.Y,
-        Max(Bounds.BottomLeft.Y, Bounds.BottomRight.Y)));
-  end;
-
   procedure Walk(Item: TSVGObject);
   var
     C: Integer;
-    Left, Top, Right, Bottom, Width, Height: TFloat;
   begin
-    Item.CalcObjectBounds;
-    Left := GetLeft(Item.FBounds);
-    Top := GetTop(Item.FBounds);
-    Right := GetRight(Item.FBounds);
-    Bottom := GetBottom(Item.FBounds);
-
-    Width := Right - Left;
-    Height := Bottom - Top;
-
-    FSize.Width := Max(Width, FSize.Width);
-    FSize.Height := Max(Height, FSize.Height);
+    FSize.Width := Max(Item.FBounds.Width, FSize.Width);
+    FSize.Height := Max(Item.FBounds.Height, FSize.Height);
 
     for C := 0 to Item.Count - 1 do
       Walk(Item[C]);
@@ -2670,6 +2630,16 @@ begin
   Display := 1;
   Visible := 1;
 
+  // % width and height do not make sense in stand-alone svgs
+  // and they centainly do not refer to % size of the svg content
+  // When svg's are embedded in a web page for instance the %s
+  // correspond to the % of the Web page size
+  // TODO FSize, CalcCompleteSize can be removed
+  if ParseUnit(VarToStr(Node.Attributes['width'])) = suPercent then
+    FWidth := 0;
+  if ParseUnit(VarToStr(Node.Attributes['height'])) = suPercent then
+    FHeight := 0;
+
   FViewBox.Width := FWidth;
   FViewBox.Height := FHeight;
 
@@ -2687,14 +2657,6 @@ begin
   ReadChildren(Node);
 
   DeReferenceUse;
-
-  CalcCompleteSize;
-
-  if ParseUnit(VarToStr(Node.Attributes['width'])) = suPercent then
-    FWidth := FSize.Width * 100 / FWidth;
-
-  if ParseUnit(VarToStr(Node.Attributes['height'])) = suPercent then
-    FHeight := FSize.Height * 100 / FHeight;
 end;
 
 procedure TSVG.DeReferenceUse;
@@ -2869,9 +2831,7 @@ var
 begin
   SW := Max(0, GetStrokeWidth) / 2;
   FBounds.TopLeft := Transform(FX - SW, FY - SW);
-  FBounds.TopRight := Transform(FX + FWidth + SW, FY - SW);
   FBounds.BottomRight := Transform(FX + FWidth + SW, FY + Height + SW);
-  FBounds.BottomLeft := Transform(FX - SW, FY + FHeight + SW);
 end;
 
 procedure TSVGRect.ConstructPath;
@@ -2914,9 +2874,7 @@ begin
   Right := Max(X, Width) + SW;
   Bottom := Max(Y, Height) + SW;
   FBounds.TopLeft := Transform(Left, Top);
-  FBounds.TopRight := Transform(Right, Top);
   FBounds.BottomRight := Transform(Right, Bottom);
-  FBounds.BottomLeft := Transform(Left, Bottom);
 end;
 
 procedure TSVGLine.ConstructPath;
@@ -2960,9 +2918,7 @@ begin
 
   SW := Max(0, GetStrokeWidth) / 2;
   FBounds.TopLeft := Transform(Left - SW, Top - SW);
-  FBounds.TopRight := Transform(Right + SW, Top - SW);
   FBounds.BottomRight := Transform(Right + SW, Bottom + SW);
-  FBounds.BottomLeft := Transform(Left - SW, Bottom + SW);
 end;
 
 procedure TSVGPolyLine.Clear;
@@ -3111,9 +3067,7 @@ var
 begin
   SW := Max(0, GetStrokeWidth) / 2;
   FBounds.TopLeft := Transform(X - Width - SW, Y - Height - SW);
-  FBounds.TopRight := Transform(X + Width + SW, Y - Height - SW);
   FBounds.BottomRight := Transform(X + Width + SW, Y + Height + SW);
-  FBounds.BottomLeft := Transform(X - Width - SW, Y + Height + SW);
 end;
 
 procedure TSVGEllipse.ConstructPath;
@@ -3161,9 +3115,7 @@ begin
 
   SW := Max(0, GetStrokeWidth) / 2;
   FBounds.TopLeft := Transform(Left - SW, Top - SW);
-  FBounds.TopRight := Transform(Right + SW, Top - SW);
   FBounds.BottomRight := Transform(Right + SW, Bottom + SW);
-  FBounds.BottomLeft := Transform(Left - SW, Bottom + SW);
 end;
 
 procedure TSVGPath.ConstructPath;
@@ -3407,9 +3359,7 @@ var
 begin
   SW := Max(0, GetStrokeWidth) / 2;
   FBounds.TopLeft := Transform(X - SW, Y - SW);
-  FBounds.TopRight := Transform(X + Width + SW, Y - SW);
   FBounds.BottomRight := Transform(X + Width + SW, Y + Height + SW);
-  FBounds.BottomLeft := Transform(X - SW, Y + Height - SW);
 end;
 
 procedure TSVGImage.Clear;
@@ -3600,9 +3550,7 @@ var
 begin
   SW := Max(0, GetStrokeWidth) / 2;
   FBounds.TopLeft := Transform(X - SW, Y - FFontHeight - SW);
-  FBounds.TopRight := Transform(X + Width + SW, Y - FFontHeight - SW);
   FBounds.BottomRight := Transform(X + Width + SW, Y - FFontHeight + Height + SW);
-  FBounds.BottomLeft := Transform(X - SW, Y - FFontHeight + Height + SW);
 end;
 
 procedure TSVGCustomText.Clear;
