@@ -32,8 +32,6 @@ If you want a full support for High-DPI in a multi-form application on multi-mon
 
 The [SVG Icon Explorer](https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIconExplorer) utility is useful to explore and preview your svg image collections.
 
-![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGIconExplorer.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGIconExplorer.jpg)
-
 **DOCUMENTATION**
 
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
@@ -41,6 +39,23 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png)
 
 **RELEASE NOTES:**
+
+03 Aug 2020: version 1.8 (VCL+FMX)
+ - Complete refactoring for full support of High-DPI
+ - New SVGIconImageCollection component
+ - New SVGIconVirtualImageList component
+ - Redesign of SVGIconImageList component and Component Editor
+ - Demo updated to test multi-monitor with different DPI
+ - Fixed issue #20: Coordinates in double (PaintTo methods)
+ - Fixed issue #25: Transform matrix is wrongly parsed 
+ - Fixed issue #26: Error in CalcMartrix
+ - Fixed issue #27: TSVGRadialGradient.ReadIn does not read the gradientTransform matrix
+ - Fixed issue #28: Colors should be reversed in TSVGRadialGradient
+ - Fixed issue #29: Scaling should be based on ViewBox width/height
+ - Fixed issue #31: Empty svg properties cause exceptions
+ - Fixed issue #33: "fill-rule' presentation attribute is not processed
+ - Fixed issue #34: Exception text elements cause exceptions
+
 05 Aug 2020: version 1.7 (VCL+FMX)
  - Added DPIChanged method
  - Enhanced SVGExplorer
