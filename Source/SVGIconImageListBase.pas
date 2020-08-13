@@ -106,7 +106,7 @@ type
     procedure Loaded; override;
     function GetCount: Integer;    {$IF CompilerVersion > 29} override; {$ELSE}  virtual;abstract; {$ENDIF}
 
-    procedure RecreateBitmaps;virtual;abstract;
+    procedure RecreateBitmaps; virtual; abstract;
     procedure DoChange; override;
     procedure ClearIcons;virtual;
 
@@ -150,6 +150,8 @@ type
     {$ENDIF}
     property Images[Index: Integer]: TSVG read GetImages write SetImages;
     property Names[Index: Integer]: string read GetNames write SetNames;
+  published
+    property ColorDepth default cd32Bit;
   end;
 
 implementation

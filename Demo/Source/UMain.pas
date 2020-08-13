@@ -38,7 +38,8 @@ uses
   ActnList, ExtCtrls, ComCtrls, ToolWin,
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
   System.Actions, System.ImageList, SVGIconImageListBase,
-  SVGIconImageCollection, SVGIconVirtualImageList;
+  SVGIconImageCollection, SVGIconVirtualImageList,
+  UDataModule;
 
 type
   TMainForm = class(TForm)
@@ -79,7 +80,8 @@ type
     FixedColorComboBox: TComboBox;
     GrayScaleCheckBox: TCheckBox;
     SVGIconVirtualImageList: TSVGIconVirtualImageList;
-    SVGIconImageCollection: TSVGIconImageCollection;
+    NewFormButton: TButton;
+    NewFormAction: TAction;
     procedure ChangeIconActionExecute(Sender: TObject);
     procedure SelectThemeRadioGroupClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -96,6 +98,7 @@ type
     procedure paButtonsResize(Sender: TObject);
     procedure GrayScaleCheckBoxClick(Sender: TObject);
     procedure FixedColorComboBoxSelect(Sender: TObject);
+    procedure NewFormActionExecute(Sender: TObject);
   private
     FUpdating: Boolean;
     FSVGIconImageListHot: TSVGIconImageList;
@@ -130,6 +133,7 @@ procedure TMainForm.UpdateButtons;
 begin
   DeleteButton.Action := DeleteIconAction;
   ChangeIconButton.Action := ChangeIconAction;
+  NewFormButton.Action := NewFormAction;
 end;
 
 procedure TMainForm.UpdateListView;
@@ -185,7 +189,7 @@ end;
 procedure TMainForm.ClearButtonClick(Sender: TObject);
 begin
   //Clear Collection
-  SVGIconImageCollection.ClearIcons;
+  ImageDataModule.SVGIconImageCollection.ClearIcons;
   UpdateGUI;
 end;
 
@@ -289,6 +293,12 @@ begin
   SVGIconImage.ImageIndex := Item.Index;
 end;
 
+procedure TMainForm.NewFormActionExecute(Sender: TObject);
+begin
+  With TMainForm.Create(Application) do
+    Show;
+end;
+
 procedure TMainForm.paButtonsResize(Sender: TObject);
 begin
   SVGIconImage.Height := SVGIconImage.width;
@@ -299,7 +309,7 @@ begin
 //  Image Editor for ImageCollection
 //  if EditSVGIconImageCollection(SVGIconImageCollection) then
 //    UpdateGUI;
-  Image Editor for VirtualImageList
+  //Image Editor for VirtualImageList
   if EditSVGIconVirtualImageList(SVGIconVirtualImageList) then
     UpdateGUI;
 end;

@@ -74,7 +74,7 @@ type
     procedure DefineProperties(Filer: TFiler); override;
     procedure DoAssign(const Source: TPersistent); override;
   public
-    procedure RecreateBitmaps;override;
+    procedure RecreateBitmaps; override;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function Add(const ASVG: TSVG; const AIconName: string;
@@ -87,13 +87,13 @@ type
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
   published
     //Publishing properties of Custom Class
+    property Width;
+    property Height;
+    property Size;
     property OnChange;
     //New properties
     property SVGIconItems stored FStoreAsText;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
-    property Width;
-    property Height;
-    property Size;
     property StoreAsText: boolean read FStoreAsText write FStoreAsText default False;
     property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
