@@ -14,6 +14,7 @@
 {                                                                  }
 { Thanks to:                                                       }
 { Carlo Barazzetta (parsing errors)                                }
+{ Kiriakos Vlahos (exception handling)                             }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }

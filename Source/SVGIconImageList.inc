@@ -1,29 +1,3 @@
-// Delphi 2010
-{$IFDEF VER210}
-  {$DEFINE D2010+}
-{$ENDIF}
-
-// Delphi XE
-{$IFDEF VER220}
-  {$DEFINE D2010+}
-  {$DEFINE DXE+}
-{$ENDIF}
-
-// Delphi XE2
-{$IFDEF VER230}
-  {$DEFINE D2010+}
-  {$DEFINE DXE+}
-  {$DEFINE DXE2+}
-{$ENDIF}
-
-// Delphi XE3
-{$IFDEF VER240}
-  {$DEFINE D2010+}
-  {$DEFINE DXE+}
-  {$DEFINE DXE2+}
-  {$DEFINE DXE3+}
-{$ENDIF}
-
 // Delphi XE4
 {$IFDEF VER250}
   {$DEFINE D2010+}

@@ -10,6 +10,9 @@
 { use, as long as the author is credited.                          }
 { This file (c) 2005, 2008 Martin Walter                           }
 {                                                                  }
+{ Thanks to:                                                       }
+{ Kiriakos Vlahos (fixed GetFactor)                                }
+{                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }
 {                                                                  }

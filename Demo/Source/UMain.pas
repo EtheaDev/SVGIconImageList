@@ -6,7 +6,7 @@
 {       Copyright (c) 2019-2020 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors:                                                          }
-{         Nicola Tambascia                                                     }
+{         Nicola Tambascia, Vincent Parrett                                    }
 {                                                                              }
 {       https://github.com/EtheaDev/SVGIconImageList                           }
 {                                                                              }
@@ -150,7 +150,7 @@ begin
     Screen.Cursor := crHourGlass;
     try
       LStart := GetTickCount;
-      LCount := SVGIconVirtualImageList.SVGIconItems.LoadFromFiles(OpenDialog.Files);
+      LCount := SVGIconVirtualImageList.LoadFromFiles(OpenDialog.Files);
       LStop := GetTickCount;
     finally
       Screen.Cursor := crDefault;
@@ -296,7 +296,11 @@ end;
 
 procedure TMainForm.ShowImageEditorButtonClick(Sender: TObject);
 begin
-  if EditSVGIconImageCollection(SVGIconImageCollection) then
+//  Image Editor for ImageCollection
+//  if EditSVGIconImageCollection(SVGIconImageCollection) then
+//    UpdateGUI;
+  Image Editor for VirtualImageList
+  if EditSVGIconVirtualImageList(SVGIconVirtualImageList) then
     UpdateGUI;
 end;
 

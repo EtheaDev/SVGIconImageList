@@ -4,7 +4,7 @@
 {                                                                              }
 {       Copyright (c) 2019-2020 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
-{       Contributors:                                                          }
+{       Contributors: Vincent Parrett, Kiriakos Vlahos                         }
 {                                                                              }
 {       https://github.com/EtheaDev/SVGIconsImageList                          }
 {                                                                              }
@@ -60,7 +60,7 @@ uses
 resourcestring
   SELECT_DIR = 'Select directory';
   FILES_SAVED = '%d File(s) saved into "%s" folder';
-
+  NOT_APPLYED_TO_COLLECTION = '(not applied to image collection)';
 type
   TSVGIconImageListEditor = class(TForm)
     OKButton: TButton;
@@ -271,6 +271,8 @@ begin
       try
         FSourceList := TSVGIconImageList.Create(LEditor);
         FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
+        FEditingList.Size := 32; //Force 32 pixel size for image collection icons
+        ImageListGroupBox.Caption := ImageListGroupBox.Caption + ' ' + NOT_APPLYED_TO_COLLECTION;
         FEditingList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
         OpacitySpinEdit.Value := FSourceList.Opacity;
         StoreAsTextCheckBox.Checked := AImageCollection.StoreAsText;

@@ -12,6 +12,7 @@
 {                                                                  }
 { Thanks to:                                                       }
 { Carlo Barazzetta (Changed color ref)                             }
+{ Kiriakos Vlahos (optimization of ConvertColor)                   }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }

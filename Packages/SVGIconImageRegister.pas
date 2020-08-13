@@ -4,7 +4,7 @@
 {                                                                              }
 {       Copyright (c) 2019-2020 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
-{       Contributors:                                                          }
+{       Contributors: Vincent Parrett, Kiriakos Vlahos                         }
 {                                                                              }
 {       https://github.com/EtheaDev/SVGIconsImageList                          }
 {                                                                              }

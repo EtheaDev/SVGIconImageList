@@ -24,6 +24,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
     Height = 4
     Cursor = crVSplit
     Align = alTop
+    AutoSnap = False
     Beveled = True
     MinSize = 170
     ExplicitLeft = 4
@@ -145,7 +146,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Width = 85
           Height = 17
           Caption = 'StoreAsText'
-          TabOrder = 4
+          TabOrder = 5
           OnClick = StoreAsTextCheckBoxClick
         end
         object WidthSpinEdit: TSpinEdit
@@ -190,7 +191,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Width = 136
           Height = 21
           Style = csDropDownList
-          TabOrder = 5
+          TabOrder = 4
           OnSelect = FixedColorComboBoxSelect
         end
         object GrayScaleCheckBox: TCheckBox

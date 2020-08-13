@@ -1,21 +1,21 @@
-      {******************************************************************}
-      { GDIPKerning                                                      }
-      {                                                                  }
-      { home page : http://www.mwcs.de                                   }
-      { email     : martin.walter@mwcs.de                                }
-      {                                                                  }
-      { date      : 20-11-2007                                           }
-      {                                                                  }
-      { version   : 1.1                                                  }
-      {                                                                  }
-      { Use of this file is permitted for commercial and non-commercial  }
-      { use, as long as the author is credited.                          }
-      { This file (c) 2007 Martin Walter                                 }
-      {                                                                  }
-      { This Software is distributed on an "AS IS" basis, WITHOUT        }
-      { WARRANTY OF ANY KIND, either express or implied.                 }
-      {                                                                  }
-      { *****************************************************************}
+{******************************************************************}
+{ GDIPKerning                                                      }
+{                                                                  }
+{ home page : http://www.mwcs.de                                   }
+{ email     : martin.walter@mwcs.de                                }
+{                                                                  }
+{ date      : 20-11-2007                                           }
+{                                                                  }
+{ version   : 1.1                                                  }
+{                                                                  }
+{ Use of this file is permitted for commercial and non-commercial  }
+{ use, as long as the author is credited.                          }
+{ This file (c) 2007 Martin Walter                                 }
+{                                                                  }
+{ This Software is distributed on an "AS IS" basis, WITHOUT        }
+{ WARRANTY OF ANY KIND, either express or implied.                 }
+{                                                                  }
+{ *****************************************************************}
 
 unit GDIPKerning;
 

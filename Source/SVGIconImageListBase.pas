@@ -1,3 +1,35 @@
+{******************************************************************************}
+{                                                                              }
+{       SVGIconImageList: An extended ImageList for Delphi/VCL                 }
+{       to simplify use of SVG Icons (resize, opacity and more...)             }
+{                                                                              }
+{       Copyright (c) 2019-2020 (Ethea S.r.l.)                                 }
+{       Author: Carlo Barazzetta                                               }
+{       Contributors: Vincent Parrett, Kiriakos Vlahos                         }
+{                                                                              }
+{       https://github.com/EtheaDev/SVGIconImageList                           }
+{                                                                              }
+{******************************************************************************}
+{       Original version (c) 2005, 2008 Martin Walter with license:            }
+{       Use of this file is permitted for commercial and non-commercial        }
+{       use, as long as the author is credited.                                }
+{       home page: http://www.mwcs.de                                          }
+{       email    : martin.walter@mwcs.de                                       }
+{******************************************************************************}
+{                                                                              }
+{  Licensed under the Apache License, Version 2.0 (the "License");             }
+{  you may not use this file except in compliance with the License.            }
+{  You may obtain a copy of the License at                                     }
+{                                                                              }
+{      http://www.apache.org/licenses/LICENSE-2.0                              }
+{                                                                              }
+{  Unless required by applicable law or agreed to in writing, software         }
+{  distributed under the License is distributed on an "AS IS" BASIS,           }
+{  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.    }
+{  See the License for the specific language governing permissions and         }
+{  limitations under the License.                                              }
+{                                                                              }
+{******************************************************************************}
 unit SVGIconImageListBase;
 
 interface
@@ -17,7 +49,7 @@ uses
   SVGIconItems;
 
 const
-  SVGIconImageListVersion = '1.7.0';
+  SVGIconImageListVersion = '1.8.0';
   DEFAULT_SIZE = 16;
 
 type
@@ -69,7 +101,6 @@ type
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload; virtual; abstract;
     procedure PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload;
 
-
     procedure DefineProperties(Filer: TFiler); override;
     procedure DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer; Style: Cardinal; Enabled: Boolean = True); override;
     procedure Loaded; override;
@@ -88,12 +119,13 @@ type
 
     procedure AssignTo(Dest: TPersistent); override;
     procedure DoAssign(const Source: TPersistent); virtual;
-    procedure DPIChanged(Sender: TObject; const OldDPI, NewDPI: Integer); virtual;
   public
     constructor Create(AOwner : TComponent);override;
     destructor Destroy;override;
     procedure Assign(Source: TPersistent); override;
+    function LoadFromFiles(const AFileNames: TStrings; const AAppend: Boolean = True): Integer;
 
+    procedure DPIChanged(Sender: TObject; const OldDPI, NewDPI: Integer); virtual;
     {$IFDEF D10_4+}
     function IsImageNameAvailable: Boolean; override;
     function GetIndexByName(const AName: TImageName): TImageIndex; override;
@@ -359,6 +391,17 @@ procedure TSVGIconImageListBase.Loaded;
 begin
   inherited;
   Change;
+end;
+
+function TSVGIconImageListBase.LoadFromFiles(const AFileNames: TStrings;
+  const AAppend: Boolean = True): Integer;
+begin
+  BeginUpdate;
+  try
+    Result := SVGIconItems.LoadFromFiles(AFileNames, AAppend);
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TSVGIconImageListBase.PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean);

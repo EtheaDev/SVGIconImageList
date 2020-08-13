@@ -20,6 +20,10 @@
 { Carlo Barazzetta (fixed transform)                               }
 { Carlo Barazzetta (fixed style display none)                      }
 { Carlo Barazzetta (added fixedcolor and grayscale)                }
+{ Kiriakos Vlahos (fixed CalculateMatrices)                        }
+{ Kiriakos Vlahos (added FillMode property)                        }
+{ Kiriakos Vlahos (fixed SetBounds based on ViewBox)               }
+{ Kiriakos Vlahos (added 'fill-rule' presentation attribute        }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }

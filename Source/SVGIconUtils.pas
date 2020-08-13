@@ -5,7 +5,7 @@
 {                                                                              }
 {       Copyright (c) 2019-2020 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
-{       Contributors:                                                          }
+{       Contributors: Vincent Parrett, Kiriakos Vlahos                         }
 {                                                                              }
 {       https://github.com/EtheaDev/SVGIconImageList                           }
 {                                                                              }
@@ -48,8 +48,6 @@ function UpdateSVGIconListView(const AListView: TListView;
   const AIncludeIndex: Boolean = True): Integer;
 function UpdateSVGIconListViewCaptions(const AListView: TListView;
   const AShowCaption: Boolean = True): Integer;
-procedure ChangeSVGColor(var ASVGText: string;
-  const AColor: TColor; ANewColor: TColor);
 
 implementation
 
@@ -147,9 +145,5 @@ begin
   end;
 end;
 
-procedure ChangeSVGColor(var ASVGText: string;  const AColor: TColor; ANewColor: TColor);
-begin
-  //
-end;
 
 end.
