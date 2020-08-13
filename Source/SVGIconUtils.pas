@@ -39,6 +39,7 @@ interface
 uses
   Classes
   , ImgList
+  , SVGIconImageListBase
   , SVGIconImageList
   , Graphics
   , ComCtrls;
@@ -84,9 +85,9 @@ begin
     Result := LImageList.Count;
     for I := 0 to Result -1 do
     begin
-      if (LImageList is TSVGIconImageList) then
+      if (LImageList is TSVGIconImageListBase) then
       begin
-        LItem := TSVGIconImageList(LImageList).SVGIconItems[I];
+        LItem := TSVGIconImageListBase(LImageList).SVGIconItems[I];
         LListItem := AListView.Items.Add;
         LListItem.Caption := GetItemCaption;
         LListItem.ImageIndex := I;
@@ -146,8 +147,7 @@ begin
   end;
 end;
 
-procedure ChangeSVGColor(var ASVGText: string;
-  const AColor: TColor; ANewColor: TColor);
+procedure ChangeSVGColor(var ASVGText: string;  const AColor: TColor; ANewColor: TColor);
 begin
   //
 end;
