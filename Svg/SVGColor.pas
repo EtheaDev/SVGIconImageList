@@ -23,7 +23,9 @@ unit SVGColor;
 interface
 
 uses
-  System.UITypes
+  Winapi.Windows
+  , Winapi.GDIPAPI
+  , System.UITypes
   , System.Classes;
 
 const
@@ -202,7 +204,7 @@ procedure AssignSVGColorList(AList: TStrings);
 implementation
 
 uses
-  Winapi.Windows, Winapi.GDIPAPI, System.SysUtils, Vcl.Graphics, SVGTypes;
+  System.SysUtils, Vcl.Graphics, SVGTypes;
 
 function IsHex(const S: string): Boolean;
 var
