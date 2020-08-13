@@ -23,7 +23,9 @@ unit SVGColor;
 interface
 
 uses
-  System.UITypes
+  Winapi.Windows
+  , Winapi.GDIPAPI
+  , System.UITypes
   , System.Classes;
 
 const
@@ -196,13 +198,13 @@ function SVGColorToColor(const ASVGColor: TSVGColor): TColor;
 function SVGColorNameToSVGColor(const AColorName: string): TSVGColor;
 function SVGColorToSVGColorName(const AColor: TSVGColor): string;
 function ColorToSVGColor(const AColor: TColor): TSVGColor;
-function ConvertColor(Color: TColor; Alpha: Byte): Cardinal;
+function ConvertColor(Color: TColor; Alpha: Byte): Cardinal; inline;
 procedure AssignSVGColorList(AList: TStrings);
 
 implementation
 
 uses
-  Winapi.Windows, Winapi.GDIPAPI, System.SysUtils, Vcl.Graphics, SVGTypes;
+  System.SysUtils, Vcl.Graphics, SVGTypes;
 
 function IsHex(const S: string): Boolean;
 var
@@ -445,13 +447,9 @@ begin
 end;
 
 function ConvertColor(Color: TColor; Alpha: Byte): Cardinal;
-var
-  R, G, B: Byte;
 begin
-  R := (Color and $000000FF);
-  G := (Color and $0000FF00) shr 8;
-  B := (Color and $00FF0000) shr 16;
-  Result := MakeColor(Alpha, R, G, B);
+  with TColors(Color) do
+    Result := Winapi.GDIPAPI.MakeColor(Alpha, R, G, B);
 end;
 
 procedure AssignSVGColorList(AList: TStrings);

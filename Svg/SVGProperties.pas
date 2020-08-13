@@ -82,11 +82,16 @@ procedure LoadString(const Node: IXMLNode; const S: string;
   var X: string);
 var
   Attribute: IXMLNode;
+  V: Variant;
 begin
   Attribute := Node.AttributeNodes.FindNode(S);
   if Assigned(Attribute) then
   begin
-    X := Attribute.nodeValue;
+    V := Attribute.nodeValue;
+    if VarType(V) = varNull then
+      X := ''
+    else
+      X := V;
   end;
 end;
 

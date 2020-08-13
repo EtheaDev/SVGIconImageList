@@ -225,7 +225,7 @@ begin
     suIN: Result := 25.4;
     suEM: Result := 1;
     suEX: Result := 1;
-    suPercent: Result := 1;
+    suPercent: Result := 1/100;
     else
       Result := 1;
   end;

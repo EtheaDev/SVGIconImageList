@@ -39,7 +39,6 @@ type
     FOpacity: TFloat;
 
   protected
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure ReadIn(const Node: IXMLNode); override;
@@ -53,9 +52,6 @@ type
   end;
 
   TSVGFiller = class(TSVGMatrix)
-  private
-  protected
-    function New(Parent: TSVGObject): TSVGObject; override;
   public
     procedure ReadIn(const Node: IXMLNode); override;
     function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; virtual; abstract;
@@ -64,6 +60,10 @@ type
   end;
 
   TSVGGradient = class(TSVGFiller)
+  {
+    SpreadMethod is not implemented
+    Assumed to be Repeat for LinearGradient and pad for RadialGradient
+  }
   private
     FURI: string;
     FGradientUnits: TGradientUnits;
@@ -80,11 +80,11 @@ type
     FX2: TFloat;
     FY2: TFloat;
   protected
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure ReadIn(const Node: IXMLNode); override;
     function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; override;
+    procedure Clear; override;
 
     property X1: TFloat read FX1 write FX1;
     property Y1: TFloat read FY1 write FY1;
@@ -100,7 +100,6 @@ type
     FFX: TFloat;
     FFY: TFloat;
   protected
-    function New(Parent: TSVGObject): TSVGObject; override;
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
@@ -118,7 +117,7 @@ type
 implementation
 
 uses
-  System.SysUtils, System.Math.Vectors,
+  System.Types, System.SysUtils, System.Math.Vectors,
   SVGParse, SVGStyle, SVGProperties, SVGColor,
   GDIPUtils;
 
@@ -178,11 +177,6 @@ begin
   end;
 end;
 
-function TSVGStop.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGStop.Create(Parent);
-end;
-
 procedure TSVGStop.PaintToGraphics(Graphics: TGPGraphics);
 begin
 end;
@@ -199,11 +193,6 @@ begin
   Display := 0;
 end;
 
-function TSVGFiller.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := nil;
-end;
-
 procedure TSVGFiller.PaintToGraphics(Graphics: TGPGraphics);
 begin
 end;
@@ -214,6 +203,7 @@ procedure TSVGGradient.ReadIn(const Node: IXMLNode);
 var
   C: Integer;
   Stop: TSVGStop;
+  Matrix: TMatrix;
 begin
   inherited;
 
@@ -227,34 +217,35 @@ begin
    end;
 
   FURI := Style['xlink:href'];
+  if FURI = '' then
+    FURI := Style['href'];
+  if FURI = '' then
+    LoadString(Node, 'xlink:href', FURI);
+  if FURI = '' then
+    LoadString(Node, 'href', FURI);
+
+
   if FURI <> '' then
   begin
     FURI := Trim(FURI);
     if (FURI <> '') and (FURI[1] = '#') then
       FURI := Copy(FURI, 2, MaxInt);
   end;
+
+  FillChar(Matrix, SizeOf(Matrix), 0);
+  LoadTransform(Node, 'gradientTransform', Matrix);
+  PureMatrix := Matrix;
 end;
 
 // TSVGLinearGradient
 
-function TSVGLinearGradient.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGLinearGradient.Create(Parent);
-end;
-
 procedure TSVGLinearGradient.ReadIn(const Node: IXMLNode);
-var
-  Matrix: TMatrix;
 begin
   inherited;
   LoadLength(Node, 'x1', FX1);
   LoadLength(Node, 'y1', FY1);
   LoadLength(Node, 'x2', FX2);
   LoadLength(Node, 'y2', FY2);
-
-  FillChar(Matrix, SizeOf(Matrix), 0);
-  LoadTransform(Node, 'gradientTransform', Matrix);
-  PureMatrix := Matrix;
 end;
 
 procedure TSVGLinearGradient.AssignTo(Dest: TPersistent);
@@ -269,24 +260,46 @@ begin
   end;
 end;
 
+procedure TSVGLinearGradient.Clear;
+begin
+  inherited;
+  FX1 := INHERIT;
+  FX2 := INHERIT;
+  FY1 := INHERIT;
+  FY2 := INHERIT;
+end;
+
 function TSVGLinearGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush;
 var
   Brush: TGPLinearGradientBrush;
   TGP: TGPMatrix;
   Colors: TColors;
+  BoundsRect: TGPRectF;
+  MX1, MX2, MY1, MY2: TFloat;
 begin
-  if Assigned(DestObject) and (FGradientUnits = guObjectBoundingBox) then
-    Brush := TGPLinearGradientBrush.Create(MakePoint(DestObject.X, DestObject.Y),
-      MakePoint(DestObject.X + DestObject.Width, DestObject.Y + DestObject.Height), 0, 0)
+  BoundsRect :=  ToGPRectF(DestObject.ObjectBounds);
+  if FGradientUnits = guObjectBoundingBox then begin
+    // X1, X2, Y1, Y2 are relative to the Object Bounding Rect
+    if FX1 <> INHERIT then MX1 := BoundsRect.X + FX1 * BoundsRect.Width else MX1 := FX1;
+    if FX2 <> INHERIT then MX2 := BoundsRect.X + FX2 * BoundsRect.Width else MX2 := FX2;
+    if FY1 <> INHERIT then MY1 := BoundsRect.Y + FY1 * BoundsRect.Height else MY1 := FY1;
+    if FY2 <> INHERIT then MY2 := BoundsRect.Y + FY2 * BoundsRect.Height else MY2 := FY2;
+  end else begin
+    MX1 := FX1;
+    MX2 := FX2;
+    MY1 := FY1;
+    MY2 := FY2;
+  end;
+
+  if (FX1 = INHERIT) or (FX2 = INHERIT) or (FY1 = INHERIT) or (FY2 = INHERIT) then
+      Brush := TGPLinearGradientBrush.Create(BoundsRect, 0, 0, LinearGradientModeHorizontal)
   else
-    Brush := TGPLinearGradientBrush.Create(MakePoint(FX1, FY1), MakePoint(FX2, FY2), 0, 0);
+    Brush := TGPLinearGradientBrush.Create(MakePoint(MX1, MY1), MakePoint(MX2, MY2), 0, 0);
 
   Colors := GetColors(Alpha);
 
   Brush.SetInterpolationColors(PGPColor(Colors.Colors),
     PSingle(Colors.Positions), Colors.Count);
-
-  Finalize(Colors);
 
   if PureMatrix.m33 = 1 then
   begin
@@ -317,9 +330,9 @@ procedure TSVGRadialGradient.Clear;
 begin
   inherited;
 
-  FCX := 0.5;
-  FCY := 0.5;
-  FR := 0.5;
+  FCX := INHERIT;
+  FCY := INHERIT;
+  FR := INHERIT;
   FFX := FCX;
   FFY := FCY;
 end;
@@ -327,12 +340,15 @@ end;
 procedure TSVGRadialGradient.ReadIn(const Node: IXMLNode);
 begin
   inherited;
-
   LoadLength(Node, 'cx', FCX);
   LoadLength(Node, 'cy', FCY);
   LoadLength(Node, 'r', FR);
   LoadLength(Node, 'fx', FFX);
   LoadLength(Node, 'fy', FFY);
+  if FFX = INHERIT then
+    FFX := FCX;
+  if FFY = INHERIT then
+    FFY := FCY;
 end;
 
 function TSVGRadialGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush;
@@ -341,23 +357,57 @@ var
   Path: TGPGraphicsPath;
   TGP: TGPMatrix;
   Colors: TColors;
+  RevColors: TColors;
+  BoundsRect: TGPRectF;
+  MCX, MCY, MR, MFX, MFY: TFloat;
+  i: integer;
 begin
-  Path := TGPGraphicsPath.Create;
+  BoundsRect :=  ToGPRectF(DestObject.ObjectBounds);
+  if FGradientUnits = guObjectBoundingBox then begin
+    // CX, CY, R, FX, FY are relative to the Object Bounding Rect
+    if FCX <> INHERIT then MCX := BoundsRect.X + FCX * BoundsRect.Width else MCX := FCX;
+    if FFX <> INHERIT then MFX := BoundsRect.X + FFX * BoundsRect.Width else MFX := FFX;
+    if FCY <> INHERIT then MCY := BoundsRect.Y + FCY * BoundsRect.Height else MCY := FCY;
+    if FFY <> INHERIT then MFY := BoundsRect.Y + FFY * BoundsRect.Height else MFY := FFY;
+    if FR <> INHERIT then MR :=
+      FR * Sqrt(Sqr(BoundsRect.Width) + Sqr(BoundsRect.Height))/Sqrt(2)
+    else
+      MR := FR;
+  end else begin
+    MCX := FCX;
+    MFX := FFX;
+    MCY := FCY;
+    MFY := FFY;
+    MR := FR;
+  end;
 
-  if Assigned(DestObject) and (FGradientUnits = guObjectBoundingBox) then
-    Path.AddEllipse(DestObject.X, DestObject.Y, DestObject.Width, DestObject.Height)
+  Path := TGPGraphicsPath.Create;
+  if ((FR = INHERIT) or (FCX = INHERIT) or (FCY = INHERIT)) then
+    Path.AddEllipse(BoundsRect)
   else
-    Path.AddEllipse(FCX - FR, FCY - FR, 2 * FR, 2 * FR);
+    Path.AddEllipse(MCX - MR, MCY - MR, 2 * MR, 2 * MR);
 
   Brush := TGPPathGradientBrush.Create(Path);
   Path.Free;
 
   Colors := GetColors(Alpha);
-  Brush.SetInterpolationColors(PARGB(Colors.Colors), PSingle(Colors.Positions), Colors.Count);
 
-  Finalize(Colors);
+  SetLength(RevColors.Colors, Colors.Count);
+  SetLength(RevColors.Positions, Colors.Count);
+  // Reverse colors! TGPPathGradientBrush uses colors from outside to inside unlike svg
+  for i := 0 to Colors.Count - 1 do
+  begin
+    RevColors.Colors[i] := Colors.Colors[Colors.Count - 1 - i];
+    RevColors.Positions[i] := 1 - Colors.Positions[Colors.Count - 1 - i];
+  end;
+  if Colors.Count > 0 then
+    // Temporarily store last color. Used in TSVGBasic.BeforePaint
+    DestObject.FillColor := Integer(RevColors.Colors[0]);
 
-  Brush.SetCenterPoint(MakePoint(FFX, FFY));
+  Brush.SetInterpolationColors(PARGB(RevColors.Colors), PSingle(RevColors.Positions), Colors.Count);
+
+  if (FFX <> INHERIT) and (FFY <> INHERIT) then
+    Brush.SetCenterPoint(MakePoint(MFX, MFY));
 
   if PureMatrix.m33 = 1 then
   begin
@@ -367,11 +417,6 @@ begin
   end;
 
   Result := Brush;
-end;
-
-function TSVGRadialGradient.New(Parent: TSVGObject): TSVGObject;
-begin
-  Result := TSVGRadialGradient.Create(Parent);
 end;
 
 function TSVGGradient.GetColors(Alpha: Byte): TColors;
