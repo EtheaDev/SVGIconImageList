@@ -51,7 +51,10 @@ uses
   , ExtDlgs
   , Spin
   , SVGIconImage
+  , SVGIconImageListBase
   , SVGIconImageList
+  , SVGIconImageCollection
+  , SVGIconVirtualImageList
   ;
 
 resourcestring
@@ -156,6 +159,10 @@ type
 
 function EditSVGIconImageList(const AImageList: TSVGIconImageList): Boolean;
 
+function EditSVGIconVirtualImageList(const AImageList: TSVGIconVirtualImageList): Boolean;
+
+function EditSVGIconImageCollection(const AImageCollection: TSVGIconImageCollection): Boolean;
+
 implementation
 
 {$R *.dfm}
@@ -209,6 +216,89 @@ begin
   end;
 end;
 
+function EditSVGIconVirtualImageList(const AImageList: TSVGIconVirtualImageList): Boolean;
+var
+  LEditor: TSVGIconImageListEditor;
+begin
+  if AImageList.Collection = nil then
+    exit(false);
+  LEditor := TSVGIconImageListEditor.Create(nil);
+  with LEditor do
+  begin
+    try
+      Screen.Cursor := crHourglass;
+      try
+        FSourceList := TSVGIconImageList.Create(LEditor);
+        FSourceList.Assign(AImageList);
+        FEditingList.Assign(AImageList);
+        OpacitySpinEdit.Value := FSourceList.Opacity;
+        StoreAsTextCheckBox.Checked := AImageList.Collection.StoreAsText;
+        OpacitySpinEdit.Value := AImageList.Opacity;
+        StoreAsTextCheckBox.Checked := FSourceList.StoreAsText;
+        UpdateGUI;
+      finally
+        Screen.Cursor := crDefault;
+      end;
+      Result := ShowModal = mrOk;
+      if Result then
+      begin
+        Screen.Cursor := crHourglass;
+        try
+          AImageList.Collection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
+          AImageList.Collection.StoreAsText := StoreAsTextCheckBox.Checked;
+          AImageList.Assign(LEditor.FEditingList);
+        finally
+          Screen.Cursor := crDefault;
+        end;
+      end;
+      SavedBounds := BoundsRect;
+      paTopHeight := paTop.Height;
+    finally
+      Free;
+    end;
+  end;
+end;
+
+function EditSVGIconImageCollection(const AImageCollection: TSVGIconImageCollection): Boolean;
+var
+  LEditor: TSVGIconImageListEditor;
+begin
+  LEditor := TSVGIconImageListEditor.Create(nil);
+  with LEditor do
+  begin
+    try
+      Screen.Cursor := crHourglass;
+      try
+        FSourceList := TSVGIconImageList.Create(LEditor);
+        FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
+        FEditingList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
+        OpacitySpinEdit.Value := FSourceList.Opacity;
+        StoreAsTextCheckBox.Checked := AImageCollection.StoreAsText;
+        UpdateGUI;
+      finally
+        Screen.Cursor := crDefault;
+      end;
+      Result := ShowModal = mrOk;
+      if Result then
+      begin
+        Screen.Cursor := crHourglass;
+        try
+          AImageCollection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
+          AImageCollection.StoreAsText := StoreAsTextCheckBox.Checked;
+        finally
+          Screen.Cursor := crDefault;
+        end;
+      end;
+      SavedBounds := BoundsRect;
+      paTopHeight := paTop.Height;
+    finally
+      Free;
+    end;
+  end;
+
+end;
+
+
 { TSVGIconImageListEditor }
 
 procedure TSVGIconImageListEditor.UpdateSizeGUI;
@@ -230,7 +320,7 @@ begin
   begin
     Screen.Cursor := crHourGlass;
     try
-      FEditingList.LoadFromFiles(OpenDialog.Files);
+      FEditingList.SvgIconItems.LoadFromFiles(OpenDialog.Files);
       BuildList(MaxInt);
       FChanged := True;
       UpdateGUI;
@@ -369,9 +459,9 @@ begin
   if OpenDialog.Execute then
   begin
     Screen.Cursor := crHourGlass;
+    FEditingList.BeginUpdate;
     try
       SVG := TSVG.Create;
-      FEditingList.StopDrawing(True);
       try
         for LIndex := 0 to OpenDialog.Files.Count - 1 do
         begin
@@ -386,12 +476,11 @@ begin
           end;
         end;
       finally
-        FEditingList.StopDrawing(False);
-        FEditingList.RecreateBitmaps;
         SVG.Free;
       end;
       BuildList(ImageView.ItemIndex);
     finally
+      FEditingList.EndUpdate;
       Screen.Cursor := crDefault;
     end;
   end;
@@ -435,12 +524,11 @@ end;
 
 procedure TSVGIconImageListEditor.BuildList(Selected: Integer);
 begin
-  FEditingList.StopDrawing(True);
+  FEditingList.BeginUpdate;
   try
     UpdateSVGIconListView(ImageView);
   finally
-    FEditingList.StopDrawing(False);
-    FEditingList.RecreateBitmaps;
+    FEditingList.EndUpdate;
   end;
 
   if Selected < -1 then
@@ -460,14 +548,13 @@ begin
   Screen.Cursor := crHourGlass;
   try
     Selected := ImageView.ItemIndex;
-    FEditingList.StopDrawing(True);
+    FEditingList.BeginUpdate;
     try
       for LIndex := ImageView.Items.Count - 1 downto 0 do
         if ImageView.Items[LIndex].Selected then
           FEditingList.SVGIconItems.Delete(LIndex);
     finally
-      FEditingList.StopDrawing(False);
-      FEditingList.RecreateBitmaps;
+      FEditingList.EndUpdate;
     end;
     FChanged := True;
     BuildList(Selected);
@@ -530,14 +617,13 @@ begin
     Exit;
   Screen.Cursor := crHourGlass;
   try
-    FSourceList.StopDrawing(True);
+    FSourceList.BeginUpdate;
     Try
       FSourceList.Assign(FEditingList);
       FChanged := False;
       FModified := True;
     Finally
-      FSourceList.StopDrawing(False);
-      FSourceList.RecreateBitmaps;
+      FSourceList.EndUpdate;
     End;
   finally
     Screen.Cursor := crDefault;
