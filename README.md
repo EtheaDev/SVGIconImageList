@@ -2,12 +2,20 @@
 
 ## An extended ImageList for Delphi (VCL+FMX) to simplify use of SVG Icons (resize, opacity, grayscale and more...)
 
+## Welcome to the SVGIconFontImageList guide (VCL+FMX)
+
+### Actual official version 1.8 (VCL+FMX)
+
 | Component | Description |
 | - | - |
-| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png) | **SVGIconImageList is an extended ImageList for Delphi (VCL+FMX) to simplify use of SVG Icons (resize, opacity, grayscale and more...)** |
+| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageCollectionComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageCollectionComponentIcon.png) | **SVGIconImageCollection is collection of SVG Images for Delphi to provide a centralized list of images for VirtualImageLists (only for VCL)** |
+| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconVirtualImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconVirtualImageListComponentIcon.png) | **SVGIconVirtualImageList is a special "virtual" ImageList for Delphi linked to an SVGIconImageCollection (only for VCL) to simplify use of SVG Icons (resize, opacity, grayscale and more...)** |
+| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png) | **SVGIconImageList is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection, to simplify use of SVG Icons (resize, opacity, grayscale and more...)** |
 | ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageComponentIcon.png) | **SVGIconImage is an extended Image component for Delphi (VCL+FMX) to show any SVG image directly or included into a an SVGIconImageList with all functionality (stretch, opacity, grayscale and more...)** |
 
-SVGIconImageList, as a TVirtualImageList+TImageCollection, can draw icons in SVG format at any resolution. The ImageList scales automatically when DPI changed. You can use those components from Delphi DXE6 to actual version.
+A single SVGIconImageList can draw icons in SVG format at any resolution similar to a VirtualImageList+ImageCollection.  The ImageList, placed on a form, scales automatically when DPI changes.
+
+If you want a full support for High-DPI in a multi-form application on multi-monitors, you must use a single TSVGIconImageCollection into a centralized resource (like a Datamodule) and add a TSVGVirtualImageList (connected to this Collection) on every form of your app.
 
 ![Delphi 10.4 Sydney Support](/Demo/Images/SupportingDelphi.jpg)
 
