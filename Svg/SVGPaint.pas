@@ -20,10 +20,14 @@ unit SVGPaint;
 interface
 
 uses
-  Winapi.Windows, Winapi.GDIPOBJ, Winapi.GDIPAPI,
-  System.UITypes, System.Classes,
+  Winapi.Windows,
+  Winapi.GDIPOBJ,
+  Winapi.GDIPAPI,
+  System.UITypes,
+  System.Classes,
   Xml.XmlIntf,
-  SVGTypes, SVG;
+  SVGTypes,
+  SVG;
 
 type
   TColors = record
@@ -116,9 +120,14 @@ type
 implementation
 
 uses
-  System.Types, System.SysUtils, System.Math.Vectors,
-  SVGParse, SVGStyle, SVGProperties, SVGColor,
-  GDIPUtils;
+  System.Types,
+  System.SysUtils,
+  System.Math.Vectors,
+  SVGCommon,
+  SVGParse,
+  SVGStyle,
+  SVGProperties,
+  SVGColor;
 
 // TSVGStop
 
@@ -298,7 +307,7 @@ begin
 
   if PureMatrix.m33 = 1 then
   begin
-    TGP := GetGPMatrix(PureMatrix);
+    TGP := ToGPMatrix(PureMatrix);
     Brush.SetTransform(TGP);
     TGP.Free;
   end;
@@ -402,7 +411,7 @@ begin
 
   if PureMatrix.m33 = 1 then
   begin
-    TGP := GetGPMatrix(PureMatrix);
+    TGP := ToGPMatrix(PureMatrix);
     Brush.SetTransform(TGP);
     TGP.Free;
   end;

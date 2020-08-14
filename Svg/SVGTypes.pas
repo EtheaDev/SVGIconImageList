@@ -20,8 +20,8 @@ unit SVGTypes;
 interface
 
 uses
-  System.Math, System.Types,
-  Winapi.Windows, Winapi.GDIPAPI;
+  System.Math,
+  System.Types;
 
 const
   INHERIT = -1;
@@ -52,14 +52,7 @@ type
 
   TLengthType = (ltHorz, ltVert, ltOther);
 
-function ToGPRectF(R: TRectF): TGPRectF; inline;
-
 implementation
 
-function ToGPRectF(R: TRectF): TGPRectF;
-begin
-  with R do
-    Result := WinApi.GDIPAPI.MakeRect(Left, Top, Width, Height);
-end;
 
 end.

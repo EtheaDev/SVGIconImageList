@@ -129,12 +129,10 @@ uses
   Winapi.GDIPOBJ,
   Vcl.ComCtrls,
   Vcl.Forms,
-  GDIPUtils,
-  SVGTypes;
+  SVGTypes,
+  SVGCommon;
 
 { TSVGIconImageListBase }
-
-
 
 procedure TSVGIconImageListBase.Assign(Source: TPersistent);
 begin
@@ -300,7 +298,8 @@ begin
     Result := Items[Index].SVG
   else
     Result := nil;
-end;
+
+end;
 
 function TSVGIconImageListBase.GetNames(Index: Integer): string;
 Var
@@ -620,7 +619,7 @@ var
 
 begin
   SVG.SVGOpacity := FOpacity / 255;
-  R := CalcRect(MakeRect(0.0, 0, Width, Height), SVG.Width, SVG.Height, baCenterCenter);
+  R := FittedRect(MakeRect(0.0, 0, Width, Height), SVG.Width, SVG.Height);
 
   if GetFileVersion(comctl32) >= ComCtlVersionIE6 then
     Result := SVGToIcon32(SVG)

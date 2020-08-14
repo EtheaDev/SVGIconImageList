@@ -115,7 +115,8 @@ uses
   , Math
   , Winapi.GDIPAPI
   , ComCtrls
-  , GDIPUtils
+  , SVGTypes
+  , SVGCommon
   , SVGIconVirtualImageList;
 
 
@@ -231,13 +232,11 @@ begin
         LOpacity := FDisabledOpacity;
     end;
     SVG.SVGOpacity := LOpacity / 255;
-    R := CalcRect( MakeRect(X, Y, AWidth, AHeight), SVG.Width, SVG.Height, baCenterCenter);
+    R := FittedRect(MakeRect(X, Y, AWidth, AHeight), SVG.Width, SVG.Height);
     SVG.PaintTo(ACanvas.Handle, R, nil, 0);
     SVG.SVGOpacity := 1;
   end;
 end;
-
-
 
 procedure TSVGIconImageList.ReadImageData(Stream: TStream);
 var

@@ -508,7 +508,7 @@ uses
 {$IFDEF MSWINDOWS}
   Xml.Win.msxmldom,
 {$ENDIF}
-  GDIPUtils, SVGParse, SVGProperties, SVGPaint, SVGPath, SVGCommon;
+  SVGParse, SVGProperties, SVGPaint, SVGPath, SVGCommon;
 
 {$REGION 'TSVGObject'}
 constructor TSVGObject.Create;
@@ -579,7 +579,7 @@ begin
   FClasses.Clear;
   FStyle.Clear;
   FObjectName := '';
-end;                           
+end;
 
 function TSVGObject.Clone(Parent: TSVGObject): TSVGObject;
 var
@@ -971,7 +971,7 @@ begin
         ClipRoot := TSVGBasic(GetRoot.FindByID(ClipURI));
         if Assigned(ClipRoot) then
         begin
-          TGP := GetGPMatrix(ClipRoot.Matrix);
+          TGP := ToGPMatrix(ClipRoot.Matrix);
           try
             Graphics.SetTransform(TGP);
           finally
@@ -983,7 +983,7 @@ begin
       Graphics.ResetTransform;
     end;
 
-    TGP := GetGPMatrix(Matrix);
+    TGP := ToGPMatrix(Matrix);
     try
       Graphics.SetTransform(TGP);
     finally
@@ -1034,7 +1034,7 @@ begin
 
   if Matrix.m33 = 1 then
   begin
-    M := GetGPMatrix(Matrix);
+    M := ToGPMatrix(Matrix);
     P.Transform(M);
     M.Free;
   end;
@@ -2469,7 +2469,7 @@ begin
     Graphics := TGPGraphics.Create(Bitmap);
     try
       Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-      R := CalcRect(MakeRect(0.0, 0.0, Width, Height), FWidth, FHeight, baCenterCenter);
+      R := FittedRect(MakeRect(0.0, 0.0, Width, Height), FWidth, FHeight);
       PaintTo(Graphics, R, nil, 0);
     finally
       Graphics.Free;
@@ -2495,7 +2495,7 @@ begin
     Graphics := TGPGraphics.Create(Bitmap);
     try
       Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-      R := CalcRect(MakeRect(0.0, 0, Size, Size), Width, Height, baCenterCenter);
+      R := FittedRect(MakeRect(0.0, 0, Size, Size), Width, Height);
       PaintTo(Graphics, R, nil, 0);
     finally
       Graphics.Free;
@@ -3370,7 +3370,7 @@ begin
   if ClipPath <> nil then
     Graphics.SetClip(ClipPath);}
 
-  TGP := GetGPMatrix(Matrix);
+  TGP := ToGPMatrix(Matrix);
   Graphics.SetTransform(TGP);
   TGP.Free;
 
@@ -3810,7 +3810,7 @@ begin
         ClipRoot := TSVGBasic(GetRoot.FindByID(ClipURI));
         if Assigned(ClipRoot) then
         begin
-          TGP := GetGPMatrix(ClipRoot.Matrix);
+          TGP := ToGPMatrix(ClipRoot.Matrix);
           Graphics.SetTransform(TGP);
           TGP.Free;
         end;
@@ -3819,7 +3819,7 @@ begin
       Graphics.ResetTransform;
     end;
 
-    TGP := GetGPMatrix(Matrix);
+    TGP := ToGPMatrix(Matrix);
     Graphics.SetTransform(TGP);
     TGP.Free;
 
@@ -4022,7 +4022,7 @@ var
       PT := TGPPathText.Create(GuidePath.FPath);
 
       if Element.FPureMatrix.m33 = 1 then
-        Matrix := GetGPMatrix(Element.FPureMatrix)
+        Matrix := ToGPMatrix(Element.FPureMatrix)
       else
         Matrix := nil;
 

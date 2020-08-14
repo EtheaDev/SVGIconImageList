@@ -200,7 +200,6 @@ uses
   , FMX.Forms
   , FMX.Consts
   , Winapi.GDIPOBJ
-  , GDIPUtils
   , Winapi.GDIPAPI
   , SVGTypes;
 
