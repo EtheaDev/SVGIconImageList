@@ -184,6 +184,8 @@ type
     FColorInterpolation: TFloat;
     FColorRendering: TFloat;
 
+    procedure LoadLengthProperty(const Node: IXMLNode; const S: string;
+      LengthType: TLengthType; var X: TFloat);
     procedure AssignTo(Dest: TPersistent); override;
     procedure ReadStyle(Style: TStyle); virtual;
     procedure ConstructPath; virtual;
@@ -1118,12 +1120,12 @@ procedure TSVGBasic.ReadIn(const Node: IXMLNode);
 begin
   inherited;
 
-  LoadLength(Node, 'x', FX);
-  LoadLength(Node, 'y', FY);
-  LoadLength(Node, 'width', FWidth);
-  LoadLength(Node, 'height', FHeight);
-  LoadLength(Node, 'rx', FRX);
-  LoadLength(Node, 'ry', FRY);
+  LoadLengthProperty(Node, 'x', ltHorz, FX);
+  LoadLengthProperty(Node, 'y', ltVert, FY);
+  LoadLengthProperty(Node, 'width', ltHorz, FWidth);
+  LoadLengthProperty(Node, 'height', ltVert, FHeight);
+  LoadLengthProperty(Node, 'rx', ltOther, FRX);
+  LoadLengthProperty(Node, 'ry', ltOther, FRY);
 
   if (FRX = INHERIT) and (FRY <> INHERIT) then
   begin
@@ -1778,6 +1780,22 @@ begin
   FF.Free;
 end;
 
+procedure TSVGBasic.LoadLengthProperty(const Node: IXMLNode; const S: string;
+  LengthType: TLengthType; var X: TFloat);
+Var
+  IsPercent: Boolean;
+begin
+  IsPercent := False;
+  LoadLength(Node, S, X, IsPercent);
+  if IsPercent then
+    with Root.ViewBox do
+      case LengthType of
+        ltHorz: X := X * Width;
+        ltVert: X := X * Height;
+        ltOther: X := X * Sqrt(Sqr(Width) + Sqr(Height))/Sqrt(2);
+      end;
+end;
+
 function TSVGBasic.GetClipURI: string;
 var
   SVG: TSVGObject;
@@ -2301,7 +2319,11 @@ end;
 
 procedure TSVG.SetViewBox(const Value: TRectF);
 begin
-  FViewBox := Value;
+  if FViewBox <> Value then
+  begin
+    FViewBox := Value;
+    ReloadFromText;
+  end;
 end;
 
 procedure TSVG.SetAngle(Angle: TFloat);
@@ -2565,9 +2587,10 @@ begin
     FCalculatedMatrix := TMatrix.Identity;
   end;
 
-  FCalculatedMatrix := BoundsMatrix * FCalculatedMatrix;
-  FCalculatedMatrix := ViewBoxMatrix * FCalculatedMatrix;
-  FCalculatedMatrix := ScaleMatrix * FCalculatedMatrix;
+  // The order is important
+  // First the ViewBox transformations are applied (translate first and then scale)
+  // Then the Bounds translation is applied.  (the order is from left to right)
+  FCalculatedMatrix := ViewBoxMatrix * ScaleMatrix * BoundsMatrix * FCalculatedMatrix;
   if FAngleMatrix.m33 = 1 then
     FCalculatedMatrix := FAngleMatrix * FCalculatedMatrix;
 
@@ -2791,10 +2814,10 @@ procedure TSVGLine.ReadIn(const Node: IXMLNode);
 begin
   inherited;
 
-  LoadLength(Node, 'x1', FX);
-  LoadLength(Node, 'y1', FY);
-  LoadLength(Node, 'x2', FWidth);
-  LoadLength(Node, 'y2', FHeight);
+  LoadLengthProperty(Node, 'x1', ltHorz, FX);
+  LoadLengthProperty(Node, 'y1', ltVert, FY);
+  LoadLengthProperty(Node, 'x2', ltHorz, FWidth);
+  LoadLengthProperty(Node, 'y2', ltVert, FHeight);
 
   ConstructPath;
 end;
@@ -2984,22 +3007,13 @@ procedure TSVGEllipse.ReadIn(const Node: IXMLNode);
 begin
   inherited;
 
-  LoadLength(Node, 'cx', FCX);
-  LoadLength(Node, 'cy', FCY);
+  LoadLengthProperty(Node, 'cx', ltHorz, FCX);
+  LoadLengthProperty(Node, 'cy', ltVert, FCY);
 
   if Node.NodeName = 'circle' then
   begin
-    LoadLength(Node, 'r', FRX);
+    LoadLengthProperty(Node, 'r', ltOther,  FRX);
     FRY := FRX;
-  end;
-
-  if FRX <> INHERIT then begin
-    FWidth := 2 * FRX;
-    FHeight := 2 * FRY;
-    if FCX <> INHERIT then
-      FX := FCX - FRX;
-    if FCY <> INHERIT then
-      FX := FCX - FRX;
   end;
 
   ConstructPath;
@@ -3347,7 +3361,6 @@ procedure TSVGImage.AssignTo(Dest: TPersistent);
 var
   SA: TStreamAdapter;
 begin
-  inherited;
   if Dest is TSVGImage then
   begin
     TSVGImage(Dest).FFileName := FFileName;
@@ -3368,7 +3381,9 @@ begin
       SA := TStreamAdapter.Create(TSVGImage(Dest).FStream, soReference);
       FImage := TGPImage.Create(SA);
     end;
-  end;
+  end
+  else
+    inherited;
 end;
 
 procedure TSVGImage.PaintToGraphics(Graphics: TGPGraphics);
@@ -3912,10 +3927,9 @@ begin
   FHasX := Node.HasAttribute('x');
   FHasY := Node.HasAttribute('y');
 
-  LoadLength(Node, 'dx', FDX);
-  LoadLength(Node, 'dy', FDY);
+  LoadLengthProperty(Node, 'dx', ltHorz, FDX);
+  LoadLengthProperty(Node, 'dy', ltVert, FDY);
 end;
-
 
 procedure TSVGCustomText.ReadTextNodes(const Node: IXMLNode);
 var

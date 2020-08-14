@@ -67,7 +67,7 @@ type
   TSVGGradient = class(TSVGFiller)
   {
     SpreadMethod is not implemented
-    Assumed to be Repeat for LinearGradient and pad for RadialGradient
+    Assumed to be repeat for LinearGradient and pad for RadialGradient
   }
   private
     FURI: string;
@@ -117,7 +117,6 @@ type
     property FX: TFloat read FFX write FFX;
     property FY: TFloat read FFY write FFY;
   end;
-
 
 implementation
 
@@ -279,27 +278,23 @@ var
   Brush: TGPLinearGradientBrush;
   TGP: TGPMatrix;
   Colors: TColors;
-  BoundsRect: TGPRectF;
+  BoundsRect: TRectF;
   MX1, MX2, MY1, MY2: TFloat;
 begin
-  BoundsRect :=  ToGPRectF(DestObject.ObjectBounds);
+  BoundsRect :=  DestObject.ObjectBounds;
+  if FX1 = INHERIT then MX1 := BoundsRect.Left else MX1 := FX1;
+  if FX2 = INHERIT then MX2 := BoundsRect.Right else MX2 := FX2;
+  if FY1 = INHERIT then MY1 := BoundsRect.Top else MY1 := FY1;
+  if FY2 = INHERIT then MY2 := BoundsRect.Top else MY2 := FY2;
   if FGradientUnits = guObjectBoundingBox then begin
     // X1, X2, Y1, Y2 are relative to the Object Bounding Rect
-    if FX1 <> INHERIT then MX1 := BoundsRect.X + FX1 * BoundsRect.Width else MX1 := FX1;
-    if FX2 <> INHERIT then MX2 := BoundsRect.X + FX2 * BoundsRect.Width else MX2 := FX2;
-    if FY1 <> INHERIT then MY1 := BoundsRect.Y + FY1 * BoundsRect.Height else MY1 := FY1;
-    if FY2 <> INHERIT then MY2 := BoundsRect.Y + FY2 * BoundsRect.Height else MY2 := FY2;
-  end else begin
-    MX1 := FX1;
-    MX2 := FX2;
-    MY1 := FY1;
-    MY2 := FY2;
+    if FX1 <> INHERIT then MX1 := BoundsRect.Left + FX1 * BoundsRect.Width;
+    if FX2 <> INHERIT then MX2 := BoundsRect.Left + FX2 * BoundsRect.Width;
+    if FY1 <> INHERIT then MY1 := BoundsRect.Top + FY1 * BoundsRect.Height;
+    if FY2 <> INHERIT then MY2 := BoundsRect.Top + FY2 * BoundsRect.Height;
   end;
 
-  if (FX1 = INHERIT) or (FX2 = INHERIT) or (FY1 = INHERIT) or (FY2 = INHERIT) then
-      Brush := TGPLinearGradientBrush.Create(BoundsRect, 0, 0, LinearGradientModeHorizontal)
-  else
-    Brush := TGPLinearGradientBrush.Create(MakePoint(MX1, MY1), MakePoint(MX2, MY2), 0, 0);
+  Brush := TGPLinearGradientBrush.Create(MakePoint(MX1, MY1), MakePoint(MX2, MY2), 0, 0);
 
   Colors := GetColors(Alpha);
 
@@ -334,7 +329,6 @@ end;
 procedure TSVGRadialGradient.Clear;
 begin
   inherited;
-
   FCX := INHERIT;
   FCY := INHERIT;
   FR := INHERIT;
@@ -363,34 +357,31 @@ var
   TGP: TGPMatrix;
   Colors: TColors;
   RevColors: TColors;
-  BoundsRect: TGPRectF;
+  BoundsRect: TRectF;
   MCX, MCY, MR, MFX, MFY: TFloat;
   i: integer;
 begin
-  BoundsRect :=  ToGPRectF(DestObject.ObjectBounds);
+  BoundsRect :=  DestObject.ObjectBounds;
+  if FCX = INHERIT then MCX := BoundsRect.Left + 0.5 * BoundsRect.Width else MCX := FCX;
+  if FFX = INHERIT then MFX := MCX else MFX := FFX;
+  if FCY = INHERIT then MCY := BoundsRect.Top + 0.5 * BoundsRect.Height else MCY := FCY;
+  if FFY = INHERIT then MFY := MCY else MFY := FFY;
+  if FR = INHERIT then
+    MR := 0.5 * Sqrt(Sqr(BoundsRect.Width) + Sqr(BoundsRect.Height))/Sqrt(2)
+  else
+    MR := FR;
   if FGradientUnits = guObjectBoundingBox then begin
     // CX, CY, R, FX, FY are relative to the Object Bounding Rect
-    if FCX <> INHERIT then MCX := BoundsRect.X + FCX * BoundsRect.Width else MCX := FCX;
-    if FFX <> INHERIT then MFX := BoundsRect.X + FFX * BoundsRect.Width else MFX := FFX;
-    if FCY <> INHERIT then MCY := BoundsRect.Y + FCY * BoundsRect.Height else MCY := FCY;
-    if FFY <> INHERIT then MFY := BoundsRect.Y + FFY * BoundsRect.Height else MFY := FFY;
-    if FR <> INHERIT then MR :=
-      FR * Sqrt(Sqr(BoundsRect.Width) + Sqr(BoundsRect.Height))/Sqrt(2)
-    else
-      MR := FR;
-  end else begin
-    MCX := FCX;
-    MFX := FFX;
-    MCY := FCY;
-    MFY := FFY;
-    MR := FR;
+    if FCX <> INHERIT then MCX := BoundsRect.Left + FCX * BoundsRect.Width;
+    if FFX <> INHERIT then MFX := BoundsRect.Left + FFX * BoundsRect.Width;
+    if FCY <> INHERIT then MCY := BoundsRect.Top + FCY * BoundsRect.Height;
+    if FFY <> INHERIT then MFY := BoundsRect.Top + FFY * BoundsRect.Height;
+    if FR <> INHERIT then
+      MR := FR * Sqrt(Sqr(BoundsRect.Width) + Sqr(BoundsRect.Height))/Sqrt(2);
   end;
 
   Path := TGPGraphicsPath.Create;
-  if ((FR = INHERIT) or (FCX = INHERIT) or (FCY = INHERIT)) then
-    Path.AddEllipse(BoundsRect)
-  else
-    Path.AddEllipse(MCX - MR, MCY - MR, 2 * MR, 2 * MR);
+  Path.AddEllipse(MCX - MR, MCY - MR, 2 * MR, 2 * MR);
 
   Brush := TGPPathGradientBrush.Create(Path);
   Path.Free;

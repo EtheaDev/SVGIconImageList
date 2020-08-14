@@ -30,7 +30,8 @@ uses
   Xml.XmlIntf,
   SVGTypes;
 
-procedure LoadLength(const Node: IXMLNode; const S: string; var X: TFloat);
+procedure LoadLength(const Node: IXMLNode; const S: string; var X: TFloat); overload;
+procedure LoadLength(const Node: IXMLNode; const S: string; var X: TFloat; var IsPercent: Boolean); overload;
 
 procedure LoadTFloat(const Node: IXMLNode; const S: string; var X: TFloat);
 
@@ -55,15 +56,22 @@ implementation
 uses
   SVGCommon, SVGParse, System.Variants;
 
-procedure LoadLength(const Node: IXMLNode; const S: string;
-  var X: TFloat);
+procedure LoadLength(const Node: IXMLNode; const S: string; var X: TFloat);
+Var
+  IsPercent : Boolean;
+begin
+  LoadLength(Node, S, X, IsPercent);
+end;
+
+procedure LoadLength(const Node: IXMLNode; const S: string; var X: TFloat;
+  var IsPercent: Boolean); overload;
 var
   Attribute: IXMLNode;
 begin
   Attribute := Node.AttributeNodes.FindNode(S);
   if Assigned(Attribute) then
   begin
-    X := ParseLength(VarToStr(Attribute.nodeValue));
+    X := ParseLength(VarToStr(Attribute.nodeValue), IsPercent);
   end;
 end;
 

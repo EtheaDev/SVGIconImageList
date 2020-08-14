@@ -34,7 +34,8 @@ function ParsePercent(const S: string): TFloat;
 
 function ParseInteger(const S: string): Integer;
 
-function ParseLength(const S: string): TFloat;
+function ParseLength(const S: string): TFloat; overload;
+function ParseLength(const S: string; var IsPercent: Boolean): TFloat; overload;
 
 function ParseUnit(const S: string): TSVGUnit;
 
@@ -121,12 +122,20 @@ begin
 end;
 
 function ParseLength(const S: string): TFloat;
+Var
+  IsPercent: Boolean;
+begin
+   Result := ParseLength(S, IsPercent);
+end;
+
+function ParseLength(const S: string; var IsPercent: Boolean): TFloat; overload;
 var
   U: string;
   SVGUnit: TSVGUnit;
   Factor: TFloat;
 begin
   SVGUnit := ParseUnit(S);
+  IsPercent := SVGUnit = suPercent;
   if SVGUnit = suPercent then
     U := Copy(S, Length(S), 1)
   else
