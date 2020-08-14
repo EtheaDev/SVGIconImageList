@@ -2224,8 +2224,8 @@ var
   M: TGPMatrix;
   MA: Winapi.GDIPOBJ.TMatrixArray;
 begin
-  Bounds.Width := Bounds.Width;// -1; //Fix: better rendering near right border
-  Bounds.Height := Bounds.Height;// -1; //Fix: better rendering near bottom border
+  Bounds.Width := Bounds.Width -1; //Fix: better rendering near right border
+  Bounds.Height := Bounds.Height -1; //Fix: better rendering near bottom border
   M := TGPMatrix.Create;
   try
     Graphics.GetTransform(M);
