@@ -38,7 +38,7 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 
 **RELEASE NOTES:**
 
-03 Aug 2020: version 1.8 (VCL+FMX)
+13 Aug 2020: version 1.8 (VCL+FMX)
  - Complete refactoring for full support of High-DPI
  - New SVGIconImageCollection component
  - New SVGIconVirtualImageList component
