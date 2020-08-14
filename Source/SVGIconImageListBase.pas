@@ -254,8 +254,8 @@ end;
 
 procedure TSVGIconImageListBase.DoChange;
 begin
-  inherited;
   RecreateBitmaps;
+  inherited;
 end;
 
 procedure TSVGIconImageListBase.DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer; Style: Cardinal; Enabled: Boolean);
@@ -455,10 +455,14 @@ procedure TSVGIconImageListBase.SetFixedColor(const Value: TSVGColor);
 begin
   if FFixedColor <> Value then
   begin
-    FFixedColor := Value;
-    if FFixedColor <> inherit_color then
-      FGrayScale := False;
-    Change;
+    BeginUpdate;
+    try
+      FFixedColor := Value;
+      if FFixedColor <> inherit_color then
+        FGrayScale := False;
+    finally
+      EndUpdate;
+    end;
   end;
 end;
 
@@ -466,10 +470,14 @@ procedure TSVGIconImageListBase.SetGrayScale(const Value: Boolean);
 begin
   if FGrayScale <> Value then
   begin
-    FGrayScale := Value;
-    if FGrayScale then
-      FixedColor := inherit_color;
-    Change;
+    BeginUpdate;
+    try
+      FGrayScale := Value;
+      if FGrayScale then
+        FixedColor := inherit_color;
+    finally
+      EndUpdate;
+    end;
   end;
 end;
 

@@ -260,8 +260,6 @@ type
     procedure Paint(const Graphics: TGPGraphics; Rects: PRectArray;
       RectCount: Integer);
   private
-    FDX: TFloat;
-    FDY: TFloat;
     FStyles: TStyleList;
     procedure SetFixedColor(const Value: TSVGColor);
     procedure ReloadFromText;
@@ -291,7 +289,6 @@ type
       Left, Top, Width, Height: TFloat): IXMLNode;
 
     procedure SetBounds(const Bounds: TGPRectF);
-    procedure Scale(const ADX: TFloat; ADY: TFloat = -1);
     procedure PaintTo(DC: HDC; Bounds: TGPRectF;
       Rects: PRectArray; RectCount: Integer); overload;
     procedure PaintTo(MetaFile: TGPMetaFile; Bounds: TGPRectF;
@@ -2180,20 +2177,6 @@ begin
   end;
 end;
 
-procedure TSVG.Scale(const ADX: TFloat; ADY: TFloat = -1);
-begin
-  if ADY < 0 then
-  begin
-    ADY := ADX;
-  end;
-
-  if not (SameValue(FDX, ADX) and SameValue(FDY, ADY)) then
-  begin
-    FDX := ADX;
-    FDY := ADY;
-  end;
-end;
-
 procedure TSVG.PaintTo(DC: HDC; Bounds: TGPRectF;
   Rects: PRectArray; RectCount: Integer);
 var
@@ -2228,8 +2211,6 @@ var
   M: TGPMatrix;
   MA: Winapi.GDIPOBJ.TMatrixArray;
 begin
-  Bounds.Width := Bounds.Width -1; //Fix: better rendering near right border
-  Bounds.Height := Bounds.Height -1; //Fix: better rendering near bottom border
   M := TGPMatrix.Create;
   try
     Graphics.GetTransform(M);
@@ -2265,8 +2246,6 @@ begin
   inherited;
   FStyles := TStyleList.Create;
   FillChar(FInitialMatrix, SizeOf(FInitialMatrix), 0);
-  FDX         := 1;
-  FDY         := 1;
   FGrayscale  := False;
   FFixedColor := inherit_color;
 end;
@@ -2344,22 +2323,6 @@ end;
 procedure TSVG.SetBounds(const Bounds: TGPRectF);
 begin
   FRootBounds := Bounds;
-
-  if FWidth = 0 then
-    FWidth := FRootBounds.Width;
-
-  if FHeight = 0 then
-    FHeight := FRootBounds.Height;
-
-  if (FViewBox.Width > 0) and (FRootBounds.Width > 0) then
-    FDX := FRootBounds.Width / FViewBox.Width
-  else
-    FDX := 1;
-
-  if (FViewBox.Height > 0) and (FRootBounds.Height > 0) then
-    FDY := FRootBounds.Height / FViewBox.Height
-  else
-    FDY := 1;
 
   CalculateMatrices;
 end;
@@ -2447,8 +2410,6 @@ begin
   if Dest is TSVG then
   begin
     TSVG(Dest).FRootBounds := FRootBounds;
-    TSVG(Dest).FDX := FDX;
-    TSVG(Dest).FDY := FDY;
     TSVG(Dest).FInitialMatrix := FInitialMatrix;
     TSVG(Dest).FViewBox := FViewBox;
     TSVG(Dest).FSource := Source;
@@ -2573,10 +2534,21 @@ var
   ViewBoxMatrix: TMatrix;
   BoundsMatrix: TMatrix;
   ScaleMatrix: TMatrix;
+  ScaleX, ScaleY: TFloat;
 begin
   ViewBoxMatrix := TMatrix.CreateTranslation(-FViewBox.Left, -FViewBox.Top);
   BoundsMatrix := TMatrix.CreateTranslation(FRootBounds.X, FRootBounds.Y);
-  ScaleMatrix := TMatrix.CreateScaling(FDX, FDY);
+
+  // The -1 below is for fixing #14. There may well be a better way.
+  if (FViewBox.Width > 0) and (FRootBounds.Width > 0) then
+    ScaleX := (FRootBounds.Width -1) / FViewBox.Width
+  else
+    ScaleX := 1;
+  if (FViewBox.Height > 0) and (FRootBounds.Height > 0) then
+    ScaleY := (FRootBounds.Height -1)/ FViewBox.Height
+  else
+    ScaleY := 1;
+  ScaleMatrix := TMatrix.CreateScaling(ScaleX, ScaleY);
 
   if FInitialMatrix.m33 = 1 then
   begin
