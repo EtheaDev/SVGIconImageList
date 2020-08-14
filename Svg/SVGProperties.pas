@@ -15,6 +15,7 @@
 { Thanks to:                                                       }
 { Carlo Barazzetta (parsing errors)                                }
 { Kiriakos Vlahos (exception handling)                             }
+{ Kiriakos Vlahos (Added parse length in percent)                  }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }

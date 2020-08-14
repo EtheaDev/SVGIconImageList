@@ -23,7 +23,8 @@
 { Kiriakos Vlahos (fixed CalculateMatrices)                        }
 { Kiriakos Vlahos (added FillMode property)                        }
 { Kiriakos Vlahos (fixed SetBounds based on ViewBox)               }
-{ Kiriakos Vlahos (added 'fill-rule' presentation attribute        }
+{ Kiriakos Vlahos (added 'fill-rule' presentation attribute)       }
+{ Kiriakos Vlahos (fixed loadlength)                               }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }

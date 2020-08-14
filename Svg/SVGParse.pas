@@ -12,6 +12,7 @@
 {                                                                  }
 { Thanks to:                                                       }
 { Kiriakos Vlahos (fixed GetFactor)                                }
+{ Kiriakos Vlahos (Added parse length in percent)                  }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }
