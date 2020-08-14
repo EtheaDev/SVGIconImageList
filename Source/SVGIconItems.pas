@@ -113,7 +113,7 @@ begin
     FFixedColor := Value;
     if FFixedColor <> inherit_color then
       FGrayScale := False;
-    TSVGIconItems(Collection).Update(Self);
+    Changed(False);
   end;
 end;
 
@@ -124,7 +124,7 @@ begin
     FGrayScale := Value;
     if FGrayScale then
       FixedColor := inherit_color;
-    TSVGIconItems(Collection).Update(Self);
+    Changed(False);
   end;
 end;
 
@@ -133,7 +133,7 @@ begin
   if FIconName <> Value then
   begin
     FIconName := Value;
-    TSVGIconItems(Collection).Update(Self);
+    Changed(False);
   end;
 end;
 
@@ -142,14 +142,14 @@ begin
   if not Assigned(Value) then
   begin
     FSVG.Clear;
-    TSVGIconItems(Collection).Update(Self);
+    Changed(False);
   end
   else
   begin
     if FSVG.Source <> Value.Source then
     begin
       FSVG.LoadFromText(Value.Source);
-      TSVGIconItems(Collection).Update(Self);
+      Changed(False);
     end;
   end;
 end;
@@ -159,7 +159,7 @@ begin
   if FSVG.Source <> Value then
   begin
     FSVG.LoadFromText(Value);
-    TSVGIconItems(Collection).Update(Self);
+    Changed(False);
   end;
 end;
 

@@ -50,6 +50,8 @@ type
 
   TGradientUnits = (guObjectBoundingBox, guUserSpaceOnUse);
 
+  TLengthType = (ltHorz, ltVert, ltOther);
+
 function ToGPRectF(R: TRectF): TGPRectF; inline;
 
 implementation
