@@ -30,7 +30,7 @@ uses
   SVG;
 
 type
-  TColors = record
+  TStopColors = record
     Colors: packed array of ARGB;
     Positions: packed array of Single;
     Count: Integer;
@@ -72,7 +72,7 @@ type
     FURI: string;
     FGradientUnits: TGradientUnits;
   protected
-    function GetColors(Alpha: Byte): TColors; virtual;
+    function GetColors(Alpha: Byte): TStopColors; virtual;
   public
     procedure ReadIn(const Node: IXMLNode); override;
   end;
@@ -157,10 +157,10 @@ begin
       FStopColor := GetSVGColor(S);
   end;
 
-  if (GetRoot.FixedColor  <> TSVGColor.inherit_color) and
+  if (GetRoot.FixedColor  <> TColors.SysDefault) and
      (integer(FStopColor) <> INHERIT) and
      (integer(FStopColor) <> SVG_NONE_COLOR) then
-    FStopColor := SVGColorToColor(GetRoot.FixedColor);
+    FStopColor := GetRoot.FixedColor;
 
   S := Style['stop-opacity'];
   if (S <> '') then
@@ -281,7 +281,7 @@ function TSVGLinearGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic): 
 var
   Brush: TGPLinearGradientBrush;
   TGP: TGPMatrix;
-  Colors: TColors;
+  Colors: TStopColors;
   BoundsRect: TRectF;
   MX1, MX2, MY1, MY2: TFloat;
 begin
@@ -359,8 +359,8 @@ var
   Brush: TGPPathGradientBrush;
   Path: TGPGraphicsPath;
   TGP: TGPMatrix;
-  Colors: TColors;
-  RevColors: TColors;
+  Colors: TStopColors;
+  RevColors: TStopColors;
   BoundsRect: TRectF;
   MCX, MCY, MR, MFX, MFY: TFloat;
   i: integer;
@@ -419,7 +419,7 @@ begin
   Result := Brush;
 end;
 
-function TSVGGradient.GetColors(Alpha: Byte): TColors;
+function TSVGGradient.GetColors(Alpha: Byte): TStopColors;
 var
   C, Start, ColorCount: Integer;
   Stop: TSVGStop;

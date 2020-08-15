@@ -31,7 +31,7 @@ type
     {$ENDIF}
     FSVGItemsUpdateMessageID: Integer;
     FOpacity: Byte;
-    FFixedColor: TSVGColor;
+    FFixedColor: TColor;
     FGrayScale: Boolean;
     FDisabledGrayScale: Boolean;
     FDisabledOpacity: Byte;
@@ -51,7 +51,7 @@ type
     procedure SetImages(Index: Integer; const Value: TSVG); virtual;
     procedure SetNames(Index: Integer; const Value: string); virtual;
     procedure SetSize(const Value: Integer);
-    procedure SetFixedColor(const Value: TSVGColor);
+    procedure SetFixedColor(const Value: TColor);
     procedure SetGrayScale(const Value: Boolean);
     procedure SetDisabledGrayScale(const Value: Boolean);
     procedure SetDisabledOpacity(const Value: Byte);
@@ -106,7 +106,7 @@ type
     property Width: Integer read GetWidth write SetWidth stored StoreWidth default DEFAULT_SIZE;
     property Height: Integer read GetHeight write SetHeight stored StoreHeight default DEFAULT_SIZE;
     property Size: Integer read GetSize write SetSize stored StoreSize default DEFAULT_SIZE;
-    property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
+    property FixedColor: TColor read FFixedColor write SetFixedColor default TColors.SysDefault;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
     property DisabledGrayScale: Boolean read FDisabledGrayScale write SetDisabledGrayScale default True;
     property DisabledOpacity: Byte read FDisabledOpacity write SetDisabledOpacity default 125;
@@ -177,7 +177,7 @@ begin
   Width := DEFAULT_SIZE;
   Height := DEFAULT_SIZE;
   FOpacity := 255;
-  FFixedColor := inherit_color;
+  FFixedColor := TColors.SysDefault;
   FGrayScale := False;
   {$IFDEF HiDPISupport}
   FScaled := True;
@@ -405,15 +405,16 @@ begin
   end;
 end;
 
-procedure TSVGIconImageListBase.SetFixedColor(const Value: TSVGColor);
+procedure TSVGIconImageListBase.SetFixedColor(const Value: TColor);
 begin
   if FFixedColor <> Value then
   begin
     BeginUpdate;
     try
       FFixedColor := Value;
-      if FFixedColor <> inherit_color then
+      if FFixedColor <> TColors.SysDefault then
         FGrayScale := False;
+      Change;
     finally
       EndUpdate;
     end;
@@ -428,7 +429,8 @@ begin
     try
       FGrayScale := Value;
       if FGrayScale then
-        FixedColor := inherit_color;
+        FixedColor := TColors.SysDefault;
+      Change;
     finally
       EndUpdate;
     end;

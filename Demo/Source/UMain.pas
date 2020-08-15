@@ -163,9 +163,9 @@ end;
 
 procedure TMainForm.ChangeColorActionExecute(Sender: TObject);
 begin
-  ColorDialog.Color := SVGColorToColor(SVGIconVirtualImageList.FixedColor);
+  ColorDialog.Color := SVGIconVirtualImageList.FixedColor;
   if ColorDialog.Execute then
-    SVGIconVirtualImageList.FixedColor := ColorToSVGColor(ColorDialog.Color);
+    SVGIconVirtualImageList.FixedColor := ColorDialog.Color;
   UpdateGUI;
 end;
 
@@ -209,8 +209,11 @@ procedure TMainForm.FixedColorComboBoxSelect(Sender: TObject);
 begin
   Screen.Cursor := crHourGlass;
   try
-    SVGIconVirtualImageList.FixedColor := SVGColorNameToSVGColor(FixedColorComboBox.Text);
-    UpdateGUI;
+    if FixedColorComboBox.ItemIndex >= 0 then begin
+      SVGIconVirtualImageList.FixedColor :=
+        TColor(FixedColorComboBox.Items.Objects[FixedColorComboBox.ItemIndex]);
+      UpdateGUI;
+    end;
   finally
     Screen.Cursor := crDefault;
   end;
@@ -329,7 +332,7 @@ begin
     UpdateListView;
     UpdateTreeView;
     GrayScaleCheckBox.Checked := SVGIconVirtualImageList.GrayScale;
-    FixedColorComboBox.ItemIndex := FixedColorComboBox.Items.IndexOf(SVGColorToSVGColorName(SVGIconVirtualImageList.FixedColor));
+    FixedColorComboBox.ItemIndex := FixedColorComboBox.Items.IndexOfObject(TObject(SVGIconVirtualImageList.FixedColor));
   finally
     FUpdating := False;
   end;

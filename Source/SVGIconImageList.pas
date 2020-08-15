@@ -79,7 +79,7 @@ type
     destructor Destroy; override;
     function Add(const ASVG: TSVG; const AIconName: string;
        const AGrayScale: Boolean = False;
-       const AFixedColor: TSVGColor = inherit_color): Integer;
+       const AFixedColor: TColor = TColors.SysDefault): Integer;
     procedure Delete(const Index: Integer);
     procedure Remove(const Name: string);
     procedure ClearIcons;override;
@@ -95,7 +95,7 @@ type
     property Height;
     property Size;
     property StoreAsText: boolean read FStoreAsText write FStoreAsText default False;
-    property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
+    property FixedColor: TColor read FFixedColor write SetFixedColor default TColors.SysDefault;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
     property DisabledGrayScale: Boolean read FDisabledGrayScale write SetDisabledGrayScale default True;
     property DisabledOpacity: Byte read FDisabledOpacity write SetDisabledOpacity default 125;
@@ -124,7 +124,7 @@ uses
 
 function TSVGIconImageList.Add(const ASVG: TSVG;
   const AIconName: string; const AGrayScale: Boolean = False;
-  const AFixedColor: TSVGColor = inherit_color): Integer;
+  const AFixedColor: TColor = TColors.SysDefault): Integer;
 var
   Item: TSVGIconItem;
 begin
@@ -212,7 +212,7 @@ begin
   begin
     LItem := FSVGItems[AIndex];
     SVG := LItem.SVG;
-    if LItem.FixedColor <> inherit_color then
+    if LItem.FixedColor <> TColors.SysDefault then
       SVG.FixedColor := LItem.FixedColor
     else
       SVG.FixedColor := FFixedColor;
@@ -249,7 +249,7 @@ var
   LTag: TBytes;
   LFixedColorStr: AnsiString;
   LGrayScale: Boolean;
-  LFixedColor: TSVGColor;
+  LFixedColor: TColor;
 begin
   if FStoreAsText then
     Exit;
@@ -274,7 +274,7 @@ begin
 
       //Check for FixedColor attribute
       LPos := Stream.Position;
-      LFixedColor := SVGColor.inherit_color;
+      LFixedColor := TColors.SysDefault;
       SetLength(LTag, 10);
       Stream.Read(Pointer(LTag)^, 10);
       SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 10);
@@ -327,7 +327,7 @@ begin
       SVG := LItem.SVG;
       if Assigned(SVG) then
       begin
-        if LItem.FixedColor <> inherit_color then
+        if LItem.FixedColor <> TColors.SysDefault then
           SVG.FixedColor := LItem.FixedColor
         else
           SVG.FixedColor := FFixedColor;
@@ -444,7 +444,7 @@ begin
     //Store SVG Data
     Stream.CopyFrom(SVGStream, Size);
     //Store FixedColor (optionally)
-    if LItem.FixedColor <> TSVGColor.inherit_color then
+    if LItem.FixedColor <> TColors.SysDefault then
     begin
       LTag := 'FixedColor';
       Stream.WriteBuffer(PAnsiChar(LTag)^, 10);

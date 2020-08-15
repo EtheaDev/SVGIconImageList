@@ -247,7 +247,7 @@ type
     FFileName: string;
     FSize: TSizeF;
     FGrayscale: Boolean;
-    FFixedColor: TSVGColor;
+    FFixedColor: TColor;
 
     procedure SetViewBox(const Value: TRectF);
 
@@ -257,7 +257,7 @@ type
       RectCount: Integer);
   private
     FStyles: TStyleList;
-    procedure SetFixedColor(const Value: TSVGColor);
+    procedure SetFixedColor(const Value: TColor);
     procedure ReloadFromText;
     procedure SetGrayscale(const Value: boolean);
   protected
@@ -301,7 +301,7 @@ type
     property Angle: TFloat read FAngle write SetAngle;
     property ViewBox: TRectF read FViewBox write SetViewBox;
     property Grayscale: boolean read FGrayscale write SetGrayscale;
-    property FixedColor: TSVGColor read FFixedColor write SetFixedColor;
+    property FixedColor: TColor read FFixedColor write SetFixedColor;
   end;
 
   TSVGContainer = class(TSVGBasic)
@@ -1096,12 +1096,12 @@ begin
       StrokeColor := GetSVGColor(FStrokeURI);
     end;
 
-  if (Root.FixedColor <> inherit_color) then
+  if (Root.FixedColor <> TColors.SysDefault) then
     begin
       if (FillColor <> INHERIT) and (FillColor <> SVG_NONE_COLOR) then
-        FillColor := SVGColorToColor(Root.FixedColor);
+        FillColor := Root.FixedColor;
       if (StrokeColor <> INHERIT) and (StrokeColor <> SVG_NONE_COLOR) then
-        StrokeColor := SVGColorToColor(Root.FixedColor);
+        StrokeColor := Root.FixedColor;
     end;
 
   FFillURI := ParseURI(FFillURI);
@@ -2243,7 +2243,7 @@ begin
   FStyles := TStyleList.Create;
   FillChar(FInitialMatrix, SizeOf(FInitialMatrix), 0);
   FGrayscale  := False;
-  FFixedColor := inherit_color;
+  FFixedColor := TColors.SysDefault;
 end;
 
 destructor TSVG.Destroy;
@@ -2331,11 +2331,13 @@ begin
   LoadFromText(LSource);
 end;
 
-procedure TSVG.SetFixedColor(const Value: TSVGColor);
+procedure TSVG.SetFixedColor(const Value: TColor);
 begin
   if FFixedColor <> Value then
   begin
     FFixedColor := Value;
+    if FFixedColor < 0 then
+      FFixedColor := GetSysColor(fFixedColor and $000000FF);
     UpdateStyle;
     ReloadFromText;
   end;

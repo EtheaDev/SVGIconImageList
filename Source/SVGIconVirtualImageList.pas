@@ -54,6 +54,7 @@ type
 implementation
 
 uses
+  System.UITypes,
   System.Math,
   System.SysUtils,
   WinApi.Windows,
@@ -123,7 +124,7 @@ begin
   begin
     LItem := FCollection.SVGIconItems[AIndex];
     SVG := LItem.SVG;
-    if LItem.FixedColor <> inherit_color then
+    if LItem.FixedColor <> TColors.SysDefault then
       SVG.FixedColor := LItem.FixedColor
     else
       SVG.FixedColor := FFixedColor;
@@ -171,7 +172,7 @@ begin
       SVG := LItem.SVG;
       if Assigned(SVG) then
       begin
-        if LItem.FixedColor <> inherit_color then
+        if LItem.FixedColor <> TColors.SysDefault then
           SVG.FixedColor := LItem.FixedColor
         else
           SVG.FixedColor := FixedColor;
