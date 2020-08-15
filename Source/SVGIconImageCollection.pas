@@ -8,6 +8,7 @@ uses
   System.Types,
   System.UITypes,
   System.Classes,
+  SVGTypes,
   SVG,
   SVGColor,
   SVGIconItems;
@@ -43,7 +44,7 @@ type
     procedure Assign(Source: TPersistent); override;
     function Add(const ASVG: TSVG; const AIconName: string;
        const AGrayScale: Boolean = False;
-       const AFixedColor: TColor = TColors.SysDefault): Integer;
+       const AFixedColor: TColor = SVG_INHERIT_COLOR): Integer;
     procedure Delete(const Index: Integer);
     procedure Remove(const Name: string);
     function IndexOf(const Name: string): Integer;
@@ -200,7 +201,7 @@ begin
 
       //Check for FixedColor attribute
       LPos := Stream.Position;
-      LFixedColor := TColors.SysDefault;
+      LFixedColor := SVG_INHERIT_COLOR;
       SetLength(LTag, 10);
       Stream.Read(Pointer(LTag)^, 10);
       SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 10);
@@ -299,7 +300,7 @@ begin
     //Store SVG Data
     Stream.CopyFrom(SVGStream, Size);
     //Store FixedColor (optionally)
-    if LItem.FixedColor <> TColors.SysDefault then
+    if LItem.FixedColor <> SVG_INHERIT_COLOR then
     begin
       LTag := 'FixedColor';
       Stream.WriteBuffer(PAnsiChar(LTag)^, 10);

@@ -81,7 +81,7 @@ var
   Percent: Boolean;
   Help: string;
 begin
-  Result := INHERIT;
+  Result := SVG_INHERIT_COLOR;
   Help := '0' + S;
   Percent := False;
   if Help[Length(Help)] = '%' then
@@ -90,13 +90,13 @@ begin
     Percent := True;
   end;
 
-  C := INHERIT;
+  C := SVG_INHERIT_COLOR;
   if IsDecimal(Help) then
     C := StrToInt(Help)
   else
     if IsHex(Help) then
       C := StrToInt('$' + Help);
-  if C = INHERIT then
+  if C = SVG_INHERIT_COLOR then
     Exit;
   if C > 255 then
     C := 255;
@@ -115,7 +115,7 @@ var
   RGB: string;
   R, B, G: Integer;
 begin
-  Result := INHERIT;
+  Result := SVG_INHERIT_COLOR;
   if not ((Copy(S, 1, 4) = 'rgb(') and (S[Length(S)] = ')')) then
     Exit;
 
@@ -190,7 +190,7 @@ var
 begin
   if ASVGColorName = '' then
   begin
-    Result := INHERIT;
+    Result := SVG_INHERIT_COLOR;
     Exit;
   end;
   if SameText(ASVGColorName, 'none') then
@@ -200,7 +200,7 @@ begin
   end;
   if SameText(ASVGColorName, 'inherit') then
   begin
-    Result := TColors.SysDefault;
+    Result := SVG_INHERIT_COLOR;
     Exit;
   end;
 
@@ -231,8 +231,8 @@ function GetSVGGrayscale(aColor : TColor) : TColor;
 var
   LGray : byte;
 begin
-  // Ignore reserved color values : "INHERIT" (-1) and "none" (-2) .
-  if (integer(aColor) = INHERIT) or (integer(aColor) = SVG_NONE_COLOR) then exit(aColor);
+  // Ignore reserved color values : "INHERIT" (TColors.SysDefault) and "none" (TColors.SysNone) .
+  if (aColor = SVG_INHERIT_COLOR) or (aColor = SVG_NONE_COLOR) then exit(aColor);
 
   // get the luminance according to https://www.w3.org/TR/AERT/#color-contrast
   LGray  := round((0.299 * GetRValue(aColor)) + (0.587 * GetGValue(aColor)) + (0.114 * GetBValue(aColor)));
@@ -250,7 +250,7 @@ end;
 procedure AssignSVGColorList(AList: TStrings);
 begin
   AList.Assign(SVGColorList);
-  AList.InsertObject(0, 'Inherit',  TObject(TColors.SysDefault));
+  AList.InsertObject(0, 'Inherit',  TObject(SVG_INHERIT_COLOR));
 end;
 
 procedure StoreToList(Sender: TObject; const S: String);

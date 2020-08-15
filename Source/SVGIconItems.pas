@@ -8,6 +8,7 @@ uses
   System.UITypes,
   System.Classes,
   System.Messaging,
+  SVGTypes,
   SVG,
   SVGColor;
 
@@ -38,7 +39,7 @@ type
   published
     property IconName: string read FIconName write SetIconName;
     property SVGText: string read GetSVGText write SetSVGText;
-    property FixedColor: TColor read FFixedColor write SetFixedColor default TColors.SysDefault;
+    property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
   end;
 
@@ -112,7 +113,7 @@ begin
   if FFixedColor <> Value then
   begin
     FFixedColor := Value;
-    if FFixedColor <> TColors.SysDefault then
+    if FFixedColor <> SVG_INHERIT_COLOR then
       FGrayScale := False;
     Changed(False);
   end;
@@ -124,7 +125,7 @@ begin
   begin
     FGrayScale := Value;
     if FGrayScale then
-      FixedColor := TColors.SysDefault;
+      FixedColor := SVG_INHERIT_COLOR;
     Changed(False);
   end;
 end;

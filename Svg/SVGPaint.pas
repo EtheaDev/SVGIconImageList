@@ -122,6 +122,7 @@ implementation
 uses
   System.Types,
   System.SysUtils,
+  System.Math,
   System.Math.Vectors,
   SVGCommon,
   SVGParse,
@@ -148,7 +149,7 @@ begin
    else
     FStopColor := GetSVGColor(S);
 
-  if FStopColor = INHERIT then
+  if FStopColor = SVG_INHERIT_COLOR then
   begin
     S := Style['stop-color'];
     if GetRoot.Grayscale then
@@ -157,8 +158,8 @@ begin
       FStopColor := GetSVGColor(S);
   end;
 
-  if (GetRoot.FixedColor  <> TColors.SysDefault) and
-     (integer(FStopColor) <> INHERIT) and
+  if (GetRoot.FixedColor  <> SVG_INHERIT_COLOR) and
+     (integer(FStopColor) <> SVG_INHERIT_COLOR) and
      (integer(FStopColor) <> SVG_NONE_COLOR) then
     FStopColor := GetRoot.FixedColor;
 
@@ -168,11 +169,7 @@ begin
   else
     FOpacity := 1;
 
-  if (FOpacity < 0) then
-    FOpacity := 0;
-
-  if (FOpacity > 1) then
-    FOpacity := 1;
+  FOpacity := EnsureRange(FOpacity, 0, 1);
 end;
 
 procedure TSVGStop.AssignTo(Dest: TPersistent);
@@ -193,7 +190,7 @@ end;
 
 procedure TSVGFiller.PaintToPath(Path: TGPGraphicsPath);
 begin
-end;           
+end;
 
 procedure TSVGFiller.ReadIn(const Node: IXMLNode);
 begin

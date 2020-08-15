@@ -115,8 +115,8 @@ type
 
   TSVGBasic = class(TSVGMatrix)
   private
-    FFillColor: Integer;
-    FStrokeColor: Integer;
+    FFillColor: TColor;
+    FStrokeColor: TColor;
     FFillOpacity: TFloat;
     FStrokeOpacity: TFloat;
     FStrokeWidth: TFloat;
@@ -148,8 +148,8 @@ type
     procedure SetStrokeDashArray(const S: string);
     procedure SetClipURI(const Value: string);
 
-    function GetFillColor: Integer;
-    function GetStrokeColor: Integer;
+    function GetFillColor: TColor;
+    function GetStrokeColor: TColor;
     function GetFillOpacity: TFloat;
     function GetStrokeOpacity: TFloat;
     function GetStrokeWidth: TFloat;
@@ -208,9 +208,9 @@ type
 
     property Root: TSVG read GetRoot;
 
-    property FillColor: Integer read GetFillColor write FFillColor;
+    property FillColor: TColor read GetFillColor write FFillColor;
     property FillMode: TFillMode read fFillMode write fFillMode;
-    property StrokeColor: Integer read GetStrokeColor write FStrokeColor;
+    property StrokeColor: TColor read GetStrokeColor write FStrokeColor;
     property FillOpacity: TFloat read GetFillOpacity write FFillOpacity;
     property StrokeOpacity: TFloat read GetStrokeOpacity write FStrokeOpacity;
     property StrokeWidth: TFloat read GetStrokeWidth write FStrokeWidth;
@@ -889,7 +889,7 @@ procedure TSVGBasic.BeforePaint(const Graphics: TGPGraphics;
 Var
   SolidBrush : TGPBrush;
 begin
-  if (Brush is TGPPathGradientBrush) and (FPath <> nil) and (FFillColor <> INHERIT) then
+  if (Brush is TGPPathGradientBrush) and (FPath <> nil) and (FFillColor <> SVG_INHERIT_COLOR) then
   begin
     // Fill with solid color
     SolidBrush :=  TGPSolidBrush.Create(TGPColor(FFillColor));
@@ -897,7 +897,7 @@ begin
       Graphics.FillPath(SolidBrush, FPath);
     finally
       SolidBrush.Free;
-      FFillColor := INHERIT;
+      FFillColor := SVG_INHERIT_COLOR;
     end;
   end;
  end;
@@ -919,8 +919,8 @@ begin
   FRY := INHERIT;
   FFillURI := '';
   FStrokeURI := '';
-  FillColor := INHERIT;
-  StrokeColor := INHERIT;
+  FillColor := SVG_INHERIT_COLOR;
+  StrokeColor := SVG_INHERIT_COLOR;
 
   StrokeWidth := INHERIT;
 
@@ -1096,11 +1096,11 @@ begin
       StrokeColor := GetSVGColor(FStrokeURI);
     end;
 
-  if (Root.FixedColor <> TColors.SysDefault) then
+  if (Root.FixedColor <> SVG_INHERIT_COLOR) then
     begin
-      if (FillColor <> INHERIT) and (FillColor <> SVG_NONE_COLOR) then
+      if (FillColor <> SVG_INHERIT_COLOR) and (FillColor <> SVG_NONE_COLOR) then
         FillColor := Root.FixedColor;
-      if (StrokeColor <> INHERIT) and (StrokeColor <> SVG_NONE_COLOR) then
+      if (StrokeColor <> SVG_INHERIT_COLOR) and (StrokeColor <> SVG_NONE_COLOR) then
         StrokeColor := Root.FixedColor;
     end;
 
@@ -1605,7 +1605,7 @@ var
 begin
   Result := nil;
   Color := FillColor;
-  if Color = INHERIT then
+  if Color = SVG_INHERIT_COLOR then
     Color := 0;
   Opacity := Round(255 * FillOpacity);
 
@@ -1615,22 +1615,22 @@ begin
     if Assigned(Filler) and (Filler is TSVGFiller) then
       Result := TSVGFiller(Filler).GetBrush(Opacity, Self);
   end else
-    if Color >= 0 then
+    if (Color <> SVG_INHERIT_COLOR) and (Color <> SVG_NONE_COLOR) then
       Result := TGPSolidBrush.Create(ConvertColor(Color, Opacity));
 end;
 
-function TSVGBasic.GetFillColor: Integer;
+function TSVGBasic.GetFillColor: TColor;
 var
   SVG: TSVGObject;
 begin
   SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FFillColor = INHERIT) do
+  while Assigned(SVG) and (TSVGBasic(SVG).FFillColor = SVG_INHERIT_COLOR) do
     SVG := SVG.FParent;
 
   if Assigned(SVG) then
     Result := TSVGBasic(SVG).FFillColor
   else
-    Result := INHERIT;
+    Result := SVG_INHERIT_COLOR;
 end;
 
 function TSVGBasic.GetStrokeBrush: TGPBrush;
@@ -1649,22 +1649,22 @@ begin
     if Assigned(Filler) and (Filler is TSVGFiller) then
       Result := TSVGFiller(Filler).GetBrush(Opacity, Self);
   end else
-    if Color >= 0 then
+    if (Color <> SVG_INHERIT_COLOR) and (Color <> SVG_NONE_COLOR) then
       Result := TGPSolidBrush.Create(ConvertColor(Color, Opacity));
 end;
 
-function TSVGBasic.GetStrokeColor: Integer;
+function TSVGBasic.GetStrokeColor: TColor;
 var
   SVG: TSVGObject;
 begin
   SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FStrokeColor = INHERIT) do
+  while Assigned(SVG) and (TSVGBasic(SVG).FStrokeColor = SVG_INHERIT_COLOR) do
     SVG := SVG.FParent;
 
   if Assigned(SVG) then
     Result := TSVGBasic(SVG).FStrokeColor
   else
-    Result := -2;
+    Result := SVG_NONE_COLOR;
 end;
 
 function TSVGBasic.GetFillOpacity: TFloat;
@@ -2243,7 +2243,7 @@ begin
   FStyles := TStyleList.Create;
   FillChar(FInitialMatrix, SizeOf(FInitialMatrix), 0);
   FGrayscale  := False;
-  FFixedColor := TColors.SysDefault;
+  FFixedColor := SVG_INHERIT_COLOR;
 end;
 
 destructor TSVG.Destroy;
@@ -2272,9 +2272,9 @@ begin
   FRX := 0;
   FRY := 0;
 
-  FillColor := -2;
+  FillColor := SVG_NONE_COLOR;
   FillOpacity := 1;
-  StrokeColor := -2;
+  StrokeColor := SVG_NONE_COLOR;
   StrokeWidth := 1;
   StrokeOpacity := 1;
 

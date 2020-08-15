@@ -21,11 +21,14 @@ interface
 
 uses
   System.Math,
-  System.Types;
+  System.Types,
+  System.UITypes;
 
 const
   INHERIT = -1;
-  SVG_NONE_COLOR = -2;
+
+  SVG_INHERIT_COLOR = TColors.SysDefault;
+  SVG_NONE_COLOR = TColors.SysNone;
 
   FontNormal = 0;
   FontItalic = 1;

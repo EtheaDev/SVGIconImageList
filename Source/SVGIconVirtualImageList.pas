@@ -124,7 +124,7 @@ begin
   begin
     LItem := FCollection.SVGIconItems[AIndex];
     SVG := LItem.SVG;
-    if LItem.FixedColor <> TColors.SysDefault then
+    if LItem.FixedColor <> SVG_INHERIT_COLOR then
       SVG.FixedColor := LItem.FixedColor
     else
       SVG.FixedColor := FFixedColor;
@@ -172,7 +172,7 @@ begin
       SVG := LItem.SVG;
       if Assigned(SVG) then
       begin
-        if LItem.FixedColor <> TColors.SysDefault then
+        if LItem.FixedColor <> SVG_INHERIT_COLOR then
           SVG.FixedColor := LItem.FixedColor
         else
           SVG.FixedColor := FixedColor;
