@@ -55,6 +55,8 @@ type
 
   TLengthType = (ltHorz, ltVert, ltOther);
 
+  TTriStateBoolean = (tbFalse, tbTrue, tbInherit);
+
 implementation
 
 

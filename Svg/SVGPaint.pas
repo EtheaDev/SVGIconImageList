@@ -195,7 +195,7 @@ end;
 procedure TSVGFiller.ReadIn(const Node: IXMLNode);
 begin
   inherited;
-  Display := 0;
+  Display := tbFalse;
 end;
 
 procedure TSVGFiller.PaintToGraphics(Graphics: TGPGraphics);

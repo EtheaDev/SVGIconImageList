@@ -47,8 +47,8 @@ type
   TSVGObject = class(TPersistent)
   private
     FItems: TList;
-    FVisible: Integer;
-    FDisplay: Integer;
+    FVisible: TTriStateBoolean;
+    FDisplay: TTriStateBoolean;
     FParent: TSVGObject;
     FStyle: TStyle;
     FID: string;
@@ -59,8 +59,8 @@ type
     procedure SetItem(const Index: Integer; const Item: TSVGObject);
     function GetItem(const Index: Integer): TSVGObject;
 
-    function GetDisplay: Integer;
-    function GetVisible: Integer;
+    function GetDisplay: TTriStateBoolean;
+    function GetVisible: TTriStateBoolean;
   protected
     class function New(Parent: TSVGObject): TSVGObject;
     procedure AssignTo(Dest: TPersistent); override;
@@ -88,8 +88,8 @@ type
     property Items[const Index: Integer]: TSVGObject read GetItem write SetItem; default;
     property Count: Integer read GetCount;
 
-    property Display: Integer read GetDisplay write FDisplay;
-    property Visible: Integer read GetVisible write FVisible;
+    property Display: TTriStateBoolean read GetDisplay write FDisplay;
+    property Visible: TTriStateBoolean read GetVisible write FVisible;
     property Parent: TSVGObject read FParent;
     property Style: TStyle read FStyle;
     property ID: string read FID;
@@ -572,8 +572,8 @@ begin
     Items[0].Free;
   end;
 
-  Visible := 1;
-  Display := 1;
+  Visible := tbTrue;
+  Display := tbTrue;
   FID := '';
 
   FClasses.Clear;
@@ -744,32 +744,32 @@ begin
   Result := TSVG(Temp);
 end;
 
-function TSVGObject.GetDisplay: Integer;
+function TSVGObject.GetDisplay: TTriStateBoolean;
 var
   SVG: TSVGObject;
 begin
   SVG := Self;
-  while Assigned(SVG) and (SVG.FDisplay = INHERIT) do
+  while Assigned(SVG) and (SVG.FDisplay = tbInherit) do
     SVG := SVG.FParent;
 
   if Assigned(SVG) then
     Result := SVG.FDisplay
   else
-    Result := 1;
+    Result := tbTrue;
 end;
 
-function TSVGObject.GetVisible: Integer;
+function TSVGObject.GetVisible: TTriStateBoolean;
 var
   SVG: TSVGObject;
 begin
   SVG := Self;
-  while Assigned(SVG) and (SVG.FVisible = INHERIT) do
+  while Assigned(SVG) and (SVG.FVisible = tbInherit) do
     SVG := SVG.FParent;
 
   if Assigned(SVG) then
     Result := SVG.FVisible
   else
-    Result := 1;
+    Result := tbTrue;
 end;
 
 procedure TSVGObject.ReadIn(const Node: IXMLNode);
@@ -1435,7 +1435,7 @@ begin
   if Value <> '' then
   begin
     if Value = 'none' then
-      FVisible := 0;
+      FVisible := tbFalse;
   end;
 end;
 
@@ -2376,9 +2376,9 @@ procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
 
   function NeedsPainting(Item: TSVGObject): Boolean;
   begin
-    Result := (Item.Display = 1) and
+    Result := (Item.Display = tbTrue) and
        (Item.FStyle.Values['display'] <> 'none') and
-       (Item.Visible = 1);
+       (Item.Visible = tbTrue);
   end;
 
   procedure PaintItem(const Item: TSVGObject);
@@ -2577,8 +2577,8 @@ begin
 
   inherited;
 
-  Display := 1;
-  Visible := 1;
+  Display := tbTrue;
+  Visible := tbTrue;
 
   // % width and height do not make sense in stand-alone svgs
   // and they centainly do not refer to % size of the svg content
@@ -2653,7 +2653,7 @@ end;
 procedure TSVGDefs.ReadIn(const Node: IXMLNode);
 begin
   inherited;
-  Display := 0;
+  Display := tbFalse;
   ReadChildren(Node);
 end;
 
@@ -3973,7 +3973,7 @@ procedure TSVGClipPath.ReadIn(const Node: IXMLNode);
 begin
   inherited;
   ReadChildren(Node);
-  Display := 0;
+  Display := tbFalse;
 end;
 {$ENDREGION}
 
