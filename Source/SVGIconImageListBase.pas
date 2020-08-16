@@ -186,7 +186,6 @@ begin
   FSVGItemsUpdateMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TSVGItemsUpdateMessage, SVGItemsUpdateMessageHandler);
   FDisabledGrayScale := True;
   FDisabledOpacity := 125;
-
 end;
 
 procedure TSVGIconImageListBase.DefineProperties(Filer: TFiler);

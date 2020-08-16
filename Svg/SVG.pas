@@ -915,32 +915,32 @@ begin
   FY := 0;
   FWidth := 0;
   FHeight := 0;
-  FRX := INHERIT;
-  FRY := INHERIT;
+  FRX := UndefinedFloat;
+  FRY := UndefinedFloat;
   FFillURI := '';
   FStrokeURI := '';
   FillColor := SVG_INHERIT_COLOR;
   StrokeColor := SVG_INHERIT_COLOR;
 
-  StrokeWidth := INHERIT;
+  StrokeWidth := UndefinedFloat;
 
   StrokeOpacity := 1;
   FillOpacity := 1;
-  FLineWidth := INHERIT;
+  FLineWidth := UndefinedFloat;
 
   FStrokeLineJoin := '';
   FStrokeLineCap := '';
-  FStrokeMiterLimit := INHERIT;
-  FStrokeDashOffset := INHERIT;
+  FStrokeMiterLimit := UndefinedFloat;
+  FStrokeDashOffset := UndefinedFloat;
 
   SetLength(FStrokeDashArray, 0);
   FStrokeDashArrayCount := 0;
   FArrayNone := False;
 
   FFontName := '';
-  FFontSize := INHERIT;
-  FFontWeight := INHERIT;
-  FFontStyle := INHERIT;
+  FFontSize := UndefinedInt;
+  FFontWeight := UndefinedInt;
+  FFontStyle := UndefinedInt;
 
   FTextDecoration := [tdInherit];
 
@@ -1120,12 +1120,12 @@ begin
   LoadLengthProperty(Node, 'rx', ltOther, FRX);
   LoadLengthProperty(Node, 'ry', ltOther, FRY);
 
-  if (FRX = INHERIT) and (FRY <> INHERIT) then
+  if not HasValue(FRX) and HasValue(FRY) then
   begin
     FRX := FRY;
   end;
 
-  if (FRY = INHERIT) and (FRX <> INHERIT) then
+  if not HasValue(FRY) and HasValue(FRX) then
   begin
     FRY := FRX;
   end;
@@ -1667,12 +1667,12 @@ begin
     Result := SVG_NONE_COLOR;
 end;
 
-function TSVGBasic.GetFillOpacity: TFloat;
+function TSVGBasic.GetFillOpacity: TFloat; //TODO
 var
   SVG: TSVGObject;
 begin
   SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FFillOpacity = INHERIT) do
+  while Assigned(SVG) and not HasValue(TSVGBasic(SVG).FFillOpacity) do
     SVG := SVG.FParent;
 
   if Assigned(SVG) then
@@ -1688,12 +1688,12 @@ begin
   end;
 end;
 
-function TSVGBasic.GetStrokeOpacity: TFloat;
+function TSVGBasic.GetStrokeOpacity: TFloat;  //TODO
 var
   SVG: TSVGObject;
 begin
   SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FStrokeOpacity = INHERIT) do
+  while Assigned(SVG) and not HasValue(TSVGBasic(SVG).FStrokeOpacity) do
     SVG := SVG.FParent;
 
   if Assigned(SVG) then
@@ -1741,13 +1741,13 @@ var
   SVG: TSVGObject;
 begin
   SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FStrokeWidth = INHERIT) do
+  while Assigned(SVG) and not HasValue(TSVGBasic(SVG).FStrokeWidth) do
     SVG := SVG.FParent;
 
   if Assigned(SVG) and (SVG is TSVGBasic) then
     Result := TSVGBasic(SVG).FStrokeWidth
   else
-    Result := -2;
+    Result := -2;  //TODO
 end;
 
 function TSVGBasic.GetTextDecoration: TTextDecoration;
@@ -1871,10 +1871,10 @@ begin
   Result := 4;
 
   SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FStrokeMiterLimit = INHERIT) do
+  while Assigned(SVG) and not HasValue(TSVGBasic(SVG).FStrokeMiterLimit) do
     SVG := SVG.FParent;
 
-  if Assigned(SVG) and (TSVGBasic(SVG).FStrokeMiterLimit <> INHERIT) then
+  if Assigned(SVG) then
       Result := TSVGBasic(SVG).FStrokeMiterLimit;
 end;
 
@@ -1885,10 +1885,10 @@ begin
   Result := 0;
 
   SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FStrokeDashOffset = INHERIT) do
+  while Assigned(SVG) and not HasValue(TSVGBasic(SVG).FStrokeDashOffset) do
     SVG := SVG.FParent;
 
-  if Assigned(SVG) and (TSVGBasic(SVG).FStrokeDashOffset <> INHERIT) then
+  if Assigned(SVG) then
       Result := TSVGBasic(SVG).FStrokeDashOffset;
 end;
 
@@ -1934,7 +1934,7 @@ var
 begin
   SVG := Self;
   while Assigned(SVG) and
-    ((not (SVG is TSVGBasic)) or (TSVGBasic(SVG).FFontWeight = INHERIT)) do
+    ((not (SVG is TSVGBasic)) or not HasValue(TSVGBasic(SVG).FFontWeight)) do
     SVG := SVG.FParent;
 
   if Assigned(SVG) and (SVG is TSVGBasic) then
@@ -1949,7 +1949,7 @@ var
 begin
   SVG := Self;
   while Assigned(SVG) and
-    ((not (SVG is TSVGBasic)) or (TSVGBasic(SVG).FFontSize = INHERIT)) do
+    ((not (SVG is TSVGBasic)) or not HasValue(TSVGBasic(SVG).FFontSize)) do
     SVG := SVG.FParent;
 
   if Assigned(SVG) and (SVG is TSVGBasic) then
@@ -1964,7 +1964,7 @@ var
 begin
   SVG := Self;
   while Assigned(SVG) and
-    ((not (SVG is TSVGBasic)) or (TSVGBasic(SVG).FFontStyle = INHERIT)) do
+    ((not (SVG is TSVGBasic)) or not HasValue(TSVGBasic(SVG).FFontStyle)) do
     SVG := SVG.FParent;
 
   if Assigned(SVG) and (SVG is TSVGBasic) then
@@ -3010,8 +3010,8 @@ end;
 procedure TSVGEllipse.Clear;
 begin
   inherited;
-  FCX := INHERIT;
-  FCY := INHERIT;
+  FCX := UndefinedFloat;
+  FCY := UndefinedFloat;
 end;
 
 procedure TSVGEllipse.ConstructPath;

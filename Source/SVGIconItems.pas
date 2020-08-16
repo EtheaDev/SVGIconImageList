@@ -87,6 +87,7 @@ constructor TSVGIconItem.Create(Collection: TCollection);
 begin
   inherited Create(Collection);
   FSVG := TSVG.Create;
+  FFixedColor := SVG_INHERIT_COLOR;
 end;
 
 destructor TSVGIconItem.Destroy;

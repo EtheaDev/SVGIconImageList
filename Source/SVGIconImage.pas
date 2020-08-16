@@ -516,13 +516,7 @@ procedure TSVGGraphic.Assign(Source: TPersistent);
 begin
   if (Source is TSVGGraphic) then
   begin
-    try
-      FSVG.Free;
-      FSVG := TSVG(TSVGGraphic(Source).FSVG.Clone(nil));
-      FStream.Clear;
-      FStream.LoadFromStream(TSVGGraphic(Source).FStream);
-    except
-    end;
+    AssignSVG(TSVGGraphic(Source).FSVG);
     Changed(Self);
   end;
 end;

@@ -25,8 +25,6 @@ uses
   System.UITypes;
 
 const
-  INHERIT = -1;
-
   SVG_INHERIT_COLOR = TColors.SysDefault;
   SVG_NONE_COLOR = TColors.SysNone;
 
@@ -34,6 +32,8 @@ const
   FontItalic = 1;
 
   MaxTFloat = MaxSingle;
+  UndefinedFloat = -340282346638528859811704183484516925440.0;  //Single.MinValue
+  UndefinedInt = -2147483648; // Integer.MinValue
 
 type
   TFloat = single;

@@ -268,10 +268,10 @@ end;
 procedure TSVGLinearGradient.Clear;
 begin
   inherited;
-  FX1 := INHERIT;
-  FX2 := INHERIT;
-  FY1 := INHERIT;
-  FY2 := INHERIT;
+  FX1 := UndefinedFloat;
+  FX2 := UndefinedFloat;
+  FY1 := UndefinedFloat;
+  FY2 := UndefinedFloat;
 end;
 
 function TSVGLinearGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush;
@@ -283,16 +283,16 @@ var
   MX1, MX2, MY1, MY2: TFloat;
 begin
   BoundsRect :=  DestObject.ObjectBounds;
-  if FX1 = INHERIT then MX1 := BoundsRect.Left else MX1 := FX1;
-  if FX2 = INHERIT then MX2 := BoundsRect.Right else MX2 := FX2;
-  if FY1 = INHERIT then MY1 := BoundsRect.Top else MY1 := FY1;
-  if FY2 = INHERIT then MY2 := BoundsRect.Top else MY2 := FY2;
+  if HasValue(FX1) then MX1 := FX1 else MX1 := BoundsRect.Left;
+  if HasValue(FX2) then MX2 := FX2 else MX2 := BoundsRect.Right;
+  if HasValue(FY1) then MY1 := FY1 else MY1 := BoundsRect.Top;
+  if HasValue(FY2) then MY2 := FY2 else MY2 := BoundsRect.Top;
   if FGradientUnits = guObjectBoundingBox then begin
     // X1, X2, Y1, Y2 are relative to the Object Bounding Rect
-    if FX1 <> INHERIT then MX1 := BoundsRect.Left + FX1 * BoundsRect.Width;
-    if FX2 <> INHERIT then MX2 := BoundsRect.Left + FX2 * BoundsRect.Width;
-    if FY1 <> INHERIT then MY1 := BoundsRect.Top + FY1 * BoundsRect.Height;
-    if FY2 <> INHERIT then MY2 := BoundsRect.Top + FY2 * BoundsRect.Height;
+    if HasValue(FX1) then MX1 := BoundsRect.Left + FX1 * BoundsRect.Width;
+    if HasValue(FX2) then MX2 := BoundsRect.Left + FX2 * BoundsRect.Width;
+    if HasValue(FY1) then MY1 := BoundsRect.Top + FY1 * BoundsRect.Height;
+    if HasValue(FY2) then MY2 := BoundsRect.Top + FY2 * BoundsRect.Height;
   end;
 
   Brush := TGPLinearGradientBrush.Create(MakePoint(MX1, MY1), MakePoint(MX2, MY2), 0, 0);
@@ -330,9 +330,9 @@ end;
 procedure TSVGRadialGradient.Clear;
 begin
   inherited;
-  FCX := INHERIT;
-  FCY := INHERIT;
-  FR := INHERIT;
+  FCX := UndefinedFloat;
+  FCY := UndefinedFloat;
+  FR := UndefinedFloat;
   FFX := FCX;
   FFY := FCY;
 end;
@@ -345,9 +345,9 @@ begin
   LoadLength(Node, 'r', FR);
   LoadLength(Node, 'fx', FFX);
   LoadLength(Node, 'fy', FFY);
-  if FFX = INHERIT then
+  if not HasValue(FFX) then
     FFX := FCX;
-  if FFY = INHERIT then
+  if not HasValue(FFY) then
     FFY := FCY;
 end;
 
@@ -363,26 +363,29 @@ var
   i: integer;
 begin
   BoundsRect :=  DestObject.ObjectBounds;
-  if FCX = INHERIT then MCX := BoundsRect.Left + 0.5 * BoundsRect.Width else MCX := FCX;
-  if FFX = INHERIT then MFX := MCX else MFX := FFX;
-  if FCY = INHERIT then MCY := BoundsRect.Top + 0.5 * BoundsRect.Height else MCY := FCY;
-  if FFY = INHERIT then MFY := MCY else MFY := FFY;
-  if FR = INHERIT then
-    MR := 0.5 * Sqrt(Sqr(BoundsRect.Width) + Sqr(BoundsRect.Height))/Sqrt(2)
+  if HasValue(FCX) then MCX := FCX else MCX := BoundsRect.Left + 0.5 * BoundsRect.Width;
+  if HasValue(FFX) then MFX := FFX else MFX := MCX;
+  if HasValue(FCY) then MCY := FCY else MCY := BoundsRect.Top + 0.5 * BoundsRect.Height;
+  if HasValue(FFY) then MFY := FFY else MFY := MCY;
+  if HasValue(FR) then
+    MR := FR
   else
-    MR := FR;
+    MR := 0.5 * Sqrt(Sqr(BoundsRect.Width) + Sqr(BoundsRect.Height))/Sqrt(2);
   if FGradientUnits = guObjectBoundingBox then begin
     // CX, CY, R, FX, FY are relative to the Object Bounding Rect
-    if FCX <> INHERIT then MCX := BoundsRect.Left + FCX * BoundsRect.Width;
-    if FFX <> INHERIT then MFX := BoundsRect.Left + FFX * BoundsRect.Width;
-    if FCY <> INHERIT then MCY := BoundsRect.Top + FCY * BoundsRect.Height;
-    if FFY <> INHERIT then MFY := BoundsRect.Top + FFY * BoundsRect.Height;
-    if FR <> INHERIT then
+    if HasValue(FCX) then MCX := BoundsRect.Left + FCX * BoundsRect.Width;
+    if HasValue(FFX) then MFX := BoundsRect.Left + FFX * BoundsRect.Width;
+    if HasValue(FCY) then MCY := BoundsRect.Top + FCY * BoundsRect.Height;
+    if HasValue(FFY) then MFY := BoundsRect.Top + FFY * BoundsRect.Height;
+    if HasValue(FR) then
       MR := FR * Sqrt(Sqr(BoundsRect.Width) + Sqr(BoundsRect.Height))/Sqrt(2);
   end;
 
   Path := TGPGraphicsPath.Create;
-  Path.AddEllipse(MCX - MR, MCY - MR, 2 * MR, 2 * MR);
+  if HasValue(FR) then
+    Path.AddEllipse(MCX - MR, MCY - MR, 2 * MR, 2 * MR)
+  else
+    Path.AddEllipse(ToGPRectF(BoundsRect));
 
   Brush := TGPPathGradientBrush.Create(Path);
   Path.Free;
@@ -403,7 +406,7 @@ begin
 
   Brush.SetInterpolationColors(PARGB(RevColors.Colors), PSingle(RevColors.Positions), Colors.Count);
 
-  if (FFX <> INHERIT) and (FFY <> INHERIT) then
+  if HasValue(FFX) and HasValue(FFY) then
     Brush.SetCenterPoint(MakePoint(MFX, MFY));
 
   if PureMatrix.m33 = 1 then

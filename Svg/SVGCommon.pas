@@ -38,6 +38,8 @@ function FromGPRectF(R: TGPRectF): TRectF; inline;
 function ToGPMatrix(const Matrix: TMatrix): TGPMatrix;
 
 // Utility functions
+function HasValue(F: TFloat): Boolean; overload; inline;
+function HasValue(I: Integer): Boolean; overload; inline;
 function FittedRect(const Bounds: TGPRectF; const Width, Height: Single): TGPRectF;
 
 implementation
@@ -78,6 +80,17 @@ begin
   Result := TGPMatrix.Create(Matrix.m11, Matrix.m12, Matrix.m21, Matrix.m22, Matrix.m31,
     Matrix.m32);
 end;
+
+function HasValue(F: TFloat): Boolean;
+begin
+  Result := F <> UndefinedFloat;
+end;
+
+function HasValue(I: Integer): Boolean; overload; inline;
+begin
+  Result := I <> UndefinedInt;
+end;
+
 
 function FittedRect(const Bounds: TGPRectF; const Width, Height: Single): TGPRectF;
 begin
