@@ -91,10 +91,12 @@ type
     property Count: Integer read GetCount;
   end;
 
+  procedure ProcessStyleSheet(Var S: string);
+
 implementation
 
 uses
-  System.SysUtils, System.StrUtils;
+  System.SysUtils, System.StrUtils, System.Character;
 
 {$REGION 'TStyle'}
 
@@ -427,6 +429,24 @@ begin
 
   Result := nil;
 end;
+
+procedure ProcessStyleSheet(Var S: string);
+Var
+  OutS: string;
+  C: Char;
+begin
+  OutS := '';
+  for C in S do
+  begin
+    if C.IsWhiteSpace then Continue;
+    if C = '}' then
+      OutS := OutS + C + SLineBreak
+    else
+      OutS := OutS + C;
+  end;
+  S := OutS;
+end;
+
 {$ENDREGION}
 
 end.

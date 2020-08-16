@@ -1071,9 +1071,13 @@ begin
           begin
             if Assigned(LRoot) then
             begin
-              Style := LRoot.FStyles.GetStyleByName('.' + FClasses[C]);
+              Style := LRoot.FStyles.GetStyleByName(FObjectName + '.' + FClasses[C]);
               if Style = nil then
-                Style := LRoot.FStyles.GetStyleByName(FClasses[C]);
+              begin
+                Style := LRoot.FStyles.GetStyleByName('.' + FClasses[C]);
+                if Style = nil then
+                  Style := LRoot.FStyles.GetStyleByName(FClasses[C]);
+              end;
             end else
               Style := nil;
           end else
@@ -2426,8 +2430,6 @@ begin
   inherited;
   if Dest is TSVG then
   begin
-    TSVG(Dest).FRootBounds := FRootBounds;
-    TSVG(Dest).FInitialMatrix := FInitialMatrix;
     TSVG(Dest).FViewBox := FViewBox;
     TSVG(Dest).FSource := Source;
     TSVG(Dest).FSize := FSize;
@@ -2441,13 +2443,14 @@ end;
 procedure TSVG.ReadStyles(const Node: IXMLNode);
 var
   C: Integer;
+  S: string;
   SL: TStrings;
 begin
   SL := TStringList.Create;
   try
     if Node.Attributes['type'] = 'text/css' then
     begin
-      SL.Text := Node.text;
+      S := Node.text;
     end
     else
     begin
@@ -2455,10 +2458,13 @@ begin
       begin
         if Node.childNodes[C].nodeName = '#cdata-section' then
         begin
-          SL.Text := Node.childNodes[C].text;
+         S := Node.childNodes[C].text;
         end;
       end;
     end;
+
+    ProcessStyleSheet(S);
+    SL.Text := S;
 
     for C := SL.Count - 1 downto 0 do
     begin
