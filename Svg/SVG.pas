@@ -924,8 +924,8 @@ begin
 
   StrokeWidth := UndefinedFloat;
 
-  StrokeOpacity := 1;
-  FillOpacity := 1;
+  FStrokeOpacity := 1;
+  FFillOpacity := 1;
   FLineWidth := UndefinedFloat;
 
   FStrokeLineJoin := '';
@@ -1623,14 +1623,17 @@ function TSVGBasic.GetFillColor: TColor;
 var
   SVG: TSVGObject;
 begin
+  Result := SVG_INHERIT_COLOR;
   SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FFillColor = SVG_INHERIT_COLOR) do
+  while Assigned(SVG) do
+  begin
+    if (SVG is TSVGBasic) and (TSVGBasic(SVG).FFillColor <> SVG_INHERIT_COLOR)  then
+    begin
+      Result := TSVGBasic(SVG).FFillColor;
+      Break;
+    end;
     SVG := SVG.FParent;
-
-  if Assigned(SVG) then
-    Result := TSVGBasic(SVG).FFillColor
-  else
-    Result := SVG_INHERIT_COLOR;
+  end;
 end;
 
 function TSVGBasic.GetStrokeBrush: TGPBrush;
@@ -1657,55 +1660,44 @@ function TSVGBasic.GetStrokeColor: TColor;
 var
   SVG: TSVGObject;
 begin
+  Result := SVG_NONE_COLOR;
   SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FStrokeColor = SVG_INHERIT_COLOR) do
-    SVG := SVG.FParent;
-
-  if Assigned(SVG) then
-    Result := TSVGBasic(SVG).FStrokeColor
-  else
-    Result := SVG_NONE_COLOR;
-end;
-
-function TSVGBasic.GetFillOpacity: TFloat; //TODO
-var
-  SVG: TSVGObject;
-begin
-  SVG := Self;
-  while Assigned(SVG) and not HasValue(TSVGBasic(SVG).FFillOpacity) do
-    SVG := SVG.FParent;
-
-  if Assigned(SVG) then
-    Result := TSVGBasic(SVG).FFillOpacity
-  else
-    Result := 1;
-
-  SVG := FParent;
   while Assigned(SVG) do
   begin
-    Result := Result * TSVGBasic(SVG).FillOpacity;
-    SVG  := SVG.FParent;
+    if (SVG is TSVGBasic) and (TSVGBasic(SVG).FStrokeColor <> SVG_INHERIT_COLOR)  then
+    begin
+      Result := TSVGBasic(SVG).FStrokeColor;
+      Break;
+    end;
+    SVG := SVG.FParent;
   end;
 end;
 
-function TSVGBasic.GetStrokeOpacity: TFloat;  //TODO
+function TSVGBasic.GetFillOpacity: TFloat;
 var
   SVG: TSVGObject;
 begin
+  Result := 1;
   SVG := Self;
-  while Assigned(SVG) and not HasValue(TSVGBasic(SVG).FStrokeOpacity) do
-    SVG := SVG.FParent;
-
-  if Assigned(SVG) then
-    Result := TSVGBasic(SVG).FStrokeOpacity
-  else
-    Result := 1;
-
-  SVG := FParent;
   while Assigned(SVG) do
   begin
-    Result := Result * TSVGBasic(SVG).StrokeOpacity;
-    SVG  := SVG.FParent;
+    if (SVG is TSVGBasic) and HasValue(TSVGBasic(SVG).FFillOpacity) then
+      Result := Result * TSVGBasic(SVG).FFillOpacity;
+    SVG := SVG.FParent;
+  end;
+end;
+
+function TSVGBasic.GetStrokeOpacity: TFloat;
+var
+  SVG: TSVGObject;
+begin
+  Result := 1;
+  SVG := Self;
+  while Assigned(SVG) do
+  begin
+    if (SVG is TSVGBasic) and HasValue(TSVGBasic(SVG).FStrokeOpacity) then
+      Result := Result * TSVGBasic(SVG).FStrokeOpacity;
+    SVG := SVG.FParent;
   end;
 end;
 
@@ -1740,28 +1732,34 @@ function TSVGBasic.GetStrokeWidth: TFloat;
 var
   SVG: TSVGObject;
 begin
+  Result := 1;   // default
   SVG := Self;
-  while Assigned(SVG) and not HasValue(TSVGBasic(SVG).FStrokeWidth) do
+  while Assigned(SVG) do
+  begin
+    if (SVG is TSVGBasic) and HasValue(TSVGBasic(SVG).FStrokeWidth) then
+    begin
+      Result := TSVGBasic(SVG).FStrokeWidth;
+      Break;
+    end;
     SVG := SVG.FParent;
-
-  if Assigned(SVG) and (SVG is TSVGBasic) then
-    Result := TSVGBasic(SVG).FStrokeWidth
-  else
-    Result := -2;  //TODO
+  end;
 end;
 
 function TSVGBasic.GetTextDecoration: TTextDecoration;
 var
   SVG: TSVGObject;
 begin
+  Result := [];
   SVG := Self;
-  while Assigned(SVG) and (tdInherit in TSVGBasic(SVG).FTextDecoration) do
+  while Assigned(SVG)  do
+  begin
+    if (SVG is TSVGBasic) and not (tdInherit in TSVGBasic(SVG).FTextDecoration) then
+    begin
+      Result := TSVGBasic(SVG).FTextDecoration;
+      Break;
+    end;
     SVG := SVG.FParent;
-
-  if Assigned(SVG) then
-    Result := TSVGBasic(SVG).FTextDecoration
-  else
-    Result := [];
+  end;
 end;
 
 function TSVGBasic.IsFontAvailable: Boolean;
@@ -1851,16 +1849,17 @@ begin
   Result := LineJoinMiterClipped;
 
   SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FStrokeLineJoin = '') do
-    SVG := SVG.FParent;
-
-  if Assigned(SVG) then
+  while Assigned(SVG) do
   begin
-    if TSVGBasic(SVG).FStrokeLineJoin = 'round' then
-      Result := LineJoinRound;
-
-    if TSVGBasic(SVG).FStrokeLineJoin = 'bevel' then
-      Result := LineJoinBevel;
+    if (SVG is TSVGBasic) and (TSVGBasic(SVG).FStrokeLineJoin <> '')  then
+    begin
+      if TSVGBasic(SVG).FStrokeLineJoin = 'round' then
+        Result := LineJoinRound
+      else if TSVGBasic(SVG).FStrokeLineJoin = 'bevel' then
+        Result := LineJoinBevel;
+      Break;
+    end;
+    SVG := SVG.FParent;
   end;
 end;
 
@@ -1871,11 +1870,15 @@ begin
   Result := 4;
 
   SVG := Self;
-  while Assigned(SVG) and not HasValue(TSVGBasic(SVG).FStrokeMiterLimit) do
-    SVG := SVG.FParent;
-
-  if Assigned(SVG) then
+  while Assigned(SVG) do
+  begin
+    if (SVG is TSVGBasic) and HasValue(TSVGBasic(SVG).FStrokeMiterLimit)  then
+    begin
       Result := TSVGBasic(SVG).FStrokeMiterLimit;
+      Break;
+    end;
+    SVG := SVG.FParent;
+  end;
 end;
 
 function TSVGBasic.GetStrokeDashOffset: TFloat;
@@ -1885,11 +1888,15 @@ begin
   Result := 0;
 
   SVG := Self;
-  while Assigned(SVG) and not HasValue(TSVGBasic(SVG).FStrokeDashOffset) do
-    SVG := SVG.FParent;
-
-  if Assigned(SVG) then
+  while Assigned(SVG) do
+  begin
+    if (SVG is TSVGBasic) and HasValue(TSVGBasic(SVG).FStrokeDashOffset) then
+    begin
       Result := TSVGBasic(SVG).FStrokeDashOffset;
+      Break;
+    end;
+    SVG := SVG.FParent;
+  end;
 end;
 
 function TSVGBasic.GetStrokeDashArray(var Count: Integer): PSingle;
@@ -1917,60 +1924,72 @@ function TSVGBasic.GetFontName: string;
 var
   SVG: TSVGObject;
 begin
-  SVG := Self;
-  while Assigned(SVG) and
-    ((not (SVG is TSVGBasic)) or (TSVGBasic(SVG).FFontName = '')) do
-    SVG := SVG.FParent;
+  Result := 'Arial';
 
-  if Assigned(SVG) and (SVG is TSVGBasic) then
-    Result := TSVGBasic(SVG).FFontName
-  else
-    Result := 'Arial';
+  SVG := Self;
+  while Assigned(SVG) do
+  begin
+    if  (SVG is TSVGBasic) and (TSVGBasic(SVG).FFontName <> '') then
+    begin
+      Result := TSVGBasic(SVG).FFontName;
+      Break;
+    end;
+    SVG := SVG.FParent;
+  end;
 end;
 
 function TSVGBasic.GetFontWeight: Integer;
 var
   SVG: TSVGObject;
 begin
-  SVG := Self;
-  while Assigned(SVG) and
-    ((not (SVG is TSVGBasic)) or not HasValue(TSVGBasic(SVG).FFontWeight)) do
-    SVG := SVG.FParent;
+  Result := FW_NORMAL;
 
-  if Assigned(SVG) and (SVG is TSVGBasic) then
-    Result := TSVGBasic(SVG).FFontWeight
-  else
-    Result := FW_NORMAL;
+  SVG := Self;
+  while Assigned(SVG) do
+  begin
+    if (SVG is TSVGBasic) and HasValue(TSVGBasic(SVG).FFontWeight) then
+    begin
+      Result := TSVGBasic(SVG).FFontWeight;
+      Break;
+    end;
+    SVG := SVG.FParent;
+  end;
 end;
 
 function TSVGBasic.GetFontSize: TFloat;
 var
   SVG: TSVGObject;
 begin
+  Result := 11;
+  
   SVG := Self;
-  while Assigned(SVG) and
-    ((not (SVG is TSVGBasic)) or not HasValue(TSVGBasic(SVG).FFontSize)) do
+  while Assigned(SVG) do
+  begin
+    if (SVG is TSVGBasic) and HasValue(TSVGBasic(SVG).FFontSize) then
+    begin
+      Result := TSVGBasic(SVG).FFontSize;
+      Break;
+    end;
     SVG := SVG.FParent;
-
-  if Assigned(SVG) and (SVG is TSVGBasic) then
-    Result := TSVGBasic(SVG).FFontSize
-  else
-    Result := 11;
+  end;
 end;
 
 function TSVGBasic.GetFontStyle: Integer;
 var
   SVG: TSVGObject;
 begin
+  Result := 0;
+  
   SVG := Self;
-  while Assigned(SVG) and
-    ((not (SVG is TSVGBasic)) or not HasValue(TSVGBasic(SVG).FFontStyle)) do
+  while Assigned(SVG)  do
+  begin
+    if (SVG is TSVGBasic) and HasValue(TSVGBasic(SVG).FFontStyle) then
+    begin
+      Result := TSVGBasic(SVG).FFontStyle;
+      Break;    
+    end;
     SVG := SVG.FParent;
-
-  if Assigned(SVG) and (SVG is TSVGBasic) then
-    Result := TSVGBasic(SVG).FFontStyle
-  else
-    Result := 0;
+  end;
 end;
 
 procedure TSVGBasic.ParseFontWeight(const S: string);
