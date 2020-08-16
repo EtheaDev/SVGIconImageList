@@ -377,6 +377,7 @@ type
     FCX: TFloat;
     FCY: TFloat;
     procedure ConstructPath; override;
+    procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
     procedure ReadIn(const Node: IXMLNode); override;
@@ -1164,6 +1165,7 @@ begin
     TSVGBasic(Dest).FFontWeight := FFontWeight;
     TSVGBasic(Dest).FFontStyle := FFontStyle;
     TSVGBasic(Dest).FTextDecoration := FTextDecoration;
+    TSVGBasic(Dest).FFillMode := FFillMode;
 
     if Assigned(FStrokeDashArray) then
     begin
@@ -2434,6 +2436,8 @@ begin
     FreeAndNil(TSVG(Dest).FStyles);
     TSVG(Dest).FStyles := FStyles.Clone;
     TSVG(Dest).FFileName := FFileName;
+    TSVG(Dest).FGrayscale := FGrayscale;
+    TSVG(Dest).FFixedColor := FFixedColor;
   end;
 end;
 
@@ -3018,6 +3022,16 @@ begin
   if ApplyTranform then begin
     Result.TopLeft := Transform(Result.TopLeft);
     Result.BottomRight := Transform(Result.BottomRight);
+  end;
+end;
+
+procedure TSVGEllipse.AssignTo(Dest: TPersistent);
+begin
+  inherited;
+  if Dest is TSVGEllipse then
+  begin
+    TSVGEllipse(Dest).FCX := FCX;
+    TSVGEllipse(Dest).FCY := FCY;
   end;
 end;
 

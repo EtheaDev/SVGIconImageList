@@ -121,13 +121,9 @@ type
   TSVGGraphic = class(TGraphic)
   strict private
     FSVG: TSVG;
-    FStream: TMemoryStream;
-
     FOpacity: Byte;
-    FFileName: TFileName;
 
     procedure SetOpacity(Value: Byte);
-    procedure SetFileName(const Value: TFileName);
   protected
     procedure DefineProperties(Filer: TFiler); override;
 
@@ -162,7 +158,6 @@ type
       var APalette: HPALETTE); override;
 
     property Opacity: Byte read FOpacity write SetOpacity;
-    property FileName: TFileName read FFileName write SetFileName;
   end;
 
 function TGPImageToBitmap(Image: TGPImage): TBitmap;
@@ -438,20 +433,17 @@ begin
   inherited;
   FSVG := TSVG.Create;
   FOpacity := 255;
-  FStream := TMemoryStream.Create;
 end;
 
 destructor TSVGGraphic.Destroy;
 begin
   FSVG.Free;
-  FStream.Free;
   inherited;
 end;
 
 procedure TSVGGraphic.Clear;
 begin
   FSVG.Clear;
-  FFileName := '';
   Changed(Self);
 end;
 
@@ -459,7 +451,12 @@ procedure TSVGGraphic.Assign(Source: TPersistent);
 begin
   if (Source is TSVGGraphic) then
   begin
-    AssignSVG(TSVGGraphic(Source).FSVG);
+    try
+      //AssignSVG(TSVGGraphic(Source).FSVG);
+      FSVG.Free;
+      FSVG := TSVG(TSVGGraphic(Source).FSVG.Clone(nil));
+    except
+    end;
     Changed(Self);
   end;
 end;
@@ -491,14 +488,6 @@ begin
 
 end;
 
-procedure TSVGGraphic.SetFileName(const Value: TFileName);
-begin
-  if Value = FFileName then
-    Exit;
-
-  LoadFromFile(Value);
-end;
-
 procedure TSVGGraphic.SetHeight(Value: Integer);
 begin
   inherited;
@@ -508,21 +497,34 @@ end;
 procedure TSVGGraphic.ReadData(Stream: TStream);
 var
   Size: LongInt;
+  MemStream: TMemoryStream;
 begin
   Stream.Read(Size, SizeOf(Size));
-  FStream.Clear;
-  FStream.CopyFrom(Stream, Size);
-  FSVG.LoadFromStream(FStream);
+  MemStream := TMemoryStream.Create;
+  try
+    MemStream.CopyFrom(Stream, Size);
+    MemStream.Position := 0;
+    FSVG.LoadFromStream(MemStream);
+  finally
+    MemStream.Free;
+  end;
 end;
 
 procedure TSVGGraphic.WriteData(Stream: TStream);
 var
   Size: LongInt;
+  MemStream: TMemoryStream;
 begin
-  Size := FStream.Size;
-  Stream.Write(Size, SizeOf(Size));
-  FStream.Position := 0;
-  FStream.SaveToStream(Stream);
+  MemStream := TMemoryStream.Create;
+  try
+    FSVG.SaveToStream(MemStream);
+    Size := MemStream.Size;
+    Stream.Write(Size, SizeOf(Size));
+    MemStream.Position := 0;
+    MemStream.SaveToStream(Stream);
+  finally
+    MemStream.Free;
+  end;
 end;
 
 procedure TSVGGraphic.DefineProperties(Filer: TFiler);
@@ -569,18 +571,14 @@ end;
 
 procedure TSVGGraphic.LoadFromFile(const Filename: String);
 begin
-  FStream.Clear;
-  FStream.LoadFromFile(FileName);
-  FSVG.LoadFromStream(FStream);
+  FSVG.LoadFromFile(Filename);
   Changed(Self);
 end;
 
 procedure TSVGGraphic.LoadFromStream(Stream: TStream);
 begin
   try
-    FFileName := '';
-    FStream.LoadFromStream(Stream);
-    FSVG.LoadFromStream(FStream);
+    FSVG.LoadFromStream(Stream);
   except
   end;
   Changed(Self);
@@ -595,8 +593,7 @@ end;
 
 procedure TSVGGraphic.SaveToStream(Stream: TStream);
 begin
-  FStream.Position := 0;
-  FStream.SaveToStream(Stream);
+  FSVG.SaveToStream(Stream);
 end;
 
 

@@ -72,6 +72,7 @@ type
     FURI: string;
     FGradientUnits: TGradientUnits;
   protected
+    procedure AssignTo(Dest: TPersistent); override;
     function GetColors(Alpha: Byte): TStopColors; virtual;
   public
     procedure ReadIn(const Node: IXMLNode); override;
@@ -179,6 +180,7 @@ begin
   begin
     TSVGStop(Dest).FStop := FStop;
     TSVGStop(Dest).FStopColor := FStopColor;
+    TSVGStop(Dest).FOpacity := FOpacity;
   end;
 end;
 
@@ -417,6 +419,16 @@ begin
   end;
 
   Result := Brush;
+end;
+
+procedure TSVGGradient.AssignTo(Dest: TPersistent);
+begin
+  inherited;
+  if Dest is TSVGGradient then
+  begin
+    TSVGGradient(Dest).FURI := FURI;
+    TSVGGradient(Dest).FGradientUnits := FGradientUnits;
+  end;
 end;
 
 function TSVGGradient.GetColors(Alpha: Byte): TStopColors;
