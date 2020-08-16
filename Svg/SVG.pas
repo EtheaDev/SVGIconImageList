@@ -53,7 +53,7 @@ type
     FStyle: TStyle;
     FID: string;
     FObjectName: string;
-    FClasses: TStrings;
+    FClasses: TArray<string>;
 
     function GetCount: Integer;
     procedure SetItem(const Index: Integer; const Item: TSVGObject);
@@ -517,8 +517,6 @@ begin
   FParent := nil;
   FStyle := TStyle.Create;
   FItems := TList.Create;
-  FClasses := TstringList.Create;
-  FClasses.Delimiter := ' ';
   Clear;
 end;
 
@@ -542,7 +540,6 @@ begin
   end;
 
   FStyle.Free;
-  FClasses.Free;
 
   inherited;
 end;
@@ -576,7 +573,7 @@ begin
   Display := tbTrue;
   FID := '';
 
-  FClasses.Clear;
+  SetLength(FClasses, 0);
   FStyle.Clear;
   FObjectName := '';
 end;
@@ -709,7 +706,7 @@ begin
 
     FreeAndNil(SVG.FStyle);
     SVG.FStyle := FStyle.Clone;
-    SVG.FClasses.Assign(FClasses);
+    SVG.FClasses := Copy(FClasses, 0);
   end;
 end;
 
@@ -794,12 +791,12 @@ begin
   S := '';
   LoadString(Node, 'class', S);
 
-  FClasses.DelimitedText := S;
-  for C := FClasses.Count - 1 downto 0 do
+  FClasses := S.Split([',']);
+  for C := Length(FClasses) - 1 downto 0 do
   begin
     FClasses[C] := Trim(FClasses[C]);
     if FClasses[C] = '' then
-      FClasses.Delete(C);
+      System.Delete(FClasses, C , 1);
   end;
 
   FObjectName := Node.nodeName;
@@ -1060,14 +1057,14 @@ var
   Style: TStyle;
 begin
   LRoot := GetRoot;
-  for C := -2 to FClasses.Count do
+  for C := -2 to Length(FClasses) do
   begin
     case C of
       -2: Style := LRoot.FStyles.GetStyleByName(FObjectName);
       -1: Style := LRoot.FStyles.GetStyleByName('#' + FID);
       else
         begin
-          if C < FClasses.Count then
+          if C < Length(FClasses) then
           begin
             if Assigned(LRoot) then
             begin
@@ -2444,40 +2441,32 @@ procedure TSVG.ReadStyles(const Node: IXMLNode);
 var
   C: Integer;
   S: string;
-  SL: TStrings;
+  Classes: TArray<string>;
+  Cls: string;
 begin
-  SL := TStringList.Create;
-  try
-    if Node.Attributes['type'] = 'text/css' then
+  if Node.Attributes['type'] = 'text/css' then
+  begin
+    S := Node.text;
+  end
+  else
+  begin
+    for C := 0 to Node.childNodes.count - 1 do
     begin
-      S := Node.text;
-    end
-    else
-    begin
-      for C := 0 to Node.childNodes.count - 1 do
+      if Node.childNodes[C].nodeName = '#cdata-section' then
       begin
-        if Node.childNodes[C].nodeName = '#cdata-section' then
-        begin
-         S := Node.childNodes[C].text;
-        end;
+       S := Node.childNodes[C].text;
       end;
     end;
+  end;
 
-    ProcessStyleSheet(S);
-    SL.Text := S;
+  ProcessStyleSheet(S);
 
-    for C := SL.Count - 1 downto 0 do
-    begin
-      SL[C] := Trim(SL[C]);
-      if SL[C] = '' then
-      begin
-        SL.Delete(C);
-      end;
-    end;
-    for C := 0 to SL.Count - 1 do
-      FStyles.Add(SL[C]);
-  finally
-    SL.Free;
+  Classes  := S.Split([SLineBreak]);
+  for Cls in Classes do
+  begin
+    S := Trim(Cls);
+    if S <> '' then
+      FStyles.Add(S);
   end;
 end;
 
