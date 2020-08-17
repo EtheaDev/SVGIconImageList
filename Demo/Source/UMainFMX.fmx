@@ -389,7 +389,6 @@ object SVGIconImageListForm: TSVGIconImageListForm
             SourceRect.Bottom = 32.000000000000000000
           end>
       end>
-    Opacity = 1.000000000000000000
     Left = 72
     Top = 264
   end

@@ -2,8 +2,8 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
   Left = 0
   Top = 0
   Caption = 
-    'FireMonkey Icon Fonts ImageList Editor %s - Copyright Ethea S.r.' +
-    'l.'
+    'FireMonkey SVG Icons ImageList Editor %s - Copyright Ethea S.r.l' +
+    '.'
   ClientHeight = 540
   ClientWidth = 632
   FormFactor.Width = 320

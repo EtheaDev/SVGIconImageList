@@ -185,12 +185,15 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Value = 0
           OnChange = OpacitySpinEditChange
         end
-        object FixedColorComboBox: TComboBox
+        object FixedColorComboBox: TColorBox
           Left = 354
           Top = 30
           Width = 136
-          Height = 21
-          Style = csDropDownList
+          Height = 22
+          DefaultColorColor = clDefault
+          NoneColorColor = clNone
+          Selected = clNone
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
           TabOrder = 4
           OnSelect = FixedColorComboBoxSelect
         end
@@ -275,12 +278,14 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           TabOrder = 4
           OnChange = SVGTextChange
         end
-        object FixedColorItemComboBox: TComboBox
+        object FixedColorItemComboBox: TColorBox
           Left = 94
           Top = 70
           Width = 136
-          Height = 21
-          Style = csDropDownList
+          Height = 22
+          NoneColorColor = clNone
+          Selected = clDefault
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
           TabOrder = 2
           OnSelect = FixedColorItemComboBoxSelect
         end

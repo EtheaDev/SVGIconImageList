@@ -77,7 +77,7 @@ type
     SVGIconImage: TSVGIconImage;
     Splitter: TSplitter;
     ColorGroupBox: TGroupBox;
-    FixedColorComboBox: TComboBox;
+    FixedColorComboBox: TColorBox;
     GrayScaleCheckBox: TCheckBox;
     SVGIconVirtualImageList: TSVGIconVirtualImageList;
     NewFormButton: TButton;
@@ -213,9 +213,9 @@ procedure TMainForm.FixedColorComboBoxSelect(Sender: TObject);
 begin
   Screen.Cursor := crHourGlass;
   try
-    if FixedColorComboBox.ItemIndex >= 0 then begin
-      SVGIconVirtualImageList.FixedColor :=
-        TColor(FixedColorComboBox.Items.Objects[FixedColorComboBox.ItemIndex]);
+    if FixedColorComboBox.ItemIndex >= 0 then
+    begin
+      SVGIconVirtualImageList.FixedColor := FixedColorComboBox.Selected;
       UpdateGUI;
     end;
   finally
@@ -227,9 +227,6 @@ procedure TMainForm.FormCreate(Sender: TObject);
 var
   I: Integer;
 begin
-  FixedColorComboBox.Sorted := False;
-  AssignSVGColorList(FixedColorComboBox.Items);
-
   FSVGIconImageListHot := TSVGIconImageList.Create(Self);
   FSVGIconImageListDisabled := TSVGIconImageList.Create(Self);
 
@@ -346,7 +343,7 @@ begin
     UpdateListView;
     UpdateTreeView;
     GrayScaleCheckBox.Checked := SVGIconVirtualImageList.GrayScale;
-    FixedColorComboBox.ItemIndex := FixedColorComboBox.Items.IndexOfObject(TObject(SVGIconVirtualImageList.FixedColor));
+    FixedColorComboBox.Selected := SVGIconVirtualImageList.FixedColor;
   finally
     FUpdating := False;
   end;

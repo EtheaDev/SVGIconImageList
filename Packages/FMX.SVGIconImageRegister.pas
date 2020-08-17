@@ -86,7 +86,7 @@ function TSVGIconImageListCompEditorFMX.GetVerb(Index: Integer): string;
 begin
   Result := '';
   case Index of
-    0: Result := 'I&conFonts ImageList Editor...';
+    0: Result := 'SVG I&con VirtualImageList Editor...';
     1: Result := Format('Ver. %s - (c) Ethea S.r.l. - show help...',[SVGIconImageListVersion]);
   end;
 end;

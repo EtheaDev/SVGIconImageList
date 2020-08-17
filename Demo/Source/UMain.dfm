@@ -131,12 +131,12 @@ object MainForm: TMainForm
       Align = alBottom
       Caption = 'Fixed color'
       TabOrder = 4
-      object FixedColorComboBox: TComboBox
+      object FixedColorComboBox: TColorBox
         Left = 10
         Top = 19
         Width = 178
-        Height = 21
-        Style = csDropDownList
+        Height = 22
+        Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
         TabOrder = 0
         OnSelect = FixedColorComboBoxSelect
       end

@@ -98,11 +98,11 @@ type
     OpacitySpinEdit: TSpinEdit;
     NewButton: TButton;
     TopSplitter: TSplitter;
-    FixedColorComboBox: TComboBox;
+    FixedColorComboBox: TColorBox;
     FixedColorLabel: TLabel;
     GrayScaleCheckBox: TCheckBox;
     Label1: TLabel;
-    FixedColorItemComboBox: TComboBox;
+    FixedColorItemComboBox: TColorBox;
     GrayScaleItemCheckBox: TCheckBox;
     ReformatXMLButton: TButton;
     procedure FormCreate(Sender: TObject);
@@ -355,7 +355,7 @@ begin
     SVGText.Enabled := LIsItemSelected;
     ImageListGroup.Caption := Format(FTotIconsLabel, [FEditingList.Count]);
     GrayScaleCheckBox.Checked := SVGIconImageList.GrayScale;
-    FixedColorComboBox.ItemIndex := FixedColorComboBox.Items.IndexOfObject(TObject(SVGIconImageList.FixedColor));
+    FixedColorComboBox.Selected := SVGIconImageList.FixedColor;
     if LIsItemSelected then
     begin
       IconImage.ImageIndex := SelectedIcon.Index;
@@ -363,8 +363,7 @@ begin
       ItemGroupBox.Caption := Format(FIconIndexLabel,[LIconItem.Index]);
       IconName.Text := LIconItem.IconName;
       SVGText.Lines.Text := LIconItem.SVGText;
-      FixedColorItemComboBox.ItemIndex :=
-        FixedColorItemComboBox.Items.IndexOfObject(TObject(LIconItem.FixedColor));
+      FixedColorItemComboBox.Selected := LIconItem.FixedColor;
       GrayScaleItemCheckBox.Checked := SelectedIcon.GrayScale;
     end
     else
@@ -577,9 +576,9 @@ procedure TSVGIconImageListEditor.FixedColorComboBoxSelect(Sender: TObject);
 begin
   Screen.Cursor := crHourGlass;
   try
-    if FixedColorComboBox.ItemIndex >= 0 then begin
-      FEditingList.FixedColor :=
-        TColor(FixedColorComboBox.Items.Objects[FixedColorComboBox.ItemIndex]);
+    if FixedColorComboBox.ItemIndex >= 0 then
+    begin
+      FEditingList.FixedColor := FixedColorComboBox.Selected;
       UpdateGUI;
     end;
   finally
@@ -590,9 +589,9 @@ end;
 procedure TSVGIconImageListEditor.FixedColorItemComboBoxSelect(Sender: TObject);
 begin
   if FUpdating then Exit;
-  if FixedColorComboBox.ItemIndex >= 0 then begin
-    SelectedIcon.FixedColor :=
-      TColor(FixedColorComboBox.Items.Objects[FixedColorComboBox.ItemIndex]);
+  if FixedColorItemComboBox.ItemIndex >= 0 then
+  begin
+    SelectedIcon.FixedColor := FixedColorItemComboBox.Selected;
     UpdateGUI;
   end;
 end;
@@ -610,8 +609,6 @@ procedure TSVGIconImageListEditor.FormCreate(Sender: TObject);
 begin
   inherited;
   FEditingList := TSVGIconImageList.Create(Self);
-  AssignSVGColorList(FixedColorComboBox.Items);
-  AssignSVGColorList(FixedColorItemComboBox.Items);
   ImageView.LargeImages := FEditingList;
   IconImage.ImageList := FEditingList;
   FIconIndexLabel := ItemGroupBox.Caption;

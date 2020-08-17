@@ -86,8 +86,8 @@ begin
     //Screen.Cursor := crHourGlass;
     try
       SVGIconImageList.LoadFromFiles(OpenDialog.Files);
-      UpdateGUI;
     finally
+      UpdateGUI;
       //Screen.Cursor := crDefault;
     end;
   end;
