@@ -37,7 +37,10 @@ interface
 {$INCLUDE SVGIconImageList.inc}
 
 uses
+  System.Types,
+  System.UITypes,
   System.Classes,
+  SVGTypes,
   SVG,
   SVGColor,
   SVGIconItems;
@@ -73,7 +76,7 @@ type
     procedure Assign(Source: TPersistent); override;
     function Add(const ASVG: TSVG; const AIconName: string;
        const AGrayScale: Boolean = False;
-       const AFixedColor: TSVGColor = inherit_color): Integer;
+       const AFixedColor: TColor = SVG_INHERIT_COLOR): Integer;
     procedure Delete(const Index: Integer);
     procedure Remove(const Name: string);
     function IndexOf(const Name: string): Integer;
@@ -91,12 +94,12 @@ type
 implementation
 
 uses
-  System.Types,
   System.SysUtils;
 
 { TSVGIconImageCollection }
 
-function TSVGIconImageCollection.Add(const ASVG: TSVG; const AIconName: string; const AGrayScale: Boolean; const AFixedColor: TSVGColor): Integer;
+function TSVGIconImageCollection.Add(const ASVG: TSVG; const AIconName: string;
+  const AGrayScale: Boolean; const AFixedColor: TColor): Integer;
 var
   Item: TSVGIconItem;
 begin
@@ -205,7 +208,7 @@ var
   LTag: TBytes;
   LFixedColorStr: AnsiString;
   LGrayScale: Boolean;
-  LFixedColor: TSVGColor;
+  LFixedColor: TColor;
 begin
   if FStoreAsText then
     Exit;
@@ -230,7 +233,7 @@ begin
 
       //Check for FixedColor attribute
       LPos := Stream.Position;
-      LFixedColor := SVGColor.inherit_color;
+      LFixedColor := SVG_INHERIT_COLOR;
       SetLength(LTag, 10);
       Stream.Read(Pointer(LTag)^, 10);
       SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 10);
@@ -329,7 +332,7 @@ begin
     //Store SVG Data
     Stream.CopyFrom(SVGStream, Size);
     //Store FixedColor (optionally)
-    if LItem.FixedColor <> TSVGColor.inherit_color then
+    if LItem.FixedColor <> SVG_INHERIT_COLOR then
     begin
       LTag := 'FixedColor';
       Stream.WriteBuffer(PAnsiChar(LTag)^, 10);

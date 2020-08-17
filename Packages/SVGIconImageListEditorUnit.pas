@@ -167,6 +167,9 @@ implementation
 
 {$R *.dfm}
 
+{$WARN UNIT_PLATFORM OFF}
+{$WARN SYMBOL_PLATFORM OFF}
+
 uses
   SVG
   , SVGColor
@@ -352,7 +355,7 @@ begin
     SVGText.Enabled := LIsItemSelected;
     ImageListGroup.Caption := Format(FTotIconsLabel, [FEditingList.Count]);
     GrayScaleCheckBox.Checked := SVGIconImageList.GrayScale;
-    FixedColorComboBox.ItemIndex := FixedColorComboBox.Items.IndexOf(SVGColorToSVGColorName(SVGIconImageList.FixedColor));
+    FixedColorComboBox.ItemIndex := FixedColorComboBox.Items.IndexOfObject(TObject(SVGIconImageList.FixedColor));
     if LIsItemSelected then
     begin
       IconImage.ImageIndex := SelectedIcon.Index;
@@ -361,7 +364,7 @@ begin
       IconName.Text := LIconItem.IconName;
       SVGText.Lines.Text := LIconItem.SVGText;
       FixedColorItemComboBox.ItemIndex :=
-        FixedColorItemComboBox.Items.IndexOf(SVGColorToSVGColorName(SelectedIcon.FixedColor));
+        FixedColorItemComboBox.Items.IndexOfObject(TObject(LIconItem.FixedColor));
       GrayScaleItemCheckBox.Checked := SelectedIcon.GrayScale;
     end
     else
@@ -574,8 +577,11 @@ procedure TSVGIconImageListEditor.FixedColorComboBoxSelect(Sender: TObject);
 begin
   Screen.Cursor := crHourGlass;
   try
-    FEditingList.FixedColor := SVGColorNameToSVGColor(FixedColorComboBox.Text);
-    UpdateGUI;
+    if FixedColorComboBox.ItemIndex >= 0 then begin
+      FEditingList.FixedColor :=
+        TColor(FixedColorComboBox.Items.Objects[FixedColorComboBox.ItemIndex]);
+      UpdateGUI;
+    end;
   finally
     Screen.Cursor := crDefault;
   end;
@@ -584,8 +590,11 @@ end;
 procedure TSVGIconImageListEditor.FixedColorItemComboBoxSelect(Sender: TObject);
 begin
   if FUpdating then Exit;
-  SelectedIcon.FixedColor := SVGColorNameToSVGColor(FixedColorItemComboBox.Text);
-  UpdateGUI;
+  if FixedColorComboBox.ItemIndex >= 0 then begin
+    SelectedIcon.FixedColor :=
+      TColor(FixedColorComboBox.Items.Objects[FixedColorComboBox.ItemIndex]);
+    UpdateGUI;
+  end;
 end;
 
 procedure TSVGIconImageListEditor.FormClose(Sender: TObject;

@@ -46,9 +46,9 @@ procedure LoadBytePercent(const Node: IXMLNode; const S: string; var X: Integer)
 
 procedure LoadBoolean(const Node: IXMLNode; const S: string; var X: Boolean);
 
-procedure LoadDisplay(const Node: IXMLNode; var X: Integer);
+procedure LoadDisplay(const Node: IXMLNode; var X: TTriStateBoolean);
 
-procedure LoadVisible(const Node: IXMLNode; var X: Integer);
+procedure LoadVisible(const Node: IXMLNode; var X: TTriStateBoolean);
 
 procedure LoadGradientUnits(const Node: IXMLNode; var Units: TGradientUnits);
 
@@ -161,7 +161,7 @@ begin
     X := Boolean(ParseInteger(Attribute.nodeValue));
 end;
 
-procedure LoadDisplay(const Node: IXMLNode; var X: Integer);
+procedure LoadDisplay(const Node: IXMLNode; var X: TTriStateBoolean);
 var
   S: string;
   Attribute: IXMLNode;
@@ -171,16 +171,16 @@ begin
   begin
     S := Attribute.nodeValue;
     if S = 'inherit' then
-      X := -1
+      X := tbInherit
     else
       if S = 'none' then
-        X := 0
+        X := tbFalse
       else
-        X := 1;
+        X := tbTrue;
   end;
 end;
 
-procedure LoadVisible(const Node: IXMLNode; var X: Integer);
+procedure LoadVisible(const Node: IXMLNode; var X: TTriStateBoolean);
 var
   S: string;
   Attribute: IXMLNode;
@@ -190,12 +190,12 @@ begin
   begin
     S := Attribute.nodeValue;
     if S = 'inherit' then
-      X := -1
+      X := tbInherit
     else
       if S = 'visible' then
-        X := 1
+        X := tbTrue
       else
-        X := 0;
+        X := tbFalse;
   end;
 end;
 

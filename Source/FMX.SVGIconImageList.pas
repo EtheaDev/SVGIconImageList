@@ -50,6 +50,7 @@ uses
   , FMX.Graphics
   , FMX.Objects
   , SVG
+  , SVGTypes
   , SVGColor
   ;
 
@@ -76,7 +77,7 @@ type
     function GetSize: Integer;
     function GetSVG: TSVG;
     function GetGrayScale: Boolean;
-    function GetSVGColor: TSVGColor;
+    function GetSVGColor: TColor;
   protected
     function BitmapStored: Boolean; override;
     function GetDisplayName: string; override;
@@ -89,7 +90,7 @@ type
     property Size: Integer read GetSize write SetSize default 32;
     //Readonly properties from Source Item
     property Opacity: single read GetOpacity stored false;
-    property FixedColor: TSVGColor read GetSVGColor stored false;
+    property FixedColor: TColor read GetSVGColor stored false;
     property GrayScale: Boolean read GetGrayScale stored false;
   end;
 
@@ -110,7 +111,7 @@ type
     FOwnerImageList: TSVGIconImageList;
     FSVG: TSVG;
     FOpacity: single;
-    FFixedColor: TSVGColor;
+    FFixedColor: TColor;
     FGrayScale: Boolean;
     procedure UpdateAllItems;
     procedure SetOpacity(const AValue: single);
@@ -122,9 +123,9 @@ type
     procedure SetSVG(const Value: TSVG);
     procedure SetSVGText(const Value: string);
     function GetSVGText: string;
-    procedure SetFixedColor(const Value: TSVGColor);
+    procedure SetFixedColor(const Value: TColor);
     procedure SetGrayScale(const Value: Boolean);
-    function GetFixedColor: TSVGColor;
+    function GetFixedColor: TColor;
     function GetGrayScale: Boolean;
   protected
     function GetDisplayName: string; override;
@@ -140,7 +141,7 @@ type
     property IconName: string read GetIconName write SetIconName;
     property Opacity: single read GetOpacity write SetOpacity stored StoreOpacity;
     property SVGText: string read GetSVGText write SetSVGText;
-    property FixedColor: TSVGColor read GetFixedColor write SetFixedColor default TSVGColor.inherit_color;
+    property FixedColor: TColor read GetFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
     property GrayScale: Boolean read GetGrayScale write SetGrayScale default False;
   end;
 
@@ -150,7 +151,7 @@ type
     FSize: Integer;
     FAutoSizeBitmaps: Boolean;
     FOpacity: single;
-    FFixedColor: TSVGColor;
+    FFixedColor: TColor;
     FGrayScale: Boolean;
     function StoreOpacity: Boolean;
     procedure SetAutoSizeBitmaps(const Value: Boolean);
@@ -159,7 +160,7 @@ type
     procedure SetOpacity(const Value: single);
     function GetSize: Integer;
     procedure SetSize(const Value: Integer);
-    procedure SetFixedColor(const Value: TSVGColor);
+    procedure SetFixedColor(const Value: TColor);
     procedure SetGrayScale(const Value: Boolean);
   protected
     procedure Loaded; override;
@@ -185,7 +186,7 @@ type
     property Size: Integer read GetSize write SetSize default 32;
     property AutoSizeBitmaps: Boolean read FAutoSizeBitmaps write SetAutoSizeBitmaps default True;
     property Opacity: single read FOpacity write SetOpacity stored StoreOpacity;
-    property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
+    property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
   end;
 
@@ -200,9 +201,8 @@ uses
   , FMX.Forms
   , FMX.Consts
   , Winapi.GDIPOBJ
-  , GDIPUtils
   , Winapi.GDIPAPI
-  , SVGTypes;
+  ;
 
 
 procedure PaintToBitmap(const ABitmap: TBitmap; const ASVG: TSVG);
@@ -335,7 +335,7 @@ begin
   Result := FOwnerMultiResBitmap.FOwnerSourceItem.SVG;
 end;
 
-function TSVGIconBitmapItem.GetSVGColor: TSVGColor;
+function TSVGIconBitmapItem.GetSVGColor: TColor;
 begin
   Result := FOwnerMultiResBitmap.FOwnerSourceItem.FixedColor;
 end;
@@ -416,7 +416,7 @@ begin
   inherited Create(Collection);
   FSVG := TSVG.Create;
   FOpacity := -1;
-  FixedColor := inherit_color;
+  FixedColor := SVG_INHERIT_COLOR;
   FGrayScale := False;
   UpdateAllItems;
 end;
@@ -438,9 +438,9 @@ begin
   Result := Format('%d.%s', [Index, Name])
 end;
 
-function TSVGIconSourceItem.GetFixedColor: TSVGColor;
+function TSVGIconSourceItem.GetFixedColor: TColor;
 begin
-  if FFixedColor = inherit_color then
+  if FFixedColor = SVG_INHERIT_COLOR then
     Result := FOwnerImageList.FixedColor
   else
     Result := FFixedColor;
@@ -486,7 +486,7 @@ begin
   end;
 end;
 
-procedure TSVGIconSourceItem.SetFixedColor(const Value: TSVGColor);
+procedure TSVGIconSourceItem.SetFixedColor(const Value: TColor);
 begin
   if FFixedColor <> Value then
   begin
@@ -671,7 +671,7 @@ begin
   FAutoSizeBitmaps := True;
   FOpacity := 1;
   FSize := 32;
-  FixedColor := inherit_color;
+  FixedColor := SVG_INHERIT_COLOR;
   FGrayScale := False;
 end;
 
@@ -771,7 +771,7 @@ begin
     UpdateSourceItems;
 end;
 
-procedure TSVGIconImageList.SetFixedColor(const Value: TSVGColor);
+procedure TSVGIconImageList.SetFixedColor(const Value: TColor);
 begin
   if FFixedColor <> Value then
   begin
@@ -801,7 +801,7 @@ begin
       LSourceItem.Opacity := FOpacity;
     if not LSourceItem.GrayScale then
       LSourceItem.GrayScale := FGrayScale;
-    if LSourceItem.FixedColor = inherit_color then
+    if LSourceItem.FixedColor = SVG_INHERIT_COLOR then
       LSourceItem.FixedColor := FFixedColor;
     LSourceItem.UpdateAllItems;
   end;

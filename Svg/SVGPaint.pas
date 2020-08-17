@@ -25,13 +25,17 @@ unit SVGPaint;
 interface
 
 uses
-  Winapi.Windows, Winapi.GDIPOBJ, Winapi.GDIPAPI,
-  System.UITypes, System.Classes,
+  Winapi.Windows,
+  Winapi.GDIPOBJ,
+  Winapi.GDIPAPI,
+  System.UITypes,
+  System.Classes,
   Xml.XmlIntf,
-  SVGTypes, SVG;
+  SVGTypes,
+  SVG;
 
 type
-  TColors = record
+  TStopColors = record
     Colors: packed array of ARGB;
     Positions: packed array of Single;
     Count: Integer;
@@ -73,7 +77,8 @@ type
     FURI: string;
     FGradientUnits: TGradientUnits;
   protected
-    function GetColors(Alpha: Byte): TColors; virtual;
+    procedure AssignTo(Dest: TPersistent); override;
+    function GetColors(Alpha: Byte): TStopColors; virtual;
   public
     procedure ReadIn(const Node: IXMLNode); override;
   end;
@@ -121,9 +126,15 @@ type
 implementation
 
 uses
-  System.Types, System.SysUtils, System.Math.Vectors,
-  SVGParse, SVGStyle, SVGProperties, SVGColor,
-  GDIPUtils;
+  System.Types,
+  System.SysUtils,
+  System.Math,
+  System.Math.Vectors,
+  SVGCommon,
+  SVGParse,
+  SVGStyle,
+  SVGProperties,
+  SVGColor;
 
 // TSVGStop
 
@@ -144,7 +155,7 @@ begin
    else
     FStopColor := GetSVGColor(S);
 
-  if FStopColor = INHERIT then
+  if FStopColor = SVG_INHERIT_COLOR then
   begin
     S := Style['stop-color'];
     if GetRoot.Grayscale then
@@ -153,10 +164,10 @@ begin
       FStopColor := GetSVGColor(S);
   end;
 
-  if (GetRoot.FixedColor  <> TSVGColor.inherit_color) and
-     (integer(FStopColor) <> INHERIT) and
+  if (GetRoot.FixedColor  <> SVG_INHERIT_COLOR) and
+     (integer(FStopColor) <> SVG_INHERIT_COLOR) and
      (integer(FStopColor) <> SVG_NONE_COLOR) then
-    FStopColor := SVGColorToColor(GetRoot.FixedColor);
+    FStopColor := GetRoot.FixedColor;
 
   S := Style['stop-opacity'];
   if (S <> '') then
@@ -164,11 +175,7 @@ begin
   else
     FOpacity := 1;
 
-  if (FOpacity < 0) then
-    FOpacity := 0;
-
-  if (FOpacity > 1) then
-    FOpacity := 1;
+  FOpacity := EnsureRange(FOpacity, 0, 1);
 end;
 
 procedure TSVGStop.AssignTo(Dest: TPersistent);
@@ -178,6 +185,7 @@ begin
   begin
     TSVGStop(Dest).FStop := FStop;
     TSVGStop(Dest).FStopColor := FStopColor;
+    TSVGStop(Dest).FOpacity := FOpacity;
   end;
 end;
 
@@ -189,12 +197,12 @@ end;
 
 procedure TSVGFiller.PaintToPath(Path: TGPGraphicsPath);
 begin
-end;           
+end;
 
 procedure TSVGFiller.ReadIn(const Node: IXMLNode);
 begin
   inherited;
-  Display := 0;
+  Display := tbFalse;
 end;
 
 procedure TSVGFiller.PaintToGraphics(Graphics: TGPGraphics);
@@ -267,31 +275,31 @@ end;
 procedure TSVGLinearGradient.Clear;
 begin
   inherited;
-  FX1 := INHERIT;
-  FX2 := INHERIT;
-  FY1 := INHERIT;
-  FY2 := INHERIT;
+  FX1 := UndefinedFloat;
+  FX2 := UndefinedFloat;
+  FY1 := UndefinedFloat;
+  FY2 := UndefinedFloat;
 end;
 
 function TSVGLinearGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush;
 var
   Brush: TGPLinearGradientBrush;
   TGP: TGPMatrix;
-  Colors: TColors;
+  Colors: TStopColors;
   BoundsRect: TRectF;
   MX1, MX2, MY1, MY2: TFloat;
 begin
   BoundsRect :=  DestObject.ObjectBounds;
-  if FX1 = INHERIT then MX1 := BoundsRect.Left else MX1 := FX1;
-  if FX2 = INHERIT then MX2 := BoundsRect.Right else MX2 := FX2;
-  if FY1 = INHERIT then MY1 := BoundsRect.Top else MY1 := FY1;
-  if FY2 = INHERIT then MY2 := BoundsRect.Top else MY2 := FY2;
+  if HasValue(FX1) then MX1 := FX1 else MX1 := BoundsRect.Left;
+  if HasValue(FX2) then MX2 := FX2 else MX2 := BoundsRect.Right;
+  if HasValue(FY1) then MY1 := FY1 else MY1 := BoundsRect.Top;
+  if HasValue(FY2) then MY2 := FY2 else MY2 := BoundsRect.Top;
   if FGradientUnits = guObjectBoundingBox then begin
     // X1, X2, Y1, Y2 are relative to the Object Bounding Rect
-    if FX1 <> INHERIT then MX1 := BoundsRect.Left + FX1 * BoundsRect.Width;
-    if FX2 <> INHERIT then MX2 := BoundsRect.Left + FX2 * BoundsRect.Width;
-    if FY1 <> INHERIT then MY1 := BoundsRect.Top + FY1 * BoundsRect.Height;
-    if FY2 <> INHERIT then MY2 := BoundsRect.Top + FY2 * BoundsRect.Height;
+    if HasValue(FX1) then MX1 := BoundsRect.Left + FX1 * BoundsRect.Width;
+    if HasValue(FX2) then MX2 := BoundsRect.Left + FX2 * BoundsRect.Width;
+    if HasValue(FY1) then MY1 := BoundsRect.Top + FY1 * BoundsRect.Height;
+    if HasValue(FY2) then MY2 := BoundsRect.Top + FY2 * BoundsRect.Height;
   end;
 
   Brush := TGPLinearGradientBrush.Create(MakePoint(MX1, MY1), MakePoint(MX2, MY2), 0, 0);
@@ -303,7 +311,7 @@ begin
 
   if PureMatrix.m33 = 1 then
   begin
-    TGP := GetGPMatrix(PureMatrix);
+    TGP := ToGPMatrix(PureMatrix);
     Brush.SetTransform(TGP);
     TGP.Free;
   end;
@@ -329,9 +337,9 @@ end;
 procedure TSVGRadialGradient.Clear;
 begin
   inherited;
-  FCX := INHERIT;
-  FCY := INHERIT;
-  FR := INHERIT;
+  FCX := UndefinedFloat;
+  FCY := UndefinedFloat;
+  FR := UndefinedFloat;
   FFX := FCX;
   FFY := FCY;
 end;
@@ -344,9 +352,9 @@ begin
   LoadLength(Node, 'r', FR);
   LoadLength(Node, 'fx', FFX);
   LoadLength(Node, 'fy', FFY);
-  if FFX = INHERIT then
+  if not HasValue(FFX) then
     FFX := FCX;
-  if FFY = INHERIT then
+  if not HasValue(FFY) then
     FFY := FCY;
 end;
 
@@ -355,33 +363,36 @@ var
   Brush: TGPPathGradientBrush;
   Path: TGPGraphicsPath;
   TGP: TGPMatrix;
-  Colors: TColors;
-  RevColors: TColors;
+  Colors: TStopColors;
+  RevColors: TStopColors;
   BoundsRect: TRectF;
   MCX, MCY, MR, MFX, MFY: TFloat;
   i: integer;
 begin
   BoundsRect :=  DestObject.ObjectBounds;
-  if FCX = INHERIT then MCX := BoundsRect.Left + 0.5 * BoundsRect.Width else MCX := FCX;
-  if FFX = INHERIT then MFX := MCX else MFX := FFX;
-  if FCY = INHERIT then MCY := BoundsRect.Top + 0.5 * BoundsRect.Height else MCY := FCY;
-  if FFY = INHERIT then MFY := MCY else MFY := FFY;
-  if FR = INHERIT then
-    MR := 0.5 * Sqrt(Sqr(BoundsRect.Width) + Sqr(BoundsRect.Height))/Sqrt(2)
+  if HasValue(FCX) then MCX := FCX else MCX := BoundsRect.Left + 0.5 * BoundsRect.Width;
+  if HasValue(FFX) then MFX := FFX else MFX := MCX;
+  if HasValue(FCY) then MCY := FCY else MCY := BoundsRect.Top + 0.5 * BoundsRect.Height;
+  if HasValue(FFY) then MFY := FFY else MFY := MCY;
+  if HasValue(FR) then
+    MR := FR
   else
-    MR := FR;
+    MR := 0.5 * Sqrt(Sqr(BoundsRect.Width) + Sqr(BoundsRect.Height))/Sqrt(2);
   if FGradientUnits = guObjectBoundingBox then begin
     // CX, CY, R, FX, FY are relative to the Object Bounding Rect
-    if FCX <> INHERIT then MCX := BoundsRect.Left + FCX * BoundsRect.Width;
-    if FFX <> INHERIT then MFX := BoundsRect.Left + FFX * BoundsRect.Width;
-    if FCY <> INHERIT then MCY := BoundsRect.Top + FCY * BoundsRect.Height;
-    if FFY <> INHERIT then MFY := BoundsRect.Top + FFY * BoundsRect.Height;
-    if FR <> INHERIT then
+    if HasValue(FCX) then MCX := BoundsRect.Left + FCX * BoundsRect.Width;
+    if HasValue(FFX) then MFX := BoundsRect.Left + FFX * BoundsRect.Width;
+    if HasValue(FCY) then MCY := BoundsRect.Top + FCY * BoundsRect.Height;
+    if HasValue(FFY) then MFY := BoundsRect.Top + FFY * BoundsRect.Height;
+    if HasValue(FR) then
       MR := FR * Sqrt(Sqr(BoundsRect.Width) + Sqr(BoundsRect.Height))/Sqrt(2);
   end;
 
   Path := TGPGraphicsPath.Create;
-  Path.AddEllipse(MCX - MR, MCY - MR, 2 * MR, 2 * MR);
+  if HasValue(FR) then
+    Path.AddEllipse(MCX - MR, MCY - MR, 2 * MR, 2 * MR)
+  else
+    Path.AddEllipse(ToGPRectF(BoundsRect));
 
   Brush := TGPPathGradientBrush.Create(Path);
   Path.Free;
@@ -402,12 +413,12 @@ begin
 
   Brush.SetInterpolationColors(PARGB(RevColors.Colors), PSingle(RevColors.Positions), Colors.Count);
 
-  if (FFX <> INHERIT) and (FFY <> INHERIT) then
+  if HasValue(FFX) and HasValue(FFY) then
     Brush.SetCenterPoint(MakePoint(MFX, MFY));
 
   if PureMatrix.m33 = 1 then
   begin
-    TGP := GetGPMatrix(PureMatrix);
+    TGP := ToGPMatrix(PureMatrix);
     Brush.SetTransform(TGP);
     TGP.Free;
   end;
@@ -415,7 +426,17 @@ begin
   Result := Brush;
 end;
 
-function TSVGGradient.GetColors(Alpha: Byte): TColors;
+procedure TSVGGradient.AssignTo(Dest: TPersistent);
+begin
+  inherited;
+  if Dest is TSVGGradient then
+  begin
+    TSVGGradient(Dest).FURI := FURI;
+    TSVGGradient(Dest).FGradientUnits := FGradientUnits;
+  end;
+end;
+
+function TSVGGradient.GetColors(Alpha: Byte): TStopColors;
 var
   C, Start, ColorCount: Integer;
   Stop: TSVGStop;

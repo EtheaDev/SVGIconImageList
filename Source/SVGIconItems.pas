@@ -37,8 +37,10 @@ interface
 {$INCLUDE SVGIconImageList.inc}
 
 uses
+  System.UITypes,
   System.Classes,
   System.Messaging,
+  SVGTypes,
   SVG,
   SVGColor;
 
@@ -52,13 +54,13 @@ type
   private
     FIconName: string;
     FSVG: TSVG;
-    FFixedColor: TSVGColor;
+    FFixedColor: TColor;
     FGrayScale: Boolean;
     procedure SetIconName(const Value: string);
     procedure SetSVG(const Value: TSVG);
     procedure SetSVGText(const Value: string);
     function GetSVGText: string;
-    procedure SetFixedColor(const Value: TSVGColor);
+    procedure SetFixedColor(const Value: TColor);
     procedure SetGrayScale(const Value: Boolean);
   public
     procedure Assign(Source: TPersistent); override;
@@ -69,7 +71,7 @@ type
   published
     property IconName: string read FIconName write SetIconName;
     property SVGText: string read GetSVGText write SetSVGText;
-    property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
+    property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
   end;
 
@@ -117,6 +119,7 @@ constructor TSVGIconItem.Create(Collection: TCollection);
 begin
   inherited Create(Collection);
   FSVG := TSVG.Create;
+  FFixedColor := SVG_INHERIT_COLOR;
 end;
 
 destructor TSVGIconItem.Destroy;
@@ -138,12 +141,12 @@ begin
   Result := SVG.Source;
 end;
 
-procedure TSVGIconItem.SetFixedColor(const Value: TSVGColor);
+procedure TSVGIconItem.SetFixedColor(const Value: TColor);
 begin
   if FFixedColor <> Value then
   begin
     FFixedColor := Value;
-    if FFixedColor <> inherit_color then
+    if FFixedColor <> SVG_INHERIT_COLOR then
       FGrayScale := False;
     Changed(False);
   end;
@@ -155,7 +158,7 @@ begin
   begin
     FGrayScale := Value;
     if FGrayScale then
-      FixedColor := inherit_color;
+      FixedColor := SVG_INHERIT_COLOR;
     Changed(False);
   end;
 end;

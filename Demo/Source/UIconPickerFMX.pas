@@ -71,7 +71,6 @@ implementation
 
 uses
   Winapi.GDIPOBJ
-  , GDIPUtils
   , Winapi.GDIPAPI
   , SVGTypes;
 

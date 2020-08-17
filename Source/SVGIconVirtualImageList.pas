@@ -86,6 +86,7 @@ type
 implementation
 
 uses
+  System.UITypes,
   System.Math,
   System.SysUtils,
   WinApi.Windows,
@@ -93,7 +94,8 @@ uses
   Winapi.GDIPAPI,
   Vcl.Forms,
   Vcl.ImgList,
-  GDIPUtils,
+  SVGTypes,
+  SVGCommon,
   SVGIconImageList;
 
 { TSVGIconVirtualImageList }
@@ -154,7 +156,7 @@ begin
   begin
     LItem := FCollection.SVGIconItems[AIndex];
     SVG := LItem.SVG;
-    if LItem.FixedColor <> inherit_color then
+    if LItem.FixedColor <> SVG_INHERIT_COLOR then
       SVG.FixedColor := LItem.FixedColor
     else
       SVG.FixedColor := FFixedColor;
@@ -174,7 +176,7 @@ begin
         LOpacity := FDisabledOpacity;
     end;
     SVG.SVGOpacity := LOpacity / 255;
-    R := CalcRect( MakeRect(X, Y, AWidth, AHeight), SVG.Width, SVG.Height, baCenterCenter);
+    R := FittedRect(MakeRect(X, Y, AWidth, AHeight), SVG.Width, SVG.Height);
     SVG.PaintTo(ACanvas.Handle, R, nil, 0);
     SVG.SVGOpacity := 1;
   end;
@@ -202,7 +204,7 @@ begin
       SVG := LItem.SVG;
       if Assigned(SVG) then
       begin
-        if LItem.FixedColor <> inherit_color then
+        if LItem.FixedColor <> SVG_INHERIT_COLOR then
           SVG.FixedColor := LItem.FixedColor
         else
           SVG.FixedColor := FixedColor;

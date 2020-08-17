@@ -44,6 +44,7 @@ uses
   Vcl.Graphics,
   Vcl.ImgList,
   System.UITypes,   // after ImgList to avoid deprecation warnings
+  SVGTypes,
   SVG,
   SVGColor,
   SVGIconItems;
@@ -63,7 +64,7 @@ type
     {$ENDIF}
     FSVGItemsUpdateMessageID: Integer;
     FOpacity: Byte;
-    FFixedColor: TSVGColor;
+    FFixedColor: TColor;
     FGrayScale: Boolean;
     FDisabledGrayScale: Boolean;
     FDisabledOpacity: Byte;
@@ -83,7 +84,7 @@ type
     procedure SetImages(Index: Integer; const Value: TSVG); virtual;
     procedure SetNames(Index: Integer; const Value: string); virtual;
     procedure SetSize(const Value: Integer);
-    procedure SetFixedColor(const Value: TSVGColor);
+    procedure SetFixedColor(const Value: TColor);
     procedure SetGrayScale(const Value: Boolean);
     procedure SetDisabledGrayScale(const Value: Boolean);
     procedure SetDisabledOpacity(const Value: Byte);
@@ -138,7 +139,7 @@ type
     property Width: Integer read GetWidth write SetWidth stored StoreWidth default DEFAULT_SIZE;
     property Height: Integer read GetHeight write SetHeight stored StoreHeight default DEFAULT_SIZE;
     property Size: Integer read GetSize write SetSize stored StoreSize default DEFAULT_SIZE;
-    property FixedColor: TSVGColor read FFixedColor write SetFixedColor default TSVGColor.inherit_color;
+    property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
     property DisabledGrayScale: Boolean read FDisabledGrayScale write SetDisabledGrayScale default True;
     property DisabledOpacity: Byte read FDisabledOpacity write SetDisabledOpacity default 125;
@@ -163,12 +164,9 @@ uses
   Winapi.GDIPOBJ,
   Vcl.ComCtrls,
   Vcl.Forms,
-  GDIPUtils,
-  SVGTypes;
+  SVGCommon;
 
 { TSVGIconImageListBase }
-
-
 
 procedure TSVGIconImageListBase.Assign(Source: TPersistent);
 begin
@@ -213,7 +211,7 @@ begin
   Width := DEFAULT_SIZE;
   Height := DEFAULT_SIZE;
   FOpacity := 255;
-  FFixedColor := inherit_color;
+  FFixedColor := SVG_INHERIT_COLOR;
   FGrayScale := False;
   {$IFDEF HiDPISupport}
   FScaled := True;
@@ -222,7 +220,6 @@ begin
   FSVGItemsUpdateMessageID := TMessageManager.DefaultManager.SubscribeToMessage(TSVGItemsUpdateMessage, SVGItemsUpdateMessageHandler);
   FDisabledGrayScale := True;
   FDisabledOpacity := 125;
-
 end;
 
 procedure TSVGIconImageListBase.DefineProperties(Filer: TFiler);
@@ -451,15 +448,16 @@ begin
   end;
 end;
 
-procedure TSVGIconImageListBase.SetFixedColor(const Value: TSVGColor);
+procedure TSVGIconImageListBase.SetFixedColor(const Value: TColor);
 begin
   if FFixedColor <> Value then
   begin
     BeginUpdate;
     try
       FFixedColor := Value;
-      if FFixedColor <> inherit_color then
+      if FFixedColor <> SVG_INHERIT_COLOR then
         FGrayScale := False;
+      Change;
     finally
       EndUpdate;
     end;
@@ -474,7 +472,8 @@ begin
     try
       FGrayScale := Value;
       if FGrayScale then
-        FixedColor := inherit_color;
+        FixedColor := SVG_INHERIT_COLOR;
+      Change;
     finally
       EndUpdate;
     end;
@@ -665,7 +664,7 @@ var
 
 begin
   SVG.SVGOpacity := FOpacity / 255;
-  R := CalcRect(MakeRect(0.0, 0, Width, Height), SVG.Width, SVG.Height, baCenterCenter);
+  R := FittedRect(MakeRect(0.0, 0, Width, Height), SVG.Width, SVG.Height);
 
   if GetFileVersion(comctl32) >= ComCtlVersionIE6 then
     Result := SVGToIcon32(SVG)

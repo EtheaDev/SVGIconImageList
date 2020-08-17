@@ -25,7 +25,7 @@ package SVGIconPackage;
 {$IMAGEBASE $400000}
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'Ethea SVGIconImageList VCL components'}
+{$DESCRIPTION 'SVG Package for Ethea SVGIcon Components'}
 {$LIBSUFFIX '_D10_2'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
@@ -45,9 +45,8 @@ contains
   SVGProperties in '..\..\Svg\SVGProperties.pas',
   SVGStyle in '..\..\Svg\SVGStyle.pas',
   SVGTypes in '..\..\Svg\SVGTypes.pas',
-  GDIPKerning in '..\..\GDIP\GDIPKerning.pas',
-  GDIPOBJ2 in '..\..\GDIP\GDIPOBJ2.pas',
-  GDIPPathText in '..\..\GDIP\GDIPPathText.pas',
-  GDIPUtils in '..\..\GDIP\GDIPUtils.pas';
+  GDIPKerning in '..\..\Svg\GDIPKerning.pas',
+  GDIPOBJ2 in '..\..\Svg\GDIPOBJ2.pas',
+  GDIPPathText in '..\..\Svg\GDIPPathText.pas';
 
 end.

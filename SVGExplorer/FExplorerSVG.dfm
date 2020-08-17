@@ -234,7 +234,6 @@ object fmExplorerSVG: TfmExplorerSVG
     end
   end
   object SVGIconImageList: TSVGIconImageList
-    ColorDepth = cd32Bit
     Size = 32
     Left = 264
     Top = 157
