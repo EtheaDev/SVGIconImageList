@@ -4,7 +4,7 @@
 
 ## Welcome to the SVGIconFontImageList guide (VCL+FMX)
 
-### Actual official version 1.8 (VCL+FMX)
+### Actual official version 1.9 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -37,6 +37,11 @@ The [SVG Icon Explorer](https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIco
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 **RELEASE NOTES:**
+
+17 Aug 2020: version 1.9 (VCL+FMX)
+ - FixedColor changed from TSVGColor to TColor
+ - Fixed assign FixedColor to icon in component editor 
+ - Updated component editor to use TColorBox
 
 13 Aug 2020: version 1.8 (VCL+FMX)
  - Complete refactoring for full support of High-DPI
