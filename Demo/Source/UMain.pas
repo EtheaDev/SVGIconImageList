@@ -39,7 +39,7 @@ uses
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
   System.Actions, System.ImageList, SVGIconImageListBase,
   SVGIconImageCollection, SVGIconVirtualImageList,
-  UDataModule;
+  UDataModule, Vcl.VirtualImageList;
 
 type
   TMainForm = class(TForm)
@@ -82,6 +82,7 @@ type
     SVGIconVirtualImageList: TSVGIconVirtualImageList;
     NewFormButton: TButton;
     NewFormAction: TAction;
+    VirtualImageList: TVirtualImageList;
     procedure ChangeIconActionExecute(Sender: TObject);
     procedure SelectThemeRadioGroupClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -372,6 +373,7 @@ procedure TMainForm.TrackBarChange(Sender: TObject);
 begin
   //Resize all icons into ImageList
   SVGIconVirtualImageList.Size := TrackBar.Position;
+  VirtualImageList.SetSize(TrackBar.Position, TrackBar.Position);
   UpdateGUI;
 end;
 

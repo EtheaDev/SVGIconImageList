@@ -111,8 +111,6 @@ type
     procedure DoChange; override;
     procedure ClearIcons;virtual;
 
-    function SVGToIcon(const SVG: TSVG): HICON;
-
   {$IFDEF HiDPISupport}
     procedure DPIChangedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
   {$ENDIF}
@@ -397,7 +395,10 @@ function TSVGIconImageListBase.LoadFromFiles(const AFileNames: TStrings;
 begin
   BeginUpdate;
   try
-    Result := SVGIconItems.LoadFromFiles(AFileNames, AAppend);
+    if Assigned(SVGIconItems) then
+      Result := SVGIconItems.LoadFromFiles(AFileNames, AAppend)
+    else
+      Result := 0;
   finally
     EndUpdate;
   end;
@@ -576,102 +577,6 @@ begin
   finally
     Graphics.Free;
   end;
-end;
-
-
-function TSVGIconImageListBase.SVGToIcon(const SVG: TSVG): HICON;
-var
-  R: TGPRectF;
-
-  function SVGToIcon24(SVG: TSVG): HIcon;
-  var
-    ColorBitmap, MaskBitmap: TBitmap;
-    X: Integer;
-    Y: Integer;
-    Bits: PRGBQuad;
-    IconInfo: TIconInfo;
-    TransparentBitmap: TBitmap;
-    BF: TBlendFunction;
-    DC: THandle;
-  begin
-    ColorBitmap := TBitmap.Create;
-    MaskBitmap := TBitmap.Create;
-    TransparentBitmap := TBitmap.Create;
-    try
-      TransparentBitmap.PixelFormat := pf32bit;
-      TransparentBitmap.Width := Width;
-      TransparentBitmap.Height := Height;
-      FillChar(TransparentBitmap.Scanline[Height - 1]^, Width * Height * 4, 0);
-
-      PaintToBitmap(SVG, TransparentBitmap, R, nil, 0);
-
-      ColorBitmap.PixelFormat := pf32bit;
-      ColorBitmap.Width := Width;
-      ColorBitmap.Height := Height;
-      MaskBitmap.PixelFormat := pf32bit;
-      MaskBitmap.Width := Width;
-      MaskBitmap.Height := Height;
-
-      ColorBitmap.Canvas.Brush.Color := BkColor;
-      ColorBitmap.Canvas.FillRect(Rect(0, 0, Width, Height));
-
-      BF.BlendOp := AC_SRC_OVER;
-      BF.BlendFlags := 0;
-      BF.SourceConstantAlpha := 255;
-      BF.AlphaFormat := AC_SRC_ALPHA;
-      AlphaBlend(ColorBitmap.Canvas.Handle, 0, 0, Width, Height,
-        TransparentBitmap.Canvas.Handle, 0, 0, Width, Height, BF);
-
-      DC := MaskBitmap.Canvas.Handle;
-      for Y := 0 to Height - 1 do
-      begin
-        Bits := TransparentBitmap.ScanLine[Y];
-        for X := 0 to Width - 1 do
-        begin
-          if Bits.rgbReserved = 0 then
-            SetPixelV(DC, X, Y, clWhite)
-          else
-            SetPixelV(DC, X, Y, clBlack);
-          Inc(Bits);
-        end;
-      end;
-
-      IconInfo.fIcon := True;
-      IconInfo.hbmColor := ColorBitmap.Handle;
-      IconInfo.hbmMask := MaskBitmap.Handle;
-      Result := CreateIconIndirect(IconInfo);
-    finally
-      TransparentBitmap.Free;
-      ColorBitmap.Free;
-      MaskBitmap.Free;
-    end;
-  end;
-
-  function SVGToIcon32(SVG: TSVG): HICON;
-  var
-    Bitmap: TGPBitmap;
-    Graphics: TGPGraphics;
-  begin
-    Bitmap := TGPBitmap.Create(Width, Height);
-    Graphics := TGPGraphics.Create(Bitmap);
-    Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-    SVG.PaintTo(Graphics, R, nil, 0);
-    Graphics.Free;
-
-    Bitmap.GetHICON(Result);
-    Bitmap.Free;
-  end;
-
-begin
-  SVG.SVGOpacity := FOpacity / 255;
-  R := FittedRect(MakeRect(0.0, 0, Width, Height), SVG.Width, SVG.Height);
-
-  if GetFileVersion(comctl32) >= ComCtlVersionIE6 then
-    Result := SVGToIcon32(SVG)
-  else
-    Result := SVGToIcon24(SVG);
-
-  SVG.SVGOpacity := 1;
 end;
 
 procedure TSVGIconImageListBase.WriteLeft(Writer: TWriter);

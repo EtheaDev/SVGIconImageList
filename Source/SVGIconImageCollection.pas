@@ -37,13 +37,21 @@ interface
 {$INCLUDE SVGIconImageList.inc}
 
 uses
-  System.Types,
-  System.UITypes,
-  System.Classes,
-  SVGTypes,
-  SVG,
-  SVGColor,
-  SVGIconItems;
+  System.Types
+  , System.UITypes
+  , System.Classes
+  , SVGTypes
+  , SVG
+  , SVGColor
+  , WinApi.Windows
+  , Winapi.GDIPOBJ
+  , Winapi.GDIPAPI
+{$IFDEF D10_3+}
+  , Graphics
+  , BaseImageCollection
+{$ENDIF}
+  , SVGIconItems
+  ;
 
 //alias to make usage simpler (less uses clause entries).
 type
@@ -51,15 +59,21 @@ type
   TSVGIconItems = SVGIconItems.TSVGIconItems;
 
 type
-  TSVGIconImageCollection = class;
-
+  {$IFDEF D10_3+}
+  TSVGIconImageCollection = class(TCustomImageCollection)
+  {$ELSE}
   TSVGIconImageCollection = class(TComponent)
+  {$ENDIF}
   private
     FSVGItems: TSVGIconItems;
     FStoreAsText : boolean;
     procedure SetSVGIconItems(const Value: TSVGIconItems);
 
   protected
+    {$IFDEF D10_3+}
+    function GetCount: Integer; override;
+    {$ENDIF}
+
     procedure ReadLeft(Reader: TReader);
     procedure ReadTop(Reader: TReader);
     procedure WriteLeft(Writer: TWriter);
@@ -71,6 +85,14 @@ type
     procedure DefineProperties(Filer: TFiler); override;
 
   public
+    {$IFDEF D10_3+}
+    function IsIndexAvailable(AIndex: Integer): Boolean; override;
+    function GetIndexByName(const AName: String): Integer; override;
+    function GetNameByIndex(AIndex: Integer): String; override;
+    function GetBitmap(AIndex: Integer; AWidth, AHeight: Integer): TBitmap; override;
+    procedure Draw(ACanvas: TCanvas; ARect: TRect; AIndex: Integer; AProportional: Boolean = False); override;
+    {$ENDIF}
+
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
@@ -94,6 +116,7 @@ type
 implementation
 
 uses
+  SVGCommon,
   System.SysUtils;
 
 { TSVGIconImageCollection }
@@ -359,5 +382,97 @@ procedure TSVGIconImageCollection.WriteTop(Writer: TWriter);
 begin
   Writer.WriteInteger(LongRec(DesignInfo).Hi);
 end;
+
+{$IFDEF D10_3+}
+function UpdateRectForProportionalSize(ARect: TRect; AWidth, AHeight: Integer; AStretch: Boolean): TRect;
+var
+  w, h, cw, ch: Integer;
+  xyaspect: Double;
+begin
+  Result := ARect;
+  if AWidth * AHeight = 0 then
+    Exit;
+
+  w := AWidth;
+  h := AHeight;
+  cw := ARect.Width;
+  ch := ARect.Height;
+
+  if AStretch or ((w > cw) or (h > ch)) then
+  begin
+    xyaspect := w / h;
+    if w > h then
+    begin
+      w := cw;
+      h := Trunc(cw / xyaspect);
+      if h > ch then
+      begin
+        h := ch;
+        w := Trunc(ch * xyaspect);
+      end;
+     end
+     else
+     begin
+       h := ch;
+       w := Trunc(ch * xyaspect);
+       if w > cw then
+       begin
+         w := cw;
+         h := Trunc(cw / xyaspect);
+       end;
+     end;
+  end;
+
+  Result := Rect(0, 0, w, h);
+  OffsetRect(Result, ARect.Left + (cw - w) div 2, ARect.Top + (ch - h) div 2);
+end;
+
+function TSVGIconImageCollection.GetCount: Integer;
+begin
+  if Assigned(FSVGItems) then
+    Result := FSVGItems.Count
+  else
+    Result := 0;
+end;
+
+function TSVGIconImageCollection.GetNameByIndex(AIndex: Integer): String;
+begin
+  if (AIndex >= 0) and (AIndex < Count) then
+    Result := FSVGItems[AIndex].IconName;
+end;
+
+function TSVGIconImageCollection.GetIndexByName(const AName: String): Integer;
+var
+  I: Integer;
+  S: String;
+begin
+  Result := -1;
+  S := LowerCase(AName);
+  for I := 0 to FSVGItems.Count - 1 do
+    if LowerCase(FSVGItems[I].IconName) = S then
+      Exit(I);
+end;
+
+function TSVGIconImageCollection.IsIndexAvailable(AIndex: Integer): Boolean;
+begin
+  Result := (Count > 0) and (AIndex >= 0) and (AIndex < Count);
+end;
+
+function TSVGIconImageCollection.GetBitmap(AIndex: Integer; AWidth, AHeight: Integer): TBitmap;
+begin
+  Result := FSVGItems[AIndex].GetBitmap(AWidth, AHeight, clDefault, 255, False);
+end;
+
+procedure TSVGIconImageCollection.Draw(ACanvas: TCanvas; ARect: TRect; AIndex: Integer;
+  AProportional: Boolean = False);
+var
+  LItem: TSVGIconItem;
+begin
+  LItem := FSVGItems.Items[AIndex];
+  if AProportional then
+    ARect := UpdateRectForProportionalSize(ARect, ARect.Width, ARect.Height, True);
+  LItem.SVG.PaintTo(ACanvas.Handle, ARect.Left, ARect.Top, ARect.Width, ARect.Height);
+end;
+{$ENDIF}
 
 end.

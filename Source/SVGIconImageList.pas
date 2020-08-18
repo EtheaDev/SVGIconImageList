@@ -42,9 +42,6 @@ uses
   , ImgList
   , Windows
   , Graphics
-{$IFDEF D10_4+}
-  , System.UITypes
-{$ENDIF}
 {$IFDEF HiDPISupport}
   , Messaging
 {$ENDIF}
@@ -308,8 +305,7 @@ end;
 procedure TSVGIconImageList.RecreateBitmaps;
 var
   C: Integer;
-  SVG: TSVG;
-  Icon: HIcon;
+  LIcon: HICON;
   LItem: TSVGIconItem;
 begin
   if not Assigned(FSVGItems) or
@@ -324,21 +320,9 @@ begin
     for C := 0 to FSVGItems.Count - 1 do
     begin
       LItem := FSVGItems[C];
-      SVG := LItem.SVG;
-      if Assigned(SVG) then
-      begin
-        if LItem.FixedColor <> SVG_INHERIT_COLOR then
-          SVG.FixedColor := LItem.FixedColor
-        else
-          SVG.FixedColor := FFixedColor;
-        if LItem.GrayScale or FGrayScale then
-          SVG.Grayscale := True
-        else
-          SVG.Grayscale := False;
-        Icon := SVGToIcon(SVG);
-        ImageList_AddIcon(Handle, Icon);
-        DestroyIcon(Icon);
-      end;
+      LIcon := LItem.GetIcon(Width, Height, FixedColor, Opacity, GrayScale);
+      ImageList_AddIcon(Handle, LIcon);
+      DestroyIcon(LIcon);
     end;
   end;
 end;

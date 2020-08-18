@@ -40,6 +40,10 @@ uses
   System.UITypes,
   System.Classes,
   System.Messaging,
+  Winapi.Windows,
+  Winapi.GDIPOBJ,
+  Winapi.GDIPAPI,
+  Vcl.Graphics,
   SVGTypes,
   SVG,
   SVGColor;
@@ -62,9 +66,18 @@ type
     function GetSVGText: string;
     procedure SetFixedColor(const Value: TColor);
     procedure SetGrayScale(const Value: Boolean);
+    function GetGPBitmap(const AWidth, AHeight: Integer;
+      const AFixedColor: TColor; const AOpacity: Byte;
+      const AGrayScale: Boolean): TGPBitmap;
   public
     procedure Assign(Source: TPersistent); override;
     function GetDisplayName: string; override;
+    function GetBitmap(const AWidth, AHeight: Integer;
+      const AFixedColor: TColor; const AOpacity: Byte;
+      const AGrayScale: Boolean): TBitmap;
+    function GetIcon(const AWidth, AHeight: Integer;
+      const AFixedColor: TColor; const AOpacity: Byte;
+      const AGrayScale: Boolean): HICON;
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
     property SVG: TSVG read FSVG write SetSVG;
@@ -95,6 +108,7 @@ implementation
 
 uses
   System.SysUtils,
+  SVGCommon,
   SVGIconImageList,
   SVGIconImageCollection;
 
@@ -134,6 +148,63 @@ begin
     Result := Format('%s',[IconName])
   else
     Result := 'SVGIconItem';
+end;
+
+function TSVGIconItem.GetGPBitmap(const AWidth, AHeight: Integer;
+  const AFixedColor: TColor; const AOpacity: Byte;
+  const AGrayScale: Boolean): TGPBitmap;
+var
+  R: TGPRectF;
+  LGPGraphics: TGPGraphics;
+begin
+  if Assigned(FSVG) then
+  begin
+    if FFixedColor <> SVG_INHERIT_COLOR then
+      FSVG.FixedColor := FFixedColor
+    else
+      FSVG.FixedColor := AFixedColor;
+    if FGrayScale or AGrayScale then
+      FSVG.Grayscale := True
+    else
+      FSVG.Grayscale := False;
+    FSVG.SVGOpacity := AOpacity / 255;
+    R := FittedRect(MakeRect(0.0, 0, AWidth, AHeight), FSVG.Width, FSVG.Height);
+    Result := TGPBitmap.Create(AWidth, AHeight);
+    LGPGraphics := TGPGraphics.Create(Result);
+    try
+      LGPGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
+      FSVG.PaintTo(LGPGraphics, R, nil, 0);
+    finally
+      LGPGraphics.Free;
+    end;
+  end
+  else
+    Result := TGPBitmap.Create(AWidth, AHeight);
+end;
+
+function TSVGIconItem.GetIcon(const AWidth, AHeight: Integer;
+  const AFixedColor: TColor; const AOpacity: Byte;
+  const AGrayScale: Boolean): HICON;
+var
+  LGPBitmap: TGPBitmap;
+begin
+  LGPBitmap := GetGPBitmap(AWidth, AHeight, AFixedColor, AOpacity, AGrayScale);
+  LGPBitmap.GetHICON(Result);
+end;
+
+function TSVGIconItem.GetBitmap(const AWidth, AHeight: Integer;
+  const AFixedColor: TColor; const AOpacity: Byte; const AGrayScale: Boolean): TBitmap;
+var
+  LGPBitmap: TGPBitmap;
+  LBitmapHandle: HBITMAP;
+begin
+  Result := TBitmap.Create;
+  Result.PixelFormat := pf32bit;
+  Result.SetSize(AWidth, AHeight);
+  Result.alphaFormat := afIgnored;
+  LGPBitmap := GetGPBitmap(AWidth, AHeight, AFixedColor, AOpacity, AGrayScale);
+  LGPBitmap.GetHBITMAP(clDefault, LBitmapHandle);
+  Result.Handle := LBitmapHandle;
 end;
 
 function TSVGIconItem.GetSVGText: string;

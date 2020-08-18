@@ -185,9 +185,8 @@ end;
 procedure TSVGIconVirtualImageList.RecreateBitmaps;
 var
   C: Integer;
-  SVG: TSVG;
-  Icon: HIcon;
   LItem: TSVGIconItem;
+  LIcon: HICON;
 begin
   if not Assigned(FCollection) or
     ([csLoading, csDestroying, csUpdating] * ComponentState <> [])
@@ -201,21 +200,9 @@ begin
     for C := 0 to FCollection.SVGIconItems.Count - 1 do
     begin
       LItem := FCollection.SVGIconItems[C];
-      SVG := LItem.SVG;
-      if Assigned(SVG) then
-      begin
-        if LItem.FixedColor <> SVG_INHERIT_COLOR then
-          SVG.FixedColor := LItem.FixedColor
-        else
-          SVG.FixedColor := FixedColor;
-        if LItem.GrayScale or GrayScale then
-          SVG.Grayscale := True
-        else
-          SVG.Grayscale := False;
-        Icon := SVGToIcon(SVG);
-        ImageList_AddIcon(Handle, Icon);
-        DestroyIcon(Icon);
-      end;
+      LIcon := LItem.GetIcon(Width, Height, FixedColor, Opacity, GrayScale);
+      ImageList_AddIcon(Handle, LIcon);
+      DestroyIcon(LIcon);
     end;
   end;
 end;
