@@ -99,13 +99,15 @@ type
 
     function IndexOf(const Name: string): Integer;virtual;
 
-    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload; virtual; abstract;
-    procedure PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload;
+    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
+      const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload; virtual; abstract;
+    procedure PaintTo(const ACanvas: TCanvas; const AName: string;
+      const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload;
 
     procedure DefineProperties(Filer: TFiler); override;
     procedure DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer; Style: Cardinal; Enabled: Boolean = True); override;
     procedure Loaded; override;
-    function GetCount: Integer;    {$IF CompilerVersion > 29} override; {$ELSE}  virtual;abstract; {$ENDIF}
+    function GetCount: Integer; {$IF CompilerVersion > 29}override;{$ELSE}virtual; abstract;{$ENDIF}
 
     procedure RecreateBitmaps; virtual; abstract;
     procedure DoChange; override;

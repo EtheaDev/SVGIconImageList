@@ -43,6 +43,9 @@ uses
   Vcl.Graphics,
   SVG,
   SVGColor,
+{$IFDEF D10_3+}
+  Vcl.VirtualImageList,
+{$ENDIF}
   SVGIconImageListBase,
   SVGIconImageCollection;
 
@@ -61,7 +64,8 @@ type
     function GetCount: Integer;override;
 
   public
-    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
+    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
+      const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
 
   published
     //Publishing properties of Custom Class
@@ -145,40 +149,41 @@ begin
   end;
 end;
 
-procedure TSVGIconVirtualImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean);
+procedure TSVGIconVirtualImageList.PaintTo(const ACanvas: TCanvas;
+  const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean);
 var
   R: TGPRectF;
-  SVG: TSVG;
+  LSVG: TSVG;
   LItem: TSVGIconItem;
   LOpacity: Byte;
 begin
   if (FCollection <> nil) and (AIndex >= 0) and (AIndex < FCollection.SVGIconItems.Count) then
   begin
     LItem := FCollection.SVGIconItems[AIndex];
-    SVG := LItem.SVG;
+    LSVG := LItem.SVG;
     if LItem.FixedColor <> SVG_INHERIT_COLOR then
-      SVG.FixedColor := LItem.FixedColor
+      LSVG.FixedColor := LItem.FixedColor
     else
-      SVG.FixedColor := FFixedColor;
+      LSVG.FixedColor := FFixedColor;
     LOpacity := FOpacity;
     if AEnabled then
     begin
       if LItem.GrayScale or FGrayScale then
-        SVG.Grayscale := True
+        LSVG.Grayscale := True
       else
-        SVG.Grayscale := False;
+        LSVG.Grayscale := False;
     end
     else
     begin
       if FDisabledGrayScale then
-        SVG.Grayscale := True
+        LSVG.Grayscale := True
       else
         LOpacity := FDisabledOpacity;
     end;
-    SVG.SVGOpacity := LOpacity / 255;
-    R := FittedRect(MakeRect(X, Y, AWidth, AHeight), SVG.Width, SVG.Height);
-    SVG.PaintTo(ACanvas.Handle, R, nil, 0);
-    SVG.SVGOpacity := 1;
+    LSVG.SVGOpacity := LOpacity / 255;
+    R := FittedRect(MakeRect(X, Y, AWidth, AHeight), LSVG.Width, LSVG.Height);
+    LSVG.PaintTo(ACanvas.Handle, R, nil, 0);
+    LSVG.SVGOpacity := 1;
   end;
 end;
 
@@ -187,6 +192,8 @@ var
   C: Integer;
   LItem: TSVGIconItem;
   LIcon: HICON;
+  LFixedColor: TColor;
+  LGrayScale: Boolean;
 begin
   if not Assigned(FCollection) or
     ([csLoading, csDestroying, csUpdating] * ComponentState <> [])
@@ -197,10 +204,18 @@ begin
   if (Width > 0) and (Height > 0) then
   begin
     HandleNeeded;
+    if FCollection.FixedColor <> SVG_INHERIT_COLOR then
+      LFixedColor := FCollection.FixedColor
+    else
+      LFixedColor := FFixedColor;
+    if FGrayScale or FCollection.GrayScale then
+      LGrayscale := True
+    else
+      LGrayscale := False;
     for C := 0 to FCollection.SVGIconItems.Count - 1 do
     begin
       LItem := FCollection.SVGIconItems[C];
-      LIcon := LItem.GetIcon(Width, Height, FixedColor, Opacity, GrayScale);
+      LIcon := LItem.GetIcon(Width, Height, LFixedColor, FOpacity, LGrayScale);
       ImageList_AddIcon(Handle, LIcon);
       DestroyIcon(LIcon);
     end;
