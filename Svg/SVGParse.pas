@@ -441,7 +441,7 @@ begin
     Stop := Pos(')', S);
     if (Start = 0) or (Stop = 0) then
       Exit;
-    TType := Copy(S, 1, Start - 1);
+    TType := Trim(Copy(S, 1, Start - 1));
     Values := Trim(Copy(S, Start + 1, Stop - Start - 1));
     Values := StringReplace(Values, ' ', ',', [rfReplaceAll]);
     M.m33 := 0;
@@ -476,7 +476,7 @@ begin
       if Result.m33 = 0 then
         Result := M
       else
-        Result := Result * M;
+        Result := M * Result;
     end;
 
     S := Trim(Copy(S, Stop + 1, Length(S)));
