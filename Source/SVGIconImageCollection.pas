@@ -67,7 +67,11 @@ type
   private
     FSVGItems: TSVGIconItems;
     FStoreAsText : boolean;
+    FFixedColor: TColor;
+    FGrayScale: Boolean;
     procedure SetSVGIconItems(const Value: TSVGIconItems);
+    procedure SetFixedColor(const Value: TColor);
+    procedure SetGrayScale(const Value: Boolean);
 
   protected
     {$IFDEF D10_3+}
@@ -108,9 +112,9 @@ type
 
   published
     property SVGIconItems: TSVGIconItems read FSVGItems write SetSVGIconItems stored FStoreAsText;
-
     property StoreAsText: boolean read FStoreAsText write FStoreAsText default False;
-
+    property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
+    property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
   end;
 
 implementation
@@ -143,7 +147,9 @@ procedure TSVGIconImageCollection.Assign(Source: TPersistent);
 begin
   if Source is TSVGIconImageCollection then
   begin
-    FStoreAsText := TSVGIconImageCollection(Source).StoreAsText;
+    FStoreAsText := TSVGIconImageCollection(Source).FStoreAsText;
+    FFixedColor := TSVGIconImageCollection(Source).FFixedColor;
+    FGrayScale := TSVGIconImageCollection(Source).FGrayScale;
     FSVGItems.Assign(TSVGIconImageCollection(Source).SVGIconItems)
   end
   else if Source is TSVGIconItems then
@@ -162,6 +168,8 @@ begin
   inherited;
   FSVGItems := TSVGIconItems.Create(Self);
   FStoreAsText := false;
+  FFixedColor := SVG_INHERIT_COLOR;
+  FGrayScale := False;
 end;
 
 procedure TSVGIconImageCollection.DefineProperties(Filer: TFiler);
@@ -308,6 +316,36 @@ end;
 procedure TSVGIconImageCollection.Remove(const Name: string);
 begin
   Delete(IndexOf(Name));
+end;
+
+procedure TSVGIconImageCollection.SetFixedColor(const Value: TColor);
+begin
+  if FFixedColor <> Value then
+  begin
+    FSVGItems.BeginUpdate;
+    try
+      FFixedColor := Value;
+      if FFixedColor <> SVG_INHERIT_COLOR then
+        FGrayScale := False;
+    finally
+      FSVGItems.EndUpdate;
+    end;
+  end;
+end;
+
+procedure TSVGIconImageCollection.SetGrayScale(const Value: Boolean);
+begin
+  if FGrayScale <> Value then
+  begin
+    FSVGItems.BeginUpdate;
+    try
+      FGrayScale := Value;
+      if FGrayScale then
+        FixedColor := SVG_INHERIT_COLOR;
+    finally
+      FSVGItems.EndUpdate;
+    end;
+  end;
 end;
 
 procedure TSVGIconImageCollection.SetSVGIconItems(const Value: TSVGIconItems);
@@ -460,18 +498,29 @@ end;
 
 function TSVGIconImageCollection.GetBitmap(AIndex: Integer; AWidth, AHeight: Integer): TBitmap;
 begin
-  Result := FSVGItems[AIndex].GetBitmap(AWidth, AHeight, clDefault, 255, False);
+  Result := FSVGItems[AIndex].GetBitmap(AWidth, AHeight, FFixedColor, 255, FGrayScale);
 end;
 
 procedure TSVGIconImageCollection.Draw(ACanvas: TCanvas; ARect: TRect; AIndex: Integer;
   AProportional: Boolean = False);
 var
   LItem: TSVGIconItem;
+  LSVG: TSVG;
 begin
   LItem := FSVGItems.Items[AIndex];
+  LSVG := LItem.SVG;
+  if LItem.FixedColor <> SVG_INHERIT_COLOR then
+    LSVG.FixedColor := LItem.FixedColor
+  else
+    LSVG.FixedColor := FFixedColor;
+  if LItem.GrayScale or FGrayScale then
+    LSVG.Grayscale := True
+  else
+    LSVG.Grayscale := False;
+  LSVG.SVGOpacity := 1;
   if AProportional then
     ARect := UpdateRectForProportionalSize(ARect, ARect.Width, ARect.Height, True);
-  LItem.SVG.PaintTo(ACanvas.Handle, ARect.Left, ARect.Top, ARect.Width, ARect.Height);
+  LSVG.PaintTo(ACanvas.Handle, ARect.Left, ARect.Top, ARect.Width, ARect.Height);
 end;
 {$ENDIF}
 

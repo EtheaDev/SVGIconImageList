@@ -274,9 +274,12 @@ begin
       try
         FSourceList := TSVGIconImageList.Create(LEditor);
         FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
-        FEditingList.Size := 32; //Force 32 pixel size for image collection icons
+        FSourceList.Size := 32; //Force 32 pixel size for image collection icons
+        FSourceList.GrayScale := AImageCollection.GrayScale;
+        FSourceList.FixedColor := AImageCollection.FixedColor;
         ImageListGroupBox.Caption := ImageListGroupBox.Caption + ' ' + NOT_APPLYED_TO_COLLECTION;
-        FEditingList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
+        FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
+        FEditingList.Assign(FSourceList);
         OpacitySpinEdit.Value := FSourceList.Opacity;
         StoreAsTextCheckBox.Checked := AImageCollection.StoreAsText;
         UpdateGUI;
@@ -290,6 +293,8 @@ begin
         try
           AImageCollection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
           AImageCollection.StoreAsText := StoreAsTextCheckBox.Checked;
+          AImageCollection.GrayScale := GrayScaleCheckBox.Checked;
+          AImageCollection.FixedColor := FixedColorComboBox.Selected;
         finally
           Screen.Cursor := crDefault;
         end;
@@ -761,7 +766,7 @@ end;
 procedure TSVGIconImageListEditor.HelpButtonClick(Sender: TObject);
 begin
   ShellExecute(handle, 'open',
-    PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Image-Editor'), nil, nil,
+    PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Component-Editor-(VCL)'), nil, nil,
     SW_SHOWNORMAL)
 end;
 

@@ -39,7 +39,7 @@ uses
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
   System.Actions, System.ImageList, SVGIconImageListBase,
   SVGIconImageCollection, SVGIconVirtualImageList,
-  UDataModule, Vcl.VirtualImageList;
+  UDataModule, Vcl.VirtualImageList; //remove this unit if you haven't Delphi 10.3 or newer
 
 type
   TMainForm = class(TForm)
@@ -235,7 +235,11 @@ begin
   OnAfterMonitorDpiChanged := FormAfterMonitorDpiChanged;
   {$ENDIF}
 
-  {$IFDEF DXE+}
+  {$IFNDEF D10_3+}
+  //Before D10_3 we must use the SVGIconVirtualImageList
+  TopToolBar.Images := SVGIconVirtualImageList;
+  {$ENDIF}
+
   //Build available VCL Styles
   SelectThemeRadioGroup.Items.Clear;
   for I := 0 to High(TStyleManager.StyleNames) do
@@ -247,7 +251,6 @@ begin
   finally
     SelectThemeRadioGroup.OnClick := SelectThemeRadioGroupClick;
   end;
-  {$ENDIF}
   SelectThemeRadioGroupClick(SelectThemeRadioGroup);
 
   TreeView.Items[0].Expand(True);
@@ -307,9 +310,10 @@ end;
 
 procedure TMainForm.ShowImageEditorButtonClick(Sender: TObject);
 begin
-//  Image Editor for ImageCollection
-//  if EditSVGIconImageCollection(SVGIconImageCollection) then
-//    UpdateGUI;
+  //Image Editor for ImageCollection
+  //if EditSVGIconImageCollection(ImageDataModule.SVGIconImageCollection) then
+  //  UpdateGUI;
+
   //Image Editor for VirtualImageList
   if EditSVGIconVirtualImageList(SVGIconVirtualImageList) then
     UpdateGUI;
@@ -373,7 +377,9 @@ procedure TMainForm.TrackBarChange(Sender: TObject);
 begin
   //Resize all icons into ImageList
   SVGIconVirtualImageList.Size := TrackBar.Position;
+  {$IFDEF D10_3+}
   VirtualImageList.SetSize(TrackBar.Position, TrackBar.Position);
+  {$ENDIF}
   UpdateGUI;
 end;
 

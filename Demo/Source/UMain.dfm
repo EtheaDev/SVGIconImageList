@@ -376,13 +376,13 @@ object MainForm: TMainForm
         CollectionIndex = 0
         CollectionName = 'businessman'
         Disabled = False
-        Name = 'businessman'
+        Name = 'business\businessman'
       end
       item
         CollectionIndex = 1
         CollectionName = 'businesswoman'
         Disabled = False
-        Name = 'businesswoman'
+        Name = 'business\businesswoman'
       end
       item
         CollectionIndex = 2
@@ -550,13 +550,13 @@ object MainForm: TMainForm
         CollectionIndex = 29
         CollectionName = 'business'
         Disabled = False
-        Name = 'business'
+        Name = 'business\business'
       end
       item
         CollectionIndex = 30
         CollectionName = 'business_contact'
         Disabled = False
-        Name = 'business_contact'
+        Name = 'business\business_contact'
       end
       item
         CollectionIndex = 31
@@ -2071,9 +2071,7 @@ object MainForm: TMainForm
         Name = 'workflow'
       end>
     ImageCollection = ImageDataModule.SVGIconImageCollection
-    Width = 32
-    Height = 32
-    Left = 426
-    Top = 390
+    Left = 418
+    Top = 398
   end
 end

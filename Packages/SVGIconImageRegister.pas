@@ -222,7 +222,9 @@ procedure Register;
 begin
   RegisterComponents('Ethea',
     [TSVGIconImage,
-     TSVGIconImageList, TSVGIconVirtualImageList, TSVGIconImageCollection]);
+     TSVGIconImageList,
+     TSVGIconVirtualImageList,
+     TSVGIconImageCollection]);
 
   RegisterComponentEditor(TSVGIconImageList, TSVGIconImageListCompEditor);
   RegisterComponentEditor(TSVGIconVirtualImageList, TSVGIconVirtualImageListCompEditor);

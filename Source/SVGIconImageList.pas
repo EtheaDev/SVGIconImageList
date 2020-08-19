@@ -82,7 +82,8 @@ type
     procedure Remove(const Name: string);
     procedure ClearIcons;override;
     procedure SaveToFile(const AFileName: string);
-    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
+    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
+      const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
   published
     //Publishing properties of Custom Class
     property Width;
@@ -198,40 +199,41 @@ begin
   end;
 end;
 
-procedure TSVGIconImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True);
+procedure TSVGIconImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
+  const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True);
 var
   R: TGPRectF;
-  SVG: TSVG;
+  LSVG: TSVG;
   LItem: TSVGIconItem;
   LOpacity: Byte;
 begin
   if (AIndex >= 0) and (AIndex < FSVGItems.Count) then
   begin
     LItem := FSVGItems[AIndex];
-    SVG := LItem.SVG;
+    LSVG := LItem.SVG;
     if LItem.FixedColor <> SVG_INHERIT_COLOR then
-      SVG.FixedColor := LItem.FixedColor
+      LSVG.FixedColor := LItem.FixedColor
     else
-      SVG.FixedColor := FFixedColor;
+      LSVG.FixedColor := FFixedColor;
     LOpacity := FOpacity;
     if AEnabled then
     begin
       if LItem.GrayScale or FGrayScale then
-        SVG.Grayscale := True
+        LSVG.Grayscale := True
       else
-        SVG.Grayscale := False;
+        LSVG.Grayscale := False;
     end
     else
     begin
       if FDisabledGrayScale then
-        SVG.Grayscale := True
+        LSVG.Grayscale := True
       else
         LOpacity := FDisabledOpacity;
     end;
-    SVG.SVGOpacity := LOpacity / 255;
-    R := FittedRect(MakeRect(X, Y, AWidth, AHeight), SVG.Width, SVG.Height);
-    SVG.PaintTo(ACanvas.Handle, R, nil, 0);
-    SVG.SVGOpacity := 1;
+    LSVG.SVGOpacity := LOpacity / 255;
+    R := FittedRect(MakeRect(X, Y, AWidth, AHeight), LSVG.Width, LSVG.Height);
+    LSVG.PaintTo(ACanvas.Handle, R, nil, 0);
+    LSVG.SVGOpacity := 1;
   end;
 end;
 
@@ -320,7 +322,7 @@ begin
     for C := 0 to FSVGItems.Count - 1 do
     begin
       LItem := FSVGItems[C];
-      LIcon := LItem.GetIcon(Width, Height, FixedColor, Opacity, GrayScale);
+      LIcon := LItem.GetIcon(Width, Height, FFixedColor, FOpacity, FGrayScale);
       ImageList_AddIcon(Handle, LIcon);
       DestroyIcon(LIcon);
     end;
