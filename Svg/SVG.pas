@@ -748,31 +748,30 @@ begin
 end;
 
 function TSVGObject.GetDisplay: TTriStateBoolean;
+// if display is false in an element, children also will not be displayed
 var
   SVG: TSVGObject;
 begin
+  Result := tbTrue;
   SVG := Self;
   while Assigned(SVG) and (SVG.FDisplay = tbInherit) do
+  begin
+    if SVG.FDisplay = tbFalse then Exit(tbFalse);
     SVG := SVG.FParent;
-
-  if Assigned(SVG) then
-    Result := SVG.FDisplay
-  else
-    Result := tbTrue;
+  end;
 end;
 
 function TSVGObject.GetVisible: TTriStateBoolean;
 var
   SVG: TSVGObject;
 begin
+  Result := tbTrue;
   SVG := Self;
-  while Assigned(SVG) and (SVG.FVisible = tbInherit) do
+  while Assigned(SVG) do
+  begin
+    if SVG.FVisible <> tbInherit then Exit(SVG.FVisible);
     SVG := SVG.FParent;
-
-  if Assigned(SVG) then
-    Result := SVG.FVisible
-  else
-    Result := tbTrue;
+  end;
 end;
 
 procedure TSVGObject.ReadIn(const Node: IXMLNode);
@@ -994,10 +993,8 @@ begin
     end;
 
     if FStyleChanged then
-    begin
       UpdateStyle;
-      FStyleChanged := False;
-    end;
+
     Brush := GetFillBrush;
     try
       StrokeBrush := GetStrokeBrush;
@@ -1114,6 +1111,8 @@ begin
   FFillURI := ParseURI(FFillURI);
   FStrokeURI := ParseURI(FStrokeURI);
   ClipURI := ParseURI(FClipURI);
+
+  FStyleChanged := False;
 end;
 
 procedure TSVGBasic.ReadIn(const Node: IXMLNode);
@@ -1443,7 +1442,7 @@ begin
   if Value <> '' then
   begin
     if Value = 'none' then
-      FVisible := tbFalse;
+      FDisplay := tbFalse;
   end;
 end;
 
@@ -2403,9 +2402,7 @@ procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
 
   function NeedsPainting(Item: TSVGObject): Boolean;
   begin
-    Result := (Item.Display = tbTrue) and
-       (Item.FStyle.Values['display'] <> 'none') and
-       (Item.Visible = tbTrue);
+    Result := (Item.Display = tbTrue) and (Item.Visible = tbTrue);
   end;
 
   procedure PaintItem(const Item: TSVGObject);
