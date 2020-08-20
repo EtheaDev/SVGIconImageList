@@ -498,7 +498,10 @@ end;
 
 function TSVGIconImageCollection.GetBitmap(AIndex: Integer; AWidth, AHeight: Integer): TBitmap;
 begin
-  Result := FSVGItems[AIndex].GetBitmap(AWidth, AHeight, FFixedColor, 255, FGrayScale);
+  if (AIndex >= 0) and (AIndex < FSVGItems.Count ) then
+    Result := FSVGItems[AIndex].GetBitmap(AWidth, AHeight, FFixedColor, 255, FGrayScale)
+  else
+    Result := nil;
 end;
 
 procedure TSVGIconImageCollection.Draw(ACanvas: TCanvas; ARect: TRect; AIndex: Integer;
