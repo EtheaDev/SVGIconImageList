@@ -60,8 +60,8 @@ type
     procedure SetCollection(const value: TSVGIconImageCollection);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
-    procedure DoAssign(const source : TPersistent);override;
-    function GetCount: Integer;override;
+    procedure DoAssign(const source : TPersistent); override;
+    function GetCount: Integer; override;
 
   public
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;

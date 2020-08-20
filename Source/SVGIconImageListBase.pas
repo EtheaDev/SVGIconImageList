@@ -331,7 +331,8 @@ begin
     Result := Items[Index].SVG
   else
     Result := nil;
-end;
+
+end;
 
 function TSVGIconImageListBase.GetNames(Index: Integer): string;
 Var
@@ -533,7 +534,6 @@ begin
     finally
       EndUpdate;
     end;
-    Change;
   end;
 end;
 

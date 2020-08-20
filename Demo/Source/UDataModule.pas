@@ -3,7 +3,9 @@ unit UDataModule;
 interface
 
 uses
-  System.SysUtils, System.Classes, SVGIconImageCollection;
+  System.SysUtils, System.Classes,
+  {$IFDEF D10_3+}Vcl.BaseImageCollection,{$ENDIF}
+  SVGIconImageCollection;
 
 type
   TImageDataModule = class(TDataModule)

@@ -56,7 +56,6 @@ type
   TSVGIconItem = SVGIconItems.TSVGIconItem;
   TSVGIconItems = SVGIconItems.TSVGIconItems;
 
-  TSVGIconImageList = class;
 
 
   {TSVGIconImageList}
@@ -80,7 +79,7 @@ type
        const AFixedColor: TColor = SVG_INHERIT_COLOR): Integer;
     procedure Delete(const Index: Integer);
     procedure Remove(const Name: string);
-    procedure ClearIcons;override;
+    procedure ClearIcons; override;
     procedure SaveToFile(const AFileName: string);
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
       const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;

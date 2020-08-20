@@ -39,7 +39,8 @@ uses
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
   System.Actions, System.ImageList, SVGIconImageListBase,
   SVGIconImageCollection, SVGIconVirtualImageList,
-  UDataModule, Vcl.VirtualImageList; //remove this unit if you haven't Delphi 10.3 or newer
+  {$IFDEF D10_3+}Vcl.VirtualImageList,{$ENDIF}
+  UDataModule;
 
 type
   TMainForm = class(TForm)
@@ -82,7 +83,6 @@ type
     SVGIconVirtualImageList: TSVGIconVirtualImageList;
     NewFormButton: TButton;
     NewFormAction: TAction;
-    VirtualImageList: TVirtualImageList;
     procedure ChangeIconActionExecute(Sender: TObject);
     procedure SelectThemeRadioGroupClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -101,6 +101,9 @@ type
     procedure FixedColorComboBoxSelect(Sender: TObject);
     procedure NewFormActionExecute(Sender: TObject);
   private
+    {$IFDEF D10_3+}
+    VirtualImageList: TVirtualImageList;
+    {$ENDIF}
     FUpdating: Boolean;
     FSVGIconImageListHot: TSVGIconImageList;
     FSVGIconImageListDisabled: TSVGIconImageList;
@@ -190,6 +193,9 @@ end;
 procedure TMainForm.ClearButtonClick(Sender: TObject);
 begin
   //Clear Collection
+  {$IFDEF D10_3+}
+  VirtualImageList.Clear;
+  {$ENDIF}
   ImageDataModule.SVGIconImageCollection.ClearIcons;
   UpdateGUI;
 end;
@@ -235,9 +241,11 @@ begin
   OnAfterMonitorDpiChanged := FormAfterMonitorDpiChanged;
   {$ENDIF}
 
-  {$IFNDEF D10_3+}
-  //Before D10_3 we must use the SVGIconVirtualImageList
-  TopToolBar.Images := SVGIconVirtualImageList;
+  {$IFDEF D10_3+}
+  ////Test use of native VirtualImageList
+  VirtualImageList := TVirtualImageList.Create(Self);
+  VirtualImageList.ImageCollection := ImageDataModule.SVGIconImageCollection;
+  TopToolBar.Images := VirtualImageList;
   {$ENDIF}
 
   //Build available VCL Styles
@@ -331,12 +339,26 @@ end;
 procedure TMainForm.updateGUI;
 var
   LSize: Integer;
+  {$IFDEF D10_3+}
+  I: Integer;
+  LItem: TSVGIconItem;
+  {$ENDIF}
 begin
   if FUpdating then
     Exit;
   FUpdating := True;
   try
     LSize := SVGIconVirtualImageList.Height;
+    {$IFDEF D10_3+}
+    VirtualImageList.Clear;
+    VirtualImageList.SetSize(LSize, LSize);
+    //Fill VirtualImageList with all icons in the collection of SVGIconVirtualImageList
+    for I := 0 to SVGIconVirtualImageList.SVGIconItems.Count -1 do
+    begin
+      LItem := SVGIconVirtualImageList.SVGIconItems[I];
+      VirtualImageList.Add(LItem.IconName, I, False);
+    end;
+    {$ENDIF+}
     IconSizeLabel.Caption := Format('Icons size: %d',[LSize]);
     TopToolBar.ButtonHeight := LSize + 2;
     TopToolBar.ButtonWidth := LSize + 2;
@@ -377,9 +399,6 @@ procedure TMainForm.TrackBarChange(Sender: TObject);
 begin
   //Resize all icons into ImageList
   SVGIconVirtualImageList.Size := TrackBar.Position;
-  {$IFDEF D10_3+}
-  VirtualImageList.SetSize(TrackBar.Position, TrackBar.Position);
-  {$ENDIF}
   UpdateGUI;
 end;
 
