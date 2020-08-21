@@ -1630,7 +1630,7 @@ function TSVGBasic.GetFillColor: TColor;
 var
   SVG: TSVGObject;
 begin
-  Result := SVG_INHERIT_COLOR;
+  Result := TColors.Black;
   SVG := Self;
   while Assigned(SVG) do
   begin
@@ -1667,7 +1667,7 @@ function TSVGBasic.GetStrokeColor: TColor;
 var
   SVG: TSVGObject;
 begin
-  Result := SVG_NONE_COLOR;
+  Result := TColors.Black;
   SVG := Self;
   while Assigned(SVG) do
   begin
