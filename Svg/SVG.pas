@@ -880,7 +880,7 @@ begin
   inherited;
   FPath := nil;
   // default SVG fill-rule is nonzero
-  fFillMode := FillModeWinding;
+  FFillMode := FillModeWinding;
   SetLength(FStrokeDashArray, 0);
   FStyle.OnChange := OnStyleChanged;
   FClipPath := nil;
@@ -1089,7 +1089,7 @@ begin
       ReadStyle(Style);
   end;
 
-  if Root.Grayscale then
+  if LRoot.Grayscale then
     begin
       FillColor   := GetSVGGrayscale(GetSVGColor(FFillURI));
       StrokeColor := GetSVGGrayscale(GetSVGColor(FStrokeURI));
@@ -1100,12 +1100,12 @@ begin
       StrokeColor := GetSVGColor(FStrokeURI);
     end;
 
-  if (Root.FixedColor <> SVG_INHERIT_COLOR) then
+  if (LRoot.FixedColor <> SVG_INHERIT_COLOR) then
     begin
       if (FillColor <> SVG_INHERIT_COLOR) and (FillColor <> SVG_NONE_COLOR) then
-        FillColor := Root.FixedColor;
+        FillColor := LRoot.FixedColor;
       if (StrokeColor <> SVG_INHERIT_COLOR) and (StrokeColor <> SVG_NONE_COLOR) then
-        StrokeColor := Root.FixedColor;
+        StrokeColor := LRoot.FixedColor;
     end;
 
   FFillURI := ParseURI(FFillURI);
@@ -2298,11 +2298,12 @@ begin
   FRX := 0;
   FRY := 0;
 
-  FillColor := SVG_NONE_COLOR;
-  FillOpacity := 1;
-  StrokeColor := SVG_NONE_COLOR;
-  StrokeWidth := 1;
-  StrokeOpacity := 1;
+  FFillColor := SVG_INHERIT_COLOR;
+  FFillURI := 'black';  //default fill color
+  FFillOpacity := 1;
+  FStrokeColor := SVG_NONE_COLOR;
+  FStrokeWidth := 1;
+  FStrokeOpacity := 1;
 
   FAngle := 0;
   FillChar(FAngleMatrix, SizeOf(TMatrix), 0);
@@ -2364,7 +2365,6 @@ begin
     FFixedColor := Value;
     if FFixedColor < 0 then
       FFixedColor := GetSysColor(fFixedColor and $000000FF);
-    UpdateStyle;
     ReloadFromText;
   end;
 end;
@@ -2374,7 +2374,6 @@ begin
   if FGrayscale <> Value then
   begin
     FGrayscale := Value;
-    UpdateStyle;
     ReloadFromText;
   end;
 end;
