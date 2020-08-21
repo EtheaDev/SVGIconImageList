@@ -754,7 +754,7 @@ var
 begin
   Result := tbTrue;
   SVG := Self;
-  while Assigned(SVG) and (SVG.FDisplay = tbInherit) do
+  while Assigned(SVG) do
   begin
     if SVG.FDisplay = tbFalse then Exit(tbFalse);
     SVG := SVG.FParent;
