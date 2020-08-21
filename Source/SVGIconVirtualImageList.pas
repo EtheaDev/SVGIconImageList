@@ -110,10 +110,7 @@ begin
   if Source is TSVGIconImageList then
   begin
     if FCollection <> nil then
-    begin
       FCollection.SVGIconItems.Assign(TSVGIconImageList(Source).SVGIconItems);
-      FCollection.StoreAsText := TSVGIconImageList(Source).StoreAsText;
-    end;
   end
   else if Source is TSVGIconVirtualImageList then
     SetCollection(TSVGIconVirtualImageList(Source).FCollection);

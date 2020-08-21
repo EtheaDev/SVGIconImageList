@@ -73,7 +73,6 @@ type
     SVGText: TMemo;
     SizeLabel: TLabel;
     SizeSpinEdit: TSpinEdit;
-    StoreAsTextCheckBox: TCheckBox;
     ItemGroupBox: TGroupBox;
     IconNameLabel: TLabel;
     IconPanel: TPanel;
@@ -128,7 +127,6 @@ type
     procedure WidthSpinEditChange(Sender: TObject);
     procedure HeightSpinEditChange(Sender: TObject);
     procedure OpacitySpinEditChange(Sender: TObject);
-    procedure StoreAsTextCheckBoxClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure NewButtonClick(Sender: TObject);
     procedure SVGTextChange(Sender: TObject);
@@ -196,7 +194,6 @@ begin
         FSourceList := AImageList;
         FEditingList.Assign(AImageList);
         OpacitySpinEdit.Value := FSourceList.Opacity;
-        StoreAsTextCheckBox.Checked := FSourceList.StoreAsText;
         UpdateGUI;
       finally
         Screen.Cursor := crDefault;
@@ -235,9 +232,7 @@ begin
         FSourceList.Assign(AImageList);
         FEditingList.Assign(AImageList);
         OpacitySpinEdit.Value := FSourceList.Opacity;
-        StoreAsTextCheckBox.Checked := AImageList.Collection.StoreAsText;
         OpacitySpinEdit.Value := AImageList.Opacity;
-        StoreAsTextCheckBox.Checked := FSourceList.StoreAsText;
         UpdateGUI;
       finally
         Screen.Cursor := crDefault;
@@ -248,7 +243,6 @@ begin
         Screen.Cursor := crHourglass;
         try
           AImageList.Collection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
-          AImageList.Collection.StoreAsText := StoreAsTextCheckBox.Checked;
           AImageList.Assign(LEditor.FEditingList);
         finally
           Screen.Cursor := crDefault;
@@ -281,7 +275,6 @@ begin
         FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
         FEditingList.Assign(FSourceList);
         OpacitySpinEdit.Value := FSourceList.Opacity;
-        StoreAsTextCheckBox.Checked := AImageCollection.StoreAsText;
         UpdateGUI;
       finally
         Screen.Cursor := crDefault;
@@ -292,7 +285,6 @@ begin
         Screen.Cursor := crHourglass;
         try
           AImageCollection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
-          AImageCollection.StoreAsText := StoreAsTextCheckBox.Checked;
           AImageCollection.GrayScale := GrayScaleCheckBox.Checked;
           AImageCollection.FixedColor := FixedColorComboBox.Selected;
         finally
@@ -517,11 +509,6 @@ begin
   if FUpdating then Exit;
   FEditingList.Size := SizeSpinEdit.Value;
   UpdateSizeGUI;
-end;
-
-procedure TSVGIconImageListEditor.StoreAsTextCheckBoxClick(Sender: TObject);
-begin
-  FEditingList.StoreAsText := StoreAsTextCheckBox.Checked;
 end;
 
 procedure TSVGIconImageListEditor.SVGTextChange(Sender: TObject);

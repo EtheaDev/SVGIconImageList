@@ -243,7 +243,10 @@ end;
 
 function TSVGIconImage.GetSVGText: string;
 begin
-  Result := FSVG.Source;
+  if not UsingSVGText then
+    Result := FImageList.Images[FImageIndex].Source
+  else
+    Result := FSVG.Source;
 end;
 
 function TSVGIconImage.UsingSVGText: Boolean;

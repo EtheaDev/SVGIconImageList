@@ -222,6 +222,13 @@ begin
   try
     if FixedColorComboBox.ItemIndex >= 0 then
     begin
+      {$IFDEF D10_3+}
+      //Warning: native VirtualImageList can change FixedColor only at Collection level
+      //so the changes are affected to all forms opened!
+      (VirtualImageList.ImageCollection as TSVGIconImageCollection).FixedColor :=
+        FixedColorComboBox.Selected;
+      {$ENDIF}
+      //Change FixedColor at ImageList (affected only to current form)
       SVGIconVirtualImageList.FixedColor := FixedColorComboBox.Selected;
       UpdateGUI;
     end;
@@ -272,6 +279,13 @@ procedure TMainForm.GrayScaleCheckBoxClick(Sender: TObject);
 begin
   Screen.Cursor := crHourGlass;
   try
+    {$IFDEF D10_3+}
+    //Warning: native VirtualImageList can change FixedColor only at Collection level
+    //so the changes are affected to all forms opened!
+    (VirtualImageList.ImageCollection as TSVGIconImageCollection).GrayScale:=
+      GrayScaleCheckBox.Checked;
+    {$ENDIF}
+    //Change GrayScale at ImageList (affected only to current form)
     SVGIconVirtualImageList.GrayScale := GrayScaleCheckBox.Checked;
     UpdateGUI;
   finally

@@ -140,15 +140,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Value = 0
           OnChange = SizeSpinEditChange
         end
-        object StoreAsTextCheckBox: TCheckBox
-          Left = 505
-          Top = 13
-          Width = 85
-          Height = 17
-          Caption = 'StoreAsText'
-          TabOrder = 5
-          OnClick = StoreAsTextCheckBoxClick
-        end
         object WidthSpinEdit: TSpinEdit
           Left = 94
           Top = 30
@@ -203,7 +194,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Width = 85
           Height = 17
           Caption = 'GrayScale'
-          TabOrder = 6
+          TabOrder = 5
           OnClick = GrayScaleCheckBoxClick
         end
       end
