@@ -195,6 +195,11 @@ begin
     Result := SVG_INHERIT_COLOR;
     Exit;
   end;
+ if SameText(ASVGColorName, 'currentColor') then
+  begin
+    Result := TColors.Black;
+    Exit;
+  end;
   if SameText(ASVGColorName, 'none') then
   begin
     Result := SVG_NONE_COLOR;
