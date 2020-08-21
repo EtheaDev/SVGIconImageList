@@ -220,7 +220,7 @@ function EditSVGIconVirtualImageList(const AImageList: TSVGIconVirtualImageList)
 var
   LEditor: TSVGIconImageListEditor;
 begin
-  if AImageList.Collection = nil then
+  if AImageList.ImageCollection = nil then
     exit(false);
   LEditor := TSVGIconImageListEditor.Create(nil);
   with LEditor do
@@ -242,7 +242,7 @@ begin
       begin
         Screen.Cursor := crHourglass;
         try
-          AImageList.Collection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
+          AImageList.ImageCollection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
           AImageList.Assign(LEditor.FEditingList);
         finally
           Screen.Cursor := crDefault;

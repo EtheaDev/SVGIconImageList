@@ -177,7 +177,7 @@ end;
 
 procedure TSVGIconImageList.DoAssign(const Source: TPersistent);
 var
-  virtualList : TSVGIconVirtualImageList;
+  LVirtualList : TSVGIconVirtualImageList;
 begin
   inherited;
   if Source is TSVGIconImageList then
@@ -186,10 +186,10 @@ begin
   end
   else if Source is TSVGIconVirtualImageList then
   begin
-    virtualList := TSVGIconVirtualImageList(Source);
-    if virtualList.Collection <> nil then
+    LVirtualList := TSVGIconVirtualImageList(Source);
+    if LVirtualList.ImageCollection <> nil then
     begin
-      FSVGItems.Assign(virtualList.Collection.SVGIconItems);
+      FSVGItems.Assign(LVirtualList.ImageCollection.SVGIconItems);
     end;
   end;
 end;

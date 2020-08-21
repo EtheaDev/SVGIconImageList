@@ -252,6 +252,7 @@ begin
   ////Test use of native VirtualImageList
   VirtualImageList := TVirtualImageList.Create(Self);
   VirtualImageList.ImageCollection := ImageDataModule.SVGIconImageCollection;
+  VirtualImageList.PreserveItems := True;
   TopToolBar.Images := VirtualImageList;
   {$ENDIF}
 

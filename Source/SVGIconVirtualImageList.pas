@@ -52,12 +52,12 @@ uses
 type
   TSVGIconVirtualImageList = class(TSVGIconImageListBase)
   private
-    FCollection : TSVGIconImageCollection;
+    FImageCollection : TSVGIconImageCollection;
   protected
     // override abstract methods
     function GetSVGIconItems: TSVGIconItems; override;
     procedure RecreateBitmaps; override;
-    procedure SetCollection(const value: TSVGIconImageCollection);
+    procedure SetImageCollection(const value: TSVGIconImageCollection);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
     procedure DoAssign(const source : TPersistent); override;
@@ -79,7 +79,7 @@ type
     property GrayScale;
     property DisabledGrayScale;
     property DisabledOpacity;
-    property Collection : TSVGIconImageCollection read FCollection write SetCollection;
+    property ImageCollection : TSVGIconImageCollection read FImageCollection write SetImageCollection;
 
     {$IFDEF HiDPISupport}
     property Scaled;
@@ -109,25 +109,25 @@ begin
   inherited;
   if Source is TSVGIconImageList then
   begin
-    if FCollection <> nil then
-      FCollection.SVGIconItems.Assign(TSVGIconImageList(Source).SVGIconItems);
+    if FImageCollection <> nil then
+      FImageCollection.SVGIconItems.Assign(TSVGIconImageList(Source).SVGIconItems);
   end
   else if Source is TSVGIconVirtualImageList then
-    SetCollection(TSVGIconVirtualImageList(Source).FCollection);
+    SetImageCollection(TSVGIconVirtualImageList(Source).FImageCollection);
 end;
 
 function TSVGIconVirtualImageList.GetCount: Integer;
 begin
-  if FCollection <> nil then
-    result := FCollection.SVGIconItems.Count
+  if FImageCollection <> nil then
+    result := FImageCollection.SVGIconItems.Count
   else
     result := 0;
 end;
 
 function TSVGIconVirtualImageList.GetSVGIconItems: TSVGIconItems;
 begin
-  if Assigned(FCollection) then
-    Result := FCollection.SVGIconItems
+  if Assigned(FImageCollection) then
+    Result := FImageCollection.SVGIconItems
   else
     Result := nil;
 end;
@@ -135,11 +135,11 @@ end;
 procedure TSVGIconVirtualImageList.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
-  if (Operation = opRemove) and (AComponent = FCollection) then
+  if (Operation = opRemove) and (AComponent = FImageCollection) then
   begin
     BeginUpdate;
     try
-      FCollection := nil;
+      FImageCollection := nil;
     finally
       EndUpdate;
     end;
@@ -154,9 +154,9 @@ var
   LItem: TSVGIconItem;
   LOpacity: Byte;
 begin
-  if (FCollection <> nil) and (AIndex >= 0) and (AIndex < FCollection.SVGIconItems.Count) then
+  if (FImageCollection <> nil) and (AIndex >= 0) and (AIndex < FImageCollection.SVGIconItems.Count) then
   begin
-    LItem := FCollection.SVGIconItems[AIndex];
+    LItem := FImageCollection.SVGIconItems[AIndex];
     LSVG := LItem.SVG;
     if LItem.FixedColor <> SVG_INHERIT_COLOR then
       LSVG.FixedColor := LItem.FixedColor
@@ -192,7 +192,7 @@ var
   LFixedColor: TColor;
   LGrayScale: Boolean;
 begin
-  if not Assigned(FCollection) or
+  if not Assigned(FImageCollection) or
     ([csLoading, csDestroying, csUpdating] * ComponentState <> [])
   then
     Exit;
@@ -201,17 +201,17 @@ begin
   if (Width > 0) and (Height > 0) then
   begin
     HandleNeeded;
-    if FCollection.FixedColor <> SVG_INHERIT_COLOR then
-      LFixedColor := FCollection.FixedColor
+    if FImageCollection.FixedColor <> SVG_INHERIT_COLOR then
+      LFixedColor := FImageCollection.FixedColor
     else
       LFixedColor := FFixedColor;
-    if FGrayScale or FCollection.GrayScale then
+    if FGrayScale or FImageCollection.GrayScale then
       LGrayscale := True
     else
       LGrayscale := False;
-    for C := 0 to FCollection.SVGIconItems.Count - 1 do
+    for C := 0 to FImageCollection.SVGIconItems.Count - 1 do
     begin
-      LItem := FCollection.SVGIconItems[C];
+      LItem := FImageCollection.SVGIconItems[C];
       LIcon := LItem.GetIcon(Width, Height, LFixedColor, FOpacity, LGrayScale);
       ImageList_AddIcon(Handle, LIcon);
       DestroyIcon(LIcon);
@@ -219,15 +219,15 @@ begin
   end;
 end;
 
-procedure TSVGIconVirtualImageList.SetCollection(const value: TSVGIconImageCollection);
+procedure TSVGIconVirtualImageList.SetImageCollection(const value: TSVGIconImageCollection);
 begin
-  if FCollection <> Value then
+  if FImageCollection <> Value then
   begin
-    if FCollection <> nil then
-      FCollection.RemoveFreeNotification(Self);
-    FCollection := Value;
-    if FCollection <> nil then
-      FCollection.FreeNotification(Self);
+    if FImageCollection <> nil then
+      FImageCollection.RemoveFreeNotification(Self);
+    FImageCollection := Value;
+    if FImageCollection <> nil then
+      FImageCollection.FreeNotification(Self);
     Change;
   end;
 end;
