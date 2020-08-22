@@ -56,14 +56,12 @@ type
   TSVGIconItem = SVGIconItems.TSVGIconItem;
   TSVGIconItems = SVGIconItems.TSVGIconItems;
 
-  TSVGIconImageList = class;
 
 
   {TSVGIconImageList}
   TSVGIconImageList = class(TSVGIconImageListBase)
   private
     FSVGItems: TSVGIconItems;
-    FStoreAsText: boolean;
   protected
     function GetSVGIconItems: TSVGIconItems; override;
     //procedure SetSVGIconItems(const Value: TSVGIconItems); override;
@@ -80,7 +78,7 @@ type
        const AFixedColor: TColor = SVG_INHERIT_COLOR): Integer;
     procedure Delete(const Index: Integer);
     procedure Remove(const Name: string);
-    procedure ClearIcons;override;
+    procedure ClearIcons; override;
     procedure SaveToFile(const AFileName: string);
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
       const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
@@ -91,9 +89,8 @@ type
     property Size;
     property OnChange;
     //New properties
-    property SVGIconItems stored FStoreAsText;
+    property SVGIconItems;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
-    property StoreAsText: boolean read FStoreAsText write FStoreAsText default False;
     property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
     property DisabledGrayScale: Boolean read FDisabledGrayScale write SetDisabledGrayScale default True;
@@ -174,27 +171,25 @@ end;
 procedure TSVGIconImageList.DefineProperties(Filer: TFiler);
 begin
   inherited;
-  Filer.DefineBinaryProperty('Images', ReadImageData, WriteImageData, True);
+  Filer.DefineBinaryProperty('Images', ReadImageData, WriteImageData, False);
 end;
 
 
 procedure TSVGIconImageList.DoAssign(const Source: TPersistent);
 var
-  virtualList : TSVGIconVirtualImageList;
+  LVirtualList : TSVGIconVirtualImageList;
 begin
   inherited;
   if Source is TSVGIconImageList then
   begin
     FSVGItems.Assign(TSVGIconImageList(Source).FSVGItems);
-    FStoreAsText := TSVGIconImageList(Source).FStoreAsText;
   end
   else if Source is TSVGIconVirtualImageList then
   begin
-    virtualList := TSVGIconVirtualImageList(Source);
-    if virtualList.Collection <> nil then
+    LVirtualList := TSVGIconVirtualImageList(Source);
+    if LVirtualList.ImageCollection <> nil then
     begin
-      FSVGItems.Assign(virtualList.Collection.SVGIconItems);
-      FStoreAsText := virtualList.Collection.StoreAsText;
+      FSVGItems.Assign(LVirtualList.ImageCollection.SVGIconItems);
     end;
   end;
 end;
@@ -250,9 +245,7 @@ var
   LGrayScale: Boolean;
   LFixedColor: TColor;
 begin
-  if FStoreAsText then
-    Exit;
-
+  //Only for backward compatibility: load images stored in old format
   BeginUpdate;
   try
     LStream := TMemoryStream.Create;
@@ -397,55 +390,8 @@ begin
 end;
 
 procedure TSVGIconImageList.WriteImageData(Stream: TStream);
-var
-  Count, Size: Integer;
-  SVG: TSVG;
-  LIconName: string;
-  LTag: AnsiString;
-  LItem: TSVGIconItem;
-  C: Integer;
-  SVGStream: TMemoryStream;
 begin
-  if FStoreAsText then
-    Exit;
-  Count := FSVGItems.Count;
-  //Store count
-  Stream.Write(Count, SizeOf(Integer));
-
-  SVGStream := TMemoryStream.Create;
-  for C := 0 to Count - 1 do
-  begin
-    LItem := FSVGItems[C];
-    //Store IconName
-    LIconName := LItem.IconName;
-    SVG := FSVGItems[C].SVG;
-    Size := Length(LIconName);
-    Stream.Write(Size, SizeOf(Integer));
-    Stream.WriteBuffer(PChar(LIconName)^, Size * SizeOf(Char));
-    //Store SVG Stream Size
-    SVG.SaveToStream(SVGStream);
-    Size := SVGStream.Size;
-    Stream.Write(Size, SizeOf(Integer));
-    SVGStream.Position := 0;
-    //Store SVG Data
-    Stream.CopyFrom(SVGStream, Size);
-    //Store FixedColor (optionally)
-    if LItem.FixedColor <> SVG_INHERIT_COLOR then
-    begin
-      LTag := 'FixedColor';
-      Stream.WriteBuffer(PAnsiChar(LTag)^, 10);
-      Size := Ord(LItem.FixedColor);
-      Stream.Write(Size, SizeOf(Integer));
-    end;
-    //Store GrayScale (optionally)
-    if LItem.GrayScale then
-    begin
-      LTag := 'GrayScale';
-      Stream.WriteBuffer(PAnsiChar(LTag)^, 9);
-    end;
-    SVGStream.Clear;
-  end;
-  SVGStream.Free;
+  Exit;
 end;
 
 
