@@ -253,6 +253,7 @@ begin
   VirtualImageList := TVirtualImageList.Create(Self);
   VirtualImageList.ImageCollection := ImageDataModule.SVGIconImageCollection;
   VirtualImageList.PreserveItems := True;
+  ActionList.Images := VirtualImageList;
   TopToolBar.Images := VirtualImageList;
   {$ENDIF}
 

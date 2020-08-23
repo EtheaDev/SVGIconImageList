@@ -300,7 +300,7 @@ end;
 procedure TSVGIconImageList.RecreateBitmaps;
 var
   C: Integer;
-  LIcon: HICON;
+  Bitmap: TBitmap;
   LItem: TSVGIconItem;
 begin
   if not Assigned(FSVGItems) or
@@ -315,9 +315,12 @@ begin
     for C := 0 to FSVGItems.Count - 1 do
     begin
       LItem := FSVGItems[C];
-      LIcon := LItem.GetIcon(Width, Height, FFixedColor, FOpacity, FGrayScale);
-      ImageList_AddIcon(Handle, LIcon);
-      DestroyIcon(LIcon);
+      Bitmap := LItem.GetBitmap(Width, Height, FFixedColor, FOpacity, FGrayScale);
+      try
+        ImageList_Add(Handle, Bitmap.Handle, 0);
+      finally
+        Bitmap.Free;
+      end;
     end;
   end;
 end;
