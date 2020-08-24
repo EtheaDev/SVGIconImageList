@@ -46,16 +46,13 @@ uses
   , Messaging
 {$ENDIF}
   , Forms
-  , SVGTypes
-  , SVG
-  , SVGColor
+  , SVGInterfaces
   , SVGIconItems
   , SVGIconImageListBase;
 
 type
   TSVGIconItem = SVGIconItems.TSVGIconItem;
   TSVGIconItems = SVGIconItems.TSVGIconItems;
-
 
 
   {TSVGIconImageList}
@@ -73,7 +70,7 @@ type
     procedure RecreateBitmaps; override;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    function Add(const ASVG: TSVG; const AIconName: string;
+    function Add(const ASVG: ISVG; const AIconName: string;
        const AGrayScale: Boolean = False;
        const AFixedColor: TColor = SVG_INHERIT_COLOR): Integer;
     procedure Delete(const Index: Integer);
@@ -107,17 +104,16 @@ type
 implementation
 
 uses
-  CommCtrl
+  System.Types
+  , CommCtrl
   , Math
-  , Winapi.GDIPAPI
   , ComCtrls
-  , SVGCommon
   , SVGIconVirtualImageList;
 
 
 { TSVGIconImageList }
 
-function TSVGIconImageList.Add(const ASVG: TSVG;
+function TSVGIconImageList.Add(const ASVG: ISVG;
   const AIconName: string; const AGrayScale: Boolean = False;
   const AFixedColor: TColor = SVG_INHERIT_COLOR): Integer;
 var
@@ -197,8 +193,7 @@ end;
 procedure TSVGIconImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
   const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True);
 var
-  R: TGPRectF;
-  LSVG: TSVG;
+  LSVG: ISVG;
   LItem: TSVGIconItem;
   LOpacity: Byte;
 begin
@@ -225,10 +220,9 @@ begin
       else
         LOpacity := FDisabledOpacity;
     end;
-    LSVG.SVGOpacity := LOpacity / 255;
-    R := FittedRect(MakeRect(X, Y, AWidth, AHeight), LSVG.Width, LSVG.Height);
-    LSVG.PaintTo(ACanvas.Handle, R, nil, 0);
-    LSVG.SVGOpacity := 1;
+    LSVG.Opacity := LOpacity / 255;
+    LSVG.PaintTo(ACanvas.Handle, TRectF.Create(TPointF.Create(X, Y), AWidth, AHeight));
+    LSVG.Opacity := 1;
   end;
 end;
 
@@ -236,7 +230,7 @@ procedure TSVGIconImageList.ReadImageData(Stream: TStream);
 var
   LStream: TMemoryStream;
   LCount, LSize: Integer;
-  LSVG: TSVG;
+  LSVG: ISVG;
   C: Integer;
   LPos: Int64;
   LIconName: string;
@@ -254,7 +248,7 @@ begin
     //Read Count of Images
     if Stream.Read(LCount, SizeOf(Integer)) > 0 then
     begin
-      LSVG := TSVG.Create(nil);
+      LSVG := GlobalSVGHandler.NewSvg;
       for C := 0 to LCount - 1 do
       begin
         //Read IconName
@@ -296,7 +290,6 @@ begin
     end;
   finally
     LStream.Free;
-    LSVG.Free;
     EndUpdate;
   end;
 end;

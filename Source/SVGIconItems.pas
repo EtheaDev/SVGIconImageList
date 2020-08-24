@@ -37,16 +37,13 @@ interface
 {$INCLUDE SVGIconImageList.inc}
 
 uses
+  System.Types,
   System.UITypes,
   System.Classes,
   System.Messaging,
   Winapi.Windows,
-  Winapi.GDIPOBJ,
-  Winapi.GDIPAPI,
   Vcl.Graphics,
-  SVGTypes,
-  SVG,
-  SVGColor;
+  SVGInterfaces;
 
 type
   TSVGIconItems = class;
@@ -57,11 +54,11 @@ type
   TSVGIconItem = class(TCollectionItem)
   private
     FIconName: string;
-    FSVG: TSVG;
+    FSVG: ISVG;
     FFixedColor: TColor;
     FGrayScale: Boolean;
     procedure SetIconName(const Value: string);
-    procedure SetSVG(const Value: TSVG);
+    procedure SetSVG(const Value: ISVG);
     procedure SetSVGText(const Value: string);
     function GetSVGText: string;
     procedure SetFixedColor(const Value: TColor);
@@ -73,8 +70,7 @@ type
       const AFixedColor: TColor; const AOpacity: Byte;
       const AGrayScale: Boolean): TBitmap;
     constructor Create(Collection: TCollection); override;
-    destructor Destroy; override;
-    property SVG: TSVG read FSVG write SetSVG;
+    property SVG: ISVG read FSVG write SetSVG;
   published
     property IconName: string read FIconName write SetIconName;
     property SVGText: string read GetSVGText write SetSVGText;
@@ -102,7 +98,6 @@ implementation
 
 uses
   System.SysUtils,
-  SVGCommon,
 {$IFDEF D10_3+}
   BaseImageCollection,
 {$ENDIF}
@@ -121,7 +116,7 @@ begin
     FIconName := TSVGIconItem(Source).FIconName;
     FFixedColor := TSVGIconItem(Source).FFixedColor;
     FGrayScale := TSVGIconItem(Source).FGrayScale;
-    FSVG.LoadFromText(TSVGIconItem(Source).FSVG.Source);
+    FSVG.Source :=  TSVGIconItem(Source).FSVG.Source;
   end else
     inherited;
 end;
@@ -129,14 +124,8 @@ end;
 constructor TSVGIconItem.Create(Collection: TCollection);
 begin
   inherited Create(Collection);
-  FSVG := TSVG.Create;
+  FSVG := GlobalSVGHandler.NewSvg;
   FFixedColor := SVG_INHERIT_COLOR;
-end;
-
-destructor TSVGIconItem.Destroy;
-begin
-  FreeAndNil(FSVG);
-  inherited;
 end;
 
 function TSVGIconItem.GetDisplayName: string;
@@ -149,8 +138,7 @@ end;
 
 function TSVGIconItem.GetBitmap(const AWidth, AHeight: Integer;
   const AFixedColor: TColor; const AOpacity: Byte; const AGrayScale: Boolean): TBitmap;
-var
-  R: TGPRectF;
+
 begin
   if FFixedColor <> SVG_INHERIT_COLOR then
     FSVG.FixedColor := FFixedColor
@@ -160,15 +148,14 @@ begin
     FSVG.Grayscale := True
   else
     FSVG.Grayscale := False;
-  FSVG.SVGOpacity := AOpacity / 255;
-
-  R := FittedRect(MakeRect(0.0, 0, AWidth, AHeight), FSVG.Width, FSVG.Height);
+  FSVG.Opacity := AOpacity / 255;
 
   Result := TBitmap.Create;
   Result.PixelFormat := pf32bit;
   Result.Canvas.Brush.Color := $00FFFFFF;
   Result.SetSize(AWidth, AHeight);
-  SVG.PaintTo(Result.Canvas.Handle, R, nil, 0);
+
+  FSVG.PaintTo(Result.Canvas.Handle, TRectF.Create(0, 0, AWidth, AHeight));
 end;
 
 function TSVGIconItem.GetSVGText: string;
@@ -207,20 +194,12 @@ begin
   end;
 end;
 
-procedure TSVGIconItem.SetSVG(const Value: TSVG);
+procedure TSVGIconItem.SetSVG(const Value: ISVG);
 begin
-  if not Assigned(Value) then
+  if FSVG <> Value then
   begin
-    FSVG.Clear;
+    FSVG := Value;
     Changed(False);
-  end
-  else
-  begin
-    if FSVG.Source <> Value.Source then
-    begin
-      FSVG.LoadFromText(Value.Source);
-      Changed(False);
-    end;
   end;
 end;
 
@@ -228,7 +207,7 @@ procedure TSVGIconItem.SetSVGText(const Value: string);
 begin
   if FSVG.Source <> Value then
   begin
-    FSVG.LoadFromText(Value);
+    FSVG.Source := Value;
     Changed(False);
   end;
 end;
@@ -284,7 +263,6 @@ begin
   end;
 end;
 
-
 function TSVGIconItems.GetItem(
   Index: Integer): TSVGIconItem;
 begin
@@ -295,7 +273,7 @@ function TSVGIconItems.LoadFromFiles(const AFileNames: TStrings;
   const AAppend: Boolean): Integer;
 Var
   LIndex: Integer;
-  LSVG: TSVG;
+  LSVG: ISVG;
   LFileName: string;
   LItem: TSVGIconItem;
   LErrors: string;
@@ -304,29 +282,25 @@ begin
   BeginUpdate;
   try
     LErrors := '';
-    LSVG := TSVG.Create;
-    try
-      if not AAppend then
-        Clear;
-      for LIndex := 0 to AFileNames.Count - 1 do
-      begin
-        LFileName := AFileNames[LIndex];
-        try
-          LSVG.LoadFromFile(LFileName);
-          LItem := Add;
-          LItem.IconName := ChangeFileExt(ExtractFileName(LFileName), '');
-          LItem.SVG := LSVG;
-          Inc(Result);
-        except
-          on E: Exception do
-            LErrors := LErrors + Format('%s (%s)',[E.Message, LFileName]) + sLineBreak;
-        end;
+    LSVG := GlobalSVGHandler.NewSvg;
+    if not AAppend then
+      Clear;
+    for LIndex := 0 to AFileNames.Count - 1 do
+    begin
+      LFileName := AFileNames[LIndex];
+      try
+        LSVG.LoadFromFile(LFileName);
+        LItem := Add;
+        LItem.IconName := ChangeFileExt(ExtractFileName(LFileName), '');
+        LItem.SVG := LSVG;
+        Inc(Result);
+      except
+        on E: Exception do
+          LErrors := LErrors + Format('%s (%s)',[E.Message, LFileName]) + sLineBreak;
       end;
-      if LErrors <> '' then
-        raise Exception.Create(ERROR_LOADING_FILES+sLineBreak+LErrors);
-    finally
-      LSVG.Free;
     end;
+    if LErrors <> '' then
+      raise Exception.Create(ERROR_LOADING_FILES+sLineBreak+LErrors);
   finally
     EndUpdate;
   end;

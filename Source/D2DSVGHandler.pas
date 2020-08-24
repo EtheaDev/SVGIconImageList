@@ -56,7 +56,9 @@ type
     procedure SetFixedColor(const Color: TColor);
     function GetSource: string;
     procedure SetSource(const ASource: string);
-    // procedures
+    // procedures and functions
+    function IsEmpty: Boolean;
+    procedure Clear;
     procedure SaveToStream(Stream: TStream);
     procedure SaveToFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
@@ -80,6 +82,13 @@ type
   end;
 
 { TD2DSVG }
+
+procedure TD2DSVG.Clear;
+Const
+  EmptySvg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
+begin
+  SetSource(EmptySvg);
+end;
 
 constructor TD2DSVG.Create;
 begin
@@ -189,6 +198,16 @@ end;
 function TD2DSVG.GetWidth: Single;
 begin
   Result := fWidth;
+end;
+
+function TD2DSVG.IsEmpty: Boolean;
+Var
+  Root: ID2D1SvgElement;
+begin
+  if fSvgDoc = nil then Exit(True);
+
+  fSvgDoc.GetRoot(Root);
+  Result := not Root.HasChildren;
 end;
 
 procedure TD2DSVG.LoadFromStream(Stream: TStream);
@@ -406,8 +425,11 @@ end;
 
 procedure TD2DSVG.SetSource(const ASource: string);
 begin
-  FSource := ASource;
-  LoadFromSource;
+  if FSource <> ASource then
+  begin
+    FSource := ASource;
+    LoadFromSource;
+  end;
 end;
 
 procedure TD2DSVG.SourceFromStream(Stream: TStream);
@@ -454,7 +476,7 @@ begin
   begin
     if not Succeeded(D2DFactory.CreateDCRenderTarget(
       D2D1RenderTargetProperties(
-        D2D1_RENDER_TARGET_TYPE_DEFAULT,
+        D2D1_RENDER_TARGET_TYPE_DEFAULT,  // D2D1_RENDER_TARGET_TYPE_SOFTWARE is much faster in my desktop with a slow GPU
         D2D1PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED),
         0, 0, D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE),
         RenderTarget))

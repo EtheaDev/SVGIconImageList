@@ -25,8 +25,9 @@ Uses
   System.UITypes,
   System.SysUtils,
   System.Classes,
-  Svg,
-  SvgTypes;
+  SvgTypes,
+  SvgCommon,
+  Svg;
 
 type
 
@@ -44,7 +45,9 @@ type
     procedure SetFixedColor(const Color: TColor);
     function GetSource: string;
     procedure SetSource(const ASource: string);
-    // procedures
+    // procedures and functions
+    function IsEmpty: Boolean;
+    procedure Clear;
     procedure SaveToStream(Stream: TStream);
     procedure SaveToFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
@@ -60,6 +63,11 @@ type
   end;
 
 { TPasSVG }
+
+procedure TPasSVG.Clear;
+begin
+  fSvgDoc.Clear;
+end;
 
 constructor TPasSVG.Create;
 begin
@@ -109,6 +117,11 @@ begin
   Result := fSvgDoc.Width;
 end;
 
+function TPasSVG.IsEmpty: Boolean;
+begin
+  Result := fSvgDoc.Count = 0;
+end;
+
 procedure TPasSVG.LoadFromStream(Stream: TStream);
 begin
   fSvgDoc.LoadFromStream(Stream);
@@ -117,7 +130,6 @@ end;
 procedure TPasSVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
 var
   SvgRect : TRectF;
-  GPRectF: TGPRectF;
 begin
   SvgRect:= R;
   if (fSvgDoc.Width > 0) and (fSvgDoc.Height > 0) and KeepAspectRatio then
@@ -125,8 +137,7 @@ begin
       SvgRect := TRectF.Create(0, 0, fSvgDoc.Width, fSvgDoc.Height);
       SvgRect := SvgRect.FitInto(R);
   end;
-  GPRectF := Winapi.GDIPAPI.MakeRect(SvgRect.Left, SvgRect.Top, SvgRect.Width, SvgRect.Height);
-  fSvgDoc.PaintTo(DC, GPRectF, nil, 0);
+  fSvgDoc.PaintTo(DC, ToGPRectF(SvgRect), nil, 0);
 end;
 
 procedure TPasSVG.SaveToFile(const FileName: string);

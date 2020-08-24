@@ -39,16 +39,14 @@ interface
 uses
   WinApi.Windows,
   Winapi.CommCtrl,
-  Winapi.GDIPAPI,
   System.Classes,
   System.Messaging,
   Vcl.Controls,
   Vcl.Graphics,
-  SVG,
-  SVGColor,
 {$IFDEF D10_3+}
   Vcl.VirtualImageList,
 {$ENDIF}
+  SVGInterfaces,
   SVGIconImageListBase,
   SVGIconImageCollection;
 
@@ -93,13 +91,12 @@ type
 implementation
 
 uses
+  System.Types,
   System.UITypes,
   System.Math,
   System.SysUtils,
   Vcl.Forms,
   Vcl.ImgList,
-  SVGTypes,
-  SVGCommon,
   SVGIconImageList;
 
 { TSVGIconVirtualImageList }
@@ -149,8 +146,7 @@ end;
 procedure TSVGIconVirtualImageList.PaintTo(const ACanvas: TCanvas;
   const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean);
 var
-  R: TGPRectF;
-  LSVG: TSVG;
+  LSVG: ISVG;
   LItem: TSVGIconItem;
   LOpacity: Byte;
 begin
@@ -177,10 +173,9 @@ begin
       else
         LOpacity := FDisabledOpacity;
     end;
-    LSVG.SVGOpacity := LOpacity / 255;
-    R := FittedRect(MakeRect(X, Y, AWidth, AHeight), LSVG.Width, LSVG.Height);
-    LSVG.PaintTo(ACanvas.Handle, R, nil, 0);
-    LSVG.SVGOpacity := 1;
+    LSVG.Opacity := LOpacity / 255;
+    LSVG.PaintTo(ACanvas.Handle, TRectF.Create(TPointF.Create(X, Y), AWidth, AHeight));
+    LSVG.Opacity := 1;
   end;
 end;
 

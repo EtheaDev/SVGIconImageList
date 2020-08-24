@@ -16,8 +16,11 @@ Uses
   System.SysUtils,
   System.Classes;
 
-type
+const
+  SVG_INHERIT_COLOR = TColors.SysDefault;
+  SVG_NONE_COLOR = TColors.SysNone;
 
+type
   //  Abstraction of an SVG document
   ISVG = interface
     // property access methods
@@ -31,7 +34,9 @@ type
     procedure SetFixedColor(const Color: TColor);
     function GetSource: string;
     procedure SetSource(const ASource: string);
-    // procedures
+    // procedures and functions
+    function IsEmpty: Boolean;
+    procedure Clear;
     procedure SaveToStream(Stream: TStream);
     procedure SaveToFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
@@ -39,7 +44,7 @@ type
     procedure PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean = True);
     // properties
     property Width: Single read GetWidth;
-    property Heigth: Single read GetHeight;
+    property Height: Single read GetHeight;
     property Opacity: Single read GetOpacity write SetOpacity;
     property GrayScale: Boolean read GetGrayScale write SetGrayScale;
     property FixedColor: TColor read GetFixedColor write SetFixedColor;
