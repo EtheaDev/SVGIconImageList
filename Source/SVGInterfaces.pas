@@ -59,8 +59,8 @@ type
     function NewSvg: ISVG;
   end;
 
-Var
-  GlobalSVGHandler: ISVGHandler;
+function GlobalSVGHandler: ISVGHandler;
+procedure SetGlobalSVGHandler(SVGHandler: ISVGHandler);
 
 implementation
 
@@ -72,15 +72,26 @@ Uses
   {$ENDIF}
   PasSVGHandler;
 
-initialization
-  if not Assigned(GlobalSVGHandler) then
+Var
+ FGlobalSVGHandler: ISVGHandler;
+
+function GlobalSVGHandler: ISVGHandler;
+begin
+  if not Assigned(FGlobalSVGHandler) then
   begin
     {$IFDEF PreferNativeSvgSupport}
     if WinSvgSupported then
-      GlobalSVGHandler := GetD2DSVGHandler
+      FGlobalSVGHandler := GetD2DSVGHandler
     else
     {$ENDIF}
-      GlobalSVGHandler := GetPasSVGHandler;
+      FGlobalSVGHandler := GetPasSVGHandler;
   end;
+  Result := FGlobalSVGHandler;
+end;
+
+procedure SetGlobalSVGHandler(SVGHandler: ISVGHandler);
+begin
+  FGlobalSVGHandler := SVGHandler;
+end;
 
 end.
