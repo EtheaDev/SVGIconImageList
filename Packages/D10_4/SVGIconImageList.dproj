@@ -104,6 +104,10 @@
         <DCCReference Include="..\..\Source\SVGIconItems.pas"/>
         <DCCReference Include="..\..\Source\SVGIconVirtualImageList.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageListBase.pas"/>
+        <DCCReference Include="..\..\Source\D2DSVGHandler.pas"/>
+        <DCCReference Include="..\..\Source\Winapi.D2DMissing.pas"/>
+        <DCCReference Include="..\..\Source\PasSVGHandler.pas"/>
+        <DCCReference Include="..\..\Source\SVGInterfaces.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -124,10 +128,7 @@
                 <Source>
                     <Source Name="MainSource">SVGIconImageList.dpk</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k270.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp270.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>
