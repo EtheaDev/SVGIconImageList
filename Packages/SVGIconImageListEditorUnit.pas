@@ -73,7 +73,6 @@ type
     SVGText: TMemo;
     SizeLabel: TLabel;
     SizeSpinEdit: TSpinEdit;
-    StoreAsTextCheckBox: TCheckBox;
     ItemGroupBox: TGroupBox;
     IconNameLabel: TLabel;
     IconPanel: TPanel;
@@ -128,7 +127,6 @@ type
     procedure WidthSpinEditChange(Sender: TObject);
     procedure HeightSpinEditChange(Sender: TObject);
     procedure OpacitySpinEditChange(Sender: TObject);
-    procedure StoreAsTextCheckBoxClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure NewButtonClick(Sender: TObject);
     procedure SVGTextChange(Sender: TObject);
@@ -196,7 +194,6 @@ begin
         FSourceList := AImageList;
         FEditingList.Assign(AImageList);
         OpacitySpinEdit.Value := FSourceList.Opacity;
-        StoreAsTextCheckBox.Checked := FSourceList.StoreAsText;
         UpdateGUI;
       finally
         Screen.Cursor := crDefault;
@@ -223,7 +220,7 @@ function EditSVGIconVirtualImageList(const AImageList: TSVGIconVirtualImageList)
 var
   LEditor: TSVGIconImageListEditor;
 begin
-  if AImageList.Collection = nil then
+  if AImageList.ImageCollection = nil then
     exit(false);
   LEditor := TSVGIconImageListEditor.Create(nil);
   with LEditor do
@@ -235,9 +232,7 @@ begin
         FSourceList.Assign(AImageList);
         FEditingList.Assign(AImageList);
         OpacitySpinEdit.Value := FSourceList.Opacity;
-        StoreAsTextCheckBox.Checked := AImageList.Collection.StoreAsText;
         OpacitySpinEdit.Value := AImageList.Opacity;
-        StoreAsTextCheckBox.Checked := FSourceList.StoreAsText;
         UpdateGUI;
       finally
         Screen.Cursor := crDefault;
@@ -247,8 +242,7 @@ begin
       begin
         Screen.Cursor := crHourglass;
         try
-          AImageList.Collection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
-          AImageList.Collection.StoreAsText := StoreAsTextCheckBox.Checked;
+          AImageList.ImageCollection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
           AImageList.Assign(LEditor.FEditingList);
         finally
           Screen.Cursor := crDefault;
@@ -274,11 +268,13 @@ begin
       try
         FSourceList := TSVGIconImageList.Create(LEditor);
         FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
-        FEditingList.Size := 32; //Force 32 pixel size for image collection icons
+        FSourceList.Size := 32; //Force 32 pixel size for image collection icons
+        FSourceList.GrayScale := AImageCollection.GrayScale;
+        FSourceList.FixedColor := AImageCollection.FixedColor;
         ImageListGroupBox.Caption := ImageListGroupBox.Caption + ' ' + NOT_APPLYED_TO_COLLECTION;
-        FEditingList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
+        FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
+        FEditingList.Assign(FSourceList);
         OpacitySpinEdit.Value := FSourceList.Opacity;
-        StoreAsTextCheckBox.Checked := AImageCollection.StoreAsText;
         UpdateGUI;
       finally
         Screen.Cursor := crDefault;
@@ -289,7 +285,8 @@ begin
         Screen.Cursor := crHourglass;
         try
           AImageCollection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
-          AImageCollection.StoreAsText := StoreAsTextCheckBox.Checked;
+          AImageCollection.GrayScale := GrayScaleCheckBox.Checked;
+          AImageCollection.FixedColor := FixedColorComboBox.Selected;
         finally
           Screen.Cursor := crDefault;
         end;
@@ -512,11 +509,6 @@ begin
   if FUpdating then Exit;
   FEditingList.Size := SizeSpinEdit.Value;
   UpdateSizeGUI;
-end;
-
-procedure TSVGIconImageListEditor.StoreAsTextCheckBoxClick(Sender: TObject);
-begin
-  FEditingList.StoreAsText := StoreAsTextCheckBox.Checked;
 end;
 
 procedure TSVGIconImageListEditor.SVGTextChange(Sender: TObject);
@@ -761,7 +753,7 @@ end;
 procedure TSVGIconImageListEditor.HelpButtonClick(Sender: TObject);
 begin
   ShellExecute(handle, 'open',
-    PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Image-Editor'), nil, nil,
+    PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Component-Editor-(VCL)'), nil, nil,
     SW_SHOWNORMAL)
 end;
 

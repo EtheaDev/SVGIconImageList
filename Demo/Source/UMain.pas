@@ -39,7 +39,8 @@ uses
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
   System.Actions, System.ImageList, SVGIconImageListBase,
   SVGIconImageCollection, SVGIconVirtualImageList,
-  UDataModule, Vcl.VirtualImageList;
+  {$IFDEF D10_3+}Vcl.VirtualImageList,{$ENDIF}
+  UDataModule;
 
 type
   TMainForm = class(TForm)
@@ -82,7 +83,6 @@ type
     SVGIconVirtualImageList: TSVGIconVirtualImageList;
     NewFormButton: TButton;
     NewFormAction: TAction;
-    VirtualImageList: TVirtualImageList;
     procedure ChangeIconActionExecute(Sender: TObject);
     procedure SelectThemeRadioGroupClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -101,6 +101,9 @@ type
     procedure FixedColorComboBoxSelect(Sender: TObject);
     procedure NewFormActionExecute(Sender: TObject);
   private
+    {$IFDEF D10_3+}
+    VirtualImageList: TVirtualImageList;
+    {$ENDIF}
     FUpdating: Boolean;
     FSVGIconImageListHot: TSVGIconImageList;
     FSVGIconImageListDisabled: TSVGIconImageList;
@@ -190,6 +193,9 @@ end;
 procedure TMainForm.ClearButtonClick(Sender: TObject);
 begin
   //Clear Collection
+  {$IFDEF D10_3+}
+  VirtualImageList.Clear;
+  {$ENDIF}
   ImageDataModule.SVGIconImageCollection.ClearIcons;
   UpdateGUI;
 end;
@@ -216,6 +222,13 @@ begin
   try
     if FixedColorComboBox.ItemIndex >= 0 then
     begin
+      {$IFDEF D10_3+}
+      //Warning: native VirtualImageList can change FixedColor only at Collection level
+      //so the changes are affected to all forms opened!
+      (VirtualImageList.ImageCollection as TSVGIconImageCollection).FixedColor :=
+        FixedColorComboBox.Selected;
+      {$ENDIF}
+      //Change FixedColor at ImageList (affected only to current form)
       SVGIconVirtualImageList.FixedColor := FixedColorComboBox.Selected;
       UpdateGUI;
     end;
@@ -235,7 +248,15 @@ begin
   OnAfterMonitorDpiChanged := FormAfterMonitorDpiChanged;
   {$ENDIF}
 
-  {$IFDEF DXE+}
+  {$IFDEF D10_3+}
+  ////Test use of native VirtualImageList
+  VirtualImageList := TVirtualImageList.Create(Self);
+  VirtualImageList.ImageCollection := ImageDataModule.SVGIconImageCollection;
+  VirtualImageList.PreserveItems := True;
+  ActionList.Images := VirtualImageList;
+  TopToolBar.Images := VirtualImageList;
+  {$ENDIF}
+
   //Build available VCL Styles
   SelectThemeRadioGroup.Items.Clear;
   for I := 0 to High(TStyleManager.StyleNames) do
@@ -247,7 +268,6 @@ begin
   finally
     SelectThemeRadioGroup.OnClick := SelectThemeRadioGroupClick;
   end;
-  {$ENDIF}
   SelectThemeRadioGroupClick(SelectThemeRadioGroup);
 
   TreeView.Items[0].Expand(True);
@@ -261,6 +281,13 @@ procedure TMainForm.GrayScaleCheckBoxClick(Sender: TObject);
 begin
   Screen.Cursor := crHourGlass;
   try
+    {$IFDEF D10_3+}
+    //Warning: native VirtualImageList can change FixedColor only at Collection level
+    //so the changes are affected to all forms opened!
+    (VirtualImageList.ImageCollection as TSVGIconImageCollection).GrayScale:=
+      GrayScaleCheckBox.Checked;
+    {$ENDIF}
+    //Change GrayScale at ImageList (affected only to current form)
     SVGIconVirtualImageList.GrayScale := GrayScaleCheckBox.Checked;
     UpdateGUI;
   finally
@@ -307,9 +334,10 @@ end;
 
 procedure TMainForm.ShowImageEditorButtonClick(Sender: TObject);
 begin
-//  Image Editor for ImageCollection
-//  if EditSVGIconImageCollection(SVGIconImageCollection) then
-//    UpdateGUI;
+  //Image Editor for ImageCollection
+  //if EditSVGIconImageCollection(ImageDataModule.SVGIconImageCollection) then
+  //  UpdateGUI;
+
   //Image Editor for VirtualImageList
   if EditSVGIconVirtualImageList(SVGIconVirtualImageList) then
     UpdateGUI;
@@ -327,12 +355,26 @@ end;
 procedure TMainForm.updateGUI;
 var
   LSize: Integer;
+  {$IFDEF D10_3+}
+  I: Integer;
+  LItem: TSVGIconItem;
+  {$ENDIF}
 begin
   if FUpdating then
     Exit;
   FUpdating := True;
   try
     LSize := SVGIconVirtualImageList.Height;
+    {$IFDEF D10_3+}
+    VirtualImageList.Clear;
+    VirtualImageList.SetSize(LSize, LSize);
+    //Fill VirtualImageList with all icons in the collection of SVGIconVirtualImageList
+    for I := 0 to SVGIconVirtualImageList.SVGIconItems.Count -1 do
+    begin
+      LItem := SVGIconVirtualImageList.SVGIconItems[I];
+      VirtualImageList.Add(LItem.IconName, I, False);
+    end;
+    {$ENDIF+}
     IconSizeLabel.Caption := Format('Icons size: %d',[LSize]);
     TopToolBar.ButtonHeight := LSize + 2;
     TopToolBar.ButtonWidth := LSize + 2;
@@ -373,7 +415,6 @@ procedure TMainForm.TrackBarChange(Sender: TObject);
 begin
   //Resize all icons into ImageList
   SVGIconVirtualImageList.Size := TrackBar.Position;
-  VirtualImageList.SetSize(TrackBar.Position, TrackBar.Position);
   UpdateGUI;
 end;
 

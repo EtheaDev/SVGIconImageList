@@ -14,6 +14,7 @@
 { Carlo Barazzetta (Changed color ref)                             }
 { Kiriakos Vlahos (optimization of ConvertColor)                   }
 { Kiriakos Vlahos (conversion from TSVGColor to TColor)            }
+{ Kiriakos Vlahos (Fixed currentColor and default fillcolor)       }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }
@@ -203,6 +204,11 @@ begin
   if SameText(ASVGColorName, 'inherit') then
   begin
     Result := SVG_INHERIT_COLOR;
+    Exit;
+  end;
+  if SameText(ASVGColorName, 'currentColor') then
+  begin
+    Result := TColors.Black;
     Exit;
   end;
 

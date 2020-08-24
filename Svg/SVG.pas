@@ -25,6 +25,7 @@
 { Kiriakos Vlahos (fixed SetBounds based on ViewBox)               }
 { Kiriakos Vlahos (added 'fill-rule' presentation attribute)       }
 { Kiriakos Vlahos (fixed loadlength)                               }
+{ Kiriakos Vlahos (Fixed currentColor and default fillcolor)       }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }
@@ -748,31 +749,30 @@ begin
 end;
 
 function TSVGObject.GetDisplay: TTriStateBoolean;
+// if display is false in an element, children also will not be displayed
 var
   SVG: TSVGObject;
 begin
+  Result := tbTrue;
   SVG := Self;
-  while Assigned(SVG) and (SVG.FDisplay = tbInherit) do
+  while Assigned(SVG) do
+  begin
+    if SVG.FDisplay = tbFalse then Exit(tbFalse);
     SVG := SVG.FParent;
-
-  if Assigned(SVG) then
-    Result := SVG.FDisplay
-  else
-    Result := tbTrue;
+  end;
 end;
 
 function TSVGObject.GetVisible: TTriStateBoolean;
 var
   SVG: TSVGObject;
 begin
+  Result := tbTrue;
   SVG := Self;
-  while Assigned(SVG) and (SVG.FVisible = tbInherit) do
+  while Assigned(SVG) do
+  begin
+    if SVG.FVisible <> tbInherit then Exit(SVG.FVisible);
     SVG := SVG.FParent;
-
-  if Assigned(SVG) then
-    Result := SVG.FVisible
-  else
-    Result := tbTrue;
+  end;
 end;
 
 procedure TSVGObject.ReadIn(const Node: IXMLNode);
@@ -881,7 +881,7 @@ begin
   inherited;
   FPath := nil;
   // default SVG fill-rule is nonzero
-  fFillMode := FillModeWinding;
+  FFillMode := FillModeWinding;
   SetLength(FStrokeDashArray, 0);
   FStyle.OnChange := OnStyleChanged;
   FClipPath := nil;
@@ -994,10 +994,8 @@ begin
     end;
 
     if FStyleChanged then
-    begin
       UpdateStyle;
-      FStyleChanged := False;
-    end;
+
     Brush := GetFillBrush;
     try
       StrokeBrush := GetStrokeBrush;
@@ -1092,7 +1090,7 @@ begin
       ReadStyle(Style);
   end;
 
-  if Root.Grayscale then
+  if LRoot.Grayscale then
     begin
       FillColor   := GetSVGGrayscale(GetSVGColor(FFillURI));
       StrokeColor := GetSVGGrayscale(GetSVGColor(FStrokeURI));
@@ -1103,17 +1101,19 @@ begin
       StrokeColor := GetSVGColor(FStrokeURI);
     end;
 
-  if (Root.FixedColor <> SVG_INHERIT_COLOR) then
+  if (LRoot.FixedColor <> SVG_INHERIT_COLOR) then
     begin
       if (FillColor <> SVG_INHERIT_COLOR) and (FillColor <> SVG_NONE_COLOR) then
-        FillColor := Root.FixedColor;
+        FillColor := LRoot.FixedColor;
       if (StrokeColor <> SVG_INHERIT_COLOR) and (StrokeColor <> SVG_NONE_COLOR) then
-        StrokeColor := Root.FixedColor;
+        StrokeColor := LRoot.FixedColor;
     end;
 
   FFillURI := ParseURI(FFillURI);
   FStrokeURI := ParseURI(FStrokeURI);
   ClipURI := ParseURI(FClipURI);
+
+  FStyleChanged := False;
 end;
 
 procedure TSVGBasic.ReadIn(const Node: IXMLNode);
@@ -1443,7 +1443,7 @@ begin
   if Value <> '' then
   begin
     if Value = 'none' then
-      FVisible := tbFalse;
+      FDisplay := tbFalse;
   end;
 end;
 
@@ -2299,11 +2299,12 @@ begin
   FRX := 0;
   FRY := 0;
 
-  FillColor := SVG_NONE_COLOR;
-  FillOpacity := 1;
-  StrokeColor := SVG_NONE_COLOR;
-  StrokeWidth := 1;
-  StrokeOpacity := 1;
+  FFillColor := SVG_INHERIT_COLOR;
+  FFillURI := 'black';  //default fill color
+  FFillOpacity := 1;
+  FStrokeColor := SVG_NONE_COLOR;
+  FStrokeWidth := 1;
+  FStrokeOpacity := 1;
 
   FAngle := 0;
   FillChar(FAngleMatrix, SizeOf(TMatrix), 0);
@@ -2365,7 +2366,6 @@ begin
     FFixedColor := Value;
     if FFixedColor < 0 then
       FFixedColor := GetSysColor(fFixedColor and $000000FF);
-    UpdateStyle;
     ReloadFromText;
   end;
 end;
@@ -2375,7 +2375,6 @@ begin
   if FGrayscale <> Value then
   begin
     FGrayscale := Value;
-    UpdateStyle;
     ReloadFromText;
   end;
 end;
@@ -2403,9 +2402,7 @@ procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
 
   function NeedsPainting(Item: TSVGObject): Boolean;
   begin
-    Result := (Item.Display = tbTrue) and
-       (Item.FStyle.Values['display'] <> 'none') and
-       (Item.Visible = tbTrue);
+    Result := (Item.Display = tbTrue) and (Item.Visible = tbTrue);
   end;
 
   procedure PaintItem(const Item: TSVGObject);
@@ -2562,11 +2559,11 @@ begin
 
   // The -1 below is for fixing #14. There may well be a better way.
   if (FViewBox.Width > 0) and (FRootBounds.Width > 0) then
-    ScaleX := (FRootBounds.Width -1) / FViewBox.Width
+    ScaleX := (FRootBounds.Width - 1) / FViewBox.Width
   else
     ScaleX := 1;
   if (FViewBox.Height > 0) and (FRootBounds.Height > 0) then
-    ScaleY := (FRootBounds.Height -1)/ FViewBox.Height
+    ScaleY := (FRootBounds.Height - 1)/ FViewBox.Height
   else
     ScaleY := 1;
   ScaleMatrix := TMatrix.CreateScaling(ScaleX, ScaleY);

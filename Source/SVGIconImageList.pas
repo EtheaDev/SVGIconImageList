@@ -56,14 +56,12 @@ type
   TSVGIconItem = SVGIconItems.TSVGIconItem;
   TSVGIconItems = SVGIconItems.TSVGIconItems;
 
-  TSVGIconImageList = class;
 
 
   {TSVGIconImageList}
   TSVGIconImageList = class(TSVGIconImageListBase)
   private
     FSVGItems: TSVGIconItems;
-    FStoreAsText: boolean;
   protected
     function GetSVGIconItems: TSVGIconItems; override;
     //procedure SetSVGIconItems(const Value: TSVGIconItems); override;
@@ -80,9 +78,10 @@ type
        const AFixedColor: TColor = SVG_INHERIT_COLOR): Integer;
     procedure Delete(const Index: Integer);
     procedure Remove(const Name: string);
-    procedure ClearIcons;override;
+    procedure ClearIcons; override;
     procedure SaveToFile(const AFileName: string);
-    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
+    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
+      const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
   published
     //Publishing properties of Custom Class
     property Width;
@@ -90,9 +89,8 @@ type
     property Size;
     property OnChange;
     //New properties
-    property SVGIconItems stored FStoreAsText;
+    property SVGIconItems;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
-    property StoreAsText: boolean read FStoreAsText write FStoreAsText default False;
     property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
     property DisabledGrayScale: Boolean read FDisabledGrayScale write SetDisabledGrayScale default True;
@@ -173,65 +171,64 @@ end;
 procedure TSVGIconImageList.DefineProperties(Filer: TFiler);
 begin
   inherited;
-  Filer.DefineBinaryProperty('Images', ReadImageData, WriteImageData, True);
+  Filer.DefineBinaryProperty('Images', ReadImageData, WriteImageData, False);
 end;
 
 
 procedure TSVGIconImageList.DoAssign(const Source: TPersistent);
 var
-  virtualList : TSVGIconVirtualImageList;
+  LVirtualList : TSVGIconVirtualImageList;
 begin
   inherited;
   if Source is TSVGIconImageList then
   begin
     FSVGItems.Assign(TSVGIconImageList(Source).FSVGItems);
-    FStoreAsText := TSVGIconImageList(Source).FStoreAsText;
   end
   else if Source is TSVGIconVirtualImageList then
   begin
-    virtualList := TSVGIconVirtualImageList(Source);
-    if virtualList.Collection <> nil then
+    LVirtualList := TSVGIconVirtualImageList(Source);
+    if LVirtualList.ImageCollection <> nil then
     begin
-      FSVGItems.Assign(virtualList.Collection.SVGIconItems);
-      FStoreAsText := virtualList.Collection.StoreAsText;
+      FSVGItems.Assign(LVirtualList.ImageCollection.SVGIconItems);
     end;
   end;
 end;
 
-procedure TSVGIconImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True);
+procedure TSVGIconImageList.PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
+  const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True);
 var
   R: TGPRectF;
-  SVG: TSVG;
+  LSVG: TSVG;
   LItem: TSVGIconItem;
   LOpacity: Byte;
 begin
   if (AIndex >= 0) and (AIndex < FSVGItems.Count) then
   begin
     LItem := FSVGItems[AIndex];
-    SVG := LItem.SVG;
+    LSVG := LItem.SVG;
     if LItem.FixedColor <> SVG_INHERIT_COLOR then
-      SVG.FixedColor := LItem.FixedColor
+      LSVG.FixedColor := LItem.FixedColor
     else
-      SVG.FixedColor := FFixedColor;
+      LSVG.FixedColor := FFixedColor;
     LOpacity := FOpacity;
     if AEnabled then
     begin
       if LItem.GrayScale or FGrayScale then
-        SVG.Grayscale := True
+        LSVG.Grayscale := True
       else
-        SVG.Grayscale := False;
+        LSVG.Grayscale := False;
     end
     else
     begin
       if FDisabledGrayScale then
-        SVG.Grayscale := True
+        LSVG.Grayscale := True
       else
         LOpacity := FDisabledOpacity;
     end;
-    SVG.SVGOpacity := LOpacity / 255;
-    R := FittedRect(MakeRect(X, Y, AWidth, AHeight), SVG.Width, SVG.Height);
-    SVG.PaintTo(ACanvas.Handle, R, nil, 0);
-    SVG.SVGOpacity := 1;
+    LSVG.SVGOpacity := LOpacity / 255;
+    R := FittedRect(MakeRect(X, Y, AWidth, AHeight), LSVG.Width, LSVG.Height);
+    LSVG.PaintTo(ACanvas.Handle, R, nil, 0);
+    LSVG.SVGOpacity := 1;
   end;
 end;
 
@@ -248,56 +245,58 @@ var
   LGrayScale: Boolean;
   LFixedColor: TColor;
 begin
-  if FStoreAsText then
-    Exit;
-
+  //Only for backward compatibility: load images stored in old format
+  LStream := nil;
+  LSVG := nil;
   BeginUpdate;
   try
     LStream := TMemoryStream.Create;
     //Read Count of Images
-    Stream.Read(LCount, SizeOf(Integer));
-    LSVG := TSVG.Create(nil);
-    for C := 0 to LCount - 1 do
+    if Stream.Read(LCount, SizeOf(Integer)) > 0 then
     begin
-      //Read IconName
-      Stream.Read(LSize, SizeOf(Integer));
-      SetLength(LIconName, LSize);
-      Stream.Read(PChar(LIconName)^, LSize * SizeOf(Char));
-      //Read SVG Stream Size
-      Stream.Read(LSize, SizeOf(Integer));
-      LStream.CopyFrom(Stream, LSize);
-      //Read SVG Stream data
-      LSVG.LoadFromStream(LStream);
+      LSVG := TSVG.Create(nil);
+      for C := 0 to LCount - 1 do
+      begin
+        //Read IconName
+        Stream.Read(LSize, SizeOf(Integer));
+        SetLength(LIconName, LSize);
+        Stream.Read(PChar(LIconName)^, LSize * SizeOf(Char));
+        //Read SVG Stream Size
+        Stream.Read(LSize, SizeOf(Integer));
+        LStream.CopyFrom(Stream, LSize);
+        //Read SVG Stream data
+        LSVG.LoadFromStream(LStream);
 
-      //Check for FixedColor attribute
-      LPos := Stream.Position;
-      LFixedColor := SVG_INHERIT_COLOR;
-      SetLength(LTag, 10);
-      Stream.Read(Pointer(LTag)^, 10);
-      SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 10);
-      if LFixedColorStr = 'FixedColor' then
-        //Read Fixed Color value
-        Stream.Read(LFixedColor, SizeOf(Integer))
-      else
-        Stream.Position := LPos;
+        //Check for FixedColor attribute
+        LPos := Stream.Position;
+        LFixedColor := SVG_INHERIT_COLOR;
+        SetLength(LTag, 10);
+        Stream.Read(Pointer(LTag)^, 10);
+        SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 10);
+        if LFixedColorStr = 'FixedColor' then
+          //Read Fixed Color value
+          Stream.Read(LFixedColor, SizeOf(Integer))
+        else
+          Stream.Position := LPos;
 
-      //Check for GrayScale attribute
-      LPos := Stream.Position;
-      LGrayScale := False;
-      SetLength(LTag, 9);
-      Stream.Read(Pointer(LTag)^, 9);
-      SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 9);
-      if LFixedColorStr = 'GrayScale' then
-        LGrayScale := True
-      else
-        Stream.Position := LPos;
+        //Check for GrayScale attribute
+        LPos := Stream.Position;
+        LGrayScale := False;
+        SetLength(LTag, 9);
+        Stream.Read(Pointer(LTag)^, 9);
+        SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 9);
+        if LFixedColorStr = 'GrayScale' then
+          LGrayScale := True
+        else
+          Stream.Position := LPos;
 
-      Add(LSVG, LIconName, LGrayScale, LFixedColor);
-      LStream.Clear;
+        Add(LSVG, LIconName, LGrayScale, LFixedColor);
+        LStream.Clear;
+      end;
     end;
+  finally
     LStream.Free;
     LSVG.Free;
-  finally
     EndUpdate;
   end;
 end;
@@ -305,7 +304,7 @@ end;
 procedure TSVGIconImageList.RecreateBitmaps;
 var
   C: Integer;
-  LIcon: HICON;
+  LBitmap: TBitmap;
   LItem: TSVGIconItem;
 begin
   if not Assigned(FSVGItems) or
@@ -320,9 +319,12 @@ begin
     for C := 0 to FSVGItems.Count - 1 do
     begin
       LItem := FSVGItems[C];
-      LIcon := LItem.GetIcon(Width, Height, FixedColor, Opacity, GrayScale);
-      ImageList_AddIcon(Handle, LIcon);
-      DestroyIcon(LIcon);
+      LBitmap := LItem.GetBitmap(Width, Height, FFixedColor, FOpacity, FGrayScale);
+      try
+        ImageList_Add(Handle, LBitmap.Handle, 0);
+      finally
+        LBitmap.Free;
+      end;
     end;
   end;
 end;
@@ -395,55 +397,8 @@ begin
 end;
 
 procedure TSVGIconImageList.WriteImageData(Stream: TStream);
-var
-  Count, Size: Integer;
-  SVG: TSVG;
-  LIconName: string;
-  LTag: AnsiString;
-  LItem: TSVGIconItem;
-  C: Integer;
-  SVGStream: TMemoryStream;
 begin
-  if FStoreAsText then
-    Exit;
-  Count := FSVGItems.Count;
-  //Store count
-  Stream.Write(Count, SizeOf(Integer));
-
-  SVGStream := TMemoryStream.Create;
-  for C := 0 to Count - 1 do
-  begin
-    LItem := FSVGItems[C];
-    //Store IconName
-    LIconName := LItem.IconName;
-    SVG := FSVGItems[C].SVG;
-    Size := Length(LIconName);
-    Stream.Write(Size, SizeOf(Integer));
-    Stream.WriteBuffer(PChar(LIconName)^, Size * SizeOf(Char));
-    //Store SVG Stream Size
-    SVG.SaveToStream(SVGStream);
-    Size := SVGStream.Size;
-    Stream.Write(Size, SizeOf(Integer));
-    SVGStream.Position := 0;
-    //Store SVG Data
-    Stream.CopyFrom(SVGStream, Size);
-    //Store FixedColor (optionally)
-    if LItem.FixedColor <> SVG_INHERIT_COLOR then
-    begin
-      LTag := 'FixedColor';
-      Stream.WriteBuffer(PAnsiChar(LTag)^, 10);
-      Size := Ord(LItem.FixedColor);
-      Stream.Write(Size, SizeOf(Integer));
-    end;
-    //Store GrayScale (optionally)
-    if LItem.GrayScale then
-    begin
-      LTag := 'GrayScale';
-      Stream.WriteBuffer(PAnsiChar(LTag)^, 9);
-    end;
-    SVGStream.Clear;
-  end;
-  SVGStream.Free;
+  Exit;
 end;
 
 

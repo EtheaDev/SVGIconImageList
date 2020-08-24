@@ -50,7 +50,7 @@ uses
   SVGIconItems;
 
 const
-  SVGIconImageListVersion = '1.9.0';
+  SVGIconImageListVersion = '2.0.0';
   DEFAULT_SIZE = 16;
 
 type
@@ -99,13 +99,15 @@ type
 
     function IndexOf(const Name: string): Integer;virtual;
 
-    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload; virtual; abstract;
-    procedure PaintTo(const ACanvas: TCanvas; const AName: string; const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload;
+    procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
+      const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload; virtual; abstract;
+    procedure PaintTo(const ACanvas: TCanvas; const AName: string;
+      const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); overload;
 
     procedure DefineProperties(Filer: TFiler); override;
     procedure DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer; Style: Cardinal; Enabled: Boolean = True); override;
     procedure Loaded; override;
-    function GetCount: Integer;    {$IF CompilerVersion > 29} override; {$ELSE}  virtual;abstract; {$ENDIF}
+    function GetCount: Integer; {$IF CompilerVersion > 29}override;{$ELSE}virtual; abstract;{$ENDIF}
 
     procedure RecreateBitmaps; virtual; abstract;
     procedure DoChange; override;
@@ -329,7 +331,8 @@ begin
     Result := Items[Index].SVG
   else
     Result := nil;
-end;
+
+end;
 
 function TSVGIconImageListBase.GetNames(Index: Integer): string;
 Var
@@ -531,7 +534,6 @@ begin
     finally
       EndUpdate;
     end;
-    Change;
   end;
 end;
 
