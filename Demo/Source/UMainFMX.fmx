@@ -147,7 +147,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       Text = 'ListBoxItem3'
     end
   end
-  object V: TPanel
+  object TopPanel: TPanel
     Align = Top
     Size.Width = 513.000000000000000000
     Size.Height = 113.000000000000000000

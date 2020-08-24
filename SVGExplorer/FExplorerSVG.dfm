@@ -203,18 +203,18 @@ object fmExplorerSVG: TfmExplorerSVG
       ExplicitTop = 323
     end
     object btDelete: TButton
-      Left = 6
+      Left = 5
       Top = 385
-      Width = 75
+      Width = 78
       Height = 25
       Action = DeleteAction
       Anchors = [akLeft, akRight, akBottom]
       TabOrder = 1
     end
     object BtRename: TButton
-      Left = 6
+      Left = 5
       Top = 354
-      Width = 75
+      Width = 78
       Height = 25
       Action = RenameAction
       Anchors = [akLeft, akRight, akBottom]
@@ -235,9 +235,9 @@ object fmExplorerSVG: TfmExplorerSVG
   end
   object SVGIconImageList: TSVGIconImageList
     Size = 32
+    SVGIconItems = <>
     Left = 264
     Top = 157
-    Images = {00000000}
   end
   object PopupMenu: TPopupMenu
     Left = 480

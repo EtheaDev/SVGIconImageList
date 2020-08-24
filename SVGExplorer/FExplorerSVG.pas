@@ -290,7 +290,7 @@ procedure TfmExplorerSVG.UpdateListView;
 var
   LItemsCount: Integer;
 begin
-  LItemsCount := UpdateSVGIconListView(ImageView, False);
+  LItemsCount := UpdateSVGIconListView(ImageView, '', False);
   ImageListLabel.Caption := Format('SVG Image List Preview: %d icons',[LItemsCount]);
 end;
 

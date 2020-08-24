@@ -63,6 +63,13 @@ type
     function GetSVGText: string;
     procedure SetFixedColor(const Value: TColor);
     procedure SetGrayScale(const Value: Boolean);
+    function GetCategory: string;
+    function GetName: string;
+    procedure SetCategory(const Value: string);
+    procedure SetName(const Value: string);
+    function ExtractCategory(const S: String): String;
+    function ExtractName(const S: String): String;
+    procedure BuildIconName(const ACategory, AName: String);
   public
     procedure Assign(Source: TPersistent); override;
     function GetDisplayName: string; override;
@@ -71,6 +78,8 @@ type
       const AGrayScale: Boolean): TBitmap;
     constructor Create(Collection: TCollection); override;
     property SVG: ISVG read FSVG write SetSVG;
+    property Name: string read GetName write SetName;
+    property Category: string read GetCategory write SetCategory;
   published
     property IconName: string read FIconName write SetIconName;
     property SVGText: string read GetSVGText write SetSVGText;
@@ -104,6 +113,9 @@ uses
   SVGIconImageList,
   SVGIconImageCollection;
 
+const
+  CATEGORY_SEP = '\';
+
 resourcestring
   ERROR_LOADING_FILES = 'SVG error loading files:';
 
@@ -136,6 +148,11 @@ begin
     Result := 'SVGIconItem';
 end;
 
+function TSVGIconItem.GetName: string;
+begin
+  Result := ExtractName(FIconName);
+end;
+
 function TSVGIconItem.GetBitmap(const AWidth, AHeight: Integer;
   const AFixedColor: TColor; const AOpacity: Byte; const AGrayScale: Boolean): TBitmap;
 
@@ -158,9 +175,19 @@ begin
   FSVG.PaintTo(Result.Canvas.Handle, TRectF.Create(0, 0, AWidth, AHeight));
 end;
 
+function TSVGIconItem.GetCategory: string;
+begin
+  Result := ExtractCategory(FIconName);
+end;
+
 function TSVGIconItem.GetSVGText: string;
 begin
   Result := SVG.Source;
+end;
+
+procedure TSVGIconItem.SetCategory(const Value: string);
+begin
+  BuildIconName(Value, Name);
 end;
 
 procedure TSVGIconItem.SetFixedColor(const Value: TColor);
@@ -192,6 +219,29 @@ begin
     FIconName := Value;
     Changed(False);
   end;
+end;
+
+function TSVGIconItem.ExtractName(const S: String): String;
+begin
+  Result := S.SubString(S.IndexOf(CATEGORY_SEP) + 1);
+end;
+
+function TSVGIconItem.ExtractCategory(const S: String): String;
+begin
+  Result := S.Substring(0, S.IndexOf(CATEGORY_SEP));
+end;
+
+procedure TSVGIconItem.BuildIconName(const ACategory, AName: String);
+begin
+  if ACategory <> '' then
+    IconName := ACategory + CATEGORY_SEP + AName
+  else
+    IconName := AName;
+end;
+
+procedure TSVGIconItem.SetName(const Value: string);
+begin
+  BuildIconName(Category, Value);
 end;
 
 procedure TSVGIconItem.SetSVG(const Value: ISVG);
@@ -282,13 +332,13 @@ begin
   BeginUpdate;
   try
     LErrors := '';
-    LSVG := GlobalSVGHandler.NewSvg;
     if not AAppend then
       Clear;
     for LIndex := 0 to AFileNames.Count - 1 do
     begin
       LFileName := AFileNames[LIndex];
       try
+        LSVG := GlobalSVGHandler.NewSvg;
         LSVG.LoadFromFile(LFileName);
         LItem := Add;
         LItem.IconName := ChangeFileExt(ExtractFileName(LFileName), '');

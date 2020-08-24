@@ -60,7 +60,6 @@ uses
 resourcestring
   SELECT_DIR = 'Select directory';
   FILES_SAVED = '%d File(s) saved into "%s" folder';
-  NOT_APPLYED_TO_COLLECTION = '(not applied to image collection)';
 type
   TSVGIconImageListEditor = class(TForm)
     OKButton: TButton;
@@ -73,41 +72,55 @@ type
     SVGText: TMemo;
     SizeLabel: TLabel;
     SizeSpinEdit: TSpinEdit;
-    ItemGroupBox: TGroupBox;
-    IconNameLabel: TLabel;
-    IconPanel: TPanel;
-    IconImage: TSVGIconImage;
-    AddButton: TButton;
-    IconName: TEdit;
-    paButtons: TPanel;
-    ImageListGroupBox: TGroupBox;
-    HelpButton: TButton;
-    ApplyButton: TButton;
     WidthLabel: TLabel;
     WidthSpinEdit: TSpinEdit;
     HeightSpinEdit: TSpinEdit;
     HeightLabel: TLabel;
     BottomPanel: TPanel;
-    DeleteButton: TButton;
-    ClearAllButton: TButton;
-    ExportButton: TButton;
-    ReplaceButton: TButton;
-    ImageView: TListView;
-    OpacityLabel: TLabel;
-    OpacitySpinEdit: TSpinEdit;
+    ApplyButton: TButton;
+    HelpButton: TButton;
+    paIcon: TPanel;
+    IconButtonsPanel: TPanel;
     NewButton: TButton;
-    TopSplitter: TSplitter;
-    FixedColorComboBox: TColorBox;
-    FixedColorLabel: TLabel;
-    GrayScaleCheckBox: TCheckBox;
-    Label1: TLabel;
+    ItemGroupBox: TGroupBox;
+    IconNameLabel: TLabel;
+    IconFixedColorLabel: TLabel;
+    IconPanel: TPanel;
+    IconImage: TSVGIconImage;
+    AddButton: TButton;
+    NameEdit: TEdit;
     FixedColorItemComboBox: TColorBox;
     GrayScaleItemCheckBox: TCheckBox;
+    paImages: TPanel;
+    CategorySplitter: TSplitter;
+    ImageView: TListView;
     ReformatXMLButton: TButton;
+    paButtons: TPanel;
+    ImageListGroupBox: TGroupBox;
+    ReplaceButton: TButton;
+    ClearAllButton: TButton;
+    ExportButton: TButton;
+    ImagesPanel: TPanel;
+    CategoryGroupBox: TGroupBox;
+    CategoryListBox: TListBox;
+    PropertiesGroupBox: TGroupBox;
+    FixedColorLabel: TLabel;
+    FixedColorComboBox: TColorBox;
+    GrayScaleCheckBox: TCheckBox;
+    OpacityLabel: TLabel;
+    OpacitySpinEdit: TSpinEdit;
+    BottomSplitter: TSplitter;
+    IconIndexEdit: TEdit;
+    IconIndexLabel: TLabel;
+    SetCategoriesButton: TButton;
+    DeleteAllButton: TButton;
+    DeleteButton: TButton;
+    CategoryEdit: TEdit;
+    CategoryLabel: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure ApplyButtonClick(Sender: TObject);
     procedure ClearAllButtonClick(Sender: TObject);
-    procedure DeleteButtonClick(Sender: TObject);
+    procedure DeleteAllButtonClick(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
     procedure ImageViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
@@ -116,7 +129,7 @@ type
     procedure ExportButtonClick(Sender: TObject);
     procedure OkButtonClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure IconNameExit(Sender: TObject);
+    procedure NameEditExit(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure ImageViewDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
@@ -135,21 +148,26 @@ type
     procedure FixedColorItemComboBoxSelect(Sender: TObject);
     procedure GrayScaleItemCheckBoxClick(Sender: TObject);
     procedure ReformatXMLButtonClick(Sender: TObject);
+    procedure CategoryListBoxClick(Sender: TObject);
+    procedure SetCategoriesButtonClick(Sender: TObject);
+    procedure DeleteButtonClick(Sender: TObject);
+    procedure CategoryEditExit(Sender: TObject);
   private
+    FSelectedCategory: string;
     FSourceList, FEditingList: TSVGIconImageList;
-    FIconIndexLabel: string;
     FTotIconsLabel: string;
     FUpdating: Boolean;
     FChanged: Boolean;
     FModified: Boolean;
 
     procedure BuildList(Selected: Integer);
+    procedure UpdateCategories;
     procedure Apply;
     procedure UpdateGUI;
     function SelectedIcon: TSVGIconItem;
     procedure UpdateSizeGUI;
     procedure AddNewItem;
-    procedure DeleteSelectedItem;
+    procedure DeleteSelectedItems;
   public
     property Modified: Boolean read FModified;
     property SVGIconImageList: TSVGIconImageList read FEditingList;
@@ -267,10 +285,10 @@ begin
       try
         FSourceList := TSVGIconImageList.Create(LEditor);
         FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
-        FSourceList.Size := 32; //Force 32 pixel size for image collection icons
+        FSourceList.Size := 64; //Force 64 pixel size for image collection icons
         FSourceList.GrayScale := AImageCollection.GrayScale;
         FSourceList.FixedColor := AImageCollection.FixedColor;
-        ImageListGroupBox.Caption := ImageListGroupBox.Caption + ' ' + NOT_APPLYED_TO_COLLECTION;
+        ImageListGroupBox.Visible := False;
         FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
         FEditingList.Assign(FSourceList);
         OpacitySpinEdit.Value := FSourceList.Opacity;
@@ -332,6 +350,29 @@ begin
 end;
 
 
+procedure TSVGIconImageListEditor.UpdateCategories;
+var
+  I: Integer;
+  LCategory: string;
+begin
+  CategoryListBox.Items.Clear;
+  CategoryListBox.AddItem('All', nil);
+  for I := 0 to FEditingList.SVGIconItems.Count -1 do
+  begin
+    LCategory := FEditingList.SVGIconItems[I].Category;
+    if (LCategory <> '') and (CategoryListBox.Items.IndexOf(LCategory)<0) then
+      CategoryListBox.AddItem(LCategory,nil);
+  end;
+  if (FSelectedCategory <> '') then
+  begin
+    I := CategoryListBox.Items.IndexOf(FSelectedCategory);
+    if I >= 0 then
+      CategoryListBox.Selected[I] := True;
+  end
+  else
+    CategoryListBox.Selected[0] := True;
+end;
+
 procedure TSVGIconImageListEditor.UpdateGUI;
 var
   LIsItemSelected: Boolean;
@@ -339,15 +380,18 @@ var
 begin
   FUpdating := True;
   try
+    UpdateCategories;
     LIconItem := SelectedIcon;
     LIsItemSelected := LIconItem <> nil;
     ClearAllButton.Enabled := FEditingList.Count > 0;
     ExportButton.Enabled := LIsItemSelected;
+    DeleteAllButton.Enabled := LIsItemSelected;
     DeleteButton.Enabled := LIsItemSelected;
     ReformatXMLButton.Enabled := LIsItemSelected;
     ReplaceButton.Enabled := LIsItemSelected;
+    SetCategoriesButton.Enabled := LIsItemSelected;
     ApplyButton.Enabled := FChanged;
-    IconName.Enabled := LIsItemSelected;
+    NameEdit.Enabled := LIsItemSelected;
     SVGText.Enabled := LIsItemSelected;
     ImageListGroup.Caption := Format(FTotIconsLabel, [FEditingList.Count]);
     GrayScaleCheckBox.Checked := SVGIconImageList.GrayScale;
@@ -356,8 +400,9 @@ begin
     begin
       IconImage.ImageIndex := SelectedIcon.Index;
       IconImage.Invalidate;
-      ItemGroupBox.Caption := Format(FIconIndexLabel,[LIconItem.Index]);
-      IconName.Text := LIconItem.IconName;
+      NameEdit.Text := LIconItem.Name;
+      CategoryEdit.Text := LIconItem.Category;
+      IconIndexEdit.Text := LIconItem.Index.ToString;
       SVGText.Lines.Text := LIconItem.SVGText;
       FixedColorItemComboBox.Selected := LIconItem.FixedColor;
       GrayScaleItemCheckBox.Checked := SelectedIcon.GrayScale;
@@ -366,7 +411,7 @@ begin
     begin
       IconImage.ImageIndex := -1;
       ItemGroupBox.Caption := '';
-      IconName.Text := '';
+      NameEdit.Text := '';
       SVGText.Lines.Text := '';
     end;
   finally
@@ -384,23 +429,24 @@ end;
 procedure TSVGIconImageListEditor.ImageViewDragDrop(Sender, Source: TObject; X,
   Y: Integer);
 var
-  Target: TListItem;
-  Item: TCollectionItem;
+  LTargetItem: TListItem;
+  LItem: TCollectionItem;
   SIndex, DIndex: Integer;
 begin
-  SIndex := ImageView.ItemIndex;
-  Target := ImageView.GetItemAt(X, Y);
-  if Target = nil then
-    Target := ImageView.GetNearestItem(Point(X, Y), sdRight);
+  LTargetItem := ImageView.GetItemAt(X, Y);
 
-  if Assigned(Target) then
-    DIndex := ImageView.Items.IndexOf(Target)
+  if not Assigned(LTargetItem) then
+    LTargetItem := ImageView.GetNearestItem(Point(X, Y), sdRight);
+
+  if Assigned(LTargetItem) then
+    DIndex := LTargetItem.ImageIndex
   else
     DIndex := ImageView.Items.Count - 1;
 
-  Item := FEditingList.SVGIconItems[SIndex];
-  Item.Index := DIndex;
-  BuildList(Item.Index);
+  SIndex := ImageView.Items[ImageView.ItemIndex].ImageIndex;
+  LItem := FEditingList.SVGIconItems[SIndex];
+  LItem.Index := DIndex;
+  BuildList(LItem.Index);
   if SIndex <> DIndex then
     FChanged := True;
   UpdateGUI;
@@ -429,6 +475,21 @@ end;
 procedure TSVGIconImageListEditor.NewButtonClick(Sender: TObject);
 begin
   AddNewItem;
+end;
+
+procedure TSVGIconImageListEditor.CategoryListBoxClick(Sender: TObject);
+var
+  LIndex: Integer;
+begin
+  if SelectedIcon <> nil then
+    LIndex := SelectedIcon.Index
+  else
+    LIndex := -1;  
+  if CategoryListBox.ItemIndex <= 0 then
+    FSelectedCategory := ''
+  else
+    FSelectedCategory := CategoryListBox.Items[CategoryListBox.ItemIndex];
+  BuildList(LIndex);
 end;
 
 procedure TSVGIconImageListEditor.ClearAllButtonClick(Sender: TObject);
@@ -488,15 +549,50 @@ begin
   if (Key = VK_INSERT) and (Shift = []) then
     AddNewItem
   else if (Key = VK_DELETE) and (Shift = []) then
-    DeleteSelectedItem;
+    DeleteSelectedItems;
 end;
 
 function TSVGIconImageListEditor.SelectedIcon: TSVGIconItem;
 begin
-  if (ImageView.Selected <> nil) and (ImageView.Selected.Index < FEditingList.SVGIconItems.Count) then
-    Result := FEditingList.SVGIconItems[ImageView.Selected.Index]
+  if (ImageView.Selected <> nil) and (ImageView.Selected.ImageIndex < FEditingList.SVGIconItems.Count) then
+    Result := FEditingList.SVGIconItems[ImageView.Selected.ImageIndex]
   else
     Result := nil;
+end;
+
+procedure TSVGIconImageListEditor.SetCategoriesButtonClick(Sender: TObject);
+var
+  LIndex: Integer;
+  Selected: Integer;
+  LSVGIconItem: TSVGIconItem;
+  LCategoryName: string;
+begin
+  LCategoryName := InputBox('Set Category', 'Name', FSelectedCategory);
+  if (LCategoryName = FSelectedCategory) then
+    Exit;
+
+  Screen.Cursor := crHourGlass;
+  try
+    FSelectedCategory := LCategoryName;
+    Selected := ImageView.ItemIndex;
+    FEditingList.BeginUpdate;
+    try
+      for LIndex := ImageView.Items.Count - 1 downto 0 do
+      begin
+        if ImageView.Items[LIndex].Selected then
+        begin
+          LSVGIconItem := FEditingList.SVGIconItems[ImageView.Items[LIndex].ImageIndex];
+          LSVGIconItem.Category := FSelectedCategory;
+        end;
+      end;
+    finally
+      FEditingList.EndUpdate;
+    end;
+    FChanged := True;
+    BuildList(Selected);
+  finally
+    Screen.Cursor := crDefault;
+  end;
 end;
 
 procedure TSVGIconImageListEditor.SizeSpinEditChange(Sender: TObject);
@@ -517,21 +613,23 @@ procedure TSVGIconImageListEditor.BuildList(Selected: Integer);
 begin
   FEditingList.BeginUpdate;
   try
-    UpdateSVGIconListView(ImageView);
+    UpdateSVGIconListView(ImageView, FSelectedCategory);
   finally
     FEditingList.EndUpdate;
   end;
 
   if Selected < -1 then
-    Selected := -1;
-  if Selected >= FEditingList.SVGIconItems.Count then
-    Selected := FEditingList.SVGIconItems.Count - 1;
+    Selected := -1
+  else if Selected >= ImageView.Items.Count then
+    Selected := ImageView.Items.Count - 1;
 
   ImageView.ItemIndex := Selected;
   UpdateGUI;
+  if (ImageView.ItemIndex >= 0) and ImageView.CanFocus then
+    ImageView.SetFocus;
 end;
 
-procedure TSVGIconImageListEditor.DeleteSelectedItem;
+procedure TSVGIconImageListEditor.DeleteSelectedItems;
 var
   LIndex: Integer;
   Selected: Integer;
@@ -543,7 +641,7 @@ begin
     try
       for LIndex := ImageView.Items.Count - 1 downto 0 do
         if ImageView.Items[LIndex].Selected then
-          FEditingList.SVGIconItems.Delete(LIndex);
+          FEditingList.SVGIconItems.Delete(ImageView.Items[LIndex].ImageIndex);
     finally
       FEditingList.EndUpdate;
     end;
@@ -554,9 +652,25 @@ begin
   end;
 end;
 
-procedure TSVGIconImageListEditor.DeleteButtonClick(Sender: TObject);
+procedure TSVGIconImageListEditor.DeleteAllButtonClick(Sender: TObject);
 begin
-  DeleteSelectedItem;
+  DeleteSelectedItems;
+end;
+
+procedure TSVGIconImageListEditor.DeleteButtonClick(Sender: TObject);
+var
+  LIndex: Integer;
+begin
+  FEditingList.BeginUpdate;
+  try
+    LIndex := ImageView.ItemIndex;
+    FEditingList.SVGIconItems.Delete(ImageView.Items[LIndex].ImageIndex);
+  finally
+    FEditingList.EndUpdate;
+  end;
+  FChanged := True;
+  if ImageView.Items.Count > 1 then
+    BuildList(ImageView.Items[LIndex-1].ImageIndex);
 end;
 
 procedure TSVGIconImageListEditor.FixedColorComboBoxSelect(Sender: TObject);
@@ -598,7 +712,6 @@ begin
   FEditingList := TSVGIconImageList.Create(Self);
   ImageView.LargeImages := FEditingList;
   IconImage.ImageList := FEditingList;
-  FIconIndexLabel := ItemGroupBox.Caption;
   FTotIconsLabel := ImageListGroup.Caption;
   FChanged := False;
   FModified := False;
@@ -695,11 +808,29 @@ begin
   FEditingList.Free;
 end;
 
-procedure TSVGIconImageListEditor.IconNameExit(Sender: TObject);
+procedure TSVGIconImageListEditor.NameEditExit(Sender: TObject);
 begin
   if FUpdating then Exit;
-  SelectedIcon.IconName := IconName.Text;
+  SelectedIcon.Name := NameEdit.Text;
   UpdateSVGIconListViewCaptions(ImageView);
+  UpdateGUI;
+end;
+
+procedure TSVGIconImageListEditor.CategoryEditExit(Sender: TObject);
+begin
+  if FUpdating then Exit;
+  if SelectedIcon.Category <> CategoryEdit.Text then
+  begin
+    SelectedIcon.Category := CategoryEdit.Text;
+    if FSelectedCategory <> SelectedIcon.Category then
+    begin
+      FSelectedCategory := SelectedIcon.Category;
+      UpdateCategories;
+      BuildList(SelectedIcon.Index);
+    end
+    else
+      UpdateSVGIconListViewCaptions(ImageView);
+  end;
   UpdateGUI;
 end;
 

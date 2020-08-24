@@ -45,6 +45,7 @@ uses
   , ComCtrls;
 
 function UpdateSVGIconListView(const AListView: TListView;
+  const ACategory: string = '';
   const AIncludeIndex: Boolean = True): Integer;
 function UpdateSVGIconListViewCaptions(const AListView: TListView;
   const AShowCaption: Boolean = True): Integer;
@@ -61,6 +62,7 @@ uses
   ;
 
 function UpdateSVGIconListView(const AListView: TListView;
+  const ACategory: string = '';
   const AIncludeIndex: Boolean = True): Integer;
 var
   I: Integer;
@@ -71,10 +73,11 @@ var
   function GetItemCaption: string;
   begin
     if AIncludeIndex then
-      Result := Format('%d.%s', [LItem.Index, LItem.IconName])
+      Result := Format('%d.%s', [LItem.Index, LItem.Name])
     else
-      Result := Format('%s', [LItem.IconName]);
+      Result := Format('%s', [LItem.Name]);
   end;
+
 begin
   LImageList := AListView.LargeImages as TCustomImageList;
   AListView.Items.BeginUpdate;
@@ -86,9 +89,13 @@ begin
       if (LImageList is TSVGIconImageListBase) then
       begin
         LItem := TSVGIconImageListBase(LImageList).SVGIconItems[I];
-        LListItem := AListView.Items.Add;
-        LListItem.Caption := GetItemCaption;
-        LListItem.ImageIndex := I;
+        if (ACategory = '') or
+         (LowerCase(ACategory) = LowerCase(LItem.Category)) then
+        begin
+          LListItem := AListView.Items.Add;
+          LListItem.Caption := GetItemCaption;
+          LListItem.ImageIndex := I;
+        end;
       end;
     end;
   finally
