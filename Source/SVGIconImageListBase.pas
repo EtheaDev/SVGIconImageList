@@ -105,10 +105,10 @@ type
     procedure DefineProperties(Filer: TFiler); override;
     procedure DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer; Style: Cardinal; Enabled: Boolean = True); override;
     procedure Loaded; override;
-    function GetCount: Integer; {$IF CompilerVersion > 27}override;{$ELSE}virtual;{$ENDIF}
+    function GetCount: Integer; {$IF CompilerVersion > 28}override;{$ELSE}virtual;{$ENDIF}
 
     procedure RecreateBitmaps; virtual; abstract;
-    {$IF CompilerVersion < 28}
+    {$IF CompilerVersion < 29}
     procedure Change; override;
     {$ELSE}
     procedure DoChange; override;
@@ -249,7 +249,7 @@ begin
   //do nothing.. TSVGIconImageList will override;
 end;
 
-{$IF CompilerVersion < 28}
+{$IF CompilerVersion < 29}
 procedure TSVGIconImageListBase.Change;
 {$ELSE}
 procedure TSVGIconImageListBase.DoChange;
