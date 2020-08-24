@@ -136,3 +136,6 @@
 {$IFDEF D10_3+}
   {$Define HiDPISupport}
 {$ENDIF}
+
+{$DEFINE PreferNativeSvgSupport}
+{.$DEFINE GPUSupport}
