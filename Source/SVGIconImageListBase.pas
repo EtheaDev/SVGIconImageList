@@ -159,9 +159,7 @@ uses
   System.Math,
   System.SysUtils,
   Vcl.ComCtrls,
-  Vcl.Forms,
-  PasSVGHandler,
-  D2DSVGHandler;
+  Vcl.Forms;
 
 { TSVGIconImageListBase }
 
@@ -612,14 +610,4 @@ begin
     Change;
 end;
 
-initialization
-  if not Assigned(GlobalSVGHandler) then
-  begin
-    {$IFDEF PreferNativeSvgSupport}
-    if WinSvgSupported then
-      GlobalSVGHandler := GetD2DSVGHandler
-    else
-    {$ENDIF}
-      GlobalSVGHandler := GetPasSVGHandler;
-  end;
 end.

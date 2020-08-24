@@ -64,4 +64,23 @@ Var
 
 implementation
 
+{$INCLUDE SVGIconImageList.inc}
+
+Uses
+  {$IFDEF PreferNativeSvgSupport}
+  D2DSVGHandler,
+  {$ENDIF}
+  PasSVGHandler;
+
+initialization
+  if not Assigned(GlobalSVGHandler) then
+  begin
+    {$IFDEF PreferNativeSvgSupport}
+    if WinSvgSupported then
+      GlobalSVGHandler := GetD2DSVGHandler
+    else
+    {$ENDIF}
+      GlobalSVGHandler := GetPasSVGHandler;
+  end;
+
 end.

@@ -164,10 +164,6 @@ type
 
 implementation
 
-uses
-  PasSVGHandler,
-  D2DSVGHandler;
-
 constructor TSVGIconImage.Create(AOwner: TComponent);
 begin
   inherited;
@@ -544,16 +540,6 @@ end;
 
 
 initialization
-  if not Assigned(GlobalSVGHandler) then
-  begin
-    {$IFDEF PreferNativeSvgSupport}
-    if WinSvgSupported then
-      GlobalSVGHandler := GetD2DSVGHandler
-    else
-    {$ENDIF}
-      GlobalSVGHandler := GetPasSVGHandler;
-  end;
-
   TPicture.RegisterFileFormat('SVG', 'Scalable Vector Graphics', TSVGGraphic);
 
 finalization
