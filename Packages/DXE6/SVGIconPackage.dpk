@@ -33,10 +33,7 @@ package SVGIconPackage;
 requires
   rtl,
   xmlrtl,
-  vcl,
-  IndySystem,
-  IndyProtocols,
-  IndyCore;
+  vcl;
 
 contains
   SVG in '..\..\svg\SVG.pas',
