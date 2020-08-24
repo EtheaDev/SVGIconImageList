@@ -68,9 +68,11 @@ begin
 end;
 
 function ToGPRectF(R: TRect): TGPRectF;
+var
+  LLeft: Single;
 begin
-  with R do
-    Result := WinApi.GDIPAPI.MakeRect(Single(Left), Top, Width, Height);
+  LLeft := R.Left;
+  Result := WinApi.GDIPAPI.MakeRect(LLeft, R.Top, R.Width, R.Height);
 end;
 
 
