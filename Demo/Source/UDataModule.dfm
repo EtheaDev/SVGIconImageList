@@ -5,7 +5,7 @@ object ImageDataModule: TImageDataModule
   object SVGIconImageCollection: TSVGIconImageCollection
     SVGIconItems = <
       item
-        IconName = 'businessman'
+        IconName = 'Business\businessman'
         SVGText = 
           '<svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0' +
           ' 48 48" enable-background="new 0 0 48 48">'#13#10'    <polygon fill="#' +
@@ -24,7 +24,7 @@ object ImageDataModule: TImageDataModule
           ',33,29,31,29,31z"/>'#13#10'</svg>'#13#10
       end
       item
-        IconName = 'businesswoman'
+        IconName = 'Business\businesswoman'
         SVGText = 
           '<svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0' +
           ' 48 48" enable-background="new 0 0 48 48">'#13#10'    <rect x="16" y="' +
@@ -533,7 +533,7 @@ object ImageDataModule: TImageDataModule
           '17"/>'#13#10'    </g>'#13#10'</svg>'#13#10
       end
       item
-        IconName = 'business'
+        IconName = 'Business\business'
         SVGText = 
           '<svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0' +
           ' 48 48" enable-background="new 0 0 48 48">'#13#10'    <g fill="#263238' +
@@ -546,7 +546,7 @@ object ImageDataModule: TImageDataModule
           ',4v24C44,41.2,42.2,43,40,43z"/>'#13#10'</svg>'#13#10
       end
       item
-        IconName = 'business_contact'
+        IconName = 'Business\business_contact'
         SVGText = 
           '<svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0' +
           ' 48 48" enable-background="new 0 0 48 48">'#13#10'    <path fill="#673' +

@@ -61,7 +61,7 @@ object MainForm: TMainForm
         Top = 23
         Width = 189
         Height = 30
-        Caption = 'Build from files...'
+        Caption = 'Build from SVG files...'
         TabOrder = 0
         OnClick = BuildFromFilesButtonClick
       end

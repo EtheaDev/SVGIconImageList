@@ -27,7 +27,7 @@ type
     ListBoxItem2: TListBoxItem;
     SpinBox1: TSpinBox;
     ListBoxItem3: TListBoxItem;
-    V: TPanel;
+    TopPanel: TPanel;
     Glyph2: TGlyph;
     Glyph1: TGlyph;
     Glyph: TGlyph;

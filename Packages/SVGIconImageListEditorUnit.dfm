@@ -2,83 +2,56 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   Left = 392
   Top = 450
   Caption = 'SVG Icon ImageList Editor %s - Copyright Ethea S.r.l.'
-  ClientHeight = 526
-  ClientWidth = 679
+  ClientHeight = 619
+  ClientWidth = 784
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
   Font.Style = []
   OldCreateOrder = True
+  ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 96
-  TextHeight = 13
-  object TopSplitter: TSplitter
+  TextHeight = 15
+  object BottomSplitter: TSplitter
     Left = 0
-    Top = 183
-    Width = 679
+    Top = 377
+    Width = 784
     Height = 4
     Cursor = crVSplit
-    Align = alTop
+    Align = alBottom
     AutoSnap = False
-    Beveled = True
-    MinSize = 170
-    ExplicitLeft = 4
-    ExplicitTop = 23
-    ExplicitWidth = 675
-  end
-  object ImageListGroup: TGroupBox
-    Left = 0
-    Top = 187
-    Width = 679
-    Height = 306
-    Align = alClient
-    Caption = '%d Icons of Imagelist'
-    TabOrder = 1
-    object ImageView: TListView
-      Left = 2
-      Top = 15
-      Width = 675
-      Height = 289
-      Align = alClient
-      Columns = <>
-      DragMode = dmAutomatic
-      FullDrag = True
-      HideSelection = False
-      IconOptions.AutoArrange = True
-      MultiSelect = True
-      ReadOnly = True
-      TabOrder = 0
-      OnDragDrop = ImageViewDragDrop
-      OnDragOver = ImageViewDragOver
-      OnKeyDown = ImageViewKeyDown
-      OnSelectItem = ImageViewSelectItem
-    end
+    MinSize = 200
+    ExplicitTop = 398
   end
   object paTop: TPanel
     Left = 0
     Top = 0
-    Width = 679
-    Height = 183
-    Align = alTop
+    Width = 784
+    Height = 377
+    Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitTop = 4
+    ExplicitHeight = 386
     object paClient: TPanel
       Left = 0
       Top = 0
-      Width = 596
-      Height = 183
+      Width = 784
+      Height = 377
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
+      ExplicitHeight = 386
       object ImageListGroupBox: TGroupBox
         Left = 0
         Top = 0
-        Width = 596
+        Width = 784
         Height = 62
         Align = alTop
         Caption = 'Properties of ImageList'
@@ -87,7 +60,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Left = 8
           Top = 15
           Width = 80
-          Height = 13
+          Height = 15
           AutoSize = False
           Caption = 'Size (in pixel)'
           Transparent = True
@@ -96,7 +69,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Left = 94
           Top = 15
           Width = 80
-          Height = 13
+          Height = 15
           AutoSize = False
           Caption = 'Width (in pixel)'
           Transparent = True
@@ -104,36 +77,17 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         object HeightLabel: TLabel
           Left = 181
           Top = 15
-          Width = 80
-          Height = 13
+          Width = 84
+          Height = 15
           AutoSize = False
           Caption = 'Height (in pixel)'
           Transparent = True
         end
-        object OpacityLabel: TLabel
-          Left = 268
-          Top = 15
-          Width = 80
-          Height = 13
-          AutoSize = False
-          Caption = 'Opacity (255-0)'
-          Transparent = True
-        end
-        object FixedColorLabel: TLabel
-          Left = 354
-          Top = 15
-          Width = 63
-          Height = 13
-          AutoSize = False
-          Caption = 'Fixed Color'
-          Transparent = True
-        end
         object SizeSpinEdit: TSpinEdit
           Left = 8
-          Top = 30
+          Top = 32
           Width = 81
-          Height = 22
-          Hint = 'Decimal value'
+          Height = 24
           MaxValue = 0
           MinValue = 0
           TabOrder = 0
@@ -142,10 +96,9 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         end
         object WidthSpinEdit: TSpinEdit
           Left = 94
-          Top = 30
+          Top = 32
           Width = 81
-          Height = 22
-          Hint = 'Decimal value'
+          Height = 24
           MaxValue = 0
           MinValue = 0
           TabOrder = 1
@@ -154,265 +107,461 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         end
         object HeightSpinEdit: TSpinEdit
           Left = 181
-          Top = 30
+          Top = 32
           Width = 81
-          Height = 22
-          Hint = 'Decimal value'
+          Height = 24
           MaxValue = 0
           MinValue = 0
           TabOrder = 2
           Value = 0
           OnChange = HeightSpinEditChange
         end
-        object OpacitySpinEdit: TSpinEdit
-          Left = 268
-          Top = 30
-          Width = 81
-          Height = 22
-          Hint = 'Decimal value'
-          MaxValue = 255
-          MinValue = 0
-          TabOrder = 3
-          Value = 0
-          OnChange = OpacitySpinEditChange
-        end
-        object FixedColorComboBox: TColorBox
-          Left = 354
-          Top = 30
-          Width = 136
-          Height = 22
-          DefaultColorColor = clDefault
-          NoneColorColor = clNone
-          Selected = clNone
-          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
-          TabOrder = 4
-          OnSelect = FixedColorComboBoxSelect
-        end
-        object GrayScaleCheckBox: TCheckBox
-          Left = 505
-          Top = 32
-          Width = 85
-          Height = 17
-          Caption = 'GrayScale'
-          TabOrder = 5
-          OnClick = GrayScaleCheckBoxClick
-        end
       end
-      object ItemGroupBox: TGroupBox
+      object paImages: TPanel
         Left = 0
         Top = 62
-        Width = 596
-        Height = 121
+        Width = 784
+        Height = 315
         Align = alClient
-        Caption = 'Properties of Selected Icon n.%d'
         TabOrder = 1
-        DesignSize = (
-          596
-          121)
-        object IconNameLabel: TLabel
-          Left = 94
-          Top = 19
-          Width = 87
-          Height = 13
-          AutoSize = False
-          Caption = 'IconName'
-          Transparent = True
+        ExplicitHeight = 324
+        object CategorySplitter: TSplitter
+          Left = 186
+          Top = 1
+          Width = 4
+          Height = 313
+          AutoSnap = False
+          ExplicitHeight = 136
         end
-        object Label1: TLabel
-          Left = 94
-          Top = 55
-          Width = 63
-          Height = 13
-          AutoSize = False
-          Caption = 'Fixed Color'
-          Transparent = True
-        end
-        object IconPanel: TPanel
-          Left = 10
-          Top = 18
-          Width = 78
-          Height = 78
-          BevelOuter = bvNone
-          BorderWidth = 2
-          BorderStyle = bsSingle
-          Color = clWindow
-          Ctl3D = False
-          ParentCtl3D = False
-          TabOrder = 0
-          object IconImage: TSVGIconImage
+        object ImageListGroup: TGroupBox
+          Left = 190
+          Top = 1
+          Width = 450
+          Height = 313
+          Align = alClient
+          Caption = '%d Icons collection'
+          TabOrder = 1
+          ExplicitHeight = 322
+          object ImageView: TListView
             Left = 2
-            Top = 2
-            Width = 72
-            Height = 72
-            AutoSize = False
-            Proportional = False
+            Top = 17
+            Width = 446
+            Height = 294
             Align = alClient
+            Columns = <>
+            DragMode = dmAutomatic
+            FullDrag = True
+            HideSelection = False
+            IconOptions.AutoArrange = True
+            MultiSelect = True
+            ReadOnly = True
+            TabOrder = 0
+            OnDragDrop = ImageViewDragDrop
+            OnDragOver = ImageViewDragOver
+            OnKeyDown = ImageViewKeyDown
+            OnSelectItem = ImageViewSelectItem
+            ExplicitHeight = 303
           end
         end
-        object IconName: TEdit
-          Left = 94
-          Top = 34
-          Width = 136
-          Height = 21
-          Hint = 'Icon Name'
-          TabOrder = 1
-          OnExit = IconNameExit
-        end
-        object SVGText: TMemo
-          Left = 236
-          Top = 10
-          Width = 353
-          Height = 106
-          Hint = 'SVG Text'
-          Anchors = [akLeft, akTop, akRight, akBottom]
-          ScrollBars = ssBoth
-          TabOrder = 4
-          OnChange = SVGTextChange
-        end
-        object FixedColorItemComboBox: TColorBox
-          Left = 94
-          Top = 70
-          Width = 136
-          Height = 22
-          NoneColorColor = clNone
-          Selected = clDefault
-          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
+        object paButtons: TPanel
+          Left = 640
+          Top = 1
+          Width = 143
+          Height = 313
+          Align = alRight
+          BevelOuter = bvNone
           TabOrder = 2
-          OnSelect = FixedColorItemComboBoxSelect
+          ExplicitHeight = 322
+          object AddButton: TButton
+            Left = 4
+            Top = 17
+            Width = 135
+            Height = 25
+            Caption = '&Add...'
+            TabOrder = 0
+            OnClick = AddButtonClick
+          end
+          object ReplaceButton: TButton
+            Left = 4
+            Top = 48
+            Width = 135
+            Height = 25
+            Caption = '&Replace...'
+            TabOrder = 1
+            OnClick = ReplaceButtonClick
+          end
+          object ClearAllButton: TButton
+            Left = 4
+            Top = 107
+            Width = 135
+            Height = 25
+            Caption = '&Clear all'
+            Enabled = False
+            TabOrder = 3
+            OnClick = ClearAllButtonClick
+          end
+          object ExportButton: TButton
+            Left = 4
+            Top = 138
+            Width = 135
+            Height = 25
+            Caption = '&Export...'
+            Enabled = False
+            TabOrder = 4
+            OnClick = ExportButtonClick
+          end
+          object SetCategoriesButton: TButton
+            Left = 4
+            Top = 169
+            Width = 135
+            Height = 25
+            Caption = '&Set Categories...'
+            TabOrder = 5
+            OnClick = SetCategoriesButtonClick
+          end
+          object DeleteAllButton: TButton
+            Left = 4
+            Top = 78
+            Width = 135
+            Height = 25
+            Caption = 'D&elete'
+            Enabled = False
+            TabOrder = 2
+            OnClick = DeleteAllButtonClick
+          end
         end
-        object GrayScaleItemCheckBox: TCheckBox
-          Left = 94
-          Top = 97
-          Width = 85
-          Height = 17
-          Caption = 'GrayScale'
-          TabOrder = 3
-          OnClick = GrayScaleItemCheckBoxClick
+        object ImagesPanel: TPanel
+          Left = 1
+          Top = 1
+          Width = 185
+          Height = 313
+          Align = alLeft
+          BevelOuter = bvNone
+          TabOrder = 0
+          ExplicitHeight = 322
+          object CategoryGroupBox: TGroupBox
+            Left = 0
+            Top = 0
+            Width = 185
+            Height = 179
+            Align = alClient
+            Caption = 'Images/Categories'
+            TabOrder = 0
+            ExplicitLeft = 1
+            ExplicitTop = 1
+            ExplicitWidth = 183
+            ExplicitHeight = 186
+            object CategoryListBox: TListBox
+              Left = 2
+              Top = 17
+              Width = 181
+              Height = 160
+              Align = alClient
+              ItemHeight = 15
+              TabOrder = 0
+              OnClick = CategoryListBoxClick
+              ExplicitWidth = 179
+              ExplicitHeight = 167
+            end
+          end
+          object PropertiesGroupBox: TGroupBox
+            Left = 0
+            Top = 179
+            Width = 185
+            Height = 134
+            Align = alBottom
+            Caption = 'Global properties'
+            TabOrder = 1
+            ExplicitLeft = 1
+            ExplicitTop = 187
+            ExplicitWidth = 183
+            object FixedColorLabel: TLabel
+              Left = 6
+              Top = 20
+              Width = 63
+              Height = 15
+              AutoSize = False
+              Caption = 'Fixed Color'
+              Transparent = True
+            end
+            object OpacityLabel: TLabel
+              Left = 8
+              Top = 88
+              Width = 80
+              Height = 15
+              AutoSize = False
+              Caption = 'Opacity (255-0)'
+              Transparent = True
+            end
+            object FixedColorComboBox: TColorBox
+              Left = 6
+              Top = 37
+              Width = 139
+              Height = 22
+              DefaultColorColor = clDefault
+              NoneColorColor = clNone
+              Selected = clNone
+              Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
+              TabOrder = 0
+              OnSelect = FixedColorComboBoxSelect
+            end
+            object GrayScaleCheckBox: TCheckBox
+              Left = 8
+              Top = 65
+              Width = 85
+              Height = 17
+              Caption = 'GrayScale'
+              TabOrder = 1
+              OnClick = GrayScaleCheckBoxClick
+            end
+            object OpacitySpinEdit: TSpinEdit
+              Left = 7
+              Top = 103
+              Width = 81
+              Height = 24
+              MaxValue = 255
+              MinValue = 0
+              TabOrder = 2
+              Value = 0
+              OnChange = OpacitySpinEditChange
+            end
+          end
         end
-      end
-    end
-    object paButtons: TPanel
-      Left = 596
-      Top = 0
-      Width = 83
-      Height = 183
-      Align = alRight
-      BevelOuter = bvNone
-      TabOrder = 1
-      object OKButton: TButton
-        Left = 2
-        Top = 8
-        Width = 75
-        Height = 25
-        Caption = 'OK'
-        Default = True
-        ModalResult = 1
-        TabOrder = 0
-        OnClick = OkButtonClick
-      end
-      object CancelButton: TButton
-        Left = 2
-        Top = 34
-        Width = 75
-        Height = 25
-        Cancel = True
-        Caption = 'Cancel'
-        ModalResult = 2
-        TabOrder = 1
-      end
-      object HelpButton: TButton
-        Left = 2
-        Top = 94
-        Width = 75
-        Height = 25
-        Caption = '&Help'
-        TabOrder = 3
-        OnClick = HelpButtonClick
-      end
-      object ApplyButton: TButton
-        Left = 2
-        Top = 68
-        Width = 75
-        Height = 25
-        Caption = '&Apply'
-        TabOrder = 2
-        OnClick = ApplyButtonClick
-      end
-      object ReformatXMLButton: TButton
-        Left = 2
-        Top = 152
-        Width = 75
-        Height = 25
-        Caption = 'Reformat &XML'
-        TabOrder = 4
-        OnClick = ReformatXMLButtonClick
       end
     end
   end
   object BottomPanel: TPanel
     Left = 0
-    Top = 493
-    Width = 679
-    Height = 33
+    Top = 581
+    Width = 784
+    Height = 38
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
-    object AddButton: TButton
-      Left = 84
-      Top = 4
-      Width = 75
+    DesignSize = (
+      784
+      38)
+    object OKButton: TButton
+      Left = 417
+      Top = 6
+      Width = 85
       Height = 25
-      Caption = '&Add...'
-      TabOrder = 1
-      OnClick = AddButtonClick
-    end
-    object DeleteButton: TButton
-      Left = 246
-      Top = 4
-      Width = 75
-      Height = 25
-      Caption = '&Delete'
-      Enabled = False
-      TabOrder = 3
-      OnClick = DeleteButtonClick
-    end
-    object ClearAllButton: TButton
-      Left = 327
-      Top = 4
-      Width = 75
-      Height = 25
-      Caption = '&Clear all'
-      Enabled = False
-      TabOrder = 4
-      OnClick = ClearAllButtonClick
-    end
-    object ExportButton: TButton
-      Left = 408
-      Top = 4
-      Width = 75
-      Height = 25
-      Caption = '&Export...'
-      Enabled = False
-      TabOrder = 5
-      OnClick = ExportButtonClick
-    end
-    object ReplaceButton: TButton
-      Left = 165
-      Top = 4
-      Width = 75
-      Height = 25
-      Caption = '&Replace...'
-      TabOrder = 2
-      OnClick = ReplaceButtonClick
-    end
-    object NewButton: TButton
-      Left = 2
-      Top = 4
-      Width = 75
-      Height = 25
-      Caption = '&New'
+      Anchors = [akTop, akRight]
+      Caption = 'OK'
+      Default = True
+      ModalResult = 1
       TabOrder = 0
-      OnClick = NewButtonClick
+      OnClick = OkButtonClick
+    end
+    object ApplyButton: TButton
+      Left = 600
+      Top = 6
+      Width = 85
+      Height = 25
+      Anchors = [akTop, akRight]
+      Caption = '&Apply'
+      TabOrder = 2
+      OnClick = ApplyButtonClick
+    end
+    object CancelButton: TButton
+      Left = 509
+      Top = 6
+      Width = 85
+      Height = 25
+      Anchors = [akTop, akRight]
+      Cancel = True
+      Caption = 'Cancel'
+      ModalResult = 2
+      TabOrder = 1
+    end
+    object HelpButton: TButton
+      Left = 692
+      Top = 6
+      Width = 85
+      Height = 25
+      Anchors = [akTop, akRight]
+      Caption = '&Help'
+      TabOrder = 3
+      OnClick = HelpButtonClick
+    end
+  end
+  object paIcon: TPanel
+    Left = 0
+    Top = 381
+    Width = 784
+    Height = 200
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 1
+    object IconButtonsPanel: TPanel
+      Left = 691
+      Top = 0
+      Width = 93
+      Height = 200
+      Align = alRight
+      BevelOuter = bvNone
+      TabOrder = 1
+      ExplicitLeft = 689
+      ExplicitHeight = 187
+      object NewButton: TButton
+        Left = 2
+        Top = 6
+        Width = 85
+        Height = 25
+        Caption = '&New'
+        TabOrder = 0
+        OnClick = NewButtonClick
+      end
+      object ReformatXMLButton: TButton
+        Left = 2
+        Top = 152
+        Width = 85
+        Height = 25
+        Caption = 'Reformat &XML'
+        TabOrder = 2
+        OnClick = ReformatXMLButtonClick
+      end
+      object DeleteButton: TButton
+        Left = 2
+        Top = 37
+        Width = 85
+        Height = 25
+        Caption = '&Delete'
+        TabOrder = 1
+        OnClick = DeleteButtonClick
+      end
+    end
+    object ItemGroupBox: TGroupBox
+      Left = 0
+      Top = 0
+      Width = 691
+      Height = 200
+      Align = alClient
+      Caption = 'Selected Icon'
+      TabOrder = 0
+      ExplicitLeft = 1
+      ExplicitTop = 1
+      ExplicitWidth = 689
+      ExplicitHeight = 185
+      DesignSize = (
+        691
+        200)
+      object IconNameLabel: TLabel
+        Left = 176
+        Top = 11
+        Width = 87
+        Height = 15
+        AutoSize = False
+        Caption = 'Name'
+        Transparent = True
+      end
+      object IconFixedColorLabel: TLabel
+        Left = 415
+        Top = 11
+        Width = 63
+        Height = 15
+        AutoSize = False
+        Caption = 'Fixed Color'
+        Transparent = True
+      end
+      object IconIndexLabel: TLabel
+        Left = 643
+        Top = 11
+        Width = 38
+        Height = 15
+        AutoSize = False
+        Caption = 'Index'
+        Transparent = True
+      end
+      object CategoryLabel: TLabel
+        Left = 295
+        Top = 11
+        Width = 87
+        Height = 15
+        AutoSize = False
+        Caption = 'Category'
+        Transparent = True
+      end
+      object IconPanel: TPanel
+        Left = 10
+        Top = 28
+        Width = 160
+        Height = 160
+        BevelOuter = bvNone
+        BorderWidth = 2
+        BorderStyle = bsSingle
+        Color = clWindow
+        Ctl3D = False
+        ParentCtl3D = False
+        TabOrder = 0
+        object IconImage: TSVGIconImage
+          Left = 2
+          Top = 2
+          Width = 154
+          Height = 154
+          AutoSize = False
+          Proportional = False
+          Align = alClient
+          ExplicitWidth = 72
+          ExplicitHeight = 72
+        end
+      end
+      object NameEdit: TEdit
+        Left = 176
+        Top = 28
+        Width = 114
+        Height = 23
+        TabOrder = 1
+        OnExit = NameEditExit
+      end
+      object SVGText: TMemo
+        Left = 176
+        Top = 54
+        Width = 507
+        Height = 134
+        Hint = 'SVG Text content'
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        ScrollBars = ssBoth
+        TabOrder = 6
+        OnChange = SVGTextChange
+      end
+      object FixedColorItemComboBox: TColorBox
+        Left = 415
+        Top = 28
+        Width = 136
+        Height = 22
+        NoneColorColor = clNone
+        Selected = clDefault
+        Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
+        TabOrder = 3
+        OnSelect = FixedColorItemComboBoxSelect
+      end
+      object GrayScaleItemCheckBox: TCheckBox
+        Left = 563
+        Top = 30
+        Width = 85
+        Height = 17
+        Caption = 'GrayScale'
+        TabOrder = 4
+        OnClick = GrayScaleItemCheckBoxClick
+      end
+      object IconIndexEdit: TEdit
+        Left = 643
+        Top = 25
+        Width = 40
+        Height = 23
+        Enabled = False
+        TabOrder = 5
+        OnExit = NameEditExit
+      end
+      object CategoryEdit: TEdit
+        Left = 295
+        Top = 28
+        Width = 114
+        Height = 23
+        TabOrder = 2
+        OnExit = CategoryEditExit
+      end
     end
   end
   object OpenDialog: TOpenPictureDialog

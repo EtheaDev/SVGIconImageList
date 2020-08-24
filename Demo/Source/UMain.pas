@@ -149,22 +149,15 @@ begin
 end;
 
 procedure TMainForm.BuildFromFilesButtonClick(Sender: TObject);
-var
-  LStart, LStop: cardinal;
-  LCount: Integer;
 begin
   if OpenDialog.Execute then
   begin
     Screen.Cursor := crHourGlass;
     try
-      LStart := GetTickCount;
-      LCount := SVGIconVirtualImageList.LoadFromFiles(OpenDialog.Files);
-      LStop := GetTickCount;
+      SVGIconVirtualImageList.LoadFromFiles(OpenDialog.Files);
     finally
       Screen.Cursor := crDefault;
     end;
-    MessageDlg(Format('Built %d Icons in %d milliseconds!',
-      [LCount, LStop - LStart]), mtInformation, [mbOK], 0);
   end;
   UpdateGUI;
 end;
@@ -252,7 +245,7 @@ begin
   ////Test use of native VirtualImageList
   VirtualImageList := TVirtualImageList.Create(Self);
   VirtualImageList.ImageCollection := ImageDataModule.SVGIconImageCollection;
-  VirtualImageList.PreserveItems := True;
+  //VirtualImageList.PreserveItems := True;
   ActionList.Images := VirtualImageList;
   TopToolBar.Images := VirtualImageList;
   {$ENDIF}

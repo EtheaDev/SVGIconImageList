@@ -152,7 +152,12 @@ end;
 
 procedure TSVGIconImageCollection.ClearIcons;
 begin
-  FSVGItems.Clear;
+  FSVGItems.BeginUpdate;
+  try
+    FSVGItems.Clear;
+  finally
+    FSVGItems.EndUpdate;
+  end;
 end;
 
 constructor TSVGIconImageCollection.Create(AOwner: TComponent);
