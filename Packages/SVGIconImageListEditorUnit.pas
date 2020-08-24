@@ -36,20 +36,20 @@ interface
 {$INCLUDE ..\Source\SVGIconImageList.inc}
 
 uses
-  Windows
-  , Messages
-  , SysUtils
-  , Graphics
-  , Forms
-  , StdCtrls
-  , ExtCtrls
-  , Controls
-  , Classes
-  , Dialogs
-  , ComCtrls
-  , ImgList
-  , ExtDlgs
-  , Spin
+  Winapi.Windows
+  , Winapi.Messages
+  , System.SysUtils
+  , Vcl.Graphics
+  , Vcl.Forms
+  , Vcl.StdCtrls
+  , Vcl.ExtCtrls
+  , Vcl.Controls
+  , System.Classes
+  , Vcl.Dialogs
+  , Vcl.ComCtrls
+  , Vcl.ImgList
+  , Vcl.ExtDlgs
+  , Vcl.Samples.Spin
   , SVGIconImage
   , SVGIconImageListBase
   , SVGIconImageList
@@ -169,12 +169,11 @@ implementation
 {$WARN SYMBOL_PLATFORM OFF}
 
 uses
-  SVG
-  , SVGColor
-  , Types
-  , ShellApi
-  , FileCtrl
-  , XMLDoc
+  SVGInterfaces
+  , System.Types
+  , Winapi.ShellAPI
+  , Vcl.FileCtrl
+  , Xml.XMLDoc
   , SVGIconUtils;
 
 var
@@ -447,13 +446,13 @@ end;
 
 procedure TSVGIconImageListEditor.ReformatXMLButtonClick(Sender: TObject);
 begin
-  SVGText.Lines.Text := xmlDoc.FormatXMLData(SVGText.Lines.Text);
+  SVGText.Lines.Text := Xml.XMLDoc.FormatXMLData(SVGText.Lines.Text);
 end;
 
 procedure TSVGIconImageListEditor.ReplaceButtonClick(Sender: TObject);
 var
   LIndex: Integer;
-  SVG: TSVG;
+  SVG: ISVG;
   FileName: string;
   Item: TSVGIconItem;
 begin
@@ -462,22 +461,18 @@ begin
     Screen.Cursor := crHourGlass;
     FEditingList.BeginUpdate;
     try
-      SVG := TSVG.Create;
-      try
-        for LIndex := 0 to OpenDialog.Files.Count - 1 do
-        begin
-          FileName := ChangeFileExt(ExtractFileName(OpenDialog.Files[LIndex]), '');
-          try
-            SVG.LoadFromFile(OpenDialog.Files[LIndex]);
-            Item := FEditingList.SVGIconItems[ImageView.ItemIndex];
-            Item.IconName := FileName;
-            Item.SVG := SVG;
-            FChanged := True;
-          finally
-          end;
+      SVG := GlobalSVGHandler.NewSvg;
+      for LIndex := 0 to OpenDialog.Files.Count - 1 do
+      begin
+        FileName := ChangeFileExt(ExtractFileName(OpenDialog.Files[LIndex]), '');
+        try
+          SVG.LoadFromFile(OpenDialog.Files[LIndex]);
+          Item := FEditingList.SVGIconItems[ImageView.ItemIndex];
+          Item.IconName := FileName;
+          Item.SVG := SVG;
+          FChanged := True;
+        finally
         end;
-      finally
-        SVG.Free;
       end;
       BuildList(ImageView.ItemIndex);
     finally

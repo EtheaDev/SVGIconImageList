@@ -40,16 +40,12 @@ uses
   System.Types
   , System.UITypes
   , System.Classes
-  , SVGTypes
-  , SVG
-  , SVGColor
   , WinApi.Windows
-  , Winapi.GDIPOBJ
-  , Winapi.GDIPAPI
 {$IFDEF D10_3+}
   , Graphics
   , BaseImageCollection
 {$ENDIF}
+  , SvgInterfaces
   , SVGIconItems
   ;
 
@@ -99,7 +95,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    function Add(const ASVG: TSVG; const AIconName: string;
+    function Add(const ASVG: ISVG; const AIconName: string;
        const AGrayScale: Boolean = False;
        const AFixedColor: TColor = SVG_INHERIT_COLOR): Integer;
     procedure Delete(const Index: Integer);
@@ -107,7 +103,7 @@ type
     function IndexOf(const Name: string): Integer;
     procedure ClearIcons;
 
-    procedure LoadFromResource(const hInstance : THandle; const resourceName : string; const iconName : string);
+    procedure LoadFromResource(const hInstance : THandle; const ResourceName : string; const IconName : string);
 
   published
     property SVGIconItems: TSVGIconItems read FSVGItems write SetSVGIconItems;
@@ -118,12 +114,11 @@ type
 implementation
 
 uses
-  SVGCommon,
   System.SysUtils;
 
 { TSVGIconImageCollection }
 
-function TSVGIconImageCollection.Add(const ASVG: TSVG; const AIconName: string;
+function TSVGIconImageCollection.Add(const ASVG: ISVG; const AIconName: string;
   const AGrayScale: Boolean; const AFixedColor: TColor): Integer;
 var
   Item: TSVGIconItem;
@@ -204,23 +199,18 @@ begin
   Result := -1;
 end;
 
-procedure TSVGIconImageCollection.LoadFromResource(const hInstance: THandle; const resourceName, iconName: string);
+procedure TSVGIconImageCollection.LoadFromResource(const hInstance: THandle; const ResourceName, IconName: string);
 var
-  resStream: TResourceStream;
-  svg : TSVG;
+  ResStream: TResourceStream;
+  Svg : ISVG;
 begin
-  resStream := TResourceStream.Create(hInstance, resourceName, RT_RCDATA);
+  resStream := TResourceStream.Create(hInstance, ResourceName, RT_RCDATA);
   try
-    svg := TSVG.Create;
-    try
-      svg.LoadFromStream(resStream);
-      Add(svg, iconName);
-    except
-      svg.Free;
-      raise;
-    end;
+    Svg := GlobalSVGHandler.NewSvg;
+    Svg.LoadFromStream(ResStream);
+    Add(Svg, IconName);
   finally
-    resStream.Free;
+    ResStream.Free;
   end;
 end;
 
@@ -228,7 +218,7 @@ procedure TSVGIconImageCollection.ReadImageData(Stream: TStream);
 var
   LStream: TMemoryStream;
   LCount, LSize: Integer;
-  LSVG: TSVG;
+  LSVG: ISVG;
   C: Integer;
   LPos: Int64;
   LIconName: string;
@@ -246,7 +236,7 @@ begin
     //Read Count of Images
     if Stream.Read(LCount, SizeOf(Integer)) > 0 then
     begin
-      LSVG := TSVG.Create(nil);
+      LSVG := GlobalSVGHandler.NewSvg;
       for C := 0 to LCount - 1 do
       begin
         //Read IconName
@@ -288,7 +278,6 @@ begin
     end;
   finally
     LStream.Free;
-    LSVG.Free;
     FSVGItems.EndUpdate;
   end;
 end;
@@ -416,8 +405,7 @@ procedure TSVGIconImageCollection.Draw(ACanvas: TCanvas; ARect: TRect; AIndex: I
   AProportional: Boolean = False);
 var
   LItem: TSVGIconItem;
-  LSVG: TSVG;
-  R: TGPRectF;
+  LSVG: ISVG;
 begin
   LItem := FSVGItems.Items[AIndex];
   LSVG := LItem.SVG;
@@ -429,12 +417,9 @@ begin
     LSVG.Grayscale := True
   else
     LSVG.Grayscale := False;
-  LSVG.SVGOpacity := 1;
+  LSVG.Opacity := 1;
 
-  R := ToGPRectF(ARect);
-  if AProportional then
-    R := FittedRect(R, LSVG.Width, LSVG.Height);
-  LSVG.PaintTo(ACanvas.Handle, R, nil, 0);
+  LSVG.PaintTo(ACanvas.Handle, TRectF.Create(ARect), AProportional);
 end;
 {$ENDIF}
 

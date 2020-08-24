@@ -36,22 +36,22 @@ interface
 {$INCLUDE SVGIconImageList.inc}
 
 uses
-  Windows
-  , SysUtils
+  Winapi.Windows
+  , System.SysUtils
+  , System.Types
 {$IFDEF D10_4+}
   , System.UITypes
 {$ENDIF}
-  , GDIPOBJ
-  , Classes
-  , Controls
-  , Graphics
-  , SVG
+  , System.Classes
+  , Vcl.Controls
+  , Vcl.Graphics
+  , SVGInterfaces
   , SVGIconImageListBase;
 
 type
   TSVGIconImage = class(TGraphicControl)
   strict private
-    FSVG: TSVG;
+    FSVG: ISVG;
 
     FCenter: Boolean;
     FProportional: Boolean;
@@ -84,7 +84,6 @@ type
     procedure CheckAutoSize;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
     procedure Clear;
     function Empty: Boolean;
     procedure Paint; override;
@@ -92,7 +91,7 @@ type
     procedure LoadFromStream(Stream: TStream);
     procedure SaveToFile(const FileName: string);
     procedure Assign(Source: TPersistent); override;
-    property SVG: TSVG read FSVG;
+    property SVG: ISVG read FSVG;
   published
     property AutoSize: Boolean read FAutoSize write SetAutoSizeImage;
     property Center: Boolean read FCenter write SetCenter default True;
@@ -120,7 +119,7 @@ type
 
   TSVGGraphic = class(TGraphic)
   strict private
-    FSVG: TSVG;
+    FSVG: ISVG;
     FOpacity: Byte;
     FFileName: TFileName;
 
@@ -141,13 +140,12 @@ type
     procedure WriteData(Stream: TStream); override;
   public
     constructor Create; override;
-    destructor Destroy; override;
     procedure Clear;
 
     procedure Assign(Source: TPersistent); override;
     procedure AssignTo(Dest: TPersistent); override;
 
-    procedure AssignSVG(SVG: TSVG);
+    procedure AssignSVG(SVG: ISVG);
 
     procedure LoadFromFile(const Filename: String); override;
     procedure LoadFromStream(Stream: TStream); override;
@@ -164,61 +162,22 @@ type
     property FileName: TFileName read FFileName write SetFileName;
   end;
 
-function TGPImageToBitmap(Image: TGPImage): TBitmap;
-
 implementation
 
 uses
-  Winapi.GDIPAPI,
-  SVGCommon;
-
-function TGPImageToBitmap(Image: TGPImage): TBitmap;
-var
-  Graphics: TGPGraphics;
-  Bitmap: TBitmap;
-  P: Pointer;
-  W, H: Cardinal;
-begin
-  Bitmap := nil;
-  if Assigned(Image) then
-  begin
-    W := Image.GetWidth;
-    H := Image.GetHeight;
-    if (W > 0) and (H > 0) then
-    begin
-      Bitmap := TBitmap.Create;
-      Bitmap.PixelFormat := pf32Bit;
-      Bitmap.Width := W;
-      Bitmap.Height := H;
-      P := Bitmap.ScanLine[H - 1];
-      FillChar(P^, (W * H) shl 2, 0);
-      Graphics := TGPGraphics.Create(Bitmap.Canvas.Handle);
-      try
-        Graphics.DrawImage(Image, 0, 0);
-      finally
-        Graphics.Free;
-      end;
-    end;
-  end;
-  Result := Bitmap;
-end;
+  PasSVGHandler,
+  D2DSVGHandler;
 
 constructor TSVGIconImage.Create(AOwner: TComponent);
 begin
   inherited;
-  FSVG := TSVG.Create;
+  FSVG := GlobalSVGHandler.NewSvg;
   FProportional := False;
   FCenter := True;
   FStretch := True;
   FOpacity := 255;
   FScale := 1;
   FImageIndex := -1;
-end;
-
-destructor TSVGIconImage.Destroy;
-begin
-  FSVG.Free;
-  inherited;
 end;
 
 procedure TSVGIconImage.CheckAutoSize;
@@ -238,7 +197,7 @@ end;
 
 function TSVGIconImage.Empty: Boolean;
 begin
-  Empty := FSVG.Count = 0;
+  Empty := FSVG.IsEmpty;
 end;
 
 function TSVGIconImage.GetSVGText: string;
@@ -257,25 +216,18 @@ end;
 
 procedure TSVGIconImage.Paint;
 var
-  Bounds: TGPRectF;
-
-var
-  SVG: TSVG;
+  SVG: ISVG;
 begin
   if not UsingSVGText then
     SVG := FImageList.Images[FImageIndex]
   else
     SVG := FSVG;
 
-  if SVG.Count > 0 then
+  if not SVG.IsEmpty then
   begin
-    Bounds := MakeRect(0.0, 0, Width, Height);
-    if FProportional then
-      Bounds := FittedRect(Bounds, SVG.Width, SVG.Height);
-
-    SVG.SVGOpacity := FOpacity / 255;
-    SVG.PaintTo(Canvas.Handle, Bounds, nil, 0);
-    SVG.SVGOpacity := 1;
+    SVG.Opacity := FOpacity / 255;
+    SVG.PaintTo(Canvas.Handle, TRectF.Create(TPointF.Create(0, 0), Width, Height), FProportional);
+    SVG.Opacity := 1;
   end;
 
   if csDesigning in ComponentState then
@@ -320,22 +272,12 @@ begin
 end;
 
 procedure TSVGIconImage.Assign(Source: TPersistent);
-var
-  SVG: TSVG;
 begin
   if (Source is TSVGIconImage) then
   begin
-    SVG := (Source as TSVGIconImage).FSVG;
-    FSVG.LoadFromText(SVG.Source);
+    FSVG := (Source as TSVGIconImage).FSVG;
     FImageIndex := -1;
     CheckAutoSize;
-  end;
-
-  if (Source.ClassType = TSVG) then
-  begin
-    SVG := TSVG(Source);
-    FSVG.LoadFromText(SVG.Source);
-    FImageIndex := -1;
   end;
 
   Repaint;
@@ -395,7 +337,7 @@ end;
 
 procedure TSVGIconImage.SetSVGText(const AValue: string);
 begin
-  FSVG.LoadFromText(AValue);
+  FSVG.Source := AValue;
   Repaint;
 end;
 
@@ -438,14 +380,8 @@ end;
 constructor TSVGGraphic.Create;
 begin
   inherited;
-  FSVG := TSVG.Create;
+  FSVG := GlobalSVGHandler.NewSvg;
   FOpacity := 255;
-end;
-
-destructor TSVGGraphic.Destroy;
-begin
-  FSVG.Free;
-  inherited;
 end;
 
 procedure TSVGGraphic.Clear;
@@ -461,17 +397,16 @@ begin
   begin
     try
       //AssignSVG(TSVGGraphic(Source).FSVG);
-      FSVG.Free;
-      FSVG := TSVG(TSVGGraphic(Source).FSVG.Clone(nil));
+      FSVG := TSVGGraphic(Source).FSVG;
     except
     end;
     Changed(Self);
   end;
 end;
 
-procedure TSVGGraphic.AssignSVG(SVG: TSVG);
+procedure TSVGGraphic.AssignSVG(SVG: ISVG);
 begin
-  FSVG.LoadFromText(SVG.Source);
+  FSVG := SVG;
   Changed(Self);
 end;
 
@@ -549,23 +484,18 @@ begin
 end;
 
 procedure TSVGGraphic.Draw(ACanvas: TCanvas; const Rect: TRect);
-var
-  Bounds: TGPRectF;
 begin
   if Empty then
     Exit;
 
-  Bounds := MakeRect(Rect.Left + 0.0, Rect.Top,
-    Rect.Right - Rect.Left, Rect.Bottom - Rect.Top);
-
-  FSVG.SVGOpacity := FOpacity / 255;
-  FSVG.PaintTo(ACanvas.Handle, Bounds, nil, 0);
+  FSVG.Opacity := FOpacity / 255;
+  FSVG.PaintTo(ACanvas.Handle, TRectF.Create(Rect));
 end;
 
 
 function TSVGGraphic.GetEmpty: Boolean;
 begin
-  Result := FSVG.Count = 0;
+  Result := FSVG.IsEmpty;
 end;
 
 function TSVGGraphic.GetWidth: Integer;
@@ -614,6 +544,16 @@ end;
 
 
 initialization
+  if not Assigned(GlobalSVGHandler) then
+  begin
+    {$IFDEF PreferNativeSvgSupport}
+    if WinSvgSupported then
+      GlobalSVGHandler := GetD2DSVGHandler
+    else
+    {$ENDIF}
+      GlobalSVGHandler := GetPasSVGHandler;
+  end;
+
   TPicture.RegisterFileFormat('SVG', 'Scalable Vector Graphics', TSVGGraphic);
 
 finalization

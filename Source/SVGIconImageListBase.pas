@@ -44,10 +44,8 @@ uses
   Vcl.Graphics,
   Vcl.ImgList,
   System.UITypes,   // after ImgList to avoid deprecation warnings
-  SVGTypes,
-  SVG,
-  SVGColor,
-  SVGIconItems;
+  SVGIconItems,
+  SvgInterfaces;
 
 const
   SVGIconImageListVersion = '2.0.0';
@@ -78,10 +76,10 @@ type
     function GetSVGIconItems: TSVGIconItems; virtual; abstract;
     procedure SetSVGIconItems(const Value: TSVGIconItems); virtual;
 
-    function GetImages(Index: Integer): TSVG; virtual;
+    function GetImages(Index: Integer): ISVG; virtual;
     function GetNames(Index: Integer): string; virtual;
 
-    procedure SetImages(Index: Integer; const Value: TSVG); virtual;
+    procedure SetImages(Index: Integer; const Value: ISVG); virtual;
     procedure SetNames(Index: Integer; const Value: string); virtual;
     procedure SetSize(const Value: Integer);
     procedure SetFixedColor(const Value: TColor);
@@ -149,7 +147,7 @@ type
     property Scaled: Boolean read FScaled write FScaled default True;
     {$ENDIF}
     {$ENDIF}
-    property Images[Index: Integer]: TSVG read GetImages write SetImages;
+    property Images[Index: Integer]: ISVG read GetImages write SetImages;
     property Names[Index: Integer]: string read GetNames write SetNames;
   published
     property ColorDepth default cd32Bit;
@@ -160,11 +158,10 @@ implementation
 uses
   System.Math,
   System.SysUtils,
-  Winapi.GDIPAPI,
-  Winapi.GDIPOBJ,
   Vcl.ComCtrls,
   Vcl.Forms,
-  SVGCommon;
+  PasSVGHandler,
+  D2DSVGHandler;
 
 { TSVGIconImageListBase }
 
@@ -322,7 +319,7 @@ begin
   Result := inherited Height;
 end;
 
-function TSVGIconImageListBase.GetImages(Index: Integer): TSVG;
+function TSVGIconImageListBase.GetImages(Index: Integer): ISVG;
 Var
   Items: TSVGIconItems;
 begin
@@ -331,7 +328,6 @@ begin
     Result := Items[Index].SVG
   else
     Result := nil;
-
 end;
 
 function TSVGIconImageListBase.GetNames(Index: Integer): string;
@@ -493,7 +489,7 @@ begin
   end;
 end;
 
-procedure TSVGIconImageListBase.SetImages(Index: Integer; const Value: TSVG);
+procedure TSVGIconImageListBase.SetImages(Index: Integer; const Value: ISVG);
 Var
   Items: TSVGIconItems;
 begin
@@ -567,20 +563,6 @@ begin
   Result := (Width <> Height) and (Width <> DEFAULT_SIZE);
 end;
 
-procedure PaintToBitmap(SVG: TSVG; Bitmap: TBitmap; Bounds: TGPRectF;
-  Rects: PRectArray; RectCount: Integer);
-var
-  Graphics: TGPGraphics;
-begin
-  Graphics := TGPGraphics.Create(Bitmap.Canvas.Handle);
-  try
-    Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
-    SVG.PaintTo(Graphics, Bounds, Rects, RectCount);
-  finally
-    Graphics.Free;
-  end;
-end;
-
 procedure TSVGIconImageListBase.WriteLeft(Writer: TWriter);
 begin
   Writer.WriteInteger(LongRec(DesignInfo).Lo);
@@ -630,5 +612,14 @@ begin
     Change;
 end;
 
-
+initialization
+  if not Assigned(GlobalSVGHandler) then
+  begin
+    {$IFDEF PreferNativeSvgSupport}
+    if WinSvgSupported then
+      GlobalSVGHandler := GetD2DSVGHandler
+    else
+    {$ENDIF}
+      GlobalSVGHandler := GetPasSVGHandler;
+  end;
 end.
