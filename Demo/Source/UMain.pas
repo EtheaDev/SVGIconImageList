@@ -37,8 +37,9 @@ uses
   StdCtrls, Buttons, StdActns,
   ActnList, ExtCtrls, ComCtrls, ToolWin,
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
-  System.Actions, System.ImageList, SVGIconImageListBase,
-  SVGIconImageCollection, SVGIconVirtualImageList,
+  System.Actions,
+  {$IFDEF DXE7+}System.ImageList,{$ENDIF}
+  SVGIconImageListBase, SVGIconImageCollection, SVGIconVirtualImageList,
   {$IFDEF D10_3+}Vcl.VirtualImageList,{$ENDIF}
   UDataModule;
 
