@@ -2559,11 +2559,11 @@ begin
 
   // The -1 below is for fixing #14. There may well be a better way.
   if (FViewBox.Width > 0) and (FRootBounds.Width > 0) then
-    ScaleX := (FRootBounds.Width -1) / FViewBox.Width
+    ScaleX := (FRootBounds.Width - 1) / FViewBox.Width
   else
     ScaleX := 1;
   if (FViewBox.Height > 0) and (FRootBounds.Height > 0) then
-    ScaleY := (FRootBounds.Height -1)/ FViewBox.Height
+    ScaleY := (FRootBounds.Height - 1)/ FViewBox.Height
   else
     ScaleY := 1;
   ScaleMatrix := TMatrix.CreateScaling(ScaleX, ScaleY);

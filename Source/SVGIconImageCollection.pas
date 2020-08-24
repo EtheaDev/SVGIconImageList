@@ -369,49 +369,6 @@ begin
 end;
 
 {$IFDEF D10_3+}
-function UpdateRectForProportionalSize(ARect: TRect; AWidth, AHeight: Integer; AStretch: Boolean): TRect;
-var
-  w, h, cw, ch: Integer;
-  xyaspect: Double;
-begin
-  Result := ARect;
-  if AWidth * AHeight = 0 then
-    Exit;
-
-  w := AWidth;
-  h := AHeight;
-  cw := ARect.Width;
-  ch := ARect.Height;
-
-  if AStretch or ((w > cw) or (h > ch)) then
-  begin
-    xyaspect := w / h;
-    if w > h then
-    begin
-      w := cw;
-      h := Trunc(cw / xyaspect);
-      if h > ch then
-      begin
-        h := ch;
-        w := Trunc(ch * xyaspect);
-      end;
-     end
-     else
-     begin
-       h := ch;
-       w := Trunc(ch * xyaspect);
-       if w > cw then
-       begin
-         w := cw;
-         h := Trunc(cw / xyaspect);
-       end;
-     end;
-  end;
-
-  Result := Rect(0, 0, w, h);
-  OffsetRect(Result, ARect.Left + (cw - w) div 2, ARect.Top + (ch - h) div 2);
-end;
-
 function TSVGIconImageCollection.GetCount: Integer;
 begin
   if Assigned(FSVGItems) then
@@ -456,6 +413,7 @@ procedure TSVGIconImageCollection.Draw(ACanvas: TCanvas; ARect: TRect; AIndex: I
 var
   LItem: TSVGIconItem;
   LSVG: TSVG;
+  R: TGPRectF;
 begin
   LItem := FSVGItems.Items[AIndex];
   LSVG := LItem.SVG;
@@ -468,9 +426,11 @@ begin
   else
     LSVG.Grayscale := False;
   LSVG.SVGOpacity := 1;
+
+  R := ToGPRectF(ARect);
   if AProportional then
-    ARect := UpdateRectForProportionalSize(ARect, ARect.Width, ARect.Height, True);
-  LSVG.PaintTo(ACanvas.Handle, ARect.Left, ARect.Top, ARect.Width, ARect.Height);
+    R := FittedRect(R, LSVG.Width, LSVG.Height);
+  LSVG.PaintTo(ACanvas.Handle, R, nil, 0);
 end;
 {$ENDIF}
 

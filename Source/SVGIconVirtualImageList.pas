@@ -37,6 +37,9 @@ interface
 {$INCLUDE SVGIconImageList.inc}
 
 uses
+  WinApi.Windows,
+  Winapi.CommCtrl,
+  Winapi.GDIPAPI,
   System.Classes,
   System.Messaging,
   Vcl.Controls,
@@ -93,9 +96,6 @@ uses
   System.UITypes,
   System.Math,
   System.SysUtils,
-  WinApi.Windows,
-  Winapi.CommCtrl,
-  Winapi.GDIPAPI,
   Vcl.Forms,
   Vcl.ImgList,
   SVGTypes,
@@ -188,7 +188,7 @@ procedure TSVGIconVirtualImageList.RecreateBitmaps;
 var
   C: Integer;
   LItem: TSVGIconItem;
-  LIcon: HICON;
+  BitMap: TBitmap;
   LFixedColor: TColor;
   LGrayScale: Boolean;
 begin
@@ -212,9 +212,12 @@ begin
     for C := 0 to FImageCollection.SVGIconItems.Count - 1 do
     begin
       LItem := FImageCollection.SVGIconItems[C];
-      LIcon := LItem.GetIcon(Width, Height, LFixedColor, FOpacity, LGrayScale);
-      ImageList_AddIcon(Handle, LIcon);
-      DestroyIcon(LIcon);
+      Bitmap := LItem.GetBitmap(Width, Height, LFixedColor, FOpacity, LGrayScale);
+      try
+        ImageList_Add(Handle, Bitmap.Handle, 0);
+      finally
+        Bitmap.Free;
+      end;
     end;
   end;
 end;

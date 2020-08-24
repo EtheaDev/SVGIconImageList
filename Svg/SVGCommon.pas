@@ -36,7 +36,8 @@ function TryStrToTFloat(const S: string; out Value: TFloat): Boolean;
 function StrToTFloat(const S: string): TFloat;
 
 // type conversion functions
-function ToGPRectF(R: TRectF): TGPRectF; inline;
+function ToGPRectF(R: TRect): TGPRectF; overload; inline;
+function ToGPRectF(R: TRectF): TGPRectF; overload; inline;
 function FromGPRectF(R: TGPRectF): TRectF; inline;
 function ToGPMatrix(const Matrix: TMatrix): TGPMatrix;
 
@@ -65,6 +66,13 @@ function StrToTFloat(const S: string): TFloat;
 begin
   TryStrToTFloat(S, Result);
 end;
+
+function ToGPRectF(R: TRect): TGPRectF;
+begin
+  with R do
+    Result := WinApi.GDIPAPI.MakeRect(Single(Left), Top, Width, Height);
+end;
+
 
 function ToGPRectF(R: TRectF): TGPRectF;
 begin
