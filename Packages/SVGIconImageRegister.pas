@@ -44,7 +44,6 @@ type
     function GetVerbCount: Integer; override;
     function GetVerb(Index: Integer): string; override;
     procedure ExecuteVerb(Index: Integer); override;
-    procedure Edit; override;
   end;
 
   TSVGIconVirtualImageListCompEditor = class(TComponentEditor)
@@ -52,7 +51,6 @@ type
     function GetVerbCount: Integer; override;
     function GetVerb(Index: Integer): string; override;
     procedure ExecuteVerb(Index: Integer); override;
-    procedure Edit; override;
   end;
 
 
@@ -61,7 +59,6 @@ type
     function GetVerbCount: Integer; override;
     function GetVerb(Index: Integer): string; override;
     procedure ExecuteVerb(Index: Integer); override;
-    procedure Edit; override;
   end;
 
 
@@ -79,6 +76,12 @@ type
     function GetValue: string; override;
   end;
 
+  TSVGIconImageCompEditor = class(TComponentEditor)
+  public
+    function GetVerbCount: Integer; override;
+    function GetVerb(Index: Integer): string; override;
+    procedure ExecuteVerb(Index: Integer); override;
+  end;
 
   TSVGTextProperty = class(TClassProperty)
   public
@@ -104,11 +107,6 @@ uses
   , SVGTextPropertyEditorUnit;
 
 { TSVGIconImageListCompEditor }
-procedure TSVGIconImageListCompEditor.Edit;
-begin
-  inherited;
-end;
-
 procedure TSVGIconImageListCompEditor.ExecuteVerb(Index: Integer);
 begin
   inherited;
@@ -140,6 +138,7 @@ begin
 end;
 
 { TSVGIconImageListProperty }
+
 procedure TSVGIconImageListProperty.Edit;
 var
   SVGImageList: TSVGIconImageList;
@@ -229,6 +228,7 @@ begin
   RegisterComponentEditor(TSVGIconImageList, TSVGIconImageListCompEditor);
   RegisterComponentEditor(TSVGIconVirtualImageList, TSVGIconVirtualImageListCompEditor);
   RegisterComponentEditor(TSVGIconImageCollection, TSVGIconImageCollectionCompEditor);
+  RegisterComponentEditor(TSVGIconImage, TSVGIconImageCompEditor);
   RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageList, 'SVGIconItems', TSVGIconImageListProperty);
   RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageCollection, 'SVGIconItems', TSVGIconCollectionListProperty);
   RegisterPropertyEditor(TypeInfo(string), TSVGIconItem, 'SVGText', TSVGTextProperty);
@@ -236,12 +236,6 @@ begin
 end;
 
 { TSVGIconImageCollectionCompEditor }
-
-procedure TSVGIconImageCollectionCompEditor.Edit;
-begin
-  inherited;
-
-end;
 
 procedure TSVGIconImageCollectionCompEditor.ExecuteVerb(Index: Integer);
 begin
@@ -276,12 +270,6 @@ end;
 
 { TSVGIconVirtualImageListCompEditor }
 
-procedure TSVGIconVirtualImageListCompEditor.Edit;
-begin
-  inherited;
-
-end;
-
 procedure TSVGIconVirtualImageListCompEditor.ExecuteVerb(Index: Integer);
 begin
   inherited;
@@ -310,6 +298,45 @@ end;
 function TSVGIconVirtualImageListCompEditor.GetVerbCount: Integer;
 begin
   result := 2;
+end;
+
+{ TSVGIconImageCompEditor }
+
+procedure TSVGIconImageCompEditor.ExecuteVerb(Index: Integer);
+var
+  LSVGText: string;
+begin
+  inherited;
+  if Index = 0 then
+  begin
+    LSVGText := (Component as TSVGIconImage).SVGText;
+    if EditSVGTextProperty(LSVGText) then
+    begin
+      TSVGIconImage(Component).ImageList := nil;
+      TSVGIconImage(Component).SVGText := LSVGText;
+      Designer.Modified;
+    end;
+  end
+  else if Index = 1 then
+  begin
+    ShellExecute(0, 'open',
+      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Home'), nil, nil,
+      SW_SHOWNORMAL)
+  end;
+end;
+
+function TSVGIconImageCompEditor.GetVerb(Index: Integer): string;
+begin
+  Result := '';
+  case Index of
+    0: Result := 'SVG I&conImage Editor...';
+    1: Result := Format('Ver. %s - (c) Ethea S.r.l. - show help...',[SVGIconImageListVersion]);
+  end;
+end;
+
+function TSVGIconImageCompEditor.GetVerbCount: Integer;
+begin
+  Result := 2;
 end;
 
 end.

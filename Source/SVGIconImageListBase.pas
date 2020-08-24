@@ -50,7 +50,7 @@ uses
   SVGIconItems;
 
 const
-  SVGIconImageListVersion = '1.9.0';
+  SVGIconImageListVersion = '2.0.0';
   DEFAULT_SIZE = 16;
 
 type
