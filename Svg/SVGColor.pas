@@ -261,6 +261,15 @@ begin
   AList.InsertObject(0, 'Inherit',  TObject(SVG_INHERIT_COLOR));
 end;
 
+//copied from 10.4
+function AlphaColorToColor(const Color: TAlphaColor): TColor;
+begin
+  TColorRec(Result).R := TAlphaColorRec(Color).R;
+  TColorRec(Result).G := TAlphaColorRec(Color).G;
+  TColorRec(Result).B := TAlphaColorRec(Color).B;
+  TColorRec(Result).A := 0;
+end;
+
 procedure StoreToList(Sender: TObject; const S: String);
 Var
   Color: NativeInt;
@@ -274,7 +283,9 @@ Var
   M: TMethod;
 begin
   SVGColorList := TStringList.Create;
+  {$IF CompilerVersion > 28}
   SVGColorList.Options := SVGColorList.Options - [soUseLocale];
+  {$ENDIF}
   SVGColorList.CaseSensitive := False;
   SVGColorList.Sorted := True;
   SVGColorList.Duplicates := TDuplicates.dupIgnore;
