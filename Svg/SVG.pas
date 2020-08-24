@@ -2393,7 +2393,7 @@ procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
       for C := 0 to RectCount - 1 do
       begin
         Bounds := Item.ObjectBounds(True, True);
-        if Bounds.IntersectsWith(Rects^[C]) then
+        if Bounds.IntersectsWith(TRectF.Create(Rects^[C])) then
           Exit;
       end;
       Result := False;
@@ -2467,7 +2467,7 @@ begin
 
   ProcessStyleSheet(S);
 
-  Classes  := S.Split([SLineBreak]);
+  Classes  := S.Split([string(SLineBreak)], TStringSplitOptions.None);
   for Cls in Classes do
   begin
     S := Trim(Cls);
