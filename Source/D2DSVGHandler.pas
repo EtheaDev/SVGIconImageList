@@ -476,7 +476,11 @@ begin
   begin
     if not Succeeded(D2DFactory.CreateDCRenderTarget(
       D2D1RenderTargetProperties(
-        D2D1_RENDER_TARGET_TYPE_DEFAULT,  // D2D1_RENDER_TARGET_TYPE_SOFTWARE is much faster in my desktop with a slow GPU
+        {$IFDEF GPUSupprt}
+        D2D1_RENDER_TARGET_TYPE_DEFAULT,
+        {$ELSE}
+        D2D1_RENDER_TARGET_TYPE_SOFTWARE, // much faster in my desktop with a slow GPU
+        {$ENDIF}
         D2D1PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED),
         0, 0, D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE),
         RenderTarget))

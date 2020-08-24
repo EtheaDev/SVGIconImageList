@@ -138,3 +138,4 @@
 {$ENDIF}
 
 {$DEFINE PreferNativeSvgSupport}
+{.$DEFINE GPUSupport}
