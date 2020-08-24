@@ -779,6 +779,21 @@ procedure TSVGObject.ReadIn(const Node: IXMLNode);
 var
   S: string;
   C: Integer;
+
+  {$IF CompilerVersion < 28}
+  procedure DeleteElement(var A: TArray<string>; const Index: Cardinal;
+      Count: Cardinal = 1);
+  var
+    ALength: Cardinal;
+    i: Cardinal;
+  begin
+    ALength := Length(A);
+    for i := Index + Count to ALength - 1 do
+      A[i - Count] := A[i];
+    SetLength(A, ALength - Count);
+  end;
+  {$IFEND}
+
 begin
   LoadString(Node, 'id', FID);
 
@@ -802,7 +817,11 @@ begin
   begin
     FClasses[C] := Trim(FClasses[C]);
     if FClasses[C] = '' then
+      {$IF CompilerVersion < 28}
+      DeleteElement(FClasses, C, 1);
+      {$ELSE}
       System.Delete(FClasses, C , 1);
+      {$IFEND}
   end;
 
   FObjectName := Node.nodeName;
@@ -2467,7 +2486,7 @@ begin
 
   ProcessStyleSheet(S);
 
-  Classes  := S.Split([SLineBreak]);
+  Classes  := S.Split([SLineBreak], MaxInt, TStringSplitOptions.None);
   for Cls in Classes do
   begin
     S := Trim(Cls);

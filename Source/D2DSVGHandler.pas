@@ -295,7 +295,7 @@ begin
   end;
 end;
 
-procedure RecolorSubtree(const Element: ID2D1SvgElement; const NewColor: TD2D1ColorF);
+procedure RecolorSubtree(const Element: ID2D1SvgElement; NewColor: TD2D1ColorF);
 begin
   TransformSvgElement(Element,
     procedure(const Element: ID2D1SvgElement)

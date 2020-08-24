@@ -107,8 +107,8 @@
         <DCCReference Include="..\..\Svg\SVGProperties.pas"/>
         <DCCReference Include="..\..\Svg\SVGStyle.pas"/>
         <DCCReference Include="..\..\Svg\SVGTypes.pas"/>
-        <DCCReference Include="..\..\Svg\GDIPOBJ2.pas"/>
         <DCCReference Include="..\..\Svg\GDIPKerning.pas"/>
+        <DCCReference Include="..\..\Svg\GDIPOBJ2.pas"/>
         <DCCReference Include="..\..\Svg\GDIPPathText.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
@@ -130,8 +130,7 @@
                 <Source>
                     <Source Name="MainSource">SVGIconPackage.dpk</Source>
                 </Source>
-                <Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>

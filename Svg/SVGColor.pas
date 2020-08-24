@@ -47,6 +47,15 @@ uses
   , Vcl.Graphics
   , SVGTypes
   ;
+{$IF CompilerVersion < 29}
+function AlphaColorToColor(const Color: TAlphaColor): TColor;
+begin
+  TColorRec(Result).R := TAlphaColorRec(Color).R;
+  TColorRec(Result).G := TAlphaColorRec(Color).G;
+  TColorRec(Result).B := TAlphaColorRec(Color).B;
+  TColorRec(Result).A := 0;
+end;
+{$IFEND}
 
 function IsHex(const S: string): Boolean;
 var
@@ -274,7 +283,9 @@ Var
   M: TMethod;
 begin
   SVGColorList := TStringList.Create;
+{$IF CompilerVersion > 29}
   SVGColorList.Options := SVGColorList.Options - [soUseLocale];
+{$IFEND}
   SVGColorList.CaseSensitive := False;
   SVGColorList.Sorted := True;
   SVGColorList.Duplicates := TDuplicates.dupIgnore;

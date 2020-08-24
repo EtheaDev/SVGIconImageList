@@ -105,11 +105,16 @@ type
     procedure DefineProperties(Filer: TFiler); override;
     procedure DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer; Style: Cardinal; Enabled: Boolean = True); override;
     procedure Loaded; override;
-    function GetCount: Integer; {$IF CompilerVersion > 29}override;{$ELSE}virtual; abstract;{$ENDIF}
+    function GetCount: Integer; {$IF CompilerVersion > 28}override;{$ELSE}virtual;{$ENDIF}
 
     procedure RecreateBitmaps; virtual; abstract;
+    {$IF CompilerVersion < 29}
+    procedure Change; override;
+    {$ELSE}
     procedure DoChange; override;
-    procedure ClearIcons;virtual;
+    {$IFEND}
+
+    procedure ClearIcons; virtual;
 
   {$IFDEF HiDPISupport}
     procedure DPIChangedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
@@ -244,7 +249,11 @@ begin
   //do nothing.. TSVGIconImageList will override;
 end;
 
+{$IF CompilerVersion < 29}
+procedure TSVGIconImageListBase.Change;
+{$ELSE}
 procedure TSVGIconImageListBase.DoChange;
+{$IFEND}
 begin
   RecreateBitmaps;
   inherited;
@@ -299,7 +308,6 @@ begin
   end;
 end;
 
-{$IF CompilerVersion > 29}
 function TSVGIconImageListBase.GetCount: Integer;
 Var
   Items: TSVGIconItems;
@@ -310,7 +318,6 @@ begin
   else
     Result := 0;
 end;
-{$ENDIF}
 
 function TSVGIconImageListBase.GetHeight: Integer;
 begin

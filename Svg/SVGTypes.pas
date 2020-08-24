@@ -44,7 +44,7 @@ type
 
   TListOfPoints = array of TPointF;
 
-  TRectarray = packed array of TRect;
+  TRectarray = packed array of TRectF;
   PRectArray = ^TRectArray;
 
   TTextDecoration = set of (tdInherit, tdUnderLine, tdOverLine, tdStrikeOut);

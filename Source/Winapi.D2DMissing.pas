@@ -75,6 +75,9 @@ type
   D2D1_MATRIX_4X4_F = D2D_MATRIX_4X4_F;
   {$EXTERNALSYM D2D1_MATRIX_4X4_F}
 
+  {$IF CompilerVersion < 30}
+  DXGI_COLOR_SPACE_TYPE = WORD;
+  {$IFEND}
 
   // Fonts may contain multiple drawable data formats for glyphs. These flags specify which formats
   // are supported in the font, either at a font-wide level or per glyph, and the app may use them
@@ -83,6 +86,9 @@ type
   DWRITE_GLYPH_IMAGE_FORMATS = DWord;
   {$EXTERNALSYM DWRITE_GLYPH_IMAGE_FORMATS}
 const
+  {$IF CompilerVersion < 33}
+  D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT = $00000004; // Render color versions of glyphs if defined by the font.
+  {$ENDIF}
   // Indicates no data is available for this glyph.
   DWRITE_GLYPH_IMAGE_FORMATS_NONE                   = DWRITE_GLYPH_IMAGE_FORMATS($00000000);
   {$EXTERNALSYM DWRITE_GLYPH_IMAGE_FORMATS_NONE}
@@ -2011,7 +2017,7 @@ type
                        {in_opt} defaultFillBrush: ID2D1Brush;
                        {in_opt} svgGlyphStyle: ID2D1SvgGlyphStyle;
                        colorPaletteIndex: UINT32 = 0;
-                       options: D2D1_DRAW_TEXT_OPTIONS = $00000004; //D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT;
+                       options: D2D1_DRAW_TEXT_OPTIONS = D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT;
                        measuringMode: DWRITE_MEASURING_MODE = DWRITE_MEASURING_MODE_NATURAL); stdcall;
 
 
