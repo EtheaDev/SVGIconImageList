@@ -73,25 +73,25 @@ Uses
   PasSVGFactory;
 
 Var
- FGlobalSVGHandler: ISVGFactory;
+ FGlobalSVGFactory: ISVGFactory;
 
 function GlobalSVGFactory: ISVGFactory;
 begin
-  if not Assigned(FGlobalSVGHandler) then
+  if not Assigned(FGlobalSVGFactory) then
   begin
     {$IFDEF PreferNativeSvgSupport}
     if WinSvgSupported then
-      FGlobalSVGHandler := GetD2DSVGFactory
+      FGlobalSVGFactory := GetD2DSVGFactory
     else
     {$ENDIF}
-      FGlobalSVGHandler := GetPasSVGFactory;
+      FGlobalSVGFactory := GetPasSVGFactory;
   end;
-  Result := FGlobalSVGHandler;
+  Result := FGlobalSVGFactory;
 end;
 
 procedure SetGlobalSVGFactory(const SVGFactory : ISVGFactory);
 begin
-  FGlobalSVGHandler := SVGFactory;
+  FGlobalSVGFactory := SVGFactory;
 end;
 
 end.

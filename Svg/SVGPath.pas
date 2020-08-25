@@ -394,8 +394,8 @@ begin
       FControl1Y := FStartY + (FStartY - TSVGPathCurve(Previous).FControl2Y);
     end;
 
-    FControl2X := FControl1X;
-    FControl2Y := FControl1Y;
+    FControl2X := FStartX + (FStartX - TSVGPathCurve(Previous).FControl1X);
+    FControl2Y := FStartY + (FStartY - TSVGPathCurve(Previous).FControl1Y);
 
     if Command = 't' then
     begin
