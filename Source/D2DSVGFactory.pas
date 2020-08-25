@@ -346,7 +346,7 @@ begin
   begin
     fSvgDoc.GetRoot(Root);
     with TColors(fFixedColor) do
-      RecolorSubtree(Root, D2D1ColorF(r, g, b, 1));
+      RecolorSubtree(Root, D2D1ColorF(r/255, g/255, b/255, 1));
   end;
 end;
 
