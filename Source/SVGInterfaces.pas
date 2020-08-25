@@ -53,14 +53,14 @@ type
 
 
   // Factory type
-  ISVGHandler = interface
+  ISVGFactory = interface
     ['{D81A7410-F0DB-457E-BA9D-480A335A1337}']
     // Factory method
     function NewSvg: ISVG;
   end;
 
-function GlobalSVGHandler: ISVGHandler;
-procedure SetGlobalSVGHandler(SVGHandler: ISVGHandler);
+function GlobalSVGFactory: ISVGFactory;
+procedure SetGlobalSVGFactory(const SVGFactory : ISVGFactory);
 
 implementation
 
@@ -68,30 +68,30 @@ implementation
 
 Uses
   {$IFDEF PreferNativeSvgSupport}
-  D2DSVGHandler,
+  D2DSVGFactory,
   {$ENDIF}
-  PasSVGHandler;
+  PasSVGFactory;
 
 Var
- FGlobalSVGHandler: ISVGHandler;
+ FGlobalSVGHandler: ISVGFactory;
 
-function GlobalSVGHandler: ISVGHandler;
+function GlobalSVGFactory: ISVGFactory;
 begin
   if not Assigned(FGlobalSVGHandler) then
   begin
     {$IFDEF PreferNativeSvgSupport}
     if WinSvgSupported then
-      FGlobalSVGHandler := GetD2DSVGHandler
+      FGlobalSVGHandler := GetD2DSVGFactory
     else
     {$ENDIF}
-      FGlobalSVGHandler := GetPasSVGHandler;
+      FGlobalSVGHandler := GetPasSVGFactory;
   end;
   Result := FGlobalSVGHandler;
 end;
 
-procedure SetGlobalSVGHandler(SVGHandler: ISVGHandler);
+procedure SetGlobalSVGFactory(const SVGFactory : ISVGFactory);
 begin
-  FGlobalSVGHandler := SVGHandler;
+  FGlobalSVGHandler := SVGFactory;
 end;
 
 end.

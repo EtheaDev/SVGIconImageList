@@ -522,7 +522,7 @@ begin
     Screen.Cursor := crHourGlass;
     FEditingList.BeginUpdate;
     try
-      SVG := GlobalSVGHandler.NewSvg;
+      SVG := GlobalSVGFactory.NewSvg;
       for LIndex := 0 to OpenDialog.Files.Count - 1 do
       begin
         FileName := ChangeFileExt(ExtractFileName(OpenDialog.Files[LIndex]), '');
