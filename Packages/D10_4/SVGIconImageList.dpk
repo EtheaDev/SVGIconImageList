@@ -43,9 +43,9 @@ contains
   SVGIconItems in '..\..\Source\SVGIconItems.pas',
   SVGIconVirtualImageList in '..\..\Source\SVGIconVirtualImageList.pas',
   SVGIconImageListBase in '..\..\Source\SVGIconImageListBase.pas',
-  D2DSVGHandler in '..\..\Source\D2DSVGHandler.pas',
+  D2DSVGFactory in '..\..\Source\D2DSVGFactory.pas',
   Winapi.D2DMissing in '..\..\Source\Winapi.D2DMissing.pas',
-  PasSVGHandler in '..\..\Source\PasSVGHandler.pas',
+  PasSVGFactory in '..\..\Source\PasSVGFactory.pas',
   SVGInterfaces in '..\..\Source\SVGInterfaces.pas';
 
 end.

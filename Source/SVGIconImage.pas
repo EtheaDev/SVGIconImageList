@@ -167,7 +167,7 @@ implementation
 constructor TSVGIconImage.Create(AOwner: TComponent);
 begin
   inherited;
-  FSVG := GlobalSVGHandler.NewSvg;
+  FSVG := GlobalSVGFactory.NewSvg;
   FProportional := False;
   FCenter := True;
   FStretch := True;
@@ -376,7 +376,7 @@ end;
 constructor TSVGGraphic.Create;
 begin
   inherited;
-  FSVG := GlobalSVGHandler.NewSvg;
+  FSVG := GlobalSVGFactory.NewSvg;
   FOpacity := 255;
 end;
 

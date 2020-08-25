@@ -960,7 +960,7 @@ begin
   FArrayNone := False;
 
   FFontName := '';
-  FFontSize := UndefinedInt;
+  FFontSize := UndefinedFloat;
   FFontWeight := UndefinedInt;
   FFontStyle := UndefinedInt;
 

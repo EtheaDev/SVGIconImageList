@@ -248,7 +248,7 @@ begin
     //Read Count of Images
     if Stream.Read(LCount, SizeOf(Integer)) > 0 then
     begin
-      LSVG := GlobalSVGHandler.NewSvg;
+      LSVG := GlobalSVGFactory.NewSvg;
       for C := 0 to LCount - 1 do
       begin
         //Read IconName
