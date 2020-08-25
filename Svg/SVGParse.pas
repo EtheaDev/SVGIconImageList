@@ -231,13 +231,13 @@ function GetFactor(const SVGUnit: TSVGUnit): TFloat;
 begin
   case SVGUnit of
     suPX: Result := 1;
-    suPT: Result := 1.3333;
-    suPC: Result := 15;
-    suMM: Result := 10;
-    suCM: Result := 100;
-    suIN: Result := 25.4;
-    suEM: Result := 1;
-    suEX: Result := 1;
+    suPT: Result := 1.3333;     // 96 / 72
+    suPC: Result := 16;         // 1pc = 12 pt
+    suMM: Result := 3.77952756; //  96 / 25.4
+    suCM: Result := 37.7952756; // 10 mm
+    suIN: Result := 96;         // 96 px per inch
+    suEM: Result := 16;         // 1 -> font size    12pt = 16 px
+    suEX: Result := 16;         // 1 -> font height
     suPercent: Result := 1/100;
     else
       Result := 1;

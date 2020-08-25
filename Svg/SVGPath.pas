@@ -369,6 +369,15 @@ begin
       FStopX := FStartX + FStopX;
       FStopY := FStartY + FStopY;
     end;
+    {
+      https://forums.asp.net/t/1787224.aspx?How+to+draw+quadratic+bezier+curve+in+GDI+
+      "quadratic bezier of the form [P1, C, P2] (where C is the control point)
+       you can form an equivalent cubic bezier with [P1, (C*2/3 + P1 * 1/3), (C*2/3 + P2 * 1/3), P2]. "
+    }
+    FControl1X := 2 * FControl1X / 3 + FStartX / 3;
+    FControl1Y := 2 * FControl1Y / 3 + FStartY / 3;
+    FControl2X := 2 * FControl2X / 3 + FStopX / 3;
+    FControl2Y := 2 * FControl2Y / 3 + FStopY / 3;
   end;
 
   if (Command = 'T') or (Command = 't') then
