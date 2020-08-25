@@ -17,7 +17,7 @@ A single SVGIconImageList can draw icons in SVG format at any resolution similar
 
 If you want a full support for High-DPI in a multi-form application on multi-monitors, you must use a single TSVGIconImageCollection into a centralized resource (like a Datamodule) and add a TSVGVirtualImageList (connected to this Collection) on every form of your app.
 
-### new in version 2.0: Choose your preferred engine
+### New in version 2.0: choose your preferred engine
 There are two implementation: the pascal one based on Martin's work which is using GDI+ and the native Windows one which is using Direct2D﻿, as explained [here.](Choise-of-Factories-(Direct-2D-or-GDI-))
 
 ### Available from Delphi XE6 to Delphi 10.4
@@ -41,6 +41,14 @@ The [SVG Icon Explorer](https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIco
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 **RELEASE NOTES:**
+25 Aug 2020: version 2.0 (VCL+FMX)
+ - Added factory to choose engine
+ - Added interface to use alternative Third-party SVG engine
+ - Redesigned component editor to support Categories for icons
+ - New support for native VirtualImageList (from D10.3)
+ - StoreAsText icons to dfm by default (and unique mode)
+ - Fixed many issues (from #35 to #72)
+Take care of TSVGIconVirtualImageList.Collection renamed to SVGIconVirtualImageList.ImageCollection.
 
 17 Aug 2020: version 1.9 (VCL+FMX)
  - FixedColor changed from TSVGColor to TColor
