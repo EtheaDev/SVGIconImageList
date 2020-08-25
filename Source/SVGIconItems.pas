@@ -136,7 +136,7 @@ end;
 constructor TSVGIconItem.Create(Collection: TCollection);
 begin
   inherited Create(Collection);
-  FSVG := GlobalSVGHandler.NewSvg;
+  FSVG := GlobalSVGFactory.NewSvg;
   FFixedColor := SVG_INHERIT_COLOR;
 end;
 
@@ -338,7 +338,7 @@ begin
     begin
       LFileName := AFileNames[LIndex];
       try
-        LSVG := GlobalSVGHandler.NewSvg;
+        LSVG := GlobalSVGFactory.NewSvg;
         LSVG.LoadFromFile(LFileName);
         LItem := Add;
         LItem.IconName := ChangeFileExt(ExtractFileName(LFileName), '');

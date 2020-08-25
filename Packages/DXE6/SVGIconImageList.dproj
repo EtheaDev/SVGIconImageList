@@ -103,6 +103,10 @@
         <DCCReference Include="..\..\Source\SVGIconItems.pas"/>
         <DCCReference Include="..\..\Source\SVGIconVirtualImageList.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageListBase.pas"/>
+        <DCCReference Include="..\..\Source\D2DSVGFactory.pas"/>
+        <DCCReference Include="..\..\Source\Winapi.D2DMissing.pas"/>
+        <DCCReference Include="..\..\Source\PasSVGFactory.pas"/>
+        <DCCReference Include="..\..\Source\SVGInterfaces.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
