@@ -215,11 +215,6 @@ begin
     Result := SVG_INHERIT_COLOR;
     Exit;
   end;
-  if SameText(ASVGColorName, 'currentColor') then
-  begin
-    Result := TColors.Black;
-    Exit;
-  end;
 
   Index := SVGColorList.IndexOf(ASVGColorName);
   if Index >= 0 then
