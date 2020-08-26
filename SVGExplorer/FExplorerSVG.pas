@@ -68,6 +68,9 @@ type
     spBottom: TSplitter;
     ShowTextCheckBox: TCheckBox;
     PerformanceStatusBar: TStatusBar;
+    TrackBarPanel: TPanel;
+    TrackBar: TTrackBar;
+    Label1: TLabel;
     procedure DirSelectionChange(Sender: TObject);
     procedure ImageViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
@@ -83,6 +86,7 @@ type
     procedure RenameActionExecute(Sender: TObject);
     procedure ActionUpdate(Sender: TObject);
     procedure ShowTextCheckBoxClick(Sender: TObject);
+    procedure TrackBarChange(Sender: TObject);
   private
     fpaPreviewSize: Integer;
     procedure LoadFilesDir(const APath: string; const AFilter: string = '');
@@ -177,7 +181,10 @@ begin
     SVGMemo.Text := SVGIconImageList.SVGIconItems[AIndex].SVGText;
   end
   else
+  begin
+    SVGIconImage.ImageIndex := -1;
     SVGMemo.Text := '';
+  end;
 end;
 
 procedure TfmExplorerSVG.ShowTextCheckBoxClick(Sender: TObject);
@@ -293,6 +300,12 @@ begin
     paPreview.Width := Round(paPreview.Width * 1.5)
   else if (Button = mbRight) and (paPreview.Width / 1.5 > fpaPreviewSize) then
     paPreview.Width := Round(paPreview.Width / 1.5);      
+end;
+
+procedure TfmExplorerSVG.TrackBarChange(Sender: TObject);
+begin
+  //Resize all icons into ImageList
+  SVGIconImageList.Size := TrackBar.Position;
 end;
 
 procedure TfmExplorerSVG.UpdateListView;

@@ -45,11 +45,11 @@ object fmExplorerSVG: TfmExplorerSVG
       Left = 1
       Top = 41
       Width = 183
-      Height = 355
+      Height = 295
       Align = alClient
       TabOrder = 0
       OnChange = DirSelectionChange
-      ExplicitHeight = 374
+      ExplicitHeight = 314
     end
     object DrivePanel: TPanel
       Left = 1
@@ -75,8 +75,37 @@ object fmExplorerSVG: TfmExplorerSVG
       Height = 19
       Panels = <>
       SimplePanel = True
-      ExplicitLeft = 2
-      ExplicitTop = 397
+    end
+    object TrackBarPanel: TPanel
+      Left = 1
+      Top = 336
+      Width = 183
+      Height = 60
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 3
+      object Label1: TLabel
+        Left = 8
+        Top = 5
+        Width = 51
+        Height = 13
+        Caption = 'Icons size:'
+      end
+      object TrackBar: TTrackBar
+        Left = 0
+        Top = 21
+        Width = 183
+        Height = 39
+        Align = alBottom
+        Max = 128
+        Min = 12
+        Frequency = 8
+        Position = 32
+        PositionToolTip = ptBottom
+        TabOrder = 0
+        OnChange = TrackBarChange
+        ExplicitTop = 2
+      end
     end
   end
   object PaList: TPanel
