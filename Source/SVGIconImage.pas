@@ -37,6 +37,7 @@ interface
 
 uses
   Winapi.Windows
+  , Winapi.Messages
   , System.SysUtils
   , System.Types
 {$IFDEF D10_4+}
@@ -49,10 +50,9 @@ uses
   , SVGIconImageListBase;
 
 type
-  TSVGIconImage = class(TGraphicControl)
+  TSVGIconImage = class(TCustomControl)
   strict private
     FSVG: ISVG;
-
     FCenter: Boolean;
     FProportional: Boolean;
     FStretch: Boolean;
@@ -79,14 +79,16 @@ type
     function UsingSVGText: Boolean;
     procedure SetImageList(const Value: TSVGIconImageListBase);
   protected
+    procedure Paint; override;
     //procedure DefineProperties(Filer: TFiler); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure CheckAutoSize;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     procedure Clear;
     function Empty: Boolean;
-    procedure Paint; override;
+    //procedure Paint; override;
     procedure LoadFromFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
     procedure SaveToFile(const FileName: string);
@@ -95,6 +97,7 @@ type
   published
     property AutoSize: Boolean read FAutoSize write SetAutoSizeImage;
     property Center: Boolean read FCenter write SetCenter default True;
+    property DoubleBuffered default True;
     property Proportional: Boolean read FProportional write SetProportional;
     property Stretch: Boolean read FStretch write SetStretch default True;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
@@ -167,6 +170,7 @@ implementation
 constructor TSVGIconImage.Create(AOwner: TComponent);
 begin
   inherited;
+  DoubleBuffered := True;
   FSVG := GlobalSVGFactory.NewSvg;
   FProportional := False;
   FCenter := True;
@@ -174,6 +178,11 @@ begin
   FOpacity := 255;
   FScale := 1;
   FImageIndex := -1;
+end;
+
+destructor TSVGIconImage.Destroy;
+begin
+  inherited;
 end;
 
 procedure TSVGIconImage.CheckAutoSize;

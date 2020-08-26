@@ -90,7 +90,7 @@
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Icon_MainIcon>SVGExplorer_Icon.ico</Icon_MainIcon>
-        <Debugger_RunParams>D:\ETHEA\SVGIconImageList\Demo\flat-color-icons\svg</Debugger_RunParams>
+        <Debugger_RunParams>D:\ETHEA\SVGIconImageList\Demo\Papirus-icons</Debugger_RunParams>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>

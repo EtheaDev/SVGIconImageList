@@ -177,7 +177,6 @@ begin
   if AIndex >= 0 then
   begin
     SVGIconImage.ImageIndex := AIndex;
-    SVGIconImage.Repaint;
     SVGMemo.Text := SVGIconImageList.SVGIconItems[AIndex].SVGText;
   end
   else
@@ -226,10 +225,12 @@ var
   LFiles: TStringList;
   LFilter, LTime: string;
   LStart, LStop: cardinal;
+  LErrors: string;
 begin
   LFiles := TStringList.Create;
   Screen.Cursor := crHourGlass;
   Try
+    LErrors := '';
     LFilter := Format('%s*%s*.svg', [IncludeTrailingPathDelimiter(APath), AFilter]);
     if FindFirst(LFilter, faArchive, SR) = 0 then
     begin
@@ -251,7 +252,7 @@ begin
       UpdateStatusBar(0);
     end
     else
-      UpdateStatusBar(-1);      
+      UpdateStatusBar(-1);
   Finally
     LFiles.Free;
     Screen.Cursor := crDefault;

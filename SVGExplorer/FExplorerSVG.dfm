@@ -49,7 +49,6 @@ object fmExplorerSVG: TfmExplorerSVG
       Align = alClient
       TabOrder = 0
       OnChange = DirSelectionChange
-      ExplicitHeight = 314
     end
     object DrivePanel: TPanel
       Left = 1
@@ -104,7 +103,6 @@ object fmExplorerSVG: TfmExplorerSVG
         PositionToolTip = ptBottom
         TabOrder = 0
         OnChange = TrackBarChange
-        ExplicitTop = 2
       end
     end
   end
@@ -236,11 +234,11 @@ object fmExplorerSVG: TfmExplorerSVG
       Margins.Right = 10
       Margins.Bottom = 10
       AutoSize = False
+      DoubleBuffered = True
       Proportional = False
       ImageList = SVGIconImageList
       Align = alTop
       OnMouseDown = SVGIconImageMouseDown
-      ExplicitTop = 323
     end
     object btDelete: TButton
       Left = 5
@@ -274,7 +272,7 @@ object fmExplorerSVG: TfmExplorerSVG
     end
   end
   object SVGIconImageList: TSVGIconImageList
-    Size = 32
+    Size = 48
     SVGIconItems = <>
     Left = 264
     Top = 157
