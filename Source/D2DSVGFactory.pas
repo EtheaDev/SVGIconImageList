@@ -319,6 +319,7 @@ end;
 procedure TD2DSVG.SetFixedColor(const Color: TColor);
 Var
   Root: ID2D1SvgElement;
+  NewColor: TD2D1ColorF;
 begin
   if Color = fFixedColor then Exit;
 
@@ -336,8 +337,13 @@ begin
   if FFixedColor <> TColors.SysDefault then
   begin
     fSvgDoc.GetRoot(Root);
+
     with TColors(fFixedColor) do
-      RecolorSubtree(Root, D2D1ColorF(r/255, g/255, b/255, 1));
+      NewColor :=  D2D1ColorF(r/255, g/255, b/255, 1);
+
+    Root.SetAttributeValue('fill', D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
+              @NewColor, SizeOf(NewColor));
+    RecolorSubtree(Root, NewColor);
   end;
 end;
 
