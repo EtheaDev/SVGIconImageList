@@ -27,6 +27,8 @@
 {******************************************************************************}
 unit FExplorerSVG;
 
+{$INCLUDE ..\Source\SVGIconImageList.inc}
+
 interface
 
 uses
@@ -65,6 +67,7 @@ type
     SVGMemo: TMemo;
     spBottom: TSplitter;
     ShowTextCheckBox: TCheckBox;
+    PerformanceStatusBar: TStatusBar;
     procedure DirSelectionChange(Sender: TObject);
     procedure ImageViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
@@ -214,7 +217,8 @@ procedure TfmExplorerSVG.LoadFilesDir(const APath, AFilter: string);
 var
   SR: TSearchRec;
   LFiles: TStringList;
-  LFilter: string;
+  LFilter, LTime: string;
+  LStart, LStop: cardinal;
 begin
   LFiles := TStringList.Create;
   Screen.Cursor := crHourGlass;
@@ -227,8 +231,13 @@ begin
       until FindNext(SR) <> 0;
       FindClose(SR);
     end;
+    LStart := GetTickCount;
     SVGIconImageList.LoadFromFiles(LFiles, False);
     UpdateListView;
+    LStop := GetTickCount;
+    LTime := Format('Load %d Images in %d msec.',
+      [LFiles.Count, LStop - LStart]);
+    PerformanceStatusBar.SimpleText := LTime;
     if LFiles.Count > 0 then
     begin
       ImageView.ItemIndex := 0;

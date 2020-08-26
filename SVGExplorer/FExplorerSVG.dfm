@@ -45,10 +45,11 @@ object fmExplorerSVG: TfmExplorerSVG
       Left = 1
       Top = 41
       Width = 183
-      Height = 374
+      Height = 355
       Align = alClient
       TabOrder = 0
       OnChange = DirSelectionChange
+      ExplicitHeight = 374
     end
     object DrivePanel: TPanel
       Left = 1
@@ -66,6 +67,16 @@ object fmExplorerSVG: TfmExplorerSVG
         DirList = DirSelection
         TabOrder = 0
       end
+    end
+    object PerformanceStatusBar: TStatusBar
+      Left = 1
+      Top = 396
+      Width = 183
+      Height = 19
+      Panels = <>
+      SimplePanel = True
+      ExplicitLeft = 2
+      ExplicitTop = 397
     end
   end
   object PaList: TPanel
