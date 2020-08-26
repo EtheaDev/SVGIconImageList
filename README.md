@@ -41,7 +41,7 @@ The [SVG Icon Explorer](https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIco
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 **RELEASE NOTES:**
-25 Aug 2020: version 2.0 (VCL+FMX)
+26 Aug 2020: version 2.0 (VCL+FMX)
  - Added factory to choose engine
  - Added interface to use alternative Third-party SVG engine
  - Redesigned component editor to support Categories for icons
@@ -135,6 +135,6 @@ This library is included in this project into svg folder
 Many thanks to **Vincent Parrett** and **Kiriakos Vlahos** for their great contibution.
 
 **TSVGIconImageList** and **TSVGIconImage** are similar to **TSVGImageList** and **TSVGImage** included into project: [https://github.com/ekot1/DelphiSVG.git](https://github.com/ekot1/DelphiSVG.git)
-but those versions are more efficient in performances, and adds some features like SVGText property, store icons in binary or SVGText format into dfm and more...
+but those versions are more efficient in performances, with many fixes added, plus some features like SVGText property, store icons in Text format into dfm, GrayScale and FixedColor, VirtualImageList support and more...
 
 **TSVGIconImageListFMX** and **TSVGIconImageFMX** are similar to **TIconFontsImageListFMX** and **TIconFontsImage** included into similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/IconFontsImageList](https://github.com/EtheaDev/IconFontsImageList)
