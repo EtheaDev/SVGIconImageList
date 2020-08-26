@@ -18,7 +18,7 @@ A single SVGIconImageList can draw icons in SVG format at any resolution similar
 If you want a full support for High-DPI in a multi-form application on multi-monitors, you must use a single TSVGIconImageCollection into a centralized resource (like a Datamodule) and add a TSVGVirtualImageList (connected to this Collection) on every form of your app.
 
 ### New in version 2.0: choose your preferred engine
-There are two implementation: the pascal one based on Martin's work which is using GDI+ and the native Windows one which is using Direct2D﻿, as explained [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choise-of-Factories-(Direct-2D-or-GDI-))
+There are two implementation: the pascal one based on Martin's work which is using GDI+ and the native Windows one which is using Direct2D﻿, as explained [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories-(Direct-2D-or-GDI-))
 
 ### Available from Delphi XE6 to Delphi 10.4
 ![Delphi 10.4 Sydney Support](/Demo/Images/SupportingDelphi.jpg)
