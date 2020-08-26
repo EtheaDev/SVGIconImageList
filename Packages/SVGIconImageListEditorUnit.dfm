@@ -482,8 +482,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           AutoSize = False
           Proportional = False
           Align = alClient
-          ExplicitWidth = 72
-          ExplicitHeight = 72
         end
       end
       object NameEdit: TEdit

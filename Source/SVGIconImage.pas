@@ -97,7 +97,8 @@ type
   published
     property AutoSize: Boolean read FAutoSize write SetAutoSizeImage;
     property Center: Boolean read FCenter write SetCenter default True;
-    property DoubleBuffered default True;
+    property ParentDoubleBuffered;
+    property DoubleBuffered;
     property Proportional: Boolean read FProportional write SetProportional;
     property Stretch: Boolean read FStretch write SetStretch default True;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
@@ -170,7 +171,6 @@ implementation
 constructor TSVGIconImage.Create(AOwner: TComponent);
 begin
   inherited;
-  DoubleBuffered := True;
   FSVG := GlobalSVGFactory.NewSvg;
   FProportional := False;
   FCenter := True;

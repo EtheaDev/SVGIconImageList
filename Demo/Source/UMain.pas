@@ -38,7 +38,7 @@ uses
   ActnList, ExtCtrls, ComCtrls, ToolWin,
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
   System.Actions,
-  {$IFDEF DXE7+}System.ImageList,{$ENDIF}
+  System.ImageList, //if you are compiling with older version than XE7 remove this line
   SVGIconImageListBase, SVGIconImageCollection, SVGIconVirtualImageList,
   {$IFDEF D10_3+}Vcl.VirtualImageList,{$ENDIF}
   UDataModule;
@@ -241,6 +241,9 @@ begin
   {$IFDEF HiDPISupport}
   OnAfterMonitorDpiChanged := FormAfterMonitorDpiChanged;
   {$ENDIF}
+
+  //Increase performance during drawing of SVG Image
+  SvgIconImage.DoubleBuffered := True;
 
   {$IFDEF D10_3+}
   ////Test use of native VirtualImageList
