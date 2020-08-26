@@ -399,7 +399,6 @@ begin
     if LIsItemSelected then
     begin
       IconImage.ImageIndex := SelectedIcon.Index;
-      IconImage.Invalidate;
       NameEdit.Text := LIconItem.Name;
       CategoryEdit.Text := LIconItem.Category;
       IconIndexEdit.Text := LIconItem.Index.ToString;
@@ -711,6 +710,7 @@ begin
   inherited;
   FEditingList := TSVGIconImageList.Create(Self);
   ImageView.LargeImages := FEditingList;
+  IconImage.DoubleBuffered := True;
   IconImage.ImageList := FEditingList;
   FTotIconsLabel := ImageListGroup.Caption;
   FChanged := False;

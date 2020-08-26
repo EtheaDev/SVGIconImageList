@@ -154,6 +154,9 @@ procedure TfmExplorerSVG.FormCreate(Sender: TObject);
 begin
   Caption := Application.Title;
   fpaPreviewSize := paPreview.Width;
+
+  //Increase performance during drawing of SVG Image
+  SvgIconImage.DoubleBuffered := True;
 end;
 
 procedure TfmExplorerSVG.FormShow(Sender: TObject);

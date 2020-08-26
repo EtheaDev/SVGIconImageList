@@ -4,6 +4,7 @@ object fmExplorerSVG: TfmExplorerSVG
   ClientHeight = 416
   ClientWidth = 846
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -234,7 +235,6 @@ object fmExplorerSVG: TfmExplorerSVG
       Margins.Right = 10
       Margins.Bottom = 10
       AutoSize = False
-      DoubleBuffered = True
       Proportional = False
       ImageList = SVGIconImageList
       Align = alTop
