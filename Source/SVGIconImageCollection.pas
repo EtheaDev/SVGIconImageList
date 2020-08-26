@@ -42,8 +42,8 @@ uses
   , System.Classes
   , WinApi.Windows
 {$IFDEF D10_3+}
-  , Graphics
-  , BaseImageCollection
+  , Vcl.Graphics
+  , Vcl.BaseImageCollection
 {$ENDIF}
   , SvgInterfaces
   , SVGIconItems

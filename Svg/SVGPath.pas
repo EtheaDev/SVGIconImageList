@@ -177,6 +177,7 @@ end;
 
 procedure TSVGPathMove.AddToPath(Path: TGPGraphicsPath);
 begin
+  Path.CloseFigure;
   Path.StartFigure;
 end;
 

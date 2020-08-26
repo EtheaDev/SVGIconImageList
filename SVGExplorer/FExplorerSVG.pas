@@ -27,6 +27,8 @@
 {******************************************************************************}
 unit FExplorerSVG;
 
+{$INCLUDE ..\Source\SVGIconImageList.inc}
+
 interface
 
 uses
@@ -65,6 +67,10 @@ type
     SVGMemo: TMemo;
     spBottom: TSplitter;
     ShowTextCheckBox: TCheckBox;
+    PerformanceStatusBar: TStatusBar;
+    TrackBarPanel: TPanel;
+    TrackBar: TTrackBar;
+    Label1: TLabel;
     procedure DirSelectionChange(Sender: TObject);
     procedure ImageViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
@@ -80,6 +86,7 @@ type
     procedure RenameActionExecute(Sender: TObject);
     procedure ActionUpdate(Sender: TObject);
     procedure ShowTextCheckBoxClick(Sender: TObject);
+    procedure TrackBarChange(Sender: TObject);
   private
     fpaPreviewSize: Integer;
     procedure LoadFilesDir(const APath: string; const AFilter: string = '');
@@ -170,11 +177,13 @@ begin
   if AIndex >= 0 then
   begin
     SVGIconImage.ImageIndex := AIndex;
-    SVGIconImage.Repaint;
     SVGMemo.Text := SVGIconImageList.SVGIconItems[AIndex].SVGText;
   end
   else
+  begin
+    SVGIconImage.ImageIndex := -1;
     SVGMemo.Text := '';
+  end;
 end;
 
 procedure TfmExplorerSVG.ShowTextCheckBoxClick(Sender: TObject);
@@ -214,11 +223,14 @@ procedure TfmExplorerSVG.LoadFilesDir(const APath, AFilter: string);
 var
   SR: TSearchRec;
   LFiles: TStringList;
-  LFilter: string;
+  LFilter, LTime: string;
+  LStart, LStop: cardinal;
+  LErrors: string;
 begin
   LFiles := TStringList.Create;
   Screen.Cursor := crHourGlass;
   Try
+    LErrors := '';
     LFilter := Format('%s*%s*.svg', [IncludeTrailingPathDelimiter(APath), AFilter]);
     if FindFirst(LFilter, faArchive, SR) = 0 then
     begin
@@ -227,15 +239,20 @@ begin
       until FindNext(SR) <> 0;
       FindClose(SR);
     end;
+    LStart := GetTickCount;
     SVGIconImageList.LoadFromFiles(LFiles, False);
     UpdateListView;
+    LStop := GetTickCount;
+    LTime := Format('Load %d Images in %d msec.',
+      [LFiles.Count, LStop - LStart]);
+    PerformanceStatusBar.SimpleText := LTime;
     if LFiles.Count > 0 then
     begin
       ImageView.ItemIndex := 0;
       UpdateStatusBar(0);
     end
     else
-      UpdateStatusBar(-1);      
+      UpdateStatusBar(-1);
   Finally
     LFiles.Free;
     Screen.Cursor := crDefault;
@@ -284,6 +301,12 @@ begin
     paPreview.Width := Round(paPreview.Width * 1.5)
   else if (Button = mbRight) and (paPreview.Width / 1.5 > fpaPreviewSize) then
     paPreview.Width := Round(paPreview.Width / 1.5);      
+end;
+
+procedure TfmExplorerSVG.TrackBarChange(Sender: TObject);
+begin
+  //Resize all icons into ImageList
+  SVGIconImageList.Size := TrackBar.Position;
 end;
 
 procedure TfmExplorerSVG.UpdateListView;

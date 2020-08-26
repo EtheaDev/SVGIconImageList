@@ -4,19 +4,27 @@
 
 ## Welcome to the SVGIconFontImageList guide (VCL+FMX)
 
-### Actual official version 1.9 (VCL+FMX)
+### Actual official version 2.0 (VCL+FMX)
 
 | Component | Description |
 | - | - |
-| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageCollectionComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageCollectionComponentIcon.png) | **SVGIconImageCollection is collection of SVG Images for Delphi to provide a centralized list of images for VirtualImageLists (only for VCL)** |
-| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconVirtualImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconVirtualImageListComponentIcon.png) | **SVGIconVirtualImageList is a special "virtual" ImageList for Delphi linked to an SVGIconImageCollection (only for VCL) to simplify use of SVG Icons (resize, opacity, grayscale and more...)** |
-| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png) | **SVGIconImageList is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection, to simplify use of SVG Icons (resize, opacity, grayscale and more...)** |
-| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageComponentIcon.png) | **SVGIconImage is an extended Image component for Delphi (VCL+FMX) to show any SVG image directly or included into a an SVGIconImageList with all functionality (stretch, opacity, grayscale and more...)** |
+| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageCollectionComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageCollectionComponentIcon.png) | **TSVGIconImageCollection** is collection of SVG Images for Delphi to provide a centralized list of images for SVGIconVirtualImageLists (only for VCL) |
+| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconVirtualImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconVirtualImageListComponentIcon.png) | **TSVGIconVirtualImageList** is a special "virtual" ImageList for Delphi linked to an SVGIconImageCollection (only for VCL) to simplify use of SVG Icons (resize, opacity, grayscale and more...) |
+| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageComponentIcon.png) | **TSVGIconImage** is an extended Image component for Delphi (VCL+FMX) to show any SVG image directly or included into a an SVGIconImageList with all functionality (stretch, opacity, grayscale and more...) |
+| ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png](https://github.com/EtheaDev/SVGIconImageList/blob/master/Packages/SVGIconImageListComponentIcon.png) | **TSVGIconImageList** is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection: **this component is deprecated**, we recommend to use SVGIconImageCollection + SVGIconVirtualImageList also for older Delphi versions! |
 
-A single SVGIconImageList can draw icons in SVG format at any resolution similar to a VirtualImageList+ImageCollection.  The ImageList, placed on a form, scales automatically when DPI changes.
+## Very important notice:
 
-If you want a full support for High-DPI in a multi-form application on multi-monitors, you must use a single TSVGIconImageCollection into a centralized resource (like a Datamodule) and add a TSVGVirtualImageList (connected to this Collection) on every form of your app.
+**TVirtualImageList** (available from D10.3) and **TSVGIconVirtualImageList** both use images from **TSVGIconImageCollection**. An important difference is that TVirtualImageList may use and create only a subset of the images in the collection, whereas TSVGIconVirtualImageList creates all images of the collection everytime it is needed (e,g. DPI change), which is slower and consumes more memory.
 
+Although TVirtualImageList does not have the FixedColor, GrayScale and Opacity properties, these properties exist at the TSVGIconImageCollection and they would be reflected on the linked TVirtualImageList.
+
+We advise that TSVGIconVirtualImageList should be used only for versions of Delphi before 10.3. For recent versions of Delphi the recommended combination should be **TSVGIconImageCollection + TVirtualImageList**. Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to "True", everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.
+
+### New in version 2.0: choose your preferred engine
+There are two implementation: the pascal one based on Martin's work which is using GDI+ and the native Windows one which is using Direct2D﻿, as explained [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories-(Direct-2D-or-GDI-))
+
+### Available from Delphi XE6 to Delphi 10.4
 ![Delphi 10.4 Sydney Support](/Demo/Images/SupportingDelphi.jpg)
 
 **Sample image of VCL version**
@@ -37,6 +45,14 @@ The [SVG Icon Explorer](https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIco
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 **RELEASE NOTES:**
+26 Aug 2020: version 2.0 (VCL+FMX)
+ - Added factory to choose engine
+ - Added interface to use alternative Third-party SVG engine
+ - Redesigned component editor to support Categories for icons
+ - New support for native VirtualImageList (from D10.3)
+ - StoreAsText icons to dfm by default (and unique mode)
+ - Fixed many issues (from #35 to #72)
+Take care of TSVGIconVirtualImageList.Collection renamed to SVGIconVirtualImageList.ImageCollection.
 
 17 Aug 2020: version 1.9 (VCL+FMX)
  - FixedColor changed from TSVGColor to TColor
@@ -123,6 +139,6 @@ This library is included in this project into svg folder
 Many thanks to **Vincent Parrett** and **Kiriakos Vlahos** for their great contibution.
 
 **TSVGIconImageList** and **TSVGIconImage** are similar to **TSVGImageList** and **TSVGImage** included into project: [https://github.com/ekot1/DelphiSVG.git](https://github.com/ekot1/DelphiSVG.git)
-but those versions are more efficient in performances, and adds some features like SVGText property, store icons in binary or SVGText format into dfm and more...
+but those versions are more efficient in performances, with many fixes added, plus some features like SVGText property, store icons in Text format into dfm, GrayScale and FixedColor, VirtualImageList support and more...
 
 **TSVGIconImageListFMX** and **TSVGIconImageFMX** are similar to **TIconFontsImageListFMX** and **TIconFontsImage** included into similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/IconFontsImageList](https://github.com/EtheaDev/IconFontsImageList)

@@ -5,6 +5,8 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   ClientHeight = 619
   ClientWidth = 784
   Color = clBtnFace
+  Constraints.MinHeight = 600
+  Constraints.MinWidth = 700
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
@@ -37,8 +39,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitTop = 4
-    ExplicitHeight = 386
     object paClient: TPanel
       Left = 0
       Top = 0
@@ -47,7 +47,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitHeight = 386
       object ImageListGroupBox: TGroupBox
         Left = 0
         Top = 0
@@ -124,13 +123,13 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         Height = 315
         Align = alClient
         TabOrder = 1
-        ExplicitHeight = 324
         object CategorySplitter: TSplitter
           Left = 186
           Top = 1
           Width = 4
           Height = 313
           AutoSnap = False
+          MinSize = 150
           ExplicitHeight = 136
         end
         object ImageListGroup: TGroupBox
@@ -141,7 +140,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Align = alClient
           Caption = '%d Icons collection'
           TabOrder = 1
-          ExplicitHeight = 322
           object ImageView: TListView
             Left = 2
             Top = 17
@@ -160,7 +158,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             OnDragOver = ImageViewDragOver
             OnKeyDown = ImageViewKeyDown
             OnSelectItem = ImageViewSelectItem
-            ExplicitHeight = 303
           end
         end
         object paButtons: TPanel
@@ -171,7 +168,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Align = alRight
           BevelOuter = bvNone
           TabOrder = 2
-          ExplicitHeight = 322
           object AddButton: TButton
             Left = 4
             Top = 17
@@ -238,7 +234,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Align = alLeft
           BevelOuter = bvNone
           TabOrder = 0
-          ExplicitHeight = 322
           object CategoryGroupBox: TGroupBox
             Left = 0
             Top = 0
@@ -247,10 +242,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             Align = alClient
             Caption = 'Images/Categories'
             TabOrder = 0
-            ExplicitLeft = 1
-            ExplicitTop = 1
-            ExplicitWidth = 183
-            ExplicitHeight = 186
             object CategoryListBox: TListBox
               Left = 2
               Top = 17
@@ -260,8 +251,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
               ItemHeight = 15
               TabOrder = 0
               OnClick = CategoryListBoxClick
-              ExplicitWidth = 179
-              ExplicitHeight = 167
             end
           end
           object PropertiesGroupBox: TGroupBox
@@ -272,9 +261,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             Align = alBottom
             Caption = 'Global properties'
             TabOrder = 1
-            ExplicitLeft = 1
-            ExplicitTop = 187
-            ExplicitWidth = 183
             object FixedColorLabel: TLabel
               Left = 6
               Top = 20
@@ -342,7 +328,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       784
       38)
     object OKButton: TButton
-      Left = 417
+      Left = 418
       Top = 6
       Width = 85
       Height = 25
@@ -354,7 +340,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       OnClick = OkButtonClick
     end
     object ApplyButton: TButton
-      Left = 600
+      Left = 601
       Top = 6
       Width = 85
       Height = 25
@@ -364,7 +350,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       OnClick = ApplyButtonClick
     end
     object CancelButton: TButton
-      Left = 509
+      Left = 510
       Top = 6
       Width = 85
       Height = 25
@@ -375,7 +361,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       TabOrder = 1
     end
     object HelpButton: TButton
-      Left = 692
+      Left = 693
       Top = 6
       Width = 85
       Height = 25
@@ -401,8 +387,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitLeft = 689
-      ExplicitHeight = 187
       object NewButton: TButton
         Left = 2
         Top = 6
@@ -439,10 +423,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Align = alClient
       Caption = 'Selected Icon'
       TabOrder = 0
-      ExplicitLeft = 1
-      ExplicitTop = 1
-      ExplicitWidth = 689
-      ExplicitHeight = 185
       DesignSize = (
         691
         200)

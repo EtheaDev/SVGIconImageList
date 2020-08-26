@@ -45,7 +45,7 @@ object fmExplorerSVG: TfmExplorerSVG
       Left = 1
       Top = 41
       Width = 183
-      Height = 374
+      Height = 295
       Align = alClient
       TabOrder = 0
       OnChange = DirSelectionChange
@@ -65,6 +65,44 @@ object fmExplorerSVG: TfmExplorerSVG
         Height = 19
         DirList = DirSelection
         TabOrder = 0
+      end
+    end
+    object PerformanceStatusBar: TStatusBar
+      Left = 1
+      Top = 396
+      Width = 183
+      Height = 19
+      Panels = <>
+      SimplePanel = True
+    end
+    object TrackBarPanel: TPanel
+      Left = 1
+      Top = 336
+      Width = 183
+      Height = 60
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 3
+      object Label1: TLabel
+        Left = 8
+        Top = 5
+        Width = 51
+        Height = 13
+        Caption = 'Icons size:'
+      end
+      object TrackBar: TTrackBar
+        Left = 0
+        Top = 21
+        Width = 183
+        Height = 39
+        Align = alBottom
+        Max = 128
+        Min = 12
+        Frequency = 8
+        Position = 32
+        PositionToolTip = ptBottom
+        TabOrder = 0
+        OnChange = TrackBarChange
       end
     end
   end
@@ -196,11 +234,11 @@ object fmExplorerSVG: TfmExplorerSVG
       Margins.Right = 10
       Margins.Bottom = 10
       AutoSize = False
+      DoubleBuffered = True
       Proportional = False
       ImageList = SVGIconImageList
       Align = alTop
       OnMouseDown = SVGIconImageMouseDown
-      ExplicitTop = 323
     end
     object btDelete: TButton
       Left = 5
@@ -234,7 +272,7 @@ object fmExplorerSVG: TfmExplorerSVG
     end
   end
   object SVGIconImageList: TSVGIconImageList
-    Size = 32
+    Size = 48
     SVGIconItems = <>
     Left = 264
     Top = 157
