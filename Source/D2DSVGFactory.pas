@@ -299,23 +299,14 @@ procedure RecolorSubtree(const Element: ID2D1SvgElement; NewColor: TD2D1ColorF);
 begin
   TransformSvgElement(Element,
     procedure(const Element: ID2D1SvgElement)
-    Var
-      OldColor: TD2D1ColorF;
 
       procedure RecolorAttribute(Attr: PWideChar);
       Var
         IsInherited: Bool;
       begin
         if Element.IsAttributeSpecified(Attr, @IsInherited) and not IsInherited then
-        begin
-          if Succeeded(Element.GetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
-            @OldColor, SizeOf(OldColor)))
-          then
-          begin
-            Assert(Succeeded(Element.SetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
-              @NewColor, SizeOf(NewColor))));
-          end;
-        end;
+          Element.SetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
+              @NewColor, SizeOf(NewColor));
       end;
 
     begin

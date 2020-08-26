@@ -56,7 +56,6 @@ type
     FVisible: TTriStateBoolean;
     FDisplay: TTriStateBoolean;
     FParent: TSVGObject;
-    FStyle: TStyle;
     FID: string;
     FObjectName: string;
     FClasses: TArray<string>;
@@ -68,6 +67,7 @@ type
     function GetDisplay: TTriStateBoolean;
     function GetVisible: TTriStateBoolean;
   protected
+    FStyle: TStyle;
     class function New(Parent: TSVGObject): TSVGObject;
     procedure AssignTo(Dest: TPersistent); override;
     function GetRoot: TSVG;
@@ -97,7 +97,6 @@ type
     property Display: TTriStateBoolean read GetDisplay write FDisplay;
     property Visible: TTriStateBoolean read GetVisible write FVisible;
     property Parent: TSVGObject read FParent;
-    property Style: TStyle read FStyle;
     property ID: string read FID;
     property ObjectName: string read FObjectName;
   end;
@@ -4143,7 +4142,7 @@ var
 begin
   inherited;
 
-  Value := Style.Values['startOffset'];
+  Value := FStyle.Values['startOffset'];
   if Value <> '' then
   begin
     FOffsetIsPercent := False;
@@ -4155,11 +4154,11 @@ begin
     FOffset := ParseLength(Value);
   end;
 
-  Value := Style.Values['method'];
+  Value := FStyle.Values['method'];
   if Value = 'stretch' then
     FMethod := tpmStretch;
 
-  Value := Style.Values['spacing'];
+  Value := FStyle.Values['spacing'];
   if Value = 'exact' then
     FSpacing := tpsExact;
 

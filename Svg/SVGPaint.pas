@@ -157,7 +157,7 @@ begin
 
   if FStopColor = SVG_INHERIT_COLOR then
   begin
-    S := Style['stop-color'];
+    S := FStyle['stop-color'];
     if GetRoot.Grayscale then
       FStopColor := GetSVGGrayscale(GetSVGColor(S))
     else
@@ -169,7 +169,7 @@ begin
      (integer(FStopColor) <> SVG_NONE_COLOR) then
     FStopColor := GetRoot.FixedColor;
 
-  S := Style['stop-opacity'];
+  S := FStyle['stop-opacity'];
   if (S <> '') then
     FOpacity := ParsePercent(S)
   else
@@ -228,9 +228,9 @@ begin
      Stop.ReadIn(Node.childNodes[C]);
    end;
 
-  FURI := Style['xlink:href'];
+  FURI := FStyle['xlink:href'];
   if FURI = '' then
-    FURI := Style['href'];
+    FURI := FStyle['href'];
   if FURI = '' then
     LoadString(Node, 'xlink:href', FURI);
   if FURI = '' then
