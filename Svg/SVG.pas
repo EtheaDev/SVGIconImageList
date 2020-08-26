@@ -3186,7 +3186,7 @@ begin
     case C of
       '.':
         begin
-          if HasDot then
+          if HasDot or HasExp then
           begin
             Result.Add(NumberStr);
             HasDot := True;
