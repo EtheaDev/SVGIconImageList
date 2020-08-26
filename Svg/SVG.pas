@@ -3188,9 +3188,10 @@ begin
         begin
           if HasDot then
           begin
-            HasDot := C = '.';
             Result.Add(NumberStr);
+            HasDot := True;
             NumberStr := C;
+            HasExp := False;
           end
           else
           begin
@@ -3209,10 +3210,12 @@ begin
             if not HasExp then begin
               Result.Add(NumberStr);
               HasDot := False;
+              NumberStr := C;
+              HasExp := False;
             end else
               NumberStr := NumberStr + C;
-          end;
-          if not HasExp then
+          end
+          else
             NumberStr := C;
         end;
       'E', 'e':
@@ -3227,6 +3230,7 @@ begin
             Result.Add(NumberStr);
             NumberStr := '';
             HasDot := False;
+            HasExp := False;
           end;
         end;
     end;
