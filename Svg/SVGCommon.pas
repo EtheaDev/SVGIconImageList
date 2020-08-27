@@ -27,7 +27,6 @@ uses
   Winapi.GDIPAPI,
   Winapi.GDIPOBJ,
   System.Types,
-  System.Math.Vectors,
   SVGTypes;
 
 
@@ -39,7 +38,6 @@ function StrToTFloat(const S: string): TFloat;
 function ToGPRectF(R: TRect): TGPRectF; overload; inline;
 function ToGPRectF(R: TRectF): TGPRectF; overload; inline;
 function FromGPRectF(R: TGPRectF): TRectF; inline;
-function ToGPMatrix(const Matrix: TMatrix): TGPMatrix;
 
 // Utility functions
 function HasValue(F: TFloat): Boolean; overload; inline;
@@ -54,9 +52,18 @@ uses
 function TryStrToTFloat(const S: string; out Value: TFloat): Boolean;
 var
   S1: string;
+  i : integer;
+  C: Char;
 begin
-  S1 := StringReplace(S, ',', FormatSettings.DecimalSeparator, [rfReplaceAll]);
-  S1 := StringReplace(S1, '.', FormatSettings.DecimalSeparator, [rfReplaceAll]);
+  S1 := S;
+  for i := 1 to S1.Length do
+  begin
+    C := S1[i];
+    if (C = '.') or (C =',') and (C <> FormatSettings.DecimalSeparator) then
+      S1[i] := FormatSettings.DecimalSeparator;
+  end;
+//  S1 := StringReplace(S, ',', FormatSettings.DecimalSeparator, [rfReplaceAll]);
+//  S1 := StringReplace(S1, '.', FormatSettings.DecimalSeparator, [rfReplaceAll]);
   Result := TryStrToFloat(S1, Value);
   if not Result then
     Value := 0;
@@ -86,12 +93,6 @@ function FromGPRectF(R: TGPRectF): TRectF;
 begin
   with R do
     Result := TRectF.Create(X, Y, X + Width, Y + Height);
-end;
-
-function ToGPMatrix(const Matrix: TMatrix): TGPMatrix;
-begin
-  Result := TGPMatrix.Create(Matrix.m11, Matrix.m12, Matrix.m21, Matrix.m22, Matrix.m31,
-    Matrix.m32);
 end;
 
 function HasValue(F: TFloat): Boolean;
