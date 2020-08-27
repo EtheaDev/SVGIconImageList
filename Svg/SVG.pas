@@ -39,17 +39,27 @@ unit SVG;
 interface
 
 uses
-  Winapi.Windows, Winapi.GDIPOBJ, Winapi.GDIPAPI,
-  System.UITypes, System.Classes, System.Math,
+  Winapi.Windows,
+  Winapi.GDIPOBJ,
+  Winapi.GDIPAPI,
+  System.UITypes,
+  System.Classes,
+  System.Math,
+  System.Generics.Collections,
   {$IF CompilerVersion > 27}System.NetEncoding,{$ELSE}IdCoderMIME,{$IFEND}
-  System.Math.Vectors, System.Types,
+  System.Types,
   Xml.XmlIntf,
-  GDIPOBJ2, GDIPKerning, GDIPPathText,
-  SVGTypes, SVGStyle, SVGColor;
+  GDIPOBJ2,
+  GDIPKerning,
+  GDIPPathText,
+  SVGTypes,
+  SVGStyle,
+  SVGColor;
 
 type
   TSVG = class;
 
+  TSVGObjectClass = class of TSVGObject;
   TSVGObject = class(TPersistent)
   private
     FItems: TList;
@@ -66,11 +76,15 @@ type
 
     function GetDisplay: TTriStateBoolean;
     function GetVisible: TTriStateBoolean;
+    function GetObjectStyle: TStyle;
   protected
     FStyle: TStyle;
     class function New(Parent: TSVGObject): TSVGObject;
     procedure AssignTo(Dest: TPersistent); override;
     function GetRoot: TSVG;
+    class var SVGElements: TDictionary<string, TSVGObjectClass>;
+    class constructor Create;
+    class destructor Destroy;
   public
     constructor Create; overload; virtual;
     constructor Create(Parent: TSVGObject); overload;
@@ -99,13 +113,14 @@ type
     property Parent: TSVGObject read FParent;
     property ID: string read FID;
     property ObjectName: string read FObjectName;
+    property ObjectStyle: TStyle read GetObjectStyle;
   end;
 
   TSVGMatrix = class(TSVGObject)
   private
-    FPureMatrix: TMatrix;
-    FCalculatedMatrix: TMatrix;
-    procedure SetPureMatrix(const Value: TMatrix);
+    FPureMatrix: TAffineMatrix;
+    FCalculatedMatrix: TAffineMatrix;
+    procedure SetPureMatrix(const Value: TAffineMatrix);
 
     function Transform(const P: TPointF): TPointF; overload;
   protected
@@ -114,8 +129,8 @@ type
   public
     procedure Clear; override;
     procedure ReadIn(const Node: IXMLNode); override;
-    property Matrix: TMatrix read FCalculatedMatrix;
-    property PureMatrix: TMatrix read FPureMatrix write SetPureMatrix;
+    property Matrix: TAffineMatrix read FCalculatedMatrix;
+    property PureMatrix: TAffineMatrix read FPureMatrix write SetPureMatrix;
   end;
 
   TSVGBasic = class(TSVGMatrix)
@@ -244,10 +259,10 @@ type
   TSVG = class(TSVGBasic)
   strict private
     FRootBounds: TGPRectF;
-    FInitialMatrix: TMatrix;
+    FInitialMatrix: TAffineMatrix;
     FSource: string;
     FAngle: TFloat;
-    FAngleMatrix: TMatrix;
+    FAngleMatrix: TAffineMatrix;
     FViewBox: TRectF;
     FFileName: string;
     FSize: TSizeF;
@@ -300,7 +315,7 @@ type
     function RenderToIcon(Size: Integer): HICON;
     function RenderToBitmap(Width, Height: Integer): HBITMAP;
 
-    property InitialMatrix: TMatrix read FInitialMatrix write FInitialMatrix;
+    property InitialMatrix: TAffineMatrix read FInitialMatrix write FInitialMatrix;
     property SVGOpacity: TFloat write SetSVGOpacity;
     property Source: string read FSource;
     property Angle: TFloat read FAngle write SetAngle;
@@ -509,19 +524,26 @@ type
 implementation
 
 uses
-  System.SysUtils, System.Variants, System.StrUtils, System.Character,
-  Xml.XmlDoc, Xml.xmldom,
+  System.SysUtils,
+  System.Variants,
+  System.StrUtils,
+  System.Character,
+  Xml.XmlDoc,
+  Xml.xmldom,
 {$IFDEF MSWINDOWS}
   Xml.Win.msxmldom,
 {$ENDIF}
-  SVGParse, SVGProperties, SVGPaint, SVGPath, SVGCommon;
+  SVGParse,
+  SVGProperties,
+  SVGPaint,
+  SVGPath,
+  SVGCommon;
 
 {$REGION 'TSVGObject'}
 constructor TSVGObject.Create;
 begin
   inherited;
   FParent := nil;
-  FStyle := TStyle.Create;
   FItems := TList.Create;
   Clear;
 end;
@@ -545,7 +567,8 @@ begin
     FParent.Remove(Self);
   end;
 
-  FStyle.Free;
+  if Assigned(FStyle) then
+    FStyle.Free;
 
   inherited;
 end;
@@ -580,7 +603,7 @@ begin
   FID := '';
 
   SetLength(FClasses, 0);
-  FStyle.Clear;
+  if Assigned(FStyle) then FStyle.Clear;
   FObjectName := '';
 end;
 
@@ -594,6 +617,29 @@ begin
   for C := 0 to FItems.Count - 1 do
     GetItem(C).Clone(Result);
 end;
+
+class constructor TSVGObject.Create;
+begin
+  SVGElements := TDictionary<string, TSVGObjectClass>.Create;
+  SVGElements.Add('g', TSVGContainer);
+  SVGElements.Add('switch', TSVGSwitch);
+  SVGElements.Add('defs', TSVGDefs);
+  SVGElements.Add('use', TSVGUse);
+  SVGElements.Add('rect', TSVGRect);
+  SVGElements.Add('line', TSVGLine);
+  SVGElements.Add('polyline', TSVGPolyLine);
+  SVGElements.Add('polygon', TSVGPolygon);
+  SVGElements.Add('circle', TSVGEllipse);
+  SVGElements.Add('ellipse', TSVGEllipse);
+  SVGElements.Add('path', TSVGPath);
+  SVGElements.Add('image', TSVGImage);
+  SVGElements.Add('text', TSVGText);
+  SVGElements.Add('tspan', TSVGTSpan);
+  SVGElements.Add('textPath', TSVGTextPath);
+  SVGElements.Add('clipPath', TSVGClipPath);
+  SVGElements.Add('linearGradient', TSVGLinearGradient);
+  SvgElements.Add('radialGradient', TSVGRadialGradient);
+ end;
 
 function TSVGObject.Add(Item: TSVGObject): Integer;
 begin
@@ -611,6 +657,11 @@ begin
     FItems.Delete(Index);
     Remove(Item);
   end;
+end;
+
+class destructor TSVGObject.Destroy;
+begin
+  SVGElements.Free;
 end;
 
 function TSVGObject.Remove(Item: TSVGObject): Integer;
@@ -711,7 +762,8 @@ begin
     SVG.FObjectName := FObjectName;
 
     FreeAndNil(SVG.FStyle);
-    SVG.FStyle := FStyle.Clone;
+    if Assigned(FStyle) then
+      SVG.FStyle := FStyle.Clone;
     SVG.FClasses := Copy(FClasses, 0);
   end;
 end;
@@ -733,6 +785,17 @@ begin
     Result := FItems[Index]
   else
     Result := nil;
+end;
+
+function TSVGObject.GetObjectStyle: TStyle;
+begin
+  if not Assigned(FStyle) then
+  begin
+    FStyle := TStyle.Create;
+    if Self is TSVGBasic then
+      FStyle.OnChange := TSVGBasic(Self).OnStyleChanged;
+  end;
+  Result := FStyle;
 end;
 
 function TSVGObject.GetRoot: TSVG;
@@ -802,11 +865,12 @@ begin
   for C := 0 to Node.AttributeNodes.count - 1 do
   begin
     S := Node.AttributeNodes[C].nodeName;
-    FStyle.AddStyle(S, VarToStr(Node.AttributeNodes[C].nodeValue));
+    ObjectStyle.AddStyle(S, VarToStr(Node.AttributeNodes[C].nodeValue));
   end;
 
   LoadString(Node, 'style', S);
-  FStyle.SetValues(S);
+  if S <> '' then
+    ObjectStyle.SetValues(S);
 
   S := '';
   LoadString(Node, 'class', S);
@@ -848,13 +912,13 @@ begin
     SVG := SVG.FParent;
   end;
 
-  if Assigned(SVG) and (TSVGMatrix(SVG).Matrix.m33 = 1) then
+  if Assigned(SVG) and not TSVGMatrix(SVG).Matrix.IsEmpty then
     FCalculatedMatrix := TSVGMatrix(SVG).Matrix
   else
     FillChar(FCalculatedMatrix, SizeOf(FCalculatedMatrix), 0);
 
-  if FPureMatrix.m33 = 1 then begin
-    if FCalculatedMatrix.m33 = 1 then
+  if not FPureMatrix.IsEmpty then begin
+    if not FCalculatedMatrix.IsEmpty then
       FCalculatedMatrix := FPureMatrix * FCalculatedMatrix
     else
       FCalculatedMatrix := FPureMatrix;
@@ -870,7 +934,7 @@ end;
 
 procedure TSVGMatrix.ReadIn(const Node: IXMLNode);
 var
-  M: TMatrix;
+  M: TAffineMatrix;
 begin
   inherited;
   M := FPureMatrix;
@@ -878,14 +942,14 @@ begin
   FPureMatrix := M;
 end;
 
-procedure TSVGMatrix.SetPureMatrix(const Value: TMatrix);
+procedure TSVGMatrix.SetPureMatrix(const Value: TAffineMatrix);
 begin
   FPureMatrix := Value;
 end;
 
 function TSVGMatrix.Transform(const P: TPointF): TPointF;
 begin
-  if FCalculatedMatrix.m33 = 1 then
+  if not FCalculatedMatrix.IsEmpty then
     Result := P * FCalculatedMatrix
   else
     Result := P;
@@ -901,7 +965,6 @@ begin
   // default SVG fill-rule is nonzero
   FFillMode := FillModeWinding;
   SetLength(FStrokeDashArray, 0);
-  FStyle.OnChange := OnStyleChanged;
   FClipPath := nil;
 end;
 
@@ -992,7 +1055,7 @@ begin
         ClipRoot := TSVGBasic(GetRoot.FindByID(ClipURI));
         if Assigned(ClipRoot) then
         begin
-          TGP := ToGPMatrix(ClipRoot.Matrix);
+          TGP := ClipRoot.Matrix.ToGPMatrix;
           try
             Graphics.SetTransform(TGP);
           finally
@@ -1004,7 +1067,7 @@ begin
       Graphics.ResetTransform;
     end;
 
-    TGP := ToGPMatrix(Matrix);
+    TGP := Matrix.ToGPMatrix;
     try
       Graphics.SetTransform(TGP);
     finally
@@ -1051,9 +1114,9 @@ begin
     Exit;
   P := FPath.Clone;
 
-  if Matrix.m33 = 1 then
+  if not Matrix.IsEmpty then
   begin
-    M := ToGPMatrix(Matrix);
+    M := Matrix.ToGPMatrix;
     P.Transform(M);
     M.Free;
   end;
@@ -1100,7 +1163,7 @@ begin
             end else
               Style := nil;
           end else
-            Style := FStyle;
+            Style := ObjectStyle;
           end;
         end;
 
@@ -1471,91 +1534,19 @@ var
   SVG: TSVGObject;
   LRoot: TSVG;
   NodeName: string;
+  SVGObjecClass: TSVGObjectClass;
 begin
   for C := 0 to Node.ChildNodes.count - 1 do
   begin
     SVG := nil;
-
     NodeName := Node.childNodes[C].nodeName;
-
-    if NodeName = 'g' then
-    begin
-      SVG := TSVGContainer.Create(Self);
-    end
-    else if NodeName = 'switch' then
-    begin
-      SVG := TSVGSwitch.Create(Self);
-    end
-    else if NodeName = 'defs' then
-    begin
-      SVG := TSVGDefs.Create(Self);
-    end
-    else if NodeName = 'use' then
-    begin
-      SVG := TSVGUse.Create(Self);
-    end
-    else if NodeName = 'rect' then
-    begin
-      SVG := TSVGRect.Create(Self);
-    end
-    else if NodeName = 'line' then
-    begin
-      SVG := TSVGLine.Create(Self);
-    end
-    else if NodeName = 'polyline' then
-    begin
-      SVG := TSVGPolyLine.Create(Self);
-    end
-    else if NodeName = 'polygon' then
-    begin
-      SVG := TSVGPolygon.Create(Self);
-    end
-    else if NodeName = 'circle' then
-    begin
-      SVG := TSVGEllipse.Create(Self);
-    end
-    else if NodeName = 'ellipse' then
-    begin
-      SVG := TSVGEllipse.Create(Self);
-    end
-    else if NodeName = 'path' then
-    begin
-      SVG := TSVGPath.Create(Self);
-    end
-    else if NodeName = 'image' then
-    begin
-      SVG := TSVGImage.Create(Self);
-    end
-    else if NodeName = 'text' then
-    begin
-      SVG := TSVGText.Create(Self);
-    end
-    else if NodeName = 'tspan' then
-    begin
-      SVG := TSVGTSpan.Create(Self);
-    end
-    else if NodeName = 'textPath' then
-    begin
-      SVG := TSVGTextPath.Create(Self);
-    end
-    else if NodeName = 'clipPath' then
-    begin
-      SVG := TSVGClipPath.Create(Self);
-    end
-    else if NodeName = 'linearGradient' then
-    begin
-      SVG := TSVGLinearGradient.Create(Self);
-    end
-    else if NodeName = 'radialGradient' then
-    begin
-      SVG := TSVGRadialGradient.Create(Self)
-    end
+    if SvgElements.TryGetValue(NodeName, SVGObjecClass) then
+      SVG := SVGObjecClass.Create(Self)
     else if NodeName = 'style' then
     begin
       LRoot := GetRoot;
       LRoot.ReadStyles(Node.childNodes[C]);
     end;
-
     if Assigned(SVG) then
     begin
       SVG.ReadIn(Node.childNodes[C]);
@@ -2075,30 +2066,27 @@ var
   DocNode: IXMLNode;
 begin
   Clear;
+  FSource := Text;
+  {$IFDEF MSWINDOWS}
+  TMSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False, True);
+  {$ENDIF}
+  XML := TXmlDocument.Create(nil);
   try
-    FSource := Text;
-    {$IFDEF MSWINDOWS}
-    TMSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False, True);
-    {$ENDIF}
-    XML := TXmlDocument.Create(nil);
-    try
-      XML.LoadFromXML(Text);
+    XML.Options := XML.Options - [doNamespaceDecl];
+    XML.LoadFromXML(Text);
 
-      if Assigned(XML) then
-      begin
-        DocNode := XML.documentElement;
-        if Assigned(DocNode) and (DocNode.nodeName = 'svg') then
-          ReadIn(DocNode)
-        else
-          FSource := '';
-      end else
+    if Assigned(XML) then
+    begin
+      DocNode := XML.documentElement;
+      if Assigned(DocNode) and (DocNode.nodeName = 'svg') then
+        ReadIn(DocNode)
+      else
         FSource := '';
-    except
-      On EDomParseError do
+    end else
       FSource := '';
-    end;
-  finally
-    XML := nil;
+  except
+    On EDomParseError do
+    FSource := '';
   end;
 end;
 
@@ -2124,6 +2112,7 @@ begin
   Size := Stream.Size;
   SetLength(Buffer, Size);
   Stream.Read(Buffer, 0, Size);
+  OutputDebugString('Load');
   LoadFromText(TEncoding.UTF8.GetString(Buffer));
 end;
 
@@ -2262,9 +2251,8 @@ begin
       FInitialMatrix.m12 := MA[1];
       FInitialMatrix.m21 := MA[2];
       FInitialMatrix.m22 := MA[3];
-      FInitialMatrix.m31 := MA[4];
-      FInitialMatrix.m32 := MA[5];
-      FInitialMatrix.m33 := 1;
+      FInitialMatrix.dx := MA[4];
+      FInitialMatrix.dy := MA[5];
 
       SetBounds(Bounds);
 
@@ -2325,7 +2313,7 @@ begin
   FStrokeOpacity := 1;
 
   FAngle := 0;
-  FillChar(FAngleMatrix, SizeOf(TMatrix), 0);
+  FillChar(FAngleMatrix, SizeOf(TAffineMatrix), 0);
 
   FLineWidth := 1;
 
@@ -2357,8 +2345,8 @@ begin
     FAngle := Angle;
     X := Width / 2;
     Y := Height / 2;
-    FAngleMatrix := TMatrix.CreateTranslation(X, Y) * TMatrix.CreateRotation(Angle) *
-      TMatrix.CreateTranslation(-X, -Y)
+    FAngleMatrix := TAffineMatrix.CreateTranslation(X, Y) * TAffineMatrix.CreateRotation(Angle) *
+      TAffineMatrix.CreateTranslation(-X, -Y);
   end;
 end;
 
@@ -2435,7 +2423,7 @@ procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
       for C := 0 to Item.Count - 1 do
       begin
         LItem := Item[C];
-        PaintItem(LItem);
+        if Item is TSVGBasic then PaintItem(LItem);
       end;
     end;
   end;
@@ -2567,13 +2555,13 @@ end;
 
 procedure TSVG.CalcMatrix;
 var
-  ViewBoxMatrix: TMatrix;
-  BoundsMatrix: TMatrix;
-  ScaleMatrix: TMatrix;
+  ViewBoxMatrix: TAffineMatrix;
+  BoundsMatrix: TAffineMatrix;
+  ScaleMatrix: TAffineMatrix;
   ScaleX, ScaleY: TFloat;
 begin
-  ViewBoxMatrix := TMatrix.CreateTranslation(-FViewBox.Left, -FViewBox.Top);
-  BoundsMatrix := TMatrix.CreateTranslation(FRootBounds.X, FRootBounds.Y);
+  ViewBoxMatrix := TAffineMatrix.CreateTranslation(-FViewBox.Left, -FViewBox.Top);
+  BoundsMatrix := TAffineMatrix.CreateTranslation(FRootBounds.X, FRootBounds.Y);
 
   // The -1 below is for fixing #14. There may well be a better way.
   if (FViewBox.Width > 0) and (FRootBounds.Width > 0) then
@@ -2584,25 +2572,25 @@ begin
     ScaleY := (FRootBounds.Height - 1)/ FViewBox.Height
   else
     ScaleY := 1;
-  ScaleMatrix := TMatrix.CreateScaling(ScaleX, ScaleY);
+  ScaleMatrix := TAffineMatrix.CreateScaling(ScaleX, ScaleY);
 
-  if FInitialMatrix.m33 = 1 then
+  if not FInitialMatrix.IsEmpty then
   begin
     FCalculatedMatrix := FInitialMatrix
   end
   else
   begin
-    FCalculatedMatrix := TMatrix.Identity;
+    FCalculatedMatrix := TAffineMatrix.Identity;
   end;
 
   // The order is important
   // First the ViewBox transformations are applied (translate first and then scale)
   // Then the Bounds translation is applied.  (the order is from left to right)
   FCalculatedMatrix := ViewBoxMatrix * ScaleMatrix * BoundsMatrix * FCalculatedMatrix;
-  if FAngleMatrix.m33 = 1 then
+  if not FAngleMatrix.IsEmpty then
     FCalculatedMatrix := FAngleMatrix * FCalculatedMatrix;
 
-  if FPureMatrix.m33 = 1 then
+  if not FPureMatrix.IsEmpty then
     FCalculatedMatrix := FPureMatrix * FCalculatedMatrix;
 end;
 
@@ -2720,7 +2708,7 @@ var
   Container: TSVGContainer;
   SVG: TSVGObject;
   Child: TSVGObject;
-  Matrix: TMatrix;
+  Matrix: TAffineMatrix;
 begin
   while Count > 0 do
     GetItem(0).Free;
@@ -2734,7 +2722,7 @@ begin
 
   if Assigned(SVG) then
   begin
-    Matrix := TMatrix.CreateTranslation(X, Y);
+    Matrix := TAffineMatrix.CreateTranslation(X, Y);
 
     Container := TSVGContainer.Create(Self);
     Container.FObjectName := 'g';
@@ -3424,7 +3412,7 @@ begin
   if ClipPath <> nil then
     Graphics.SetClip(ClipPath);}
 
-  TGP := ToGPMatrix(Matrix);
+  TGP := Matrix.ToGPMatrix;
   Graphics.SetTransform(TGP);
   TGP.Free;
 
@@ -3864,7 +3852,7 @@ begin
         ClipRoot := TSVGBasic(GetRoot.FindByID(ClipURI));
         if Assigned(ClipRoot) then
         begin
-          TGP := ToGPMatrix(ClipRoot.Matrix);
+          TGP := ClipRoot.Matrix.ToGPMatrix;
           Graphics.SetTransform(TGP);
           TGP.Free;
         end;
@@ -3873,7 +3861,7 @@ begin
       Graphics.ResetTransform;
     end;
 
-    TGP := ToGPMatrix(Matrix);
+    TGP := Matrix.ToGPMatrix;
     Graphics.SetTransform(TGP);
     TGP.Free;
 
@@ -4075,8 +4063,8 @@ var
 
       PT := TGPPathText.Create(GuidePath.FPath);
 
-      if Element.FPureMatrix.m33 = 1 then
-        Matrix := ToGPMatrix(Element.FPureMatrix)
+      if not Element.FPureMatrix.IsEmpty then
+        Matrix := Element.FPureMatrix.ToGPMatrix
       else
         Matrix := nil;
 
@@ -4142,7 +4130,7 @@ var
 begin
   inherited;
 
-  Value := FStyle.Values['startOffset'];
+  Value := ObjectStyle.Values['startOffset'];
   if Value <> '' then
   begin
     FOffsetIsPercent := False;
@@ -4154,11 +4142,11 @@ begin
     FOffset := ParseLength(Value);
   end;
 
-  Value := FStyle.Values['method'];
+  Value := ObjectStyle.Values['method'];
   if Value = 'stretch' then
     FMethod := tpmStretch;
 
-  Value := FStyle.Values['spacing'];
+  Value := ObjectStyle.Values['spacing'];
   if Value = 'exact' then
     FSpacing := tpsExact;
 

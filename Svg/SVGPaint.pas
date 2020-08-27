@@ -129,7 +129,6 @@ uses
   System.Types,
   System.SysUtils,
   System.Math,
-  System.Math.Vectors,
   SVGCommon,
   SVGParse,
   SVGStyle,
@@ -157,7 +156,7 @@ begin
 
   if FStopColor = SVG_INHERIT_COLOR then
   begin
-    S := FStyle['stop-color'];
+    S := ObjectStyle['stop-color'];
     if GetRoot.Grayscale then
       FStopColor := GetSVGGrayscale(GetSVGColor(S))
     else
@@ -169,7 +168,7 @@ begin
      (integer(FStopColor) <> SVG_NONE_COLOR) then
     FStopColor := GetRoot.FixedColor;
 
-  S := FStyle['stop-opacity'];
+  S := ObjectStyle['stop-opacity'];
   if (S <> '') then
     FOpacity := ParsePercent(S)
   else
@@ -215,7 +214,7 @@ procedure TSVGGradient.ReadIn(const Node: IXMLNode);
 var
   C: Integer;
   Stop: TSVGStop;
-  Matrix: TMatrix;
+  Matrix: TAffineMatrix;
 begin
   inherited;
 
@@ -228,9 +227,9 @@ begin
      Stop.ReadIn(Node.childNodes[C]);
    end;
 
-  FURI := FStyle['xlink:href'];
+  FURI := ObjectStyle['xlink:href'];
   if FURI = '' then
-    FURI := FStyle['href'];
+    FURI := ObjectStyle['href'];
   if FURI = '' then
     LoadString(Node, 'xlink:href', FURI);
   if FURI = '' then
@@ -309,9 +308,9 @@ begin
   Brush.SetInterpolationColors(PGPColor(Colors.Colors),
     PSingle(Colors.Positions), Colors.Count);
 
-  if PureMatrix.m33 = 1 then
+  if not PureMatrix.IsEmpty then
   begin
-    TGP := ToGPMatrix(PureMatrix);
+    TGP := PureMatrix.ToGPMatrix;
     Brush.SetTransform(TGP);
     TGP.Free;
   end;
@@ -416,9 +415,9 @@ begin
   if HasValue(FFX) and HasValue(FFY) then
     Brush.SetCenterPoint(MakePoint(MFX, MFY));
 
-  if PureMatrix.m33 = 1 then
+  if not PureMatrix.IsEmpty then
   begin
-    TGP := ToGPMatrix(PureMatrix);
+    TGP := PureMatrix.ToGPMatrix;
     Brush.SetTransform(TGP);
     TGP.Free;
   end;

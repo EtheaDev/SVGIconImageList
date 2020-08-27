@@ -24,7 +24,8 @@ unit SVGParse;
 interface
 
 uses
-  System.Types, System.Classes, System.Math.Vectors,
+  System.Types,
+  System.Classes,
   SVGTypes;
 
 function ParseAngle(const Angle: string): TFloat;
@@ -46,7 +47,7 @@ function ParseDRect(const S: string): TRectF;
 
 function ParseURI(const URI: string): string;
 
-function ParseTransform(const ATransform: string): TMatrix;
+function ParseTransform(const ATransform: string): TAffineMatrix;
 
 implementation
 
@@ -295,11 +296,11 @@ begin
   end;
 end;
 
-function GetMatrix(const S: string): TMatrix;
+function GetMatrix(const S: string): TAffineMatrix;
 var
   SL: TStrings;
 begin
-  Result := TMatrix.Identity;
+  Result := TAffineMatrix.Identity;
   SL := GetValues(S, ',');
   try
     if SL.Count = 6 then
@@ -308,15 +309,15 @@ begin
       Result.m12 := StrToTFloat(SL[1]);
       Result.m21 := StrToTFloat(SL[2]);
       Result.m22 := StrToTFloat(SL[3]);
-      Result.m31 := StrToTFloat(SL[4]);
-      Result.m32 := StrToTFloat(SL[5]);
+      Result.dx := StrToTFloat(SL[4]);
+      Result.dy := StrToTFloat(SL[5]);
     end;
   finally
     SL.Free;
   end;
 end;
 
-function GetTranslate(const S: string): TMatrix;
+function GetTranslate(const S: string): TAffineMatrix;
 var
   SL: TStrings;
 begin
@@ -328,14 +329,14 @@ begin
 
     if SL.Count = 2 then
     begin
-      Result := TMatrix.CreateTranslation(StrToTFloat(SL[0]), StrToTFloat(SL[1]));
+      Result := TAffineMatrix.CreateTranslation(StrToTFloat(SL[0]), StrToTFloat(SL[1]));
     end;
   finally
     SL.Free;
   end;
 end;
 
-function GetScale(const S: string): TMatrix;
+function GetScale(const S: string): TAffineMatrix;
 var
   SL: TStrings;
 begin
@@ -346,14 +347,14 @@ begin
       SL.Add(SL[0]);
     if SL.Count = 2 then
     begin
-      Result := TMatrix.CreateScaling(StrToTFloat(SL[0]), StrToTFloat(SL[1]));
+      Result := TAffineMatrix.CreateScaling(StrToTFloat(SL[0]), StrToTFloat(SL[1]));
     end;
   finally
     SL.Free;
   end;
 end;
 
-function GetRotation(const S: string): TMatrix;
+function GetRotation(const S: string): TAffineMatrix;
 var
   SL: TStrings;
   X, Y, Angle: TFloat;
@@ -381,12 +382,12 @@ begin
     SL.Free;
   end;
 
-  Result := TMatrix.CreateTranslation(X, Y);
-  Result := TMatrix.CreateRotation(Angle) * Result;
-  Result := TMatrix.CreateTranslation(-X, -Y) * Result;
+  Result := TAffineMatrix.CreateTranslation(X, Y);
+  Result := TAffineMatrix.CreateRotation(Angle) * Result;
+  Result := TAffineMatrix.CreateTranslation(-X, -Y) * Result;
 end;
 
-function GetSkewX(const S: string): TMatrix;
+function GetSkewX(const S: string): TAffineMatrix;
 var
   SL: TStrings;
 begin
@@ -396,7 +397,7 @@ begin
   try
     if SL.Count = 1 then
     begin
-      Result := TMatrix.Identity;
+      Result := TAffineMatrix.Identity;
       Result.m21 := Tan(StrToTFloat(SL[0]));
     end;
   finally
@@ -404,7 +405,7 @@ begin
   end;
 end;
 
-function GetSkewY(const S: string): TMatrix;
+function GetSkewY(const S: string): TAffineMatrix;
 var
   SL: TStrings;
 begin
@@ -414,7 +415,7 @@ begin
   try
     if SL.Count = 1 then
     begin
-      Result := TMatrix.Identity;
+      Result := TAffineMatrix.Identity;
       Result.m12 := Tan(StrToTFloat(SL[0]));
     end;
   finally
@@ -422,14 +423,14 @@ begin
   end;
 end;
 
-function ParseTransform(const ATransform: string): TMatrix;
+function ParseTransform(const ATransform: string): TAffineMatrix;
 var
   Start: Integer;
   Stop: Integer;
   TType: string;
   Values: string;
   S: string;
-  M: TMatrix;
+  M: TAffineMatrix;
 begin
   FillChar(Result, SizeOf(Result), 0);
 
@@ -444,7 +445,6 @@ begin
     TType := Trim(Copy(S, 1, Start - 1));
     Values := Trim(Copy(S, Start + 1, Stop - Start - 1));
     Values := StringReplace(Values, ' ', ',', [rfReplaceAll]);
-    M.m33 := 0;
 
     if TType = 'matrix' then
     begin
@@ -471,9 +471,9 @@ begin
       M := GetSkewY(Values);
     end;
 
-    if M.m33 = 1 then
+    if not M.IsEmpty then
     begin
-      if Result.m33 = 0 then
+      if Result.IsEmpty then
         Result := M
       else
         Result := M * Result;
