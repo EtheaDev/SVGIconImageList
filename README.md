@@ -1,8 +1,6 @@
 # SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## An extended ImageList for Delphi (VCL+FMX) to simplify use of SVG Icons (resize, opacity, grayscale and more...)
-
-## Welcome to the SVGIconFontImageList guide (VCL+FMX)
+## Components to simplify use of SVG images (resize, fixedcolor, grayscale...). Two engines to render SVG (GDI+ or Direct2D) and 4 components: TSVGIconImage, TSVGIconImageCollection, TSVGIconVirtualImageList and TSVGIconImageList (for VCL and FMX).
 
 ### Actual official version 2.0 (VCL+FMX)
 
