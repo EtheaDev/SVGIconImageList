@@ -543,7 +543,6 @@ constructor TSVGObject.Create;
 begin
   inherited;
   FParent := nil;
-  FItems := TList.Create;
   Clear;
 end;
 
@@ -559,7 +558,8 @@ end;
 destructor TSVGObject.Destroy;
 begin
   Clear;
-  FItems.Free;
+  if Assigned(FItems) then
+    FItems.Free;
 
   if Assigned(FParent) then
   begin
@@ -584,7 +584,7 @@ begin
       TSVGBasic(Self).CalcClipPath;
   end;
 
-  for C := 0 to FItems.Count - 1 do
+  for C := 0 to Count - 1 do
   begin
     TSVGObject(FItems[C]).CalculateMatrices;
   end;
@@ -613,7 +613,7 @@ begin
   Result := New(Parent);
   Result.Assign(Self);
 
-  for C := 0 to FItems.Count - 1 do
+  for C := 0 to Count - 1 do
     GetItem(C).Clone(Result);
 end;
 
@@ -665,6 +665,8 @@ end;
 
 function TSVGObject.Add(Item: TSVGObject): Integer;
 begin
+  if FItems = nil then
+    FItems := TList.Create;
   Result := FItems.Add(Item);
   Item.FParent := Self;
 end;
@@ -689,7 +691,10 @@ end;
 
 function TSVGObject.Remove(Item: TSVGObject): Integer;
 begin
-  Result := FItems.Remove(Item);
+  if Assigned(FItems) then
+    Result := FItems.Remove(Item)
+  else
+    Result := -1;
   if Assigned(Item) then
   begin
     if Item.FParent = Self then
@@ -699,7 +704,10 @@ end;
 
 function TSVGObject.IndexOf(Item: TSVGObject): Integer;
 begin
-  Result := FItems.IndexOf(Item);
+  if Assigned(FItems) then
+    Result := FItems.IndexOf(Item)
+  else
+    Result := -1;
 end;
 
 class function TSVGObject.New(Parent: TSVGObject): TSVGObject;
@@ -793,7 +801,10 @@ end;
 
 function TSVGObject.GetCount: Integer;
 begin
-  Result := FItems.Count;
+  if Assigned(FItems) then
+    Result := FItems.Count
+  else
+    Result := 0;
 end;
 
 procedure TSVGObject.SetItem(const Index: Integer; const Item: TSVGObject);
