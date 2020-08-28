@@ -103,6 +103,7 @@ var
   Root: ID2D1SvgElement;
   ViewBox: D2D1_SVG_VIEWBOX;
 begin
+  fsvgDoc := nil;
   XStream := TStreamAdapter.Create(Stream, soReference);
   if Supports(RenderTarget, ID2D1DeviceContext5, DeviceContext5) then
   begin
@@ -152,13 +153,20 @@ procedure TD2DSVG.LoadFromSource;
 var
   MStream: TMemoryStream;
 begin
-  MStream := TMemoryStream.Create;
+  fSvgDoc := nil;
+  if fSource = '' then Exit;
+
   try
-    SaveToStream(MStream);
-    MStream.Position := 0;
-    SvgFromStream(MStream);
-  finally
-    MStream.Free;
+    MStream := TMemoryStream.Create;
+    try
+      SaveToStream(MStream);
+      MStream.Position := 0;
+      SvgFromStream(MStream);
+    finally
+      MStream.Free;
+    end;
+  except
+    fSource := '';
   end;
 end;
 
