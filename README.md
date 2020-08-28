@@ -1,6 +1,6 @@
 # SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## Components to simplify use of SVG images (resize, fixedcolor, grayscale...). Two engines to render SVG (GDI+ or Direct2D) and 4 components: TSVGIconImage, TSVGIconImageCollection, TSVGIconVirtualImageList and TSVGIconImageList (for VCL and FMX).
+## Two engines to render SVG (GDI+ or Direct2D) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
 ### Actual official version 2.0 (VCL+FMX)
 
