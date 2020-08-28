@@ -145,7 +145,6 @@ type
     FStrokeMiterLimit: TFloat;
     FStrokeDashOffset: TFloat;
     FStrokeDashArray: TSingleDynArray;
-    FStrokeDashArrayCount: Integer;
     FArrayNone: Boolean;
 
     FFontName: string;
@@ -179,7 +178,7 @@ type
     function GetStrokeLineJoin: TLineJoin;
     function GetStrokeMiterLimit: TFloat;
     function GetStrokeDashOffset: TFloat;
-    function GetStrokeDashArray(var Count: Integer): PSingle;
+    function GetStrokeDashArray: TSingleDynArray;
 
     function GetFontName: string;
     function GetFontWeight: Integer;
@@ -196,7 +195,6 @@ type
     FStrokeURI: string;
     FClipURI: string;
     FLineWidth: TFloat;
-    FFillRule: Integer;
     FColorInterpolation: TFloat;
     FColorRendering: TFloat;
 
@@ -962,8 +960,6 @@ constructor TSVGBasic.Create;
 begin
   inherited;
   FPath := nil;
-  // default SVG fill-rule is nonzero
-  FFillMode := FillModeWinding;
   SetLength(FStrokeDashArray, 0);
   FClipPath := nil;
 end;
@@ -1005,6 +1001,8 @@ begin
   FStrokeURI := '';
   FillColor := SVG_INHERIT_COLOR;
   StrokeColor := SVG_INHERIT_COLOR;
+  // default SVG fill-rule is nonzero
+  FFillMode := FillModeWinding;
 
   StrokeWidth := UndefinedFloat;
 
@@ -1018,7 +1016,6 @@ begin
   FStrokeDashOffset := UndefinedFloat;
 
   SetLength(FStrokeDashArray, 0);
-  FStrokeDashArrayCount := 0;
   FArrayNone := False;
 
   FFontName := '';
@@ -1229,7 +1226,7 @@ end;
 
 procedure TSVGBasic.AssignTo(Dest: TPersistent);
 var
-  C: Integer;
+  C, L: Integer;
 begin
   inherited;
 
@@ -1244,7 +1241,6 @@ begin
     TSVGBasic(Dest).FStrokeLineCap := FStrokeLineCap;
     TSVGBasic(Dest).FStrokeMiterLimit := FStrokeMiterLimit;
     TSVGBasic(Dest).FStrokeDashOffset := FStrokeDashOffset;
-    TSVGBasic(Dest).FStrokeDashArrayCount := FStrokeDashArrayCount;
 
     TSVGBasic(Dest).FFontName := FFontName;
     TSVGBasic(Dest).FFontSize := FFontSize;
@@ -1253,10 +1249,11 @@ begin
     TSVGBasic(Dest).FTextDecoration := FTextDecoration;
     TSVGBasic(Dest).FFillMode := FFillMode;
 
-    if Assigned(FStrokeDashArray) then
+    L := Length(FStrokeDashArray);
+    if L > 0 then
     begin
-      SetLength(TSVGBasic(Dest).FStrokeDashArray, FStrokeDashArrayCount);
-      for C := 0 to FStrokeDashArrayCount - 1 do
+      SetLength(TSVGBasic(Dest).FStrokeDashArray, L);
+      for C := 0 to L - 1 do
         TSVGBasic(Dest).FStrokeDashArray[C] := FStrokeDashArray[C];
     end;
 
@@ -1271,7 +1268,6 @@ begin
     TSVGBasic(Dest).FStrokeURI := FStrokeURI;
     TSVGBasic(Dest).ClipURI := FClipURI;
     TSVGBasic(Dest).FLineWidth := FLineWidth;
-    TSVGBasic(Dest).FFillRule := FFillRule;
     TSVGBasic(Dest).FColorInterpolation := FColorInterpolation;
     TSVGBasic(Dest).FColorRendering := FColorRendering;
 
@@ -1601,7 +1597,6 @@ begin
     end;
 
     SetLength(FStrokeDashArray, SL.Count);
-    FStrokeDashArrayCount := SL.Count;
 
     for C := 0 to SL.Count - 1 do
     begin
@@ -1721,21 +1716,41 @@ end;
 function TSVGBasic.GetStrokePen(const StrokeBrush: TGPBrush): TGPPen;
 var
   Pen: TGPPen;
-  DashArray: PSingle;
-  C: Integer;
+  PenWidth : TFloat;
+  DashArray: TSingleDynArray;
+  StrokeDashCap: TDashCap;
+  I: Integer;
 begin
-  if Assigned(StrokeBrush) and (StrokeBrush.GetLastStatus = OK) then
+  PenWidth := GetStrokeWidth;
+  if Assigned(StrokeBrush) and (StrokeBrush.GetLastStatus = OK) and (PenWidth > 0) then
   begin
-    Pen := TGPPen.Create(0, GetStrokeWidth);
+    StrokeDashCap := GetStrokeDashCap;
+    Pen := TGPPen.Create(0, PenWidth);
     Pen.SetLineJoin(GetStrokeLineJoin);
     Pen.SetMiterLimit(GetStrokeMiterLimit);
-    Pen.SetLineCap(GetStrokeLineCap, GetStrokeLineCap, GetStrokeDashCap);
+    Pen.SetLineCap(GetStrokeLineCap, GetStrokeLineCap, StrokeDashCap);
 
-    DashArray := GetStrokeDashArray(C);
-    if Assigned(DashArray) then
+    DashArray := GetStrokeDashArray;
+    if Length(DashArray) > 0 then
     begin
-      Pen.SetDashPattern(DashArray, C);
+      // The length of each dash and space in the dash pattern is the product of
+      // the element value in the array and the width of the Pen object.
+      // https://docs.microsoft.com/en-us/windows/win32/api/gdipluspen/nf-gdipluspen-pen-setdashpattern
+      // Also it appears that GDI does not adjust for DashCap
+      for I := Low(DashArray) to High(DashArray) do
+      begin
+        DashArray[I] := DashArray[I] / PenWidth;
+        if StrokeDashCap <> DashCapFlat then
+        begin
+          if Odd(I) then
+            DashArray[I] := DashArray[I] - 1
+          else
+            DashArray[I] := DashArray[I] + 1;
+        end;
+      end;
+
       Pen.SetDashStyle(DashStyleCustom);
+      Pen.SetDashPattern(PSingle(DashArray), Length(DashArray));
       Pen.SetDashOffset(GetStrokeDashOffset);
     end;
 
@@ -1808,14 +1823,18 @@ function TSVGBasic.GetClipURI: string;
 var
   SVG: TSVGObject;
 begin
-  SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FClipURI = '') do
-    SVG := SVG.FParent;
+  Result := '';
 
-  if Assigned(SVG) then
-    Result := TSVGBasic(SVG).FClipURI
-  else
-    Result := '';
+  SVG := Self;
+  while Assigned(SVG) do
+  begin
+    if (SVG is TSVGBasic) and (TSVGBasic(SVG).FClipURI <> '')  then
+    begin
+      Result := TSVGBasic(SVG).FClipURI;
+      Break;
+    end;
+    SVG := SVG.FParent;
+  end;
 end;
 
 function TSVGBasic.GetStrokeLineCap: TLineCap;
@@ -1825,16 +1844,17 @@ begin
   Result := LineCapFlat;
 
   SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FStrokeLineCap = '') do
-    SVG := SVG.FParent;
-
-  if Assigned(SVG) then
+  while Assigned(SVG) do
   begin
-    if TSVGBasic(SVG).FStrokeLineCap = 'round' then
-      Result := LineCapRound;
-
-    if TSVGBasic(SVG).FStrokeLineCap = 'square' then
-      Result := LineCapSquare;
+    if (SVG is TSVGBasic) and (TSVGBasic(SVG).FStrokeLineCap <> '')  then
+    begin
+      if TSVGBasic(SVG).FStrokeLineCap = 'round' then
+        Result := LineCapRound
+      else if TSVGBasic(SVG).FStrokeLineCap = 'square' then
+        Result := LineCapSquare;
+      Break;
+    end;
+    SVG := SVG.FParent;
   end;
 end;
 
@@ -1845,8 +1865,15 @@ begin
   Result := TDashCap.DashCapFlat;
 
   SVG := Self;
-  while Assigned(SVG) and (TSVGBasic(SVG).FStrokeLineCap = '') do
+  while Assigned(SVG) do
   begin
+    if (SVG is TSVGBasic) and  (TSVGBasic(SVG).FStrokeLineCap <> '') then
+    begin
+      if TSVGBasic(SVG).FStrokeLineCap = 'round' then
+        Result := TDashCap.DashCapRound;
+
+      Break;
+    end;
     SVG := SVG.FParent;
   end;
 
@@ -1916,25 +1943,25 @@ begin
   end;
 end;
 
-function TSVGBasic.GetStrokeDashArray(var Count: Integer): PSingle;
+function TSVGBasic.GetStrokeDashArray: TSingleDynArray;
 var
   SVG: TSVGObject;
 begin
-  Result := nil;
-  Count := 0;
+  SetLength(Result, 0);
 
   SVG := Self;
-  while Assigned(SVG) and
-        (TSVGBasic(SVG).FStrokeDashArrayCount = 0) and
-        (not TSVGBasic(SVG).FArrayNone) do
-    SVG := SVG.FParent;
-
-  if Assigned(SVG) and Assigned(TSVGBasic(SVG).FStrokeDashArray) and
-     (not TSVGBasic(SVG).FArrayNone) then
+  while Assigned(SVG) do
   begin
-    Result := @TSVGBasic(SVG).FStrokeDashArray;
-    Count := TSVGBasic(SVG).FStrokeDashArrayCount;
+    if (SVG is TSVGBasic) and ((Length(TSVGBasic(SVG).FStrokeDashArray) > 0) or
+        TSVGBasic(SVG).FArrayNone) then
+    begin
+      if TSVGBasic(SVG).FArrayNone then Exit;
+      Result := Copy(TSVGBasic(SVG).FStrokeDashArray, 0);
+      Break;
+    end;
+    SVG := SVG.FParent;
   end;
+
 end;
 
 function TSVGBasic.GetFontName: string;
@@ -1978,7 +2005,7 @@ var
   SVG: TSVGObject;
 begin
   Result := 11;
-  
+
   SVG := Self;
   while Assigned(SVG) do
   begin
@@ -1996,14 +2023,14 @@ var
   SVG: TSVGObject;
 begin
   Result := 0;
-  
+
   SVG := Self;
   while Assigned(SVG)  do
   begin
     if (SVG is TSVGBasic) and HasValue(TSVGBasic(SVG).FFontStyle) then
     begin
       Result := TSVGBasic(SVG).FFontStyle;
-      Break;    
+      Break;
     end;
     SVG := SVG.FParent;
   end;

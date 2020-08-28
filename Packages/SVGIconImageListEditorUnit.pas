@@ -605,6 +605,7 @@ procedure TSVGIconImageListEditor.SVGTextChange(Sender: TObject);
 begin
   if FUpdating then Exit;
   SelectedIcon.SVGText := SVGText.Lines.Text;
+  IconImage.Invalidate;
   UpdateGUI;
 end;
 
