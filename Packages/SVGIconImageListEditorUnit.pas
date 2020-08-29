@@ -210,7 +210,6 @@ begin
       try
         FSourceList := AImageList;
         FEditingList.Assign(AImageList);
-        OpacitySpinEdit.Value := FSourceList.Opacity;
         UpdateGUI;
       finally
         Screen.Cursor := crDefault;
@@ -248,8 +247,6 @@ begin
         FSourceList := TSVGIconImageList.Create(LEditor);
         FSourceList.Assign(AImageList);
         FEditingList.Assign(AImageList);
-        OpacitySpinEdit.Value := FSourceList.Opacity;
-        OpacitySpinEdit.Value := AImageList.Opacity;
         UpdateGUI;
       finally
         Screen.Cursor := crDefault;
@@ -291,7 +288,6 @@ begin
         ImageListGroupBox.Visible := False;
         FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
         FEditingList.Assign(FSourceList);
-        OpacitySpinEdit.Value := FSourceList.Opacity;
         UpdateGUI;
       finally
         Screen.Cursor := crDefault;
@@ -396,6 +392,7 @@ begin
     ImageListGroup.Caption := Format(FTotIconsLabel, [FEditingList.Count]);
     GrayScaleCheckBox.Checked := SVGIconImageList.GrayScale;
     FixedColorComboBox.Selected := SVGIconImageList.FixedColor;
+    OpacitySpinEdit.Value := SVGIconImageList.Opacity;
     if LIsItemSelected then
     begin
       IconImage.ImageIndex := SelectedIcon.Index;
