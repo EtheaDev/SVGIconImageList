@@ -83,6 +83,7 @@ type
     procedure AssignTo(Dest: TPersistent); override;
     function GetRoot: TSVG;
     class var SVGElements: TDictionary<string, TSVGObjectClass>;
+    class var SVGAttributes: TDictionary<string, TSVGAttribute>;
     class constructor Create;
     class destructor Destroy;
   public
@@ -408,7 +409,7 @@ type
   TSVGPath = class(TSVGBasic)
   private
     procedure PrepareMoveLineCurveArc(const ACommand: Char; SL: TStrings);
-    function SeparateValues(const ACommand: Char; const S: string): TStrings;
+    procedure SeparateValues(const ACommand: Char; const S: string; Values: TStrings);
     function Split(const S: string): TStrings;
   protected
     procedure ConstructPath; override;
@@ -542,7 +543,6 @@ constructor TSVGObject.Create;
 begin
   inherited;
   FParent := nil;
-  FItems := TList.Create;
   Clear;
 end;
 
@@ -558,7 +558,8 @@ end;
 destructor TSVGObject.Destroy;
 begin
   Clear;
-  FItems.Free;
+  if Assigned(FItems) then
+    FItems.Free;
 
   if Assigned(FParent) then
   begin
@@ -583,7 +584,7 @@ begin
       TSVGBasic(Self).CalcClipPath;
   end;
 
-  for C := 0 to FItems.Count - 1 do
+  for C := 0 to Count - 1 do
   begin
     TSVGObject(FItems[C]).CalculateMatrices;
   end;
@@ -612,13 +613,13 @@ begin
   Result := New(Parent);
   Result.Assign(Self);
 
-  for C := 0 to FItems.Count - 1 do
+  for C := 0 to Count - 1 do
     GetItem(C).Clone(Result);
 end;
 
 class constructor TSVGObject.Create;
 begin
-  SVGElements := TDictionary<string, TSVGObjectClass>.Create;
+  SVGElements := TDictionary<string, TSVGObjectClass>.Create(64);
   SVGElements.Add('g', TSVGContainer);
   SVGElements.Add('switch', TSVGSwitch);
   SVGElements.Add('defs', TSVGDefs);
@@ -637,10 +638,35 @@ begin
   SVGElements.Add('clipPath', TSVGClipPath);
   SVGElements.Add('linearGradient', TSVGLinearGradient);
   SvgElements.Add('radialGradient', TSVGRadialGradient);
- end;
+
+  SVGAttributes := TDictionary<string, TSVGAttribute>.Create(64);
+  SVGAttributes.Add('stroke-width', saStrokeWidth);
+  SVGAttributes.Add('line-width', saLineWidth);
+  SVGAttributes.Add('opacity', saOpacity);
+  SVGAttributes.Add('stroke-opacity', saStrokeOpacity);
+  SVGAttributes.Add('fill-opacity', saFillOpacity);
+  SVGAttributes.Add('color', saColor);
+  SVGAttributes.Add('stroke', saStroke);
+  SVGAttributes.Add('fill', saFill);
+  SVGAttributes.Add('clip-path', saClipPath);
+  SVGAttributes.Add('stroke-linejoin', saStrokeLinejoin);
+  SVGAttributes.Add('stroke-linecap', saStrokeLinecap);
+  SVGAttributes.Add('stroke-miterlimit', saStrokeMiterlimit);
+  SVGAttributes.Add('stroke-dashoffset', saStrokeDashoffset);
+  SVGAttributes.Add('stroke-dasharray', saStrokeDasharray);
+  SVGAttributes.Add('fill-rule', saFillRule);
+  SVGAttributes.Add('font-family', saFontFamily);
+  SVGAttributes.Add('font-weight', saFontWeight);
+  SVGAttributes.Add('font-size', saFontSize);
+  SVGAttributes.Add('text-decoration', saTextDecoration);
+  SVGAttributes.Add('font-style', saFontStyle);
+  SVGAttributes.Add('display', saDisplay);
+end;
 
 function TSVGObject.Add(Item: TSVGObject): Integer;
 begin
+  if FItems = nil then
+    FItems := TList.Create;
   Result := FItems.Add(Item);
   Item.FParent := Self;
 end;
@@ -660,11 +686,15 @@ end;
 class destructor TSVGObject.Destroy;
 begin
   SVGElements.Free;
+  SVGAttributes.Free;
 end;
 
 function TSVGObject.Remove(Item: TSVGObject): Integer;
 begin
-  Result := FItems.Remove(Item);
+  if Assigned(FItems) then
+    Result := FItems.Remove(Item)
+  else
+    Result := -1;
   if Assigned(Item) then
   begin
     if Item.FParent = Self then
@@ -674,7 +704,10 @@ end;
 
 function TSVGObject.IndexOf(Item: TSVGObject): Integer;
 begin
-  Result := FItems.IndexOf(Item);
+  if Assigned(FItems) then
+    Result := FItems.IndexOf(Item)
+  else
+    Result := -1;
 end;
 
 class function TSVGObject.New(Parent: TSVGObject): TSVGObject;
@@ -768,7 +801,10 @@ end;
 
 function TSVGObject.GetCount: Integer;
 begin
-  Result := FItems.Count;
+  if Assigned(FItems) then
+    Result := FItems.Count
+  else
+    Result := 0;
 end;
 
 procedure TSVGObject.SetItem(const Index: Integer; const Item: TSVGObject);
@@ -1160,7 +1196,7 @@ begin
             end else
               Style := nil;
           end else
-            Style := ObjectStyle;
+            Style := FStyle;
           end;
         end;
 
@@ -1384,143 +1420,117 @@ procedure TSVGBasic.ReadStyle(Style: TStyle);
   end;
 
 var
+  I: integer;
+  Key : string;
   Value: string;
   SL: TStringList;
+  SVGAttr: TSVGAttribute;
 begin
-  Value := Style.Values['stroke-width'];
-  if Value <> '' then
-    FStrokeWidth := ParseLength(Value);
-
-  Value := Style.Values['line-width'];
-  if Value <> '' then
-    FLineWidth := ParseLength(Value);
-
-  Value := Style.Values['opacity'];
-  if Value <> '' then
+  for I := 0 to Style.Count - 1 do
   begin
-    FStrokeOpacity := ParsePercent(Value);
-    FFillOpacity := FStrokeOpacity;
-  end;
+    Key := Style.Keys[I];
+    if Key = '' then Continue;
 
-  Value := Style.Values['stroke-opacity'];
-  if Value <> '' then
-    FStrokeOpacity := ParsePercent(Value);
+    Value := Style.ValuesByNum[I];
+    if Value = '' then Continue;
 
-  Value := Style.Values['fill-opacity'];
-  if Value <> '' then
-    FFillOpacity := ParsePercent(Value);
+    if SVGAttributes.TryGetValue(Key, SVGAttr) then
+    begin
+      case SVGAttr of
+        saStrokeWidth:
+          FStrokeWidth := ParseLength(Value);
+        saLineWidth:
+          FLineWidth := ParseLength(Value);
+        saOpacity:
+          begin
+            FStrokeOpacity := ParsePercent(Value);
+            FFillOpacity := FStrokeOpacity;
+          end;
+        saStrokeOpacity:
+          FStrokeOpacity := ParsePercent(Value);
+        saFillOpacity:
+          FFillOpacity := ParsePercent(Value);
+        saColor:
+          begin
+            FStrokeURI := Value;
+            FFillURI := Value;
+          end;
+        saStroke:
+          FStrokeURI := Value;
+        saFill:
+          FFillURI := Value;
+        saClipPath:
+          ClipURI := Value;
+        saStrokeLinejoin:
+          FStrokeLineJoin := Value;
+        saStrokeLinecap:
+          FStrokeLineCap := Value;
+        saStrokeMiterlimit:
+          begin
+            if not TryStrToTFloat(Value, FStrokeMiterLimit) then
+              FStrokeMiterLimit := 0;
+          end;
+        saStrokeDashoffset:
+          if not TryStrToTFloat(Value, FStrokeDashOffset) then
+            FStrokeDashOffset := 0;
+        saStrokeDasharray:
+          SetStrokeDashArray(Value);
+        saFillRule:
+          if SameText(Value, 'evenodd') then
+            fFillMode := FillModeAlternate
+          else
+            fFillMode := FillModeWinding;
+        saFontFamily:
+          begin
+            FFontName := Value;
+            if not IsFontAvailable then
+              ConstructFont;
+          end;
+        saFontWeight:
+          ParseFontWeight(Value);
+        saFontSize:
+          FFontSize := ParseLength(Value);
+        saTextDecoration:
+          begin
+            SL := TStringList.Create;
+            try
+              SL.Delimiter := ' ';
+              SL.DelimitedText := Value;
 
-  Value := Style.Values['color'];
-  if Value <> '' then
-  begin
-    FStrokeURI := Value;
-    FFillURI := Value;
-  end;
+              if SL.IndexOf('underline') > -1 then
+              begin
+                Exclude(FTextDecoration, tdInherit);
+                Include(FTextDecoration, tdUnderLine);
+              end;
 
-  Value := Style.Values['stroke'];
-  if Value <> '' then
-    FStrokeURI := Value;
+              if SL.IndexOf('overline') > -1 then
+              begin
+                Exclude(FTextDecoration, tdInherit);
+                Include(FTextDecoration, tdOverLine);
+              end;
 
-  Value := Style.Values['fill'];
-  if Value <> '' then
-    FFillURI := Value;
+              if SL.IndexOf('line-through') > -1 then
+              begin
+                Exclude(FTextDecoration, tdInherit);
+                Include(FTextDecoration, tdStrikeOut);
+              end;
 
-  Value := Style.Values['clip-path'];
-  if Value <> '' then
-    ClipURI := Value;
-
-  Value := Style.Values['stroke-linejoin'];
-  if Value <> '' then
-    FStrokeLineJoin := Value;
-
-  Value := Style.Values['stroke-linecap'];
-  if Value <> '' then
-    FStrokeLineCap := Value;
-
-  Value := Style.Values['stroke-miterlimit'];
-  if Value <> '' then
-    if not TryStrToTFloat(Value, FStrokeMiterLimit) then
-      FStrokeMiterLimit := 0;
-
-  Value := Style.Values['stroke-dashoffset'];
-  if Value <> '' then
-    if not TryStrToTFloat(Value, FStrokeDashOffset) then
-      FStrokeDashOffset := 0;
-
-  Value := Style.Values['stroke-dasharray'];
-  if Value <> '' then
-    SetStrokeDashArray(Value);
-
-  Value := Style.Values['fill-rule'];
-  if SameText(Value, 'evenodd') then
-    fFillMode := FillModeAlternate
-  else
-    fFillMode := FillModeWinding;
-
-  Value := Style['font-family'];
-  if Value <> '' then
-  begin
-    FFontName := Value;
-    if not IsFontAvailable then
-      ConstructFont;
-  end;
-
-  Value := Style['font-weight'];
-  if Value <> '' then
-    ParseFontWeight(Value);
-
-  Value := Style['font-size'];
-  if Value <> '' then
-    FFontSize := ParseLength(Value);
-
-  Value := Style['text-decoration'];
-  if Value <> '' then
-  begin
-    SL := TStringList.Create;
-    try
-      SL.Delimiter := ' ';
-      SL.DelimitedText := Value;
-
-      if SL.IndexOf('underline') > -1 then
-      begin
-        Exclude(FTextDecoration, tdInherit);
-        Include(FTextDecoration, tdUnderLine);
+              if SL.IndexOf('none') > -1 then
+                FTextDecoration := [];
+            finally
+              SL.Free;
+            end;
+          end;
+        saFontStyle:
+            if Value = 'normal' then
+              FFontStyle := FontNormal
+            else if Value = 'italic' then
+              FFontStyle := FontItalic;
+        saDisplay:
+          if Value = 'none' then
+            FDisplay := tbFalse;
       end;
-
-      if SL.IndexOf('overline') > -1 then
-      begin
-        Exclude(FTextDecoration, tdInherit);
-        Include(FTextDecoration, tdOverLine);
-      end;
-
-      if SL.IndexOf('line-through') > -1 then
-      begin
-        Exclude(FTextDecoration, tdInherit);
-        Include(FTextDecoration, tdStrikeOut);
-      end;
-
-      if SL.IndexOf('none') > -1 then
-        FTextDecoration := [];
-    finally
-      SL.Free;
     end;
-  end;
-
-  Value := Style['font-style'];
-  if Value <> '' then
-  begin
-    if Value = 'normal' then
-      FFontStyle := FontNormal;
-
-    if Value = 'italic' then
-      FFontStyle := FontItalic;
-  end;
-
-  Value := Style['display'];
-  if Value <> '' then
-  begin
-    if Value = 'none' then
-      FDisplay := tbFalse;
   end;
 end;
 
@@ -1531,21 +1541,23 @@ var
   LRoot: TSVG;
   NodeName: string;
   SVGObjecClass: TSVGObjectClass;
+  ChildNode: IXMLNode;
 begin
   for C := 0 to Node.ChildNodes.count - 1 do
   begin
     SVG := nil;
-    NodeName := Node.childNodes[C].nodeName;
+    ChildNode := Node.ChildNodes[C];
+    NodeName := ChildNode.nodeName;
     if SvgElements.TryGetValue(NodeName, SVGObjecClass) then
       SVG := SVGObjecClass.Create(Self)
     else if NodeName = 'style' then
     begin
       LRoot := GetRoot;
-      LRoot.ReadStyles(Node.childNodes[C]);
+      LRoot.ReadStyles(ChildNode);
     end;
     if Assigned(SVG) then
     begin
-      SVG.ReadIn(Node.childNodes[C]);
+      SVG.ReadIn(ChildNode);
     end;
   end;
 end;
@@ -2069,7 +2081,6 @@ end;
 function TSVGBasic.GetClipPath: TGPGraphicsPath;
 var
   Path: TSVGObject;
-  ClipRoot: TSVGClipPath;
 begin
   Result := nil;
 
@@ -2077,11 +2088,7 @@ begin
   begin
     Path := GetRoot.FindByID(ClipURI);
     if Path is TSVGClipPath then
-      ClipRoot := TSVGClipPath(Path)
-    else
-      ClipRoot := nil;
-    if Assigned(ClipRoot) then
-      Result := ClipRoot.GetClipPath;
+      Result := TSVGClipPath(Path).GetClipPath;
   end;
 end;
 {$ENDREGION}
@@ -3181,93 +3188,77 @@ begin
   end;
 end;
 
-function TSVGPath.SeparateValues(const ACommand: Char;
-  const S: string): TStrings;
+procedure TSVGPath.SeparateValues(const ACommand: Char;
+  const S: string; Values: TStrings);
 var
-  NumberStr: string;
-  C: Char;
+  I, NumStart: Integer;
   HasDot: Boolean;
   HasExp: Boolean;
 begin
-  NumberStr := '';
   HasDot := False;
   HasExp := False;
+  NumStart := 1;
 
-  Result := TStringList.Create;
-
-  for C in S do
+  for I := 1 to S.Length do
   begin
-    case C of
+    case S[I] of
       '.':
         begin
           if HasDot or HasExp then
           begin
-            Result.Add(NumberStr);
-            HasDot := True;
-            NumberStr := C;
+            Values.Add(Copy(S, NumStart, I - NumStart));
+            NumStart := I;
             HasExp := False;
-          end
-          else
-          begin
-            NumberStr := NumberStr + C;
-            HasDot := True;
           end;
+          HasDot := True;
         end;
-      '0'..'9':
-        begin
-          NumberStr := NumberStr + C;
-        end;
+      '0'..'9': ;
       '+', '-':
         begin
-          if NumberStr <> '' then
+          if I > NumStart then
           begin
-            if not HasExp then begin
-              Result.Add(NumberStr);
+            if not HasExp or (UpCase(S[I-1]) <> 'E') then begin
+              Values.Add(Copy(S, NumStart, I-NumStart));
               HasDot := False;
-              NumberStr := C;
               HasExp := False;
-            end else
-              NumberStr := NumberStr + C;
-          end
-          else
-            NumberStr := C;
+              NumStart := I;
+            end
+          end;
         end;
       'E', 'e':
-        begin
-          HasExp := True;
-          NumberStr := NumberStr + C;
-        end;
+        HasExp := True;
       ' ', #9, #$A, #$D:
         begin
-          if NumberStr <> '' then
+          if I > NumStart then
           begin
-            Result.Add(NumberStr);
-            NumberStr := '';
+            Values.Add(Copy(S, NumStart, I-NumStart));
             HasDot := False;
             HasExp := False;
           end;
+          NumStart := I + 1;
         end;
     end;
   end;
-  if NumberStr <> '' then
+
+  if S.Length  + 1 > NumStart then
   begin
-    Result.Add(NumberStr);
+    Values.Add(Copy(S, NumStart, S.Length + 1 - NumStart));
   end;
 
-  Result.Insert(0, ACommand);
+  Values.Insert(0, ACommand);
 
-  if Result.Count > 0 then
+  if Values.Count > 0 then
   begin
     if ACommand.IsInArray(['M', 'm', 'L', 'l', 'H', 'h', 'V', 'v',
       'C', 'c', 'S', 's', 'Q', 'q', 'T', 't', 'A', 'a']) then
     begin
-      PrepareMoveLineCurveArc(ACommand, Result);
+      PrepareMoveLineCurveArc(ACommand, Values);
     end
     else if (ACommand = 'Z') or (ACommand = 'z') then
     begin
-      while Result.Count > 1 do
+      while Values.Count > 1 do
       begin
-        Result.Delete(1);
+        Values.Delete(1);
       end;
     end;
   end;
@@ -3288,18 +3279,23 @@ begin
 
   StartIndex := 0;
   SLength := Length(S);
-  while StartIndex < SLength do
-  begin
-    Found := S.IndexOfAny(IDs, StartIndex + 1);
-    if Found = -1 then
+  SL := TStringList.Create;
+  try
+    while StartIndex < SLength do
     begin
-      Found := SLength;
+      Found := S.IndexOfAny(IDs, StartIndex + 1);
+      if Found = -1 then
+      begin
+        Found := SLength;
+      end;
+      Part := S.Substring(StartIndex + 1, Found - StartIndex - 1).Trim;
+      SL.Clear;
+      SeparateValues(S[StartIndex + 1], Part, SL);
+      Result.AddStrings(SL);
+      StartIndex := Found;
     end;
-    Part := S.Substring(StartIndex + 1, Found - StartIndex - 1).Trim;
-    SL := SeparateValues(S[StartIndex + 1], Part);
-    Result.AddStrings(SL);
+  finally
     SL.Free;
-    StartIndex := Found;
   end;
 end;
 

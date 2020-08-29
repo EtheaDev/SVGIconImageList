@@ -71,7 +71,7 @@ begin
   Attribute := Node.AttributeNodes.FindNode(S);
   if Assigned(Attribute) then
   begin
-    X := ParseLength(VarToStr(Attribute.nodeValue), IsPercent);
+    X := ParseLength(Attribute.Text, IsPercent);
   end;
 end;
 
@@ -83,7 +83,7 @@ begin
   Attribute := Node.AttributeNodes.FindNode(S);
   if Assigned(Attribute) then
   begin
-    X := StrToTFloat(Attribute.nodeValue);
+    X := StrToTFloat(Attribute.Text);
   end;
 end;
 
@@ -91,17 +91,10 @@ procedure LoadString(const Node: IXMLNode; const S: string;
   var X: string);
 var
   Attribute: IXMLNode;
-  V: Variant;
 begin
   Attribute := Node.AttributeNodes.FindNode(S);
   if Assigned(Attribute) then
-  begin
-    V := Attribute.nodeValue;
-    if VarType(V) = varNull then
-      X := ''
-    else
-      X := V;
-  end;
+    X := Attribute.Text;
 end;
 
 procedure LoadTransform(const Node: IXMLNode; const S: string;
@@ -112,7 +105,7 @@ begin
   Attribute := Node.AttributeNodes.FindNode(S);
   if Assigned(Attribute) then
   begin
-    Matrix := ParseTransform(Attribute.nodeValue);
+    Matrix := ParseTransform(Attribute.Text);
   end;
 end;
 
@@ -134,7 +127,7 @@ begin
   Attribute := Node.AttributeNodes.FindNode(S);
   if Assigned(Attribute) then
   begin
-    X := Max * ParsePercent(Attribute.nodeValue);
+    X := Max * ParsePercent(Attribute.Text);
   end;
 end;
 
@@ -146,7 +139,7 @@ begin
   Attribute := Node.AttributeNodes.FindNode(S);
   if Assigned(Attribute) then
   begin
-    X := Round(255 * ParsePercent(Attribute.nodeValue));
+    X := Round(255 * ParsePercent(Attribute.Text));
   end;
 end;
 
@@ -157,7 +150,7 @@ var
 begin
   Attribute := Node.AttributeNodes.FindNode(S);
   if Assigned(Attribute) then
-    X := Boolean(ParseInteger(Attribute.nodeValue));
+    X := Boolean(ParseInteger(Attribute.Text));
 end;
 
 procedure LoadDisplay(const Node: IXMLNode; var X: TTriStateBoolean);
@@ -168,7 +161,7 @@ begin
   Attribute := Node.AttributeNodes.FindNode('display');
   if Assigned(Attribute) then
   begin
-    S := Attribute.nodeValue;
+    S := Attribute.Text;
     if S = 'inherit' then
       X := tbInherit
     else
@@ -187,7 +180,7 @@ begin
   Attribute := Node.AttributeNodes.FindNode('visibility');
   if Assigned(Attribute) then
   begin
-    S := Attribute.nodeValue;
+    S := Attribute.Text;
     if S = 'inherit' then
       X := tbInherit
     else
@@ -207,7 +200,7 @@ begin
   Attribute := Node.AttributeNodes.FindNode('gradientUnits');
   if Assigned(Attribute) then
   begin
-    S := Attribute.nodeValue;
+    S := Attribute.Text;
     if S = 'userSpaceOnUse' then
       Units := guUserSpaceOnUse
     else

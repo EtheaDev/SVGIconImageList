@@ -62,6 +62,28 @@ type
 
   TTriStateBoolean = (tbFalse, tbTrue, tbInherit);
 
+TSVGAttribute  = (saStrokeWidth,
+                  saLineWidth,
+                  saOpacity,
+                  saStrokeOpacity,
+                  saFillOpacity,
+                  saColor,
+                  saStroke,
+                  saFill,
+                  saClipPath,
+                  saStrokeLinejoin,
+                  saStrokeLinecap,
+                  saStrokeMiterlimit,
+                  saStrokeDashoffset,
+                  saStrokeDasharray,
+                  saFillRule,
+                  saFontFamily,
+                  saFontWeight,
+                  saFontSize,
+                  saTextDecoration,
+                  saFontStyle,
+                  saDisplay);
+
   TAffineMatrix = record
   public
     m11: Single;
