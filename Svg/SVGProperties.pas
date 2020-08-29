@@ -27,138 +27,138 @@ unit SVGProperties;
 interface
 
 uses
-  Xml.XmlIntf,
+  Winapi.msxml,
   SVGTypes;
 
-procedure LoadLength(const Node: IXMLNode; const S: string; var X: TFloat); overload;
-procedure LoadLength(const Node: IXMLNode; const S: string; var X: TFloat; var IsPercent: Boolean); overload;
+procedure LoadLength(const Node: IXMLDOMNode; const S: string; var X: TFloat); overload;
+procedure LoadLength(const Node: IXMLDOMNode; const S: string; var X: TFloat; var IsPercent: Boolean); overload;
 
-procedure LoadTFloat(const Node: IXMLNode; const S: string; var X: TFloat);
+procedure LoadTFloat(const Node: IXMLDOMNode; const S: string; var X: TFloat);
 
-procedure LoadString(const Node: IXMLNode; const S: string; var X: string);
+procedure LoadString(const Node: IXMLDOMNode; const S: string; var X: string);
 
-procedure LoadTransform(const Node: IXMLNode; const S: string; var Matrix: TAffineMatrix);
+procedure LoadTransform(const Node: IXMLDOMNode; const S: string; var Matrix: TAffineMatrix);
 
-procedure LoadPercent(const Node: IXMLNode; const S: string; var X: TFloat); overload;
-procedure LoadPercent(const Node: IXMLNode; const S: string; Max: Integer; var X: TFloat); overload;
-procedure LoadBytePercent(const Node: IXMLNode; const S: string; var X: Integer);
+procedure LoadPercent(const Node: IXMLDOMNode; const S: string; var X: TFloat); overload;
+procedure LoadPercent(const Node: IXMLDOMNode; const S: string; Max: Integer; var X: TFloat); overload;
+procedure LoadBytePercent(const Node: IXMLDOMNode; const S: string; var X: Integer);
 
-procedure LoadBoolean(const Node: IXMLNode; const S: string; var X: Boolean);
+procedure LoadBoolean(const Node: IXMLDOMNode; const S: string; var X: Boolean);
 
-procedure LoadDisplay(const Node: IXMLNode; var X: TTriStateBoolean);
+procedure LoadDisplay(const Node: IXMLDOMNode; var X: TTriStateBoolean);
 
-procedure LoadVisible(const Node: IXMLNode; var X: TTriStateBoolean);
+procedure LoadVisible(const Node: IXMLDOMNode; var X: TTriStateBoolean);
 
-procedure LoadGradientUnits(const Node: IXMLNode; var Units: TGradientUnits);
+procedure LoadGradientUnits(const Node: IXMLDOMNode; var Units: TGradientUnits);
 
 implementation
 
 uses
   SVGCommon, SVGParse, System.Variants;
 
-procedure LoadLength(const Node: IXMLNode; const S: string; var X: TFloat);
+procedure LoadLength(const Node: IXMLDOMNode; const S: string; var X: TFloat);
 Var
   IsPercent : Boolean;
 begin
   LoadLength(Node, S, X, IsPercent);
 end;
 
-procedure LoadLength(const Node: IXMLNode; const S: string; var X: TFloat;
+procedure LoadLength(const Node: IXMLDOMNode; const S: string; var X: TFloat;
   var IsPercent: Boolean); overload;
 var
-  Attribute: IXMLNode;
+  Attribute: IXMLDOMNode;
 begin
-  Attribute := Node.AttributeNodes.FindNode(S);
+  Attribute := Node.Attributes.GetNamedItem(S);
   if Assigned(Attribute) then
   begin
     X := ParseLength(Attribute.Text, IsPercent);
   end;
 end;
 
-procedure LoadTFloat(const Node: IXMLNode; const S: string;
+procedure LoadTFloat(const Node: IXMLDOMNode; const S: string;
   var X: TFloat);
 var
-  Attribute: IXMLNode;
+  Attribute: IXMLDOMNode;
 begin
-  Attribute := Node.AttributeNodes.FindNode(S);
+  Attribute := Node.Attributes.GetNamedItem(S);
   if Assigned(Attribute) then
   begin
     X := StrToTFloat(Attribute.Text);
   end;
 end;
 
-procedure LoadString(const Node: IXMLNode; const S: string;
+procedure LoadString(const Node: IXMLDOMNode; const S: string;
   var X: string);
 var
-  Attribute: IXMLNode;
+  Attribute: IXMLDOMNode;
 begin
-  Attribute := Node.AttributeNodes.FindNode(S);
+  Attribute := Node.Attributes.GetNamedItem(S);
   if Assigned(Attribute) then
     X := Attribute.Text;
 end;
 
-procedure LoadTransform(const Node: IXMLNode; const S: string;
+procedure LoadTransform(const Node: IXMLDOMNode; const S: string;
   var Matrix: TAffineMatrix);
 var
-  Attribute: IXMLNode;
+  Attribute: IXMLDOMNode;
 begin
-  Attribute := Node.AttributeNodes.FindNode(S);
+  Attribute := Node.Attributes.GetNamedItem(S);
   if Assigned(Attribute) then
   begin
     Matrix := ParseTransform(Attribute.Text);
   end;
 end;
 
-procedure LoadPercent(const Node: IXMLNode; const S: string;
+procedure LoadPercent(const Node: IXMLDOMNode; const S: string;
   var X: TFloat);
 var
-  Attribute: IXMLNode;
+  Attribute: IXMLDOMNode;
 begin
-  Attribute := Node.AttributeNodes.FindNode(S);
+  Attribute := Node.Attributes.GetNamedItem(S);
   if Assigned(Attribute) then
     X := ParsePercent(Attribute.nodeValue);
 end;
 
-procedure LoadPercent(const Node: IXMLNode; const S: string;
+procedure LoadPercent(const Node: IXMLDOMNode; const S: string;
   Max: Integer; var X: TFloat);
 var
-  Attribute: IXMLNode;
+  Attribute: IXMLDOMNode;
 begin
-  Attribute := Node.AttributeNodes.FindNode(S);
+  Attribute := Node.Attributes.GetNamedItem(S);
   if Assigned(Attribute) then
   begin
     X := Max * ParsePercent(Attribute.Text);
   end;
 end;
 
-procedure LoadBytePercent(const Node: IXMLNode; const S: string;
+procedure LoadBytePercent(const Node: IXMLDOMNode; const S: string;
   var X: Integer);
 var
-  Attribute: IXMLNode;
+  Attribute: IXMLDOMNode;
 begin
-  Attribute := Node.AttributeNodes.FindNode(S);
+  Attribute := Node.Attributes.GetNamedItem(S);
   if Assigned(Attribute) then
   begin
     X := Round(255 * ParsePercent(Attribute.Text));
   end;
 end;
 
-procedure LoadBoolean(const Node: IXMLNode; const S: string;
+procedure LoadBoolean(const Node: IXMLDOMNode; const S: string;
   var X: Boolean);
 var
-  Attribute: IXMLNode;
+  Attribute: IXMLDOMNode;
 begin
-  Attribute := Node.AttributeNodes.FindNode(S);
+  Attribute := Node.Attributes.GetNamedItem(S);
   if Assigned(Attribute) then
     X := Boolean(ParseInteger(Attribute.Text));
 end;
 
-procedure LoadDisplay(const Node: IXMLNode; var X: TTriStateBoolean);
+procedure LoadDisplay(const Node: IXMLDOMNode; var X: TTriStateBoolean);
 var
   S: string;
-  Attribute: IXMLNode;
+  Attribute: IXMLDOMNode;
 begin
-  Attribute := Node.AttributeNodes.FindNode('display');
+  Attribute := Node.Attributes.GetNamedItem('display');
   if Assigned(Attribute) then
   begin
     S := Attribute.Text;
@@ -172,12 +172,12 @@ begin
   end;
 end;
 
-procedure LoadVisible(const Node: IXMLNode; var X: TTriStateBoolean);
+procedure LoadVisible(const Node: IXMLDOMNode; var X: TTriStateBoolean);
 var
   S: string;
-  Attribute: IXMLNode;
+  Attribute: IXMLDOMNode;
 begin
-  Attribute := Node.AttributeNodes.FindNode('visibility');
+  Attribute := Node.Attributes.GetNamedItem('visibility');
   if Assigned(Attribute) then
   begin
     S := Attribute.Text;
@@ -191,13 +191,13 @@ begin
   end;
 end;
 
-procedure LoadGradientUnits(const Node: IXMLNode; var Units: TGradientUnits);
+procedure LoadGradientUnits(const Node: IXMLDOMNode; var Units: TGradientUnits);
 var
   S: string;
-  Attribute: IXMLNode;
+  Attribute: IXMLDOMNode;
 begin
   Units := guObjectBoundingBox;
-  Attribute := Node.AttributeNodes.FindNode('gradientUnits');
+  Attribute := Node.Attributes.GetNamedItem('gradientUnits');
   if Assigned(Attribute) then
   begin
     S := Attribute.Text;

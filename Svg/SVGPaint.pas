@@ -30,7 +30,7 @@ uses
   Winapi.GDIPAPI,
   System.UITypes,
   System.Classes,
-  Xml.XmlIntf,
+  Winapi.msxml,
   SVGTypes,
   SVG;
 
@@ -50,7 +50,7 @@ type
   protected
     procedure AssignTo(Dest: TPersistent); override;
   public
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
     procedure PaintToPath(Path: TGPGraphicsPath); override;
 
@@ -62,7 +62,7 @@ type
 
   TSVGFiller = class(TSVGMatrix)
   public
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
     function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; virtual; abstract;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
     procedure PaintToPath(Path: TGPGraphicsPath); override;
@@ -80,7 +80,7 @@ type
     procedure AssignTo(Dest: TPersistent); override;
     function GetColors(Alpha: Byte): TStopColors; virtual;
   public
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
   end;
 
   TSVGLinearGradient = class(TSVGGradient)
@@ -92,7 +92,7 @@ type
   protected
     procedure AssignTo(Dest: TPersistent); override;
   public
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
     function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; override;
     procedure Clear; override;
 
@@ -113,7 +113,7 @@ type
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
     function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; override;
 
     property CX: TFloat read FCX write FCX;
@@ -141,7 +141,7 @@ procedure TSVGStop.PaintToPath(Path: TGPGraphicsPath);
 begin
 end;
 
-procedure TSVGStop.ReadIn(const Node: IXMLNode);
+procedure TSVGStop.ReadIn(const Node: IXMLDOMNode);
 var
   S: string;
 begin
@@ -198,7 +198,7 @@ procedure TSVGFiller.PaintToPath(Path: TGPGraphicsPath);
 begin
 end;
 
-procedure TSVGFiller.ReadIn(const Node: IXMLNode);
+procedure TSVGFiller.ReadIn(const Node: IXMLDOMNode);
 begin
   inherited;
   Display := tbFalse;
@@ -210,9 +210,9 @@ end;
 
 // TSVGGradient
 
-procedure TSVGGradient.ReadIn(const Node: IXMLNode);
+procedure TSVGGradient.ReadIn(const Node: IXMLDOMNode);
 var
-  C: Integer;
+  ChildNode: IXMLDOMNode;
   Stop: TSVGStop;
   Matrix: TAffineMatrix;
 begin
@@ -220,12 +220,16 @@ begin
 
   LoadGradientUnits(Node, FGradientUnits);
 
-  for C := 0 to Node.childNodes.count - 1 do
-   if Node.childNodes[C].nodeName = 'stop' then
-   begin
-     Stop := TSVGStop.Create(Self);
-     Stop.ReadIn(Node.childNodes[C]);
-   end;
+  ChildNode := Node.firstChild;
+  while Assigned(ChildNode) do
+  begin
+    if ChildNode.nodeName = 'stop' then
+    begin
+      Stop := TSVGStop.Create(Self);
+      Stop.ReadIn(ChildNode);
+    end;
+    ChildNode := ChildNode.nextSibling;
+  end;
 
   FURI := ObjectStyle['xlink:href'];
   if FURI = '' then
@@ -250,7 +254,7 @@ end;
 
 // TSVGLinearGradient
 
-procedure TSVGLinearGradient.ReadIn(const Node: IXMLNode);
+procedure TSVGLinearGradient.ReadIn(const Node: IXMLDOMNode);
 begin
   inherited;
   LoadLength(Node, 'x1', FX1);
@@ -343,7 +347,7 @@ begin
   FFY := FCY;
 end;
 
-procedure TSVGRadialGradient.ReadIn(const Node: IXMLNode);
+procedure TSVGRadialGradient.ReadIn(const Node: IXMLDOMNode);
 begin
   inherited;
   LoadLength(Node, 'cx', FCX);
