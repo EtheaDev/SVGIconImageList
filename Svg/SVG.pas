@@ -524,9 +524,6 @@ uses
   System.Variants,
   System.StrUtils,
   System.Character,
-{$IFDEF MSWINDOWS}
-  Xml.Win.msxmldom,
-{$ENDIF}
   SVGParse,
   SVGProperties,
   SVGPaint,
@@ -2100,10 +2097,6 @@ var
 begin
   Clear;
   FSource := Text;
-//  {$IFDEF MSWINDOWS}
-//  MSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False, True);
-//  {$ENDIF}
-  //XML := MSXMLDOMDocumentFactory.CreateDOMDocument;
   XML := CoDOMDocument60.Create;
   try
     XML.preserveWhiteSpace := False;
