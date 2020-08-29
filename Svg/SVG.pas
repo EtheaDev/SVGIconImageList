@@ -300,9 +300,6 @@ type
     procedure SaveToFile(const FileName: string);
     procedure SaveToStream(Stream: TStream);
 
-    function SaveToNode(const Parent: IXMLDOMNode;
-      Left, Top, Width, Height: TFloat): IXMLDOMNode;
-
     procedure SetBounds(const Bounds: TGPRectF);
     procedure PaintTo(DC: HDC; Bounds: TGPRectF;
       Rects: PRectArray; RectCount: Integer); overload;
@@ -2172,81 +2169,6 @@ var
 begin
   Buffer := TEncoding.UTF8.GetBytes(FSource);
   Stream.WriteBuffer(Buffer, Length(Buffer));
-end;
-
-function TSVG.SaveToNode(const Parent: IXMLDOMNode; Left, Top, Width, Height: TFloat): IXMLDOMNode;
-//  Currently not used - Needs testing
-
-  function ConvertFloat(const D: TFloat): string;
-  begin
-    Result := FloatToStr(D);
-    Result := StringReplace(Result, ',', '.', []);
-  end;
-
-var
-  XML: IXMLDOMDocument;
-  Translation: string;
-  LScale: string;
-  C: Integer;
-  Container: IXMLDOMNode;
-  Attribute: IXMLDOMNode;
-  ChildNode: IXMLDOMNode;
-  NewNode: IXMLDOMNode;
-begin
-  Result := nil;
-  if FSource = '' then
-    Exit;
-
-  try
-    {$IFDEF MSWINDOWS}
-    TMSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False, True);
-    {$ENDIF}
-    XML := MSXMLDOMDocumentFactory.CreateDOMDocument;
-    XML.LoadXML(FSource);
-
-    Container := Parent.ownerDocument.createElement('g');
-    Parent.appendChild(Container);
-
-    if (Left <> 0) or (Top <> 0) then
-      Translation := 'translate(' + ConvertFloat(Left) + ', ' + ConvertFloat(Top) + ')'
-    else
-      Translation := '';
-
-    if (Width <> FWidth) or (Height <> FHeight) then
-      LScale := 'scale(' + ConvertFloat(Width / FWidth) + ', ' +
-        ConvertFloat(Width / FWidth) + ')'
-    else
-       LScale := '';
-
-    if LScale <> '' then
-    begin
-      if Translation = '' then
-      begin
-        Translation := LScale
-      end
-      else
-      begin
-        Translation := Translation + ' ' + LScale;
-      end;
-    end;
-
-    if Translation <> '' then
-    begin
-      Attribute := Container.ownerDocument.createElement('transform');
-//      Container.attributes.setNamedItem(Attribute);
-    end;
-
-    ChildNode := XML.documentElement.firstChild;
-    while Assigned(ChildNode) do
-    begin
-      NewNode := ChildNode.cloneNode(True);
-      Container.childNodes[C].appendChild(NewNode);
-      Result := NewNode;
-      ChildNode := ChildNode.nextSibling;
-    end;
-  finally
-    XML := nil;
-  end;
 end;
 
 procedure TSVG.PaintTo(DC: HDC; Bounds: TGPRectF;
