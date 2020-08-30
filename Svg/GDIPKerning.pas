@@ -33,7 +33,7 @@ type
     Cell: Integer;
     Kerning: Integer;
   end;
-  
+
   PKerning = ^TKerning;
 
   TGPKerningText = class(TObject)
@@ -41,7 +41,7 @@ type
     FKerningList: TList;
     FKerningPairs: TKerningPairs;
     FPairCount: Integer;
-    FLastFont: WideString;
+    FLastFont: string;
     FLastWeight: Integer;
     FLastStyle: Integer;
     FFontSizeFactor: Single;
@@ -87,42 +87,42 @@ type
     destructor Destroy; override;
 
   	function AddToPath(const Path, UPath, SPath: TGPGraphicsPath;
-      const Text: WideString; const Family: TGPFontFamily; Style: Integer;
+      const Text: string; const Family: TGPFontFamily; Style: Integer;
       const Size: Single; Origin: TGPPointF; const Format: TGPStringFormat;
       const DistanceFactor: Single = 1;
       const KerningFactor: Single = 1): TStatus; overload;
 
   	function AddToPath(const Path, UPath, SPath: TGPGraphicsPath;
-      const Text: WideString; const Family: TGPFontFamily; Style: Integer;
+      const Text: string; const Family: TGPFontFamily; Style: Integer;
       const Size: Single; Origin: TGPPoint; const Format: TGPStringFormat;
       const DistanceFactor: Single = 1;
       const KerningFactor: Single = 1): TStatus; overload;
 
-      function AddToPath(const Path: TGPGraphicsPath; const Text: WideString;
+      function AddToPath(const Path: TGPGraphicsPath; const Text: string;
       const Family: TGPFontFamily; Style: Integer; const Size: Single;
       Origin: TGPPointF; const Format: TGPStringFormat;
       const DistanceFactor: Single = 1;
       const KerningFactor: Single = 1): TStatus; overload;
 
-  	function AddToPath(const Path: TGPGraphicsPath; const Text: WideString;
+  	function AddToPath(const Path: TGPGraphicsPath; const Text: string;
       const Family: TGPFontFamily; const Style: Integer; const Size: Single;
       Origin: TGPPoint; const Format: TGPStringFormat;
       const DistanceFactor: Single = 1;
       const KerningFactor: Single = 1): TStatus; overload;
 
   	function AddToGraphics(const Graphics: TGPGraphics;
-      const Text: WideString; const Font: TGPFont; Origin: TGPPointF;
+      const Text: string; const Font: TGPFont; Origin: TGPPointF;
       const Format: TGPStringFormat; const Brush: TGPBrush;
       const DistanceFactor: Single = 1;
       const KerningFactor: Single = 1): TStatus; overload;
 
   	function AddToGraphics(const Graphics: TGPGraphics;
-      const Text: WideString; const Font: TGPFont; Origin: TGPPoint;
+      const Text: string; const Font: TGPFont; Origin: TGPPoint;
       const Format: TGPStringFormat; const Brush: TGPBrush;
       const DistanceFactor: Single = 1;
       const KerningFactor: Single = 1): TStatus; overload;
 
-    function MeasureText(const Text: WideString; const Font: TGPFont;
+    function MeasureText(const Text: string; const Font: TGPFont;
       const DistanceFactor: Single = 1;
       const KerningFactor: Single = 1): Single;
 
@@ -181,7 +181,7 @@ begin
 end;
 
 function TGPKerningText.AddToGraphics(const Graphics: TGPGraphics;
-  const Text: WideString; const Font: TGPFont; Origin: TGPPointF;
+  const Text: string; const Font: TGPFont; Origin: TGPPointF;
   const Format: TGPStringFormat; const Brush: TGPBrush;
   const DistanceFactor: Single = 1; const KerningFactor: Single = 1): TStatus;
 var
@@ -215,7 +215,7 @@ begin
 end;
 
 function TGPKerningText.AddToGraphics(const Graphics: TGPGraphics;
-  const Text: WideString; const Font: TGPFont; Origin: TGPPoint;
+  const Text: string; const Font: TGPFont; Origin: TGPPoint;
   const Format: TGPStringFormat; const Brush: TGPBrush;
   const DistanceFactor: Single = 1; const KerningFactor: Single = 1): TStatus;
 var
@@ -339,7 +339,7 @@ begin
   Result := -1;
 end;
 
-function TGPKerningText.MeasureText(const Text: WideString;
+function TGPKerningText.MeasureText(const Text: string;
   const Font: TGPFont; const DistanceFactor: Single = 1;
   const KerningFactor: Single = 1): Single;
 var
@@ -394,7 +394,7 @@ procedure TGPKerningText.PrepareKerning(const Font: TGPFont;
   const Graphics: TGPGraphics; WithFactor: Boolean);
 var
   LF: TLogFontW;
-  S: WideString;
+  S: string;
   DC: HDC;
   Factor, Size: Single;
 begin
@@ -404,7 +404,7 @@ begin
 
   if Font.GetUnit in [UnitWorld, UnitPixel] then
     WithFactor := True;
-    
+
   if WithFactor then
   begin
     FFontSizeFactor := Size / 1000;
@@ -431,7 +431,7 @@ begin
   end else
     UnprepareFont;
 
-  FLastFont := WideString(LF.lfFaceName);
+  FLastFont := string(LF.lfFaceName);
   FLastWeight := LF.lfWeight;
   FLastStyle := LF.lfItalic;
 
@@ -460,7 +460,7 @@ begin
 end;
 
 function TGPKerningText.AddToPath(const Path: TGPGraphicsPath;
-  const Text: WideString; const Family: TGPFontFamily; Style: Integer;
+  const Text: string; const Family: TGPFontFamily; Style: Integer;
   const Size: Single; Origin: TGPPointF; const Format: TGPStringFormat;
   const DistanceFactor: Single = 1;const KerningFactor: Single = 1): TStatus;
 begin
@@ -469,7 +469,7 @@ begin
 end;
 
 function TGPKerningText.AddToPath(const Path: TGPGraphicsPath;
-  const Text: WideString; const Family: TGPFontFamily; const Style: Integer;
+  const Text: string; const Family: TGPFontFamily; const Style: Integer;
   const Size: Single; Origin: TGPPoint; const Format: TGPStringFormat;
   const DistanceFactor: Single = 1;const KerningFactor: Single = 1): TStatus;
 var
@@ -482,7 +482,7 @@ begin
 end;
 
 function TGPKerningText.AddToPath(const Path, UPath, SPath: TGPGraphicsPath;
-  const Text: WideString; const Family: TGPFontFamily; Style: Integer;
+  const Text: string; const Family: TGPFontFamily; Style: Integer;
   const Size: Single; Origin: TGPPointF; const Format: TGPStringFormat;
   const DistanceFactor: Single = 1;const KerningFactor: Single = 1): TStatus;
 var
@@ -544,7 +544,7 @@ begin
 end;
 
 function TGPKerningText.AddToPath(const Path, UPath, SPath: TGPGraphicsPath;
-  const Text: WideString; const Family: TGPFontFamily; Style: Integer;
+  const Text: string; const Family: TGPFontFamily; Style: Integer;
   const Size: Single; Origin: TGPPoint; const Format: TGPStringFormat;
   const DistanceFactor: Single = 1; const KerningFactor: Single = 1): TStatus;
 var
