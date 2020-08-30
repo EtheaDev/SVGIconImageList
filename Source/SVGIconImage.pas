@@ -66,8 +66,6 @@ type
     procedure SetProportional(Value: Boolean);
     procedure SetOpacity(Value: Byte);
     procedure SetFileName(const Value: TFileName);
-    //procedure ReadData(Stream: TStream);
-    //procedure WriteData(Stream: TStream);
     procedure SetImageIndex(const Value: Integer);
     procedure SetStretch(const Value: Boolean);
     procedure SetScale(const Value: Double);
@@ -80,7 +78,6 @@ type
     procedure SetImageList(const Value: TSVGIconImageListBase);
   protected
     procedure Paint; override;
-    //procedure DefineProperties(Filer: TFiler); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure CheckAutoSize;
   public
@@ -88,7 +85,6 @@ type
     destructor Destroy; override;
     procedure Clear;
     function Empty: Boolean;
-    //procedure Paint; override;
     procedure LoadFromFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
     procedure SaveToFile(const FileName: string);
@@ -99,7 +95,8 @@ type
     property Center: Boolean read FCenter write SetCenter default True;
     property ParentDoubleBuffered;
     property DoubleBuffered;
-    property Proportional: Boolean read FProportional write SetProportional;
+    property ParentBackground default True;
+    property Proportional: Boolean read FProportional write SetProportional default False;
     property Stretch: Boolean read FStretch write SetStretch default True;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
     property Scale: Double read FScale write SetScale stored StoreScale;
@@ -178,6 +175,7 @@ begin
   FOpacity := 255;
   FScale := 1;
   FImageIndex := -1;
+  ParentBackground := True;
 end;
 
 destructor TSVGIconImage.Destroy;
