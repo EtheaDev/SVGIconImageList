@@ -26,6 +26,7 @@ interface
 uses
   System.Types,
   System.Classes,
+  System.Generics.Collections,
   SVGTypes;
 
 function ParseAngle(const Angle: string): TFloat;
@@ -48,6 +49,14 @@ function ParseDRect(const S: string): TRectF;
 function ParseURI(const URI: string): string;
 
 function ParseTransform(const ATransform: string): TAffineMatrix;
+
+function ParseDisplay(const ADisplay: string): TTriStateBoolean;
+
+function ParseVisibility(AVisibility: string): TTriStateBoolean;
+
+function ParseClass(AClass: string): TArray<string>;
+
+function ParseGradientUnits(AGradientUnit: string): TGradientUnits;
 
 implementation
 
@@ -132,100 +141,36 @@ end;
 
 function ParseLength(const S: string; var IsPercent: Boolean): TFloat; overload;
 var
-  U: string;
   SVGUnit: TSVGUnit;
   Factor: TFloat;
 begin
   SVGUnit := ParseUnit(S);
   IsPercent := SVGUnit = suPercent;
-  if SVGUnit = suPercent then
-    U := Copy(S, Length(S), 1)
-  else
-    if SVGUnit <> suNone then
-      U := Copy(S, Length(S) - 1, 2);
 
   Factor := GetFactor(SVGUnit);
-  if U = 'px' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 2))
-  else
-  if U = 'pt' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 2)) * Factor
-  else
-  if U = 'pc' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 2)) * Factor
-  else
-  if U = 'mm' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 2)) * Factor
-  else
-  if U = 'cm' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 2)) * Factor
-  else
-  if U = 'in' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 2)) * Factor
-  else
-  if U = '%' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 1)) * Factor
-  else
-    Result := StrToTFloat(S);
+  case SVGUnit of
+    suNone: Result := StrToTFloat(S);
+    suPercent: Result := StrToTFloat(Copy(S, 1, Length(S) - 1)) * Factor;
+    else
+      Result := StrToTFloat(Copy(S, 1, Length(S) - 2)) * Factor;
+  end;
 end;
 
 function ParseUnit(const S: string): TSVGUnit;
+Var
+  LastTwo: string;
 begin
   Result := suNone;
-
-  if Copy(S, Length(S) - 1, 2) = 'px' then
-  begin
-    Result := suPx;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'pt' then
-  begin
-    Result := suPt;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'pc' then
-  begin
-    Result := suPC;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'mm' then
-  begin
-    Result := suMM;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'cm' then
-  begin
-    Result := suCM;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'in' then
-  begin
-    Result := suIN;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'em' then
-  begin
-    Result := suEM;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'ex' then
-  begin
-    Result := suEX;
-    Exit;
-  end;
-
-  if Copy(S, Length(S), 1) = '%' then
-  begin
-    Result := suPercent;
-    Exit;
-  end;
+  LastTwo := Copy(S, Length(S) - 1, 2);
+  if LastTwo = 'px' then Result := suPx
+  else if LastTwo = 'pt' then Result := suPt
+  else if LastTwo = 'pc' then Result := suPC
+  else if LastTwo = 'mm' then Result := suMM
+  else if LastTwo = 'cm' then Result := suCM
+  else if LastTwo = 'in' then Result := suIN
+  else if LastTwo = 'em' then Result := suEM
+  else if LastTwo = 'ex' then Result := suEX
+  else if Copy(S, Length(S), 1) = '%' then Result := suPercent;
 end;
 
 function GetFactor(const SVGUnit: TSVGUnit): TFloat;
@@ -481,6 +426,65 @@ begin
 
     S := Trim(Copy(S, Stop + 1, Length(S)));
   end;
+end;
+
+function ParseDisplay(const ADisplay: string): TTriStateBoolean;
+begin
+  if ADisplay = 'inherit' then
+    Result := tbInherit
+  else if ADisplay = 'none' then
+    Result := tbFalse
+  else
+    Result := tbTrue;
+end;
+
+function ParseVisibility(AVisibility: string): TTriStateBoolean;
+begin
+  if AVisibility = 'inherit' then
+    Result := tbInherit
+  else if AVisibility = 'visible' then
+    Result := tbTrue
+  else
+    Result := tbFalse;
+end;
+
+function ParseClass(AClass: string): TArray<string>;
+
+  {$IF CompilerVersion < 28}
+  procedure DeleteElement(var A: TArray<string>; const Index: Cardinal;
+      Count: Cardinal = 1);
+  var
+    ALength: Cardinal;
+    i: Cardinal;
+  begin
+    ALength := Length(A);
+    for i := Index + Count to ALength - 1 do
+      A[i - Count] := A[i];
+    SetLength(A, ALength - Count);
+  end;
+  {$IFEND}
+
+Var
+  I: Integer;
+begin
+  Result := AClass.Split([',']);
+  for I := Length(Result) - 1 downto 0 do
+  begin
+    Result[I] := Trim(Result[I]);
+    if Result[I] = '' then
+      {$IF CompilerVersion < 28}
+      DeleteElement(Result, I, 1);
+      {$ELSE}
+      System.Delete(Result, I , 1);
+      {$IFEND}
+  end;
+end;
+
+function ParseGradientUnits(AGradientUnit: string): TGradientUnits;
+begin
+  Result := guObjectBoundingBox;  // 'objectBoundingBox' default
+  if AGradientUnit = 'userSpaceOnUse' then
+    Result := guUserSpaceOnUse
 end;
 
 end.

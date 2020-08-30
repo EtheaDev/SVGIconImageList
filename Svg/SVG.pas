@@ -42,13 +42,13 @@ uses
   Winapi.Windows,
   Winapi.GDIPOBJ,
   Winapi.GDIPAPI,
+  WinApi.msxml,
   System.UITypes,
   System.Classes,
   System.Math,
   System.Generics.Collections,
   {$IF CompilerVersion > 27}System.NetEncoding,{$ELSE}IdCoderMIME,{$IFEND}
   System.Types,
-  Xml.XmlIntf,
   GDIPOBJ2,
   GDIPKerning,
   GDIPPathText,
@@ -104,7 +104,8 @@ type
 
     procedure PaintToGraphics(Graphics: TGPGraphics); virtual; abstract;
     procedure PaintToPath(Path: TGPGraphicsPath); virtual; abstract;
-    procedure ReadIn(const Node: IXMLNode); virtual;
+    function ReadInAttr(const AttrName, AttrValue: string): Boolean; virtual;
+    procedure ReadIn(const Node: IXMLDOMNode); virtual;
 
     property Items[const Index: Integer]: TSVGObject read GetItem write SetItem; default;
     property Count: Integer read GetCount;
@@ -129,7 +130,7 @@ type
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
-    procedure ReadIn(const Node: IXMLNode); override;
+    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     property Matrix: TAffineMatrix read FCalculatedMatrix;
     property PureMatrix: TAffineMatrix read FPureMatrix write SetPureMatrix;
   end;
@@ -164,7 +165,7 @@ type
     FStyleChanged: Boolean;
 
     function IsFontAvailable: Boolean;
-    procedure ReadChildren(const Node: IXMLNode); virtual;
+    procedure ReadChildren(const Node: IXMLDOMNode); virtual;
     procedure SetStrokeDashArray(const S: string);
     procedure SetClipURI(const Value: string);
 
@@ -199,7 +200,7 @@ type
     FColorInterpolation: TFloat;
     FColorRendering: TFloat;
 
-    procedure LoadLengthProperty(const Node: IXMLNode; const S: string;
+    procedure ParseLengthAttr(const AttrValue: string;
       LengthType: TLengthType; var X: TFloat);
     procedure AssignTo(Dest: TPersistent); override;
     procedure ReadStyle(Style: TStyle); virtual;
@@ -221,7 +222,8 @@ type
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
 
     procedure PaintToPath(Path: TGPGraphicsPath); override;
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
+    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
 
@@ -255,6 +257,7 @@ type
     property TextDecoration: TTextDecoration read GetTextDecoration write FTextDecoration;
   end;
 
+  // TODO FSize, CalcCompleteSize can be removed
   TSVG = class(TSVGBasic)
   strict private
     FRootBounds: TGPRectF;
@@ -283,13 +286,14 @@ type
     procedure CalcCompleteSize;
     procedure CalcMatrix; override;
     procedure AssignTo(Dest: TPersistent); override;
-    procedure ReadStyles(const Node: IXMLNode);
+    procedure ReadStyles(const Node: IXMLDOMNode);
   public
     constructor Create; override;
     destructor Destroy; override;
 
     procedure Clear; override;
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
+    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
 
     procedure DeReferenceUse;
     function GetStyleValue(const Name, Key: string): string;
@@ -299,9 +303,6 @@ type
     procedure LoadFromStream(Stream: TStream); overload;
     procedure SaveToFile(const FileName: string);
     procedure SaveToStream(Stream: TStream);
-
-    function SaveToNode(const Parent: IXMLNode;
-      Left, Top, Width, Height: TFloat): IXMLNode;
 
     procedure SetBounds(const Bounds: TGPRectF);
     procedure PaintTo(DC: HDC; Bounds: TGPRectF;
@@ -325,17 +326,17 @@ type
 
   TSVGContainer = class(TSVGBasic)
   public
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
   end;
 
   TSVGSwitch = class(TSVGBasic)
   public
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
   end;
 
   TSVGDefs = class(TSVGBasic)
   public
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
   end;
 
   TSVGUse = class(TSVGBasic)
@@ -348,14 +349,14 @@ type
     procedure PaintToPath(Path: TGPGraphicsPath); override;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
     procedure Clear; override;
-    procedure ReadIn(const Node: IXMLNode); override;
+    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
   end;
 
   TSVGRect = class(TSVGBasic)
   protected
     procedure ConstructPath; override;
   public
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
   end;
@@ -364,7 +365,8 @@ type
   protected
     procedure ConstructPath; override;
   public
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
+    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
   end;
@@ -380,7 +382,8 @@ type
   public
     constructor Create; override;
     procedure Clear; override;
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
+    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
   end;
@@ -399,7 +402,8 @@ type
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
+    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
     property CX: TFloat read FCX write FCX;
@@ -414,13 +418,14 @@ type
   protected
     procedure ConstructPath; override;
   public
-    procedure ReadIn(const Node: IXMLNode); override;
+    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
   end;
 
   TSVGImage = class(TSVGBasic)
   private
+    FImageURI: string;
     FFileName: string;
     FImage: TGPImage;
     FStream: TMemoryStream;
@@ -430,7 +435,8 @@ type
     constructor Create; override;
     procedure Clear; override;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
+    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
     property Data: TMemoryStream read FStream;
@@ -458,17 +464,18 @@ type
   protected
     procedure AssignTo(Dest: TPersistent); override;
     procedure ConstructPath; override;
-    procedure ParseNode(const Node: IXMLNode); virtual;
+    procedure ParseNode(const Node: IXMLDOMNode); virtual;
     procedure BeforePaint(const Graphics: TGPGraphics; const Brush: TGPBrush;
       const Pen: TGPPen); override;
     procedure AfterPaint(const Graphics: TGPGraphics; const Brush: TGPBrush;
       const Pen: TGPPen); override;
 
-    procedure ReadTextNodes(const Node: IXMLNode); virtual;
+    procedure ReadTextNodes(const Node: IXMLDOMNode); virtual;
   public
     constructor Create; override;
     procedure Clear; override;
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
+    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
@@ -481,14 +488,9 @@ type
 
   TSVGText = class(TSVGCustomText)
   public
-    procedure ReadIn(const Node: IXMLNode); override;
   end;
 
-  TSVGTSpan = class(TSVGText)
-  private
-  protected
-    procedure ReadTextNodes(const Node: IXMLNode); override;
-  public
+  TSVGTSpan = class(TSVGCustomText)
   end;
 
   TSVGTextPath = class(TSVGCustomText)
@@ -500,10 +502,10 @@ type
     FSpacing: TTextPathSpacing;
   protected
     procedure ConstructPath; override;
-    procedure ReadTextNodes(const Node: IXMLNode); override;
+    procedure ReadTextNodes(const Node: IXMLDOMNode); override;
   public
     procedure Clear; override;
-    procedure ReadIn(const Node: IXMLNode); override;
+    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
   end;
 
   TSVGClipPath = class(TSVGBasic)
@@ -516,7 +518,7 @@ type
     procedure Clear; override;
     procedure PaintToPath(Path: TGPGraphicsPath); override;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure ReadIn(const Node: IXMLDOMNode); override;
     function GetClipPath: TGPGraphicsPath;
   end;
 
@@ -527,13 +529,7 @@ uses
   System.Variants,
   System.StrUtils,
   System.Character,
-  Xml.XmlDoc,
-  Xml.xmldom,
-{$IFDEF MSWINDOWS}
-  Xml.Win.msxmldom,
-{$ENDIF}
   SVGParse,
-  SVGProperties,
   SVGPaint,
   SVGPath,
   SVGCommon;
@@ -597,8 +593,8 @@ begin
     Items[0].Free;
   end;
 
-  Visible := tbTrue;
-  Display := tbTrue;
+  FVisible := tbTrue;
+  FDisplay := tbTrue;
   FID := '';
 
   SetLength(FClasses, 0);
@@ -871,57 +867,42 @@ begin
   end;
 end;
 
-procedure TSVGObject.ReadIn(const Node: IXMLNode);
-var
-  S: string;
-  C: Integer;
-
-  {$IF CompilerVersion < 28}
-  procedure DeleteElement(var A: TArray<string>; const Index: Cardinal;
-      Count: Cardinal = 1);
-  var
-    ALength: Cardinal;
-    i: Cardinal;
-  begin
-    ALength := Length(A);
-    for i := Index + Count to ALength - 1 do
-      A[i - Count] := A[i];
-    SetLength(A, ALength - Count);
-  end;
-  {$IFEND}
-
+function TSVGObject.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 begin
-  LoadString(Node, 'id', FID);
+  Result := True;
+  if AttrName = 'id' then
+    FID := AttrValue
+  else if AttrName = 'display' then
+    FDisplay := ParseDisplay(AttrValue)
+  else if AttrName = 'visibility' then
+    FDisplay := ParseVisibility(AttrValue)
+  else if AttrName = 'style' then
+    ObjectStyle.SetValues(AttrValue)
+  else if AttrName = 'class' then
+    FClasses := ParseClass(AttrValue)
+  else
+    Result := False;
+end;
 
-  LoadDisplay(Node, FDisplay);
-  LoadVisible(Node, FVisible);
-
-  for C := 0 to Node.AttributeNodes.count - 1 do
-  begin
-    S := Node.AttributeNodes[C].nodeName;
-    ObjectStyle.AddStyle(S, VarToStr(Node.AttributeNodes[C].nodeValue));
-  end;
-
-  LoadString(Node, 'style', S);
-  if S <> '' then
-    ObjectStyle.SetValues(S);
-
-  S := '';
-  LoadString(Node, 'class', S);
-
-  FClasses := S.Split([',']);
-  for C := Length(FClasses) - 1 downto 0 do
-  begin
-    FClasses[C] := Trim(FClasses[C]);
-    if FClasses[C] = '' then
-      {$IF CompilerVersion < 28}
-      DeleteElement(FClasses, C, 1);
-      {$ELSE}
-      System.Delete(FClasses, C , 1);
-      {$IFEND}
-  end;
-
+procedure TSVGObject.ReadIn(const Node: IXMLDOMNode);
+var
+  AttrName: string;
+  AttrValue: string;
+  Attrs: IXMLDOMNamedNodeMap;
+  AttrNode: IXMLDOMNode;
+begin
   FObjectName := Node.nodeName;
+
+  Attrs := Node.Attributes;
+  AttrNode := Attrs.nextNode;
+  while Assigned(AttrNode) do
+  begin
+    AttrName := AttrNode.nodeName;
+    AttrValue := AttrNode.text;
+    if not ReadInAttr(AttrName, AttrValue) then
+      ObjectStyle.AddStyle(AttrName, AttrValue);
+    AttrNode := Attrs.nextNode;
+  end;
 end;
 {$ENDREGION}
 
@@ -966,14 +947,13 @@ begin
   FillChar(FCalculatedMatrix, SizeOf(FCalculatedMatrix), 0);
 end;
 
-procedure TSVGMatrix.ReadIn(const Node: IXMLNode);
-var
-  M: TAffineMatrix;
+function TSVGMatrix.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 begin
-  inherited;
-  M := FPureMatrix;
-  LoadTransform(Node, 'transform', M);
-  FPureMatrix := M;
+  Result := True;
+  if AttrName = 'transform' then
+    FPureMatrix := ParseTransform(AttrValue)
+  else
+    Result := inherited;
 end;
 
 procedure TSVGMatrix.SetPureMatrix(const Value: TAffineMatrix);
@@ -1230,16 +1210,9 @@ begin
   FStyleChanged := False;
 end;
 
-procedure TSVGBasic.ReadIn(const Node: IXMLNode);
+procedure TSVGBasic.ReadIn(const Node: IXMLDOMNode);
 begin
   inherited;
-
-  LoadLengthProperty(Node, 'x', ltHorz, FX);
-  LoadLengthProperty(Node, 'y', ltVert, FY);
-  LoadLengthProperty(Node, 'width', ltHorz, FWidth);
-  LoadLengthProperty(Node, 'height', ltVert, FHeight);
-  LoadLengthProperty(Node, 'rx', ltOther, FRX);
-  LoadLengthProperty(Node, 'ry', ltOther, FRY);
 
   if not HasValue(FRX) and HasValue(FRY) then
   begin
@@ -1252,6 +1225,19 @@ begin
   end;
 
   UpdateStyle;
+end;
+
+function TSVGBasic.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+begin
+  Result := True;
+  if AttrName = 'x' then ParseLengthAttr(AttrValue, ltHorz, FX)
+  else if AttrName = 'y' then ParseLengthAttr(AttrValue, ltVert, FY)
+  else if AttrName = 'width' then ParseLengthAttr(AttrValue, ltHorz, FWidth)
+  else if AttrName = 'height' then ParseLengthAttr(AttrValue, ltVert, FHeight)
+  else if AttrName = 'rx' then ParseLengthAttr(AttrValue, ltOther, FRX)
+  else if AttrName = 'ry' then ParseLengthAttr(AttrValue, ltOther, FRY)
+  else
+    Result := inherited;
 end;
 
 procedure TSVGBasic.AfterPaint(const Graphics: TGPGraphics;
@@ -1534,19 +1520,18 @@ begin
   end;
 end;
 
-procedure TSVGBasic.ReadChildren(const Node: IXMLNode);
+procedure TSVGBasic.ReadChildren(const Node: IXMLDOMNode);
 var
-  C: Integer;
   SVG: TSVGObject;
   LRoot: TSVG;
   NodeName: string;
   SVGObjecClass: TSVGObjectClass;
-  ChildNode: IXMLNode;
+  ChildNode: IXMLDOMNode;
 begin
-  for C := 0 to Node.ChildNodes.count - 1 do
+  ChildNode := Node.firstChild;
+  while Assigned(ChildNode) do
   begin
     SVG := nil;
-    ChildNode := Node.ChildNodes[C];
     NodeName := ChildNode.nodeName;
     if SvgElements.TryGetValue(NodeName, SVGObjecClass) then
       SVG := SVGObjecClass.Create(Self)
@@ -1555,10 +1540,12 @@ begin
       LRoot := GetRoot;
       LRoot.ReadStyles(ChildNode);
     end;
+
     if Assigned(SVG) then
     begin
       SVG.ReadIn(ChildNode);
     end;
+    ChildNode := ChildNode.nextSibling;
   end;
 end;
 
@@ -1815,13 +1802,13 @@ begin
   FF.Free;
 end;
 
-procedure TSVGBasic.LoadLengthProperty(const Node: IXMLNode; const S: string;
+procedure TSVGBasic.ParseLengthAttr(const AttrValue: string;
   LengthType: TLengthType; var X: TFloat);
 Var
   IsPercent: Boolean;
 begin
   IsPercent := False;
-  LoadLength(Node, S, X, IsPercent);
+  X := ParseLength(AttrValue, IsPercent);
   if IsPercent then
     with Root.ViewBox do
       case LengthType of
@@ -2096,20 +2083,20 @@ end;
 {$REGION 'TSVG'}
 procedure TSVG.LoadFromText(const Text: string);
 var
-  XML: IXMLDocument;
-  DocNode: IXMLNode;
+  XML: IXMLDOMDocument3;
+  DocNode: IXMLDOMNode;
 begin
   Clear;
   FSource := Text;
-  {$IFDEF MSWINDOWS}
-  TMSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False, True);
-  {$ENDIF}
-  XML := TXmlDocument.Create(nil);
+  XML := CoDOMDocument60.Create;
   try
-    XML.Options := XML.Options - [doNamespaceDecl];
-    XML.LoadFromXML(Text);
-
-    if Assigned(XML) then
+    XML.preserveWhiteSpace := False;
+    XML.validateOnParse := False;
+    XML.resolveExternals := False;
+    XML.async := False;
+    XML.setProperty('ProhibitDTD', False);
+    XML.setProperty('NewParser', True);
+    if XML.LoadXML(Text) then
     begin
       DocNode := XML.documentElement;
       if Assigned(DocNode) and (DocNode.nodeName = 'svg') then
@@ -2119,7 +2106,6 @@ begin
     end else
       FSource := '';
   except
-    On EDomParseError do
     FSource := '';
   end;
 end;
@@ -2168,77 +2154,6 @@ var
 begin
   Buffer := TEncoding.UTF8.GetBytes(FSource);
   Stream.WriteBuffer(Buffer, Length(Buffer));
-end;
-
-function TSVG.SaveToNode(const Parent: IXMLNode; Left, Top, Width, Height: TFloat): IXMLNode;
-
-  function ConvertFloat(const D: TFloat): string;
-  begin
-    Result := FloatToStr(D);
-    Result := StringReplace(Result, ',', '.', []);
-  end;
-
-var
-  XML: IXMLDocument;
-  Translation: string;
-  LScale: string;
-  C: Integer;
-  Container: IXMLNode;
-  Attribute: IXMLNode;
-  NewNode: IXMLNode;
-begin
-  Result := nil;
-  if FSource = '' then
-    Exit;
-
-  try
-    {$IFDEF MSWINDOWS}
-    TMSXMLDOMDocumentFactory.AddDOMProperty('ProhibitDTD', False, True);
-    {$ENDIF}
-    XML := TXmlDocument.Create(nil);
-    XML.LoadFromXML(FSource);
-
-    Container := Parent.ownerDocument.createElement('g', '');
-    Parent.ChildNodes.Add(Container);
-
-    if (Left <> 0) or (Top <> 0) then
-      Translation := 'translate(' + ConvertFloat(Left) + ', ' + ConvertFloat(Top) + ')'
-    else
-      Translation := '';
-
-    if (Width <> FWidth) or (Height <> FHeight) then
-      LScale := 'scale(' + ConvertFloat(Width / FWidth) + ', ' +
-        ConvertFloat(Width / FWidth) + ')'
-    else
-       LScale := '';
-
-    if LScale <> '' then
-    begin
-      if Translation = '' then
-      begin
-        Translation := LScale
-      end
-      else
-      begin
-        Translation := Translation + ' ' + LScale;
-      end;
-    end;
-
-    if Translation <> '' then
-    begin
-      Attribute := Container.ownerDocument.createElement('transform', '');
-//      Container.attributes.setNamedItem(Attribute);
-    end;
-
-    for C := 0 to XML.documentElement.childNodes.Count - 1 do
-    begin
-      NewNode := XML.documentElement.childNodes[C].cloneNode(True);
-      Container.childNodes[C].ChildNodes.Add(NewNode);
-      Result := NewNode;
-    end;
-  finally
-    XML := nil;
-  end;
 end;
 
 procedure TSVG.PaintTo(DC: HDC; Bounds: TGPRectF;
@@ -2483,25 +2398,30 @@ begin
   end;
 end;
 
-procedure TSVG.ReadStyles(const Node: IXMLNode);
+procedure TSVG.ReadStyles(const Node: IXMLDOMNode);
 var
-  C: Integer;
   S: string;
   Classes: TArray<string>;
   Cls: string;
+  AttrNode: IXMLDOMNode;
+  ChildNode: IXMLDOMNode;
 begin
-  if Node.Attributes['type'] = 'text/css' then
+  AttrNode := Node.Attributes.getNamedItem('type');
+  if Assigned(AttrNode) and (AttrNode.text = 'text/css') then
   begin
     S := Node.text;
   end
   else
   begin
-    for C := 0 to Node.childNodes.count - 1 do
+    ChildNode := Node.firstChild;
+    while Assigned(ChildNode) do
     begin
-      if Node.childNodes[C].nodeName = '#cdata-section' then
+      if ChildNode.nodeName = '#cdata-section' then
       begin
-       S := Node.childNodes[C].text;
+       S := ChildNode.text;
+       Break;
       end;
+      ChildNode := ChildNode.nextSibling;
     end;
   end;
 
@@ -2628,35 +2548,18 @@ begin
     FCalculatedMatrix := FPureMatrix * FCalculatedMatrix;
 end;
 
-procedure TSVG.ReadIn(const Node: IXMLNode);
-var
-  ViewBoxStr: string;
+procedure TSVG.ReadIn(const Node: IXMLDOMNode);
 begin
   if Node.nodeName <> 'svg' then
     Exit;
 
   inherited;
 
-  Display := tbTrue;
-  Visible := tbTrue;
-
-  // % width and height do not make sense in stand-alone svgs
-  // and they centainly do not refer to % size of the svg content
-  // When svg's are embedded in a web page for instance the %s
-  // correspond to the % of the Web page size
-  // TODO FSize, CalcCompleteSize can be removed
-  if ParseUnit(VarToStr(Node.Attributes['width'])) = suPercent then
-    FWidth := 0;
-  if ParseUnit(VarToStr(Node.Attributes['height'])) = suPercent then
-    FHeight := 0;
-
-  FViewBox.Width := FWidth;
-  FViewBox.Height := FHeight;
-
-  ViewBoxStr := VarToStr(Node.Attributes['viewBox']);
-  if ViewBoxStr <> '' then
-    FViewBox := ParseDRect(ViewBoxStr);
-
+  if FViewBox.IsEmpty then
+  begin
+    FViewBox.Width := FWidth;
+    FViewBox.Height := FHeight;
+  end;
   //Fix for SVG without width and height but with viewBox
   if (FWidth = 0) and (FHeight = 0) then
   begin
@@ -2667,6 +2570,40 @@ begin
   ReadChildren(Node);
 
   DeReferenceUse;
+end;
+
+function TSVG.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+{
+  % width and height do not make sense in stand-alone svgs
+  and they centainly do not refer to % size of the svg content
+  When svg's are embedded in a web page for instance the %s
+  correspond to the % of the Web page size
+}
+begin
+  Result := True;
+  if AttrName.StartsWith('xlmns') then begin end // ignore
+  else if AttrName = 'version' then begin end // ignore
+  else if AttrName = 'width' then
+  begin
+    if (ParseUnit(AttrValue) = suPercent) then
+      FWidth := 0
+    else
+      ParseLengthAttr(AttrValue, ltHorz, FWidth);
+  end
+  else if AttrName = 'height' then
+  begin
+    if (ParseUnit(AttrValue) = suPercent) then
+      FHeight := 0
+    else
+      ParseLengthAttr(AttrValue, ltVert, FHeight)
+  end
+  else if AttrName = 'viewBox' then
+  begin
+    if AttrValue <> '' then
+      FViewBox := ParseDRect(AttrValue);
+  end
+  else
+    Result := inherited;
 end;
 
 procedure TSVG.DeReferenceUse;
@@ -2694,7 +2631,7 @@ end;
 
 // TSVGContainer
 
-procedure TSVGContainer.ReadIn(const Node: IXMLNode);
+procedure TSVGContainer.ReadIn(const Node: IXMLDOMNode);
 begin
   inherited;
   ReadChildren(Node);
@@ -2702,7 +2639,7 @@ end;
 
 // TSVGSwitch
 
-procedure TSVGSwitch.ReadIn(const Node: IXMLNode);
+procedure TSVGSwitch.ReadIn(const Node: IXMLDOMNode);
 begin
   inherited;
   ReadChildren(Node);
@@ -2710,7 +2647,7 @@ end;
 
 // TSVGDefs
 
-procedure TSVGDefs.ReadIn(const Node: IXMLNode);
+procedure TSVGDefs.ReadIn(const Node: IXMLDOMNode);
 begin
   inherited;
   Display := tbFalse;
@@ -2787,17 +2724,19 @@ begin
   FReference := '';
 end;
 
-procedure TSVGUse.ReadIn(const Node: IXMLNode);
+
+function TSVGUse.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 begin
-  inherited;
-  LoadString(Node, 'xlink:href', FReference);
-  if FReference = '' then
-    LoadString(Node, 'href', FReference);
+  Result := True;
+  if AttrName = 'xlink:href' then FReference := AttrValue
+  else if AttrName = 'href' then FReference := AttrValue
+  else
+    Result := inherited;
 end;
 
 {$REGION 'TSVGRect'}
 
-procedure TSVGRect.ReadIn(const Node: IXMLNode);
+procedure TSVGRect.ReadIn(const Node: IXMLDOMNode);
 begin
   inherited;
 
@@ -2840,16 +2779,21 @@ end;
 {$ENDREGION}
 
 {$REGION 'TSVGLine'}
-procedure TSVGLine.ReadIn(const Node: IXMLNode);
+procedure TSVGLine.ReadIn(const Node: IXMLDOMNode);
 begin
   inherited;
-
-  LoadLengthProperty(Node, 'x1', ltHorz, FX);
-  LoadLengthProperty(Node, 'y1', ltVert, FY);
-  LoadLengthProperty(Node, 'x2', ltHorz, FWidth);
-  LoadLengthProperty(Node, 'y2', ltVert, FHeight);
-
   ConstructPath;
+end;
+
+function TSVGLine.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+begin
+  Result := True;
+  if AttrName = 'x1' then ParseLengthAttr(AttrValue, ltHorz, FX)
+  else if AttrName = 'y1' then ParseLengthAttr(AttrValue, ltVert, FY)
+  else if AttrName = 'x2' then ParseLengthAttr(AttrValue, ltHorz, FWidth)
+  else if AttrName = 'y2' then ParseLengthAttr(AttrValue, ltVert, FHeight)
+  else
+    Result := inherited;
 end;
 
 function TSVGLine.ObjectBounds(IncludeStroke: Boolean; ApplyTranform: Boolean): TRectF;
@@ -2992,20 +2936,27 @@ begin
   SL.Free;
 end;
 
-procedure TSVGPolyLine.ReadIn(const Node: IXMLNode);
+procedure TSVGPolyLine.ReadIn(const Node: IXMLDOMNode);
+begin
+  inherited;
+  ConstructPath;
+end;
+
+function TSVGPolyLine.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 var
   S: string;
 begin
-  inherited;
+  Result := True;
+  if AttrName = 'points' then
+  begin
+    S := AttrValue;
+    S := StringReplace(S, ',', ' ', [rfReplaceAll]);
+    S := StringReplace(S, '-', ' -', [rfReplaceAll]);
 
-  LoadString(Node, 'points', S);
-
-  S := StringReplace(S, ',', ' ', [rfReplaceAll]);
-  S := StringReplace(S, '-', ' -', [rfReplaceAll]);
-
-  ConstructPoints(S);
-
-  ConstructPath;
+    ConstructPoints(S);
+  end
+  else
+    Result := inherited;
 end;
 
 procedure TSVGPolyLine.ConstructPath;
@@ -3033,20 +2984,27 @@ end;
 {$ENDREGION}
 
 {$REGION 'TSVGEllipse'}
-procedure TSVGEllipse.ReadIn(const Node: IXMLNode);
+procedure TSVGEllipse.ReadIn(const Node: IXMLDOMNode);
 begin
   inherited;
-
-  LoadLengthProperty(Node, 'cx', ltHorz, FCX);
-  LoadLengthProperty(Node, 'cy', ltVert, FCY);
-
-  if Node.NodeName = 'circle' then
-  begin
-    LoadLengthProperty(Node, 'r', ltOther,  FRX);
-    FRY := FRX;
-  end;
-
   ConstructPath;
+end;
+
+function TSVGEllipse.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+begin
+  Result := True;
+  if AttrName = 'cx' then ParseLengthAttr(AttrValue, ltHorz, FCX)
+  else if AttrName = 'cy' then ParseLengthAttr(AttrValue, ltVert, FCY)
+  else if AttrName = 'r' then
+  begin
+    if FObjectName = 'circle' then
+    begin
+      ParseLengthAttr(AttrValue, ltOther,  FRX);
+      FRY := FRX;
+    end;
+  end
+  else
+    Result := inherited;
 end;
 
 function TSVGEllipse.ObjectBounds(IncludeStroke: Boolean; ApplyTranform: Boolean): TRectF;
@@ -3299,7 +3257,7 @@ begin
   end;
 end;
 
-procedure TSVGPath.ReadIn(const Node: IXMLNode);
+function TSVGPath.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 var
   S: string;
   SL: TStrings;
@@ -3308,9 +3266,14 @@ var
   Element: TSVGPathElement;
   LastElement: TSVGPathElement;
 begin
-  inherited;
+  Result := True;
+  if AttrName = 'd' then
+    S := AttrValue
+  else
+    Result := inherited;
 
-  LoadString(Node, 'd', S);
+  if S = '' then Exit;
+
   S := StringReplace(S, ',', ' ', [rfReplaceAll]);
   SL := Split(S);
 
@@ -3354,6 +3317,7 @@ begin
 
   ConstructPath;
 end;
+
 {$ENDREGION}
 
 {$REGION 'TSVGImage'}
@@ -3461,14 +3425,7 @@ begin
   //FreeAndNil(ClipPath);
 end;
 
-procedure TSVGImage.ReadIn(const Node: IXMLNode);
-var
-  S: string;
-  SA: TStreamAdapter;
-
-  {$IF CompilerVersion < 28}
-  Decoder64: TIdDecoderMIME;
-  {$IFEND}
+procedure TSVGImage.ReadIn(const Node: IXMLDOMNode);
 
   function IsValid(var S: string): Boolean;
   var
@@ -3489,14 +3446,18 @@ var
     end;
   end;
 
+
 var
+  S: string;
+  SA: TStreamAdapter;
   SS: TStringStream;
+  {$IF CompilerVersion < 28}
+  Decoder64: TIdDecoderMIME;
+  {$IFEND}
 begin
   inherited;
 
-  LoadString(Node, 'xlink:href', S);
-  if S = '' then
-    LoadString(Node, 'href', S);
+  S := FImageURI;
 
   if IsValid(S) then
   begin
@@ -3521,7 +3482,7 @@ begin
       SS.Free;
     end;
   end
-  else
+  else if FileExists(S) then
   begin
     FFileName := S;
     FStream := TMemoryStream.Create;
@@ -3532,6 +3493,16 @@ begin
     FImage.GetLastStatus;
   end;
 end;
+
+function TSVGImage.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+begin
+  Result := True;
+  if AttrName = 'xlink:href' then FImageURI := AttrValue
+  else if AttrName = 'href' then FImageURI := AttrValue
+  else
+    Result := inherited;
+end;
+
 {$ENDREGION}
 
 {$REGION 'TSVGCustomText'}
@@ -3587,6 +3558,8 @@ begin
   FFontHeight := 0;
   FDX := 0;
   FDY := 0;
+  FHasX := False;
+  FHasY := False;
 end;
 
 function TSVGCustomText.GetCompleteWidth: TFloat;
@@ -3914,34 +3887,28 @@ begin
 {$ENDIF}
 end;
 
-procedure TSVGCustomText.ParseNode(const Node: IXMLNode);
+procedure TSVGCustomText.ParseNode(const Node: IXMLDOMNode);
 const
   TAB = #8;
 var
-  LText: TSVGText;
   TSpan: TSVGTSpan;
   TextPath: TSVGTextPath;
 begin
   if Node.NodeName = '#text' then
   begin
-    LText := TSVGTSpan.Create(Self);
-    LText.Assign(Self);
-    LText.FText := Node.Text;
-    LText.SetSize;
-    LText.ConstructPath;
-  end
-  else if Node.NodeName = 'text' then
-  begin
-    LText := TSVGTSpan.Create(Self);
-    LText.Assign(Self);
-    FillChar(LText.FPureMatrix, SizeOf(LText.FPureMatrix), 0);
-    LText.ReadIn(Node);
+    TSpan := TSVGTSpan.Create(Self);
+    TSpan.Assign(Self);
+    FillChar(TSpan.FPureMatrix, SizeOf(TSpan.FPureMatrix), 0);
+    TSpan.FText := Node.Text;
+    TSpan.SetSize;
+    TSpan.ConstructPath;
   end
   else if Node.NodeName = 'tspan' then
   begin
     TSpan := TSVGTSpan.Create(Self);
     TSpan.Assign(Self);
     FillChar(TSpan.FPureMatrix, SizeOf(TSpan.FPureMatrix), 0);
+    TSpan.SetSize;
     TSpan.ReadIn(Node);
   end
   else if Node.NodeName = 'textPath' then
@@ -3953,36 +3920,40 @@ begin
   end;
 end;
 
-procedure TSVGCustomText.ReadIn(const Node: IXMLNode);
+procedure TSVGCustomText.ReadIn(const Node: IXMLDOMNode);
 begin
   inherited;
-
-  FHasX := Node.HasAttribute('x');
-  FHasY := Node.HasAttribute('y');
-
-  LoadLengthProperty(Node, 'dx', ltHorz, FDX);
-  LoadLengthProperty(Node, 'dy', ltVert, FDY);
+  ReadTextNodes(Node);
 end;
 
-procedure TSVGCustomText.ReadTextNodes(const Node: IXMLNode);
-var
-  C: Integer;
+function TSVGCustomText.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 begin
-  if (Node.nodeType = TNodeType.ntText) or
-    ((Node.NodeName = 'text') and Node.IsTextElement)
-  then
+  Result := True;
+  if AttrName = 'x' then
   begin
-    FText := Node.Text;
-    SetSize;
-    ConstructPath;
+    ParseLengthAttr(AttrValue, ltHorz, FX);
+    FHasX := True;
   end
-  else
+  else if AttrName = 'y' then
   begin
-    ConstructPath;
-    for C := 0 to Node.childNodes.count - 1 do
-    begin
-      ParseNode(Node.childNodes[C]);
-    end;
+    ParseLengthAttr(AttrValue, ltVert, FY);
+    FHasY := True;
+  end
+  else if AttrName = 'dx' then ParseLengthAttr(AttrValue, ltHorz, FDX)
+  else if AttrName = 'dy' then ParseLengthAttr(AttrValue, ltVert, FDY)
+  else
+    Result := inherited;
+end;
+
+procedure TSVGCustomText.ReadTextNodes(const Node: IXMLDOMNode);
+var
+  ChildNode: IXMLDOMNode;
+begin
+  ChildNode := Node.firstChild;
+  while Assigned(ChildNode) do
+  begin
+    ParseNode(ChildNode);
+    ChildNode := ChildNode.nextSibling;
   end;
 end;
 {$ENDREGION}
@@ -4032,7 +4003,7 @@ begin
   Result := FClipPath;
 end;
 
-procedure TSVGClipPath.ReadIn(const Node: IXMLNode);
+procedure TSVGClipPath.ReadIn(const Node: IXMLDOMNode);
 begin
   inherited;
   ReadChildren(Node);
@@ -4054,7 +4025,6 @@ procedure TSVGTextPath.ConstructPath;
 var
   GuidePath: TSVGPath;
   Position: TFloat;
-  Offset: TFloat;
   X, Y: TFloat;
 
   procedure RenderTextElement(const Element: TSVGCustomText);
@@ -4105,7 +4075,7 @@ var
 
       Size := Element.GetFontSize;
       Position := Position +
-        PT.AddPathText(Element.FPath, Trim(Element.FText), Offset + Position,
+        PT.AddPathText(Element.FPath, Trim(Element.FText), Position,
           FF, FontStyle, Size, SF);
 
       PT.Free;
@@ -4136,85 +4106,41 @@ begin
   if GuidePath = nil then
     Exit;
 
-  Offset := 0;
   if FOffsetIsPercent and (FOffset <> 0) then
-  begin
-    Offset := TGPPathText.GetPathLength(GuidePath.FPath) / 100 * FOffset;
-  end;
+    Position := TGPPathText.GetPathLength(GuidePath.FPath) * FOffset
+  else
+    Position := FOffset;
 
   X := FDX;
   Y := FDY;
+
   RenderTextElement(Self);
 end;
 
-procedure TSVGTextPath.ReadIn(const Node: IXMLNode);
-var
-  Value: string;
+function TSVGTextPath.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 begin
-  inherited;
-
-  Value := ObjectStyle.Values['startOffset'];
-  if Value <> '' then
+  Result := True;
+  if AttrName = 'xlink:href' then FPathRef := AttrValue
+  else if AttrName = 'href' then FPathRef := AttrValue
+  else if AttrName = 'startOffset' then
+    FOffset := ParseLength(AttrValue, FOffsetIsPercent)
+  else if AttrName = 'method' then
   begin
-    FOffsetIsPercent := False;
-    if RightStr(Value, 1) = '%' then
-    begin
-      FOffsetIsPercent := True;
-      Value := LeftStr(Value, Length(Value) - 1);
-    end;
-    FOffset := ParseLength(Value);
-  end;
-
-  Value := ObjectStyle.Values['method'];
-  if Value = 'stretch' then
+  if AttrValue = 'stretch' then
     FMethod := tpmStretch;
-
-  Value := ObjectStyle.Values['spacing'];
-  if Value = 'exact' then
-    FSpacing := tpsExact;
-
-  LoadString(Node, 'xlink:href', FPathRef);
-  if FPathRef = '' then
-    LoadString(Node, 'href', FPathRef);
-
-  ReadTextNodes(Node);
-end;
-
-procedure TSVGTextPath.ReadTextNodes(const Node: IXMLNode);
-var
-  C: Integer;
-begin
-  if (Node.nodeType = TNodeType.ntText) or Node.IsTextElement then
+  end
+  else if AttrName = 'spacing' then
   begin
-    FText := Node.Text;
-    SetSize;
+  if AttrValue = 'exact' then
+    FSpacing := tpsExact;
   end
   else
-  begin
-    for C := 0 to Node.childNodes.Count - 1 do
-    begin
-      ParseNode(Node.childNodes[C]);
-    end;
-  end;
-  ConstructPath;
+    Result := inherited;
 end;
-{$ENDREGION}
 
-{$REGION 'TSVGText'}
-procedure TSVGText.ReadIn(const Node: IXMLNode);
+procedure TSVGTextPath.ReadTextNodes(const Node: IXMLDOMNode);
 begin
   inherited;
-
-  ReadTextNodes(Node);
-end;
-{$ENDREGION}
-
-{$REGION 'TSVGTSpan'}
-procedure TSVGTSpan.ReadTextNodes(const Node: IXMLNode);
-begin
-  if Node.IsTextElement then
-    FText := Node.Text;
-  SetSize;
   ConstructPath;
 end;
 {$ENDREGION}
