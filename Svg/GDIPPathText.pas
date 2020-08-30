@@ -60,7 +60,7 @@ type
     destructor Destroy; override;
 
     function AddPathText(const Path: TGPGraphicsPath;
-      const Text: WideString; const Indent: Single;
+      const Text: string; const Indent: Single;
       const Family: TGPFontFamily; Style: Integer;
       const Size: Single; const Format: TGPStringFormat;
       const DistanceFactor: Single = 1; const KerningFactor: Single = 1): Single;
@@ -222,7 +222,7 @@ begin
 end;
 
 function TGPPathText.AddPathText(const Path: TGPGraphicsPath;
-  const Text: WideString; const Indent: Single;
+  const Text: string; const Indent: Single;
   const Family: TGPFontFamily; Style: Integer;
   const Size: Single; const Format: TGPStringFormat;
   const DistanceFactor: Single = 1; const KerningFactor: Single = 1): Single;
