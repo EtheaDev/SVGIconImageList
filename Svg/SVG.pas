@@ -43,6 +43,7 @@ uses
   Winapi.GDIPOBJ,
   Winapi.GDIPAPI,
   WinApi.msxml,
+  WinApi.ActiveX,
   System.UITypes,
   System.Classes,
   System.Math,
@@ -748,12 +749,11 @@ function TSVGObject.FindByType(Typ: TClass; Previous: TSVGObject = nil): TSVGObj
 var
   Found: Boolean;
 
-  procedure Walk(SVG: TSVGObject);
+  procedure Walk(const SVG : TSVGObject);
   var
     C: Integer;
   begin
-    if (SVG.ClassName = Typ.ClassName) and
-       (Found) then
+    if (SVG.ClassName = Typ.ClassName) and (Found) then
     begin
       Result := SVG;
       Exit;
@@ -3356,7 +3356,7 @@ end;
 
 procedure TSVGImage.AssignTo(Dest: TPersistent);
 var
-  SA: TStreamAdapter;
+  SA: IStream;
 begin
   if Dest is TSVGImage then
   begin
@@ -3449,7 +3449,7 @@ procedure TSVGImage.ReadIn(const Node: IXMLDOMNode);
 
 var
   S: string;
-  SA: TStreamAdapter;
+  SA: IStream;
   SS: TStringStream;
   {$IF CompilerVersion < 28}
   Decoder64: TIdDecoderMIME;
