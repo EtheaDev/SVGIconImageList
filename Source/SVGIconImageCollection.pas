@@ -103,7 +103,7 @@ type
     function IndexOf(const Name: string): Integer;
     procedure ClearIcons;
 
-    procedure LoadFromResource(const hInstance : THandle; const ResourceName : string; const IconName : string);
+    function LoadFromResource(const hInstance : THandle; const ResourceName : string; const IconName : string) : integer;
     function LoadFromString(const source : string; const IconName : string) : integer;
 
   published
@@ -205,7 +205,7 @@ begin
   Result := -1;
 end;
 
-procedure TSVGIconImageCollection.LoadFromResource(const hInstance: THandle; const ResourceName, IconName: string);
+function TSVGIconImageCollection.LoadFromResource(const hInstance: THandle; const ResourceName, IconName: string) : integer;
 var
   ResStream: TResourceStream;
   Svg : ISVG;
@@ -214,7 +214,7 @@ begin
   try
     Svg := GlobalSVGFactory.NewSvg;
     Svg.LoadFromStream(ResStream);
-    Add(Svg, IconName);
+    result := Add(Svg, IconName);
   finally
     ResStream.Free;
   end;
