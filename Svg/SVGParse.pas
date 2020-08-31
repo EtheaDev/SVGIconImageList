@@ -52,11 +52,11 @@ function ParseTransform(const ATransform: string): TAffineMatrix;
 
 function ParseDisplay(const ADisplay: string): TTriStateBoolean;
 
-function ParseVisibility(AVisibility: string): TTriStateBoolean;
+function ParseVisibility(const AVisibility: string): TTriStateBoolean;
 
-function ParseClass(AClass: string): TArray<string>;
+function ParseClass(const AClass: string): TArray<string>;
 
-function ParseGradientUnits(AGradientUnit: string): TGradientUnits;
+function ParseGradientUnits(const AGradientUnit: string): TGradientUnits;
 
 implementation
 
@@ -438,7 +438,7 @@ begin
     Result := tbTrue;
 end;
 
-function ParseVisibility(AVisibility: string): TTriStateBoolean;
+function ParseVisibility(const AVisibility: string): TTriStateBoolean;
 begin
   if AVisibility = 'inherit' then
     Result := tbInherit
@@ -448,7 +448,7 @@ begin
     Result := tbFalse;
 end;
 
-function ParseClass(AClass: string): TArray<string>;
+function ParseClass(const AClass: string): TArray<string>;
 
   {$IF CompilerVersion < 28}
   procedure DeleteElement(var A: TArray<string>; const Index: Cardinal;
@@ -480,7 +480,7 @@ begin
   end;
 end;
 
-function ParseGradientUnits(AGradientUnit: string): TGradientUnits;
+function ParseGradientUnits(const AGradientUnit: string): TGradientUnits;
 begin
   Result := guObjectBoundingBox;  // 'objectBoundingBox' default
   if AGradientUnit = 'userSpaceOnUse' then

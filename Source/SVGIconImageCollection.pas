@@ -388,7 +388,9 @@ end;
 function TSVGIconImageCollection.GetNameByIndex(AIndex: Integer): String;
 begin
   if (AIndex >= 0) and (AIndex < Count) then
-    Result := FSVGItems[AIndex].IconName;
+    Result := FSVGItems[AIndex].IconName
+  else
+    result := '';
 end;
 
 function TSVGIconImageCollection.GetIndexByName(const AName: String): Integer;
