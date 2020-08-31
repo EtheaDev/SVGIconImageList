@@ -23,6 +23,7 @@ const
 type
   //  Abstraction of an SVG document
   ISVG = interface
+    ['{70F71B0C-95FA-4D2D-84F6-481BD871B20B}']
     // property access methods
     function GetWidth: Single;
     function GetHeight: Single;
@@ -40,6 +41,7 @@ type
     procedure SaveToStream(Stream: TStream);
     procedure SaveToFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
+    procedure LoadFromString(const source : string);
     procedure LoadFromFile(const FileName: string);
     procedure PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean = True);
     // properties

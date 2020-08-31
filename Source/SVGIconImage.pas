@@ -219,18 +219,18 @@ end;
 
 procedure TSVGIconImage.Paint;
 var
-  SVG: ISVG;
+  LSVG: ISVG;
 begin
   if not UsingSVGText then
-    SVG := FImageList.Images[FImageIndex]
+    LSVG := FImageList.Images[FImageIndex]
   else
-    SVG := FSVG;
+    LSVG := FSVG;
 
-  if not SVG.IsEmpty then
+  if not LSVG.IsEmpty then
   begin
-    SVG.Opacity := FOpacity / 255;
-    SVG.PaintTo(Canvas.Handle, TRectF.Create(TPointF.Create(0, 0), Width, Height), FProportional);
-    SVG.Opacity := 1;
+    LSVG.Opacity := FOpacity / 255;
+    LSVG.PaintTo(Canvas.Handle, TRectF.Create(TPointF.Create(0, 0), Width, Height), FProportional);
+    LSVG.Opacity := 1;
   end;
 
   if csDesigning in ComponentState then

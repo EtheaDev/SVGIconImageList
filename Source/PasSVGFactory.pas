@@ -51,6 +51,7 @@ type
     procedure SaveToStream(Stream: TStream);
     procedure SaveToFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
+    procedure LoadFromString(const source : string);
     procedure LoadFromFile(const FileName: string);
     procedure PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean = True);
   public
@@ -125,6 +126,18 @@ end;
 procedure TPasSVG.LoadFromStream(Stream: TStream);
 begin
   fSvgDoc.LoadFromStream(Stream);
+end;
+
+procedure TPasSVG.LoadFromString(const source: string);
+var
+  stream : TStringStream;
+begin
+  stream := TStringStream.Create(source);
+  try
+    LoadFromStream(stream);
+  finally
+    stream.Free;
+  end;
 end;
 
 procedure TPasSVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);

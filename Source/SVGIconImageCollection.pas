@@ -103,7 +103,8 @@ type
     function IndexOf(const Name: string): Integer;
     procedure ClearIcons;
 
-    procedure LoadFromResource(const hInstance : THandle; const ResourceName : string; const IconName : string);
+    function LoadFromResource(const hInstance : THandle; const ResourceName : string; const IconName : string) : integer;
+    function LoadFromString(const source : string; const IconName : string) : integer;
 
   published
     property SVGIconItems: TSVGIconItems read FSVGItems write SetSVGIconItems;
@@ -204,7 +205,7 @@ begin
   Result := -1;
 end;
 
-procedure TSVGIconImageCollection.LoadFromResource(const hInstance: THandle; const ResourceName, IconName: string);
+function TSVGIconImageCollection.LoadFromResource(const hInstance: THandle; const ResourceName, IconName: string) : integer;
 var
   ResStream: TResourceStream;
   Svg : ISVG;
@@ -213,10 +214,19 @@ begin
   try
     Svg := GlobalSVGFactory.NewSvg;
     Svg.LoadFromStream(ResStream);
-    Add(Svg, IconName);
+    result := Add(Svg, IconName);
   finally
     ResStream.Free;
   end;
+end;
+
+function TSVGIconImageCollection.LoadFromString(const source,  IconName: string): integer;
+var
+  Svg : ISVG;
+begin
+  Svg := GlobalSVGFactory.NewSvg;
+  Svg.LoadFromString(source);
+  result := Add(Svg, IconName);
 end;
 
 procedure TSVGIconImageCollection.ReadImageData(Stream: TStream);
@@ -378,7 +388,9 @@ end;
 function TSVGIconImageCollection.GetNameByIndex(AIndex: Integer): String;
 begin
   if (AIndex >= 0) and (AIndex < Count) then
-    Result := FSVGItems[AIndex].IconName;
+    Result := FSVGItems[AIndex].IconName
+  else
+    result := '';
 end;
 
 function TSVGIconImageCollection.GetIndexByName(const AName: String): Integer;
