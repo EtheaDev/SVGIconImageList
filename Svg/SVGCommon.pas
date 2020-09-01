@@ -206,10 +206,10 @@ end;
 function TryStrToTFloat(const S: string; out Value: TFloat): Boolean;
 var
   S1: UTF8String;
-  P : PAnsiChar;
+  P : PUTF8Char;
 begin
   S1 := UTF8String(S);
-  P := PAnsiChar(S1);
+  P := PUTF8Char(S1);
   while P^ <> #0 do
   begin
     if P^ = ',' then
@@ -217,7 +217,7 @@ begin
     Inc(P);
   end;
 
-  Result := ToFloat(PAnsiChar(S1), Value);
+  Result := ToFloat(PUTF8Char(S1), Value);
   if not Result then
     Value := 0;
 end;
