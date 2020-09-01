@@ -104,7 +104,7 @@ type
     procedure ClearIcons;
 
     function LoadFromResource(const hInstance : THandle; const ResourceName : string; const IconName : string) : integer;
-    function LoadFromString(const source : string; const IconName : string) : integer;
+    function LoadFromString(const Source : string; const IconName : string) : integer;
 
   published
     property SVGIconItems: TSVGIconItems read FSVGItems write SetSVGIconItems;
@@ -220,12 +220,12 @@ begin
   end;
 end;
 
-function TSVGIconImageCollection.LoadFromString(const source,  IconName: string): integer;
+function TSVGIconImageCollection.LoadFromString(const Source,  IconName: string): integer;
 var
   Svg : ISVG;
 begin
   Svg := GlobalSVGFactory.NewSvg;
-  Svg.LoadFromString(source);
+  Svg.Source := Source;
   result := Add(Svg, IconName);
 end;
 
