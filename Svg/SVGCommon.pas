@@ -12,6 +12,7 @@
 {                                                                  }
 { Thanks to:                                                       }
 { Kiriakos Vlahos (type conversion and utility functions)          }
+{ Kiriakos Vlahos (functions from mormot2 for best performances)   }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }

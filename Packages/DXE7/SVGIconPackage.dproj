@@ -57,8 +57,8 @@
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=;ProductName=;ProductVersion=1.0;Comments=</VerInfo_Keys>
         <DCC_Description>Ethea SVGIconImageList VCL components</DCC_Description>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
-        <DllSuffix>_DXE6</DllSuffix>
-        <DCC_UnitSearchPath>..\..\svg;..\..\GDIP;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DllSuffix>_DXE7</DllSuffix>
+        <DCC_UnitSearchPath>..\..\svg;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
@@ -87,7 +87,6 @@
         <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <DllSuffix>_DXE7</DllSuffix>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
@@ -104,7 +103,7 @@
         <DCCReference Include="..\..\Svg\SVGPaint.pas"/>
         <DCCReference Include="..\..\Svg\SVGParse.pas"/>
         <DCCReference Include="..\..\Svg\SVGPath.pas"/>
-        <DCCReference Include="..\..\Svg\SVGProperties.pas"/>
+        <DCCReference Include="..\..\Svg\XmlLite.pas"/>
         <DCCReference Include="..\..\Svg\SVGStyle.pas"/>
         <DCCReference Include="..\..\Svg\SVGTypes.pas"/>
         <DCCReference Include="..\..\Svg\GDIPKerning.pas"/>

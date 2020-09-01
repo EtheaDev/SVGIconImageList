@@ -103,7 +103,7 @@
         <DCCReference Include="..\..\Svg\SVGPaint.pas"/>
         <DCCReference Include="..\..\Svg\SVGParse.pas"/>
         <DCCReference Include="..\..\Svg\SVGPath.pas"/>
-        <DCCReference Include="..\..\Svg\SVGProperties.pas"/>
+        <DCCReference Include="..\..\Svg\XmlLite.pas"/>
         <DCCReference Include="..\..\Svg\SVGStyle.pas"/>
         <DCCReference Include="..\..\Svg\SVGTypes.pas"/>
         <DCCReference Include="..\..\Svg\GDIPKerning.pas"/>
