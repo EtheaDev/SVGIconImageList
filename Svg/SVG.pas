@@ -26,6 +26,7 @@
 { Kiriakos Vlahos (added 'fill-rule' presentation attribute)       }
 { Kiriakos Vlahos (fixed loadlength)                               }
 { Kiriakos Vlahos (Fixed currentColor and default fillcolor)       }
+{ Kiriakos Vlahos (Replacement of MSXLML with XMLite)              }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }
