@@ -2168,7 +2168,6 @@ begin
   Size := Stream.Size;
   SetLength(Buffer, Size);
   Stream.Read(Buffer, 0, Size);
-  OutputDebugString('Load');
   LoadFromText(TEncoding.UTF8.GetString(Buffer));
 end;
 
