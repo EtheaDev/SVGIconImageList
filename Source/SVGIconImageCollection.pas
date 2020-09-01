@@ -223,10 +223,16 @@ end;
 function TSVGIconImageCollection.LoadFromString(const source,  IconName: string): integer;
 var
   Svg : ISVG;
+  sStream : TStringStream;
 begin
-  Svg := GlobalSVGFactory.NewSvg;
-  Svg.LoadFromString(source);
-  result := Add(Svg, IconName);
+  sStream := TStringStream.Create(source);
+  try
+    Svg := GlobalSVGFactory.NewSvg;
+    Svg.LoadFromStream(sStream);
+    result := Add(Svg, IconName);
+  finally
+    sStream.Free;
+  end;
 end;
 
 procedure TSVGIconImageCollection.ReadImageData(Stream: TStream);
