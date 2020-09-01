@@ -1248,27 +1248,39 @@ begin
       ReadStyle(Style);
   end;
 
-  if LRoot.Grayscale then
+
+  if FFillURI <> '' then
+  begin
+    if LRoot.Grayscale then
+      FFillColor   := GetSVGGrayscale(GetSVGColor(FFillURI))
+    else
     begin
-      FillColor   := GetSVGGrayscale(GetSVGColor(FFillURI));
-      StrokeColor := GetSVGGrayscale(GetSVGColor(FStrokeURI));
-    end
-   else
-    begin
-      FillColor   := GetSVGColor(FFillURI);
-      StrokeColor := GetSVGColor(FStrokeURI);
+      FFillColor   := GetSVGColor(FFillURI);
+      if (LRoot.FixedColor <> SVG_INHERIT_COLOR) and
+         (FFillColor <> SVG_INHERIT_COLOR) and (FFillColor <> SVG_NONE_COLOR)
+      then
+        FFillColor := LRoot.FixedColor;
     end;
 
-  if (LRoot.FixedColor <> SVG_INHERIT_COLOR) then
+    FFillURI := ParseURI(FFillURI);
+  end;
+
+  if FStrokeURI <> '' then
+  begin
+    if LRoot.Grayscale then
+      FStrokeColor   := GetSVGGrayscale(GetSVGColor(FStrokeURI))
+    else
     begin
-      if (FillColor <> SVG_INHERIT_COLOR) and (FillColor <> SVG_NONE_COLOR) then
-        FillColor := LRoot.FixedColor;
-      if (StrokeColor <> SVG_INHERIT_COLOR) and (StrokeColor <> SVG_NONE_COLOR) then
-        StrokeColor := LRoot.FixedColor;
+      FStrokeColor   := GetSVGColor(FStrokeURI);
+      if (LRoot.FixedColor <> SVG_INHERIT_COLOR) and
+         (FStrokeColor <> SVG_INHERIT_COLOR) and (FStrokeColor <> SVG_NONE_COLOR)
+      then
+        FStrokeColor := LRoot.FixedColor;
     end;
 
-  FFillURI := ParseURI(FFillURI);
-  FStrokeURI := ParseURI(FStrokeURI);
+    FStrokeURI := ParseURI(FStrokeURI);
+  end;
+
   ClipURI := ParseURI(FClipURI);
 
   FStyleChanged := False;
@@ -1294,7 +1306,9 @@ end;
 function TSVGBasic.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'x' then ParseLengthAttr(AttrValue, ltHorz, FX)
+  if AttrName = 'fill' then FFillURI := AttrValue
+  else if AttrName = 'stroke' then FStrokeURI := AttrValue
+  else if AttrName = 'x' then ParseLengthAttr(AttrValue, ltHorz, FX)
   else if AttrName = 'y' then ParseLengthAttr(AttrValue, ltVert, FY)
   else if AttrName = 'width' then ParseLengthAttr(AttrValue, ltHorz, FWidth)
   else if AttrName = 'height' then ParseLengthAttr(AttrValue, ltVert, FHeight)
@@ -1588,7 +1602,8 @@ procedure TSVGBasic.SetClipURI(const Value: string);
 begin
   FClipURI := Value;
 
-  CalcClipPath;
+  if FClipURI <> '' then
+    CalcClipPath;
 end;
 
 procedure TSVGBasic.SetStrokeDashArray(const S: string);
@@ -2124,6 +2139,8 @@ var
   Len: LongWord;
 begin
   Clear;
+  if Text = '' then Exit;
+
   try
     Reader := CreateXmlLite.Data(Text).Reader;
     while not Reader.IsEOF do
