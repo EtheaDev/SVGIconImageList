@@ -752,12 +752,11 @@ function TSVGObject.FindByType(Typ: TClass; Previous: TSVGObject = nil): TSVGObj
 var
   Found: Boolean;
 
-  procedure Walk(SVG: TSVGObject);
+  procedure Walk(const SVG: TSVGObject);
   var
     C: Integer;
   begin
-    if (SVG.ClassName = Typ.ClassName) and
-       (Found) then
+    if (SVG.ClassType = Typ) and (Found) then
     begin
       Result := SVG;
       Exit;
@@ -3297,19 +3296,30 @@ var
   S: string;
   SL: TStrings;
   C: Integer;
+  P: PChar;
 
   Element: TSVGPathElement;
   LastElement: TSVGPathElement;
 begin
   Result := True;
   if AttrName = 'd' then
-    S := AttrValue
-  else
+  begin
+    if AttrValue.Length > 0 then
+    begin
+      SetString(S, PChar(AttrValue), AttrValue.Length); // UniqueString
+      P := PChar(S);
+      while P^ <> #0 do
+      begin
+        if P^ = ',' then
+          P^ := ' ';
+        Inc(P);
+      end;
+    end;
+  end else
     Result := inherited;
 
   if S = '' then Exit;
 
-  S := StringReplace(S, ',', ' ', [rfReplaceAll]);
   SL := Split(S);
 
   try
