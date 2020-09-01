@@ -204,18 +204,11 @@ end;
 
 
 function TryStrToTFloat(const S: string; out Value: TFloat): Boolean;
+// The SVG standard does not allow for comma decimal separators
 var
   S1: UTF8String;
-  P : PUTF8Char;
 begin
   S1 := UTF8String(S);
-  P := PUTF8Char(S1);
-  while P^ <> #0 do
-  begin
-    if P^ = ',' then
-      P^ := '.';
-    Inc(P);
-  end;
 
   Result := ToFloat(PUTF8Char(S1), Value);
   if not Result then
