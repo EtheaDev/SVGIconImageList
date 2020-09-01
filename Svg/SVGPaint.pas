@@ -1,4 +1,4 @@
-{******************************************************************}
+﻿{******************************************************************}
 { SVG fill classes                                                 }
 {                                                                  }
 { home page : http://www.mwcs.de                                   }
@@ -30,7 +30,7 @@ uses
   Winapi.GDIPAPI,
   System.UITypes,
   System.Classes,
-  Winapi.msxml,
+  XmlLite,
   SVGTypes,
   SVG;
 
@@ -50,7 +50,7 @@ type
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
-    procedure ReadIn(const Node: IXMLDOMNode); override;
+    procedure ReadIn(const Reader: IXMLReader); override;
     function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
     procedure PaintToPath(Path: TGPGraphicsPath); override;
@@ -63,7 +63,7 @@ type
 
   TSVGFiller = class(TSVGMatrix)
   public
-    procedure ReadIn(const Node: IXMLDOMNode); override;
+    procedure ReadIn(const Reader: IXMLReader); override;
     function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; virtual; abstract;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
     procedure PaintToPath(Path: TGPGraphicsPath); override;
@@ -81,7 +81,7 @@ type
     procedure AssignTo(Dest: TPersistent); override;
     function GetColors(Alpha: Byte): TStopColors; virtual;
   public
-    procedure ReadIn(const Node: IXMLDOMNode); override;
+    procedure ReadIn(const Reader: IXMLReader); override;
     function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
   end;
 
@@ -115,7 +115,7 @@ type
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
-    procedure ReadIn(const Node: IXMLDOMNode); override;
+    procedure ReadIn(const Reader: IXMLReader); override;
     function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; override;
 
@@ -143,7 +143,7 @@ procedure TSVGStop.PaintToPath(Path: TGPGraphicsPath);
 begin
 end;
 
-procedure TSVGStop.ReadIn(const Node: IXMLDOMNode);
+procedure TSVGStop.ReadIn(const Reader: IXMLReader);
 Var
   S: string;
 begin
@@ -218,7 +218,7 @@ procedure TSVGFiller.PaintToPath(Path: TGPGraphicsPath);
 begin
 end;
 
-procedure TSVGFiller.ReadIn(const Node: IXMLDOMNode);
+procedure TSVGFiller.ReadIn(const Reader: IXMLReader);
 begin
   inherited;
   Display := tbFalse;
@@ -230,23 +230,11 @@ end;
 
 // TSVGGradient
 
-procedure TSVGGradient.ReadIn(const Node: IXMLDOMNode);
-var
-  ChildNode: IXMLDOMNode;
-  Stop: TSVGStop;
+procedure TSVGGradient.ReadIn(const Reader: IXMLReader);
 begin
   inherited;
 
-  ChildNode := Node.firstChild;
-  while Assigned(ChildNode) do
-  begin
-    if ChildNode.nodeName = 'stop' then
-    begin
-      Stop := TSVGStop.Create(Self);
-      Stop.ReadIn(ChildNode);
-    end;
-    ChildNode := ChildNode.nextSibling;
-  end;
+  ReadChildren(Reader);
 
   if FURI <> '' then
   begin
@@ -365,7 +353,7 @@ begin
   FFY := FCY;
 end;
 
-procedure TSVGRadialGradient.ReadIn(const Node: IXMLDOMNode);
+procedure TSVGRadialGradient.ReadIn(const Reader: IXMLReader);
 begin
   inherited;
   if not HasValue(FFX) then

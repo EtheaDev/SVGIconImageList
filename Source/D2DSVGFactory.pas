@@ -63,7 +63,6 @@ type
     procedure SaveToFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
     procedure LoadFromFile(const FileName: string);
-    procedure LoadFromString(const source : string);
     procedure PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean = True);
     procedure LoadFromSource;
     procedure SourceFromStream(Stream: TStream);
@@ -230,18 +229,6 @@ begin
   Stream.Position := OldPos;
   // Now create the SVG
   SvgFromStream(Stream);
-end;
-
-procedure TD2DSVG.LoadFromString(const source: string);
-var
-  stream : TStringStream;
-begin
-  stream := TStringStream.Create(source);
-  try
-    LoadFromStream(stream);
-  finally
-    stream.Free;
-  end;
 end;
 
 procedure TD2DSVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
