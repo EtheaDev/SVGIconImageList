@@ -83,6 +83,8 @@ type
   public
     procedure ReadIn(const Reader: IXMLReader); override;
     function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+
+    class function Features: TSVGElementFeatures; override;
   end;
 
   TSVGLinearGradient = class(TSVGGradient)
@@ -250,7 +252,7 @@ begin
   if AttrName = 'gradientUnits' then FGradientUnits := ParseGradientUnits(AttrValue)
   else if AttrName = 'xlink:href' then FURI := AttrValue
   else if AttrName = 'href' then FURI := AttrValue
-  else if AttrName = 'gradientTransform' then PureMatrix := ParseTransform(AttrValue)
+  else if AttrName = 'gradientTransform' then LocalMatrix := ParseTransform(AttrValue)
   else
     Result := inherited;
 end;
@@ -318,9 +320,9 @@ begin
   Brush.SetInterpolationColors(PGPColor(Colors.Colors),
     PSingle(Colors.Positions), Colors.Count);
 
-  if not PureMatrix.IsEmpty then
+  if not LocalMatrix.IsEmpty then
   begin
-    TGP := PureMatrix.ToGPMatrix;
+    TGP := LocalMatrix.ToGPMatrix;
     Brush.SetTransform(TGP);
     TGP.Free;
   end;
@@ -433,9 +435,9 @@ begin
   if HasValue(FFX) and HasValue(FFY) then
     Brush.SetCenterPoint(MakePoint(MFX, MFY));
 
-  if not PureMatrix.IsEmpty then
+  if not LocalMatrix.IsEmpty then
   begin
-    TGP := PureMatrix.ToGPMatrix;
+    TGP := LocalMatrix.ToGPMatrix;
     Brush.SetTransform(TGP);
     TGP.Free;
   end;
@@ -451,6 +453,11 @@ begin
     TSVGGradient(Dest).FURI := FURI;
     TSVGGradient(Dest).FGradientUnits := FGradientUnits;
   end;
+end;
+
+class function TSVGGradient.Features: TSVGElementFeatures;
+begin
+  Result := [sefMayHaveChildren];
 end;
 
 function TSVGGradient.GetColors(Alpha: Byte): TStopColors;
