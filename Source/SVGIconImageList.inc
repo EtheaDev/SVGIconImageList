@@ -118,5 +118,5 @@
   {$Define HiDPISupport}
 {$ENDIF}
 
-{.$DEFINE PreferNativeSvgSupport}
+{$DEFINE PreferNativeSvgSupport}
 {.$DEFINE GPUSupport}
