@@ -59,6 +59,9 @@ uses
 
 type
   TSVG = class;
+  TSVGObject = class;
+
+  TSVGObjectProc = reference to function(Obj: TSVGObject): Boolean;
 
   TSVGObjectClass = class of TSVGObject;
   TSVGObject = class abstract (TPersistent)
@@ -100,10 +103,10 @@ type
     function Remove(Item: TSVGObject): Integer;
     function IndexOf(Item: TSVGObject): Integer;
     function FindByID(const Name: string): TSVGObject;
-    function FindByType(Typ: TClass; Previous: TSVGObject = nil): TSVGObject;
     procedure CalculateMatrices;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; virtual;
+    function Traverse(Proc: TSVGObjectProc): TSVGObject;
 
     procedure PaintToGraphics(Graphics: TGPGraphics); virtual; abstract;
     procedure PaintToPath(Path: TGPGraphicsPath); virtual; abstract;
@@ -327,8 +330,6 @@ end;
 
   TSVGContainer = class(TSVGBasic)
   public
-    procedure ReadIn(const Reader: IXMLReader); override;
-
     class function Features: TSVGElementFeatures; override;
   end;
 
@@ -344,8 +345,6 @@ end;
 
   TSVGDefs = class(TSVGBasic)
   public
-    procedure ReadIn(const Reader: IXMLReader); override;
-
     class function Features: TSVGElementFeatures; override;
   end;
 
@@ -356,8 +355,6 @@ end;
     procedure AssignTo(Dest: TPersistent); override;
     procedure Construct;
   public
-    procedure PaintToPath(Path: TGPGraphicsPath); override;
-    procedure PaintToGraphics(Graphics: TGPGraphics); override;
     procedure Clear; override;
     function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
 
@@ -533,8 +530,6 @@ end;
   public
     destructor Destroy; override;
     procedure Clear; override;
-    procedure PaintToGraphics(Graphics: TGPGraphics); override;
-    procedure ReadIn(const Reader: IXMLReader); override;
     property ClipPath: TGPGraphicsPath read GetClipPath;
 
     class function Features: TSVGElementFeatures; override;
@@ -740,59 +735,12 @@ begin
 end;
 
 function TSVGObject.FindByID(const Name: string): TSVGObject;
-
-  procedure Walk(const SVG: TSVGObject);
-  var
-    C: Integer;
-  begin
-    if (SVG.FID = Name) or ('#' + SVG.FID = Name) then
-    begin
-      Result := SVG;
-      Exit;
-    end;
-
-    for C := 0 to SVG.Count - 1  do
-    begin
-      Walk(SVG[C]);
-      if Assigned(Result) then
-        Exit;
-    end;
-  end;
-
 begin
-  Result := nil;
-  Walk(Self);
-end;
-
-function TSVGObject.FindByType(Typ: TClass; Previous: TSVGObject = nil): TSVGObject;
-var
-  Found: Boolean;
-
-  procedure Walk(const SVG: TSVGObject);
-  var
-    C: Integer;
-  begin
-    if (SVG.ClassType = Typ) and (Found) then
+  Result := Traverse(
+    function(SVG: TSVGObject): Boolean
     begin
-      Result := SVG;
-      Exit;
-    end;
-
-    if SVG = Previous then
-      Found := True;
-
-    for C := 0 to SVG.Count - 1  do
-    begin
-      Walk(SVG[C]);
-      if Assigned(Result) then
-        Exit;
-    end;
-  end;
-
-begin
-  Found := (Previous = nil);
-  Result := nil;
-  Walk(Self);
+      Result := ('#' + SVG.FID = Name) or (SVG.FID = Name);
+    end);
 end;
 
 procedure TSVGObject.AssignTo(Dest: TPersistent);
@@ -826,6 +774,19 @@ procedure TSVGObject.SetItem(const Index: Integer; const Item: TSVGObject);
 begin
   if (Index >= 0) and (Index < Count) then
     FItems[Index] := Item;
+end;
+
+function TSVGObject.Traverse(Proc: TSVGObjectProc): TSVGObject;
+Var
+  I: Integer;
+begin
+  Result := nil;
+  if Proc(Self) then Exit(Self);
+  for I := 0 to Count - 1 do
+  begin
+    Result := Items[I].Traverse(Proc);
+    if Assigned(Result) then Exit;
+  end;
 end;
 
 function TSVGObject.GetItem(const Index: Integer): TSVGObject;
@@ -983,8 +944,8 @@ begin
   end;
   Reader.MoveToElement;
 
-//  if sefMayHaveChildren in Features then
-//    ReadChildren(Reader);
+  if sefMayHaveChildren in Features then
+    ReadChildren(Reader);
 end;
 {$ENDREGION}
 
@@ -1177,14 +1138,13 @@ var
   I: Integer;
   Obj: TSVGObject;
 begin
-  if sefChildrenNeedPainting in Features then
-    for I := 0 to Count - 1 do
-    begin
-      Obj := TSVGBasic(Items[I]);
-      Obj.PaintToPath(Path);
-    end;
+  for I := 0 to Count - 1 do
+  begin
+    Obj := TSVGBasic(Items[I]);
+    Obj.PaintToPath(Path);
+  end;
 
-  if Assigned(GPPath) then
+  if (sefHasPath in Features) and Assigned(GPPath) then
     Path.AddPath(GPPath, False);
 
   if not LocalMatrix.IsEmpty then
@@ -1302,8 +1262,6 @@ begin
     FStrokeURI := ParseURI(FStrokeURI);
   end;
 
-  ClipURI := ParseURI(FClipURI);
-
   FStyleChanged := False;
 end;
 
@@ -1387,7 +1345,7 @@ begin
     TSVGBasic(Dest).FRY := FRY;
     TSVGBasic(Dest).FFillURI := FFillURI;
     TSVGBasic(Dest).FStrokeURI := FStrokeURI;
-    TSVGBasic(Dest).ClipURI := FClipURI;
+    TSVGBasic(Dest).FClipURI := FClipURI;
     TSVGBasic(Dest).FLineWidth := FLineWidth;
     TSVGBasic(Dest).FColorInterpolation := FColorInterpolation;
     TSVGBasic(Dest).FColorRendering := FColorRendering;
@@ -1545,7 +1503,7 @@ begin
         saFill:
           FFillURI := Value;
         saClipPath:
-          ClipURI := Value;
+          FClipURI := ParseURI(Value, False);
         saStrokeLinejoin:
           FStrokeLineJoin := Value;
         saStrokeLinecap:
@@ -2602,8 +2560,6 @@ begin
     FHeight := FViewBox.Height;
   end;
 
-  ReadChildren(Reader);
-
   DeReferenceUse;
 end;
 
@@ -2642,15 +2598,14 @@ begin
 end;
 
 procedure TSVG.DeReferenceUse;
-var
-  Child: TSVgObject;
 begin
-  Child := FindByType(TSVGUse);
-  while Assigned(Child) do
-  begin
-    TSVGUse(Child).Construct;
-    Child := FindByType(TSVGUse, Child);
-  end;
+  Traverse(
+    function(SVG: TSVGObject): Boolean
+      begin
+        Result := False;
+        if SVG is TSVGUse then
+          TSVGUse(SVG).Construct;
+      end);
 end;
 
 function TSVG.GetStyleValue(const Name, Key: string): string;
@@ -2664,58 +2619,25 @@ begin
 end;
 {$ENDREGION}
 
-// TSVGContainer
-
+{$REGION 'TSVGContainer'}
 class function TSVGContainer.Features: TSVGElementFeatures;
 begin
   Result := [sefMayHaveChildren, sefChildrenNeedPainting];
 end;
+{$ENDREGION}
 
-procedure TSVGContainer.ReadIn(const Reader: IXMLReader);
-begin
-  inherited;
-  ReadChildren(Reader);
-end;
-
-// TSVGDefs
-
+{$REGION 'TSVGDefs'}
 class function TSVGDefs.Features: TSVGElementFeatures;
 begin
   Result := [sefMayHaveChildren];
 end;
+{$ENDREGION}
 
-procedure TSVGDefs.ReadIn(const Reader: IXMLReader);
-begin
-  inherited;
-  Display := tbFalse;
-  ReadChildren(Reader);
-end;
-
-// TSVGDefs
-
-procedure TSVGUse.PaintToGraphics(Graphics: TGPGraphics);
-begin
-end;
-
-procedure TSVGUse.PaintToPath(Path: TGPGraphicsPath);
-var
-  UseObject: TSVGBasic;
-begin
-  inherited;
-
-  if FReference <> '' then
-  begin
-    UseObject := TSVGBasic(GetRoot.FindByID(FReference));
-    if Assigned(UseObject) then
-      UseObject.PaintToPath(Path);
-  end;
-end;
-
+{$REGION 'TSVGUse'}
 procedure TSVGUse.Construct;
 var
   Container: TSVGContainer;
   SVG: TSVGObject;
-  Child: TSVGObject;
   Matrix: TAffineMatrix;
 begin
   while Count > 0 do
@@ -2723,10 +2645,7 @@ begin
 
   SVG := nil;
   if FReference <> '' then
-  begin
-    if FReference[1] = '#' then
-      SVG := GetRoot.FindByID(Copy(FReference, 2, MaxInt));
-  end;
+    SVG := GetRoot.FindByID(FReference);
 
   if Assigned(SVG) then
   begin
@@ -2735,14 +2654,15 @@ begin
     Container := TSVGContainer.Create(Self);
     Container.FObjectName := 'g';
     Container.FLocalMatrix := Matrix;
-    SVG := SVG.Clone(Container);
+    SVG.Clone(Container);
 
-    Child := SVG.FindByType(TSVGUse);
-    while Assigned(Child) do
-    begin
-      TSVGUse(Child).Construct;
-      Child := SVG.FindByType(TSVGUse);
-    end;
+    Container.Traverse(
+    function(SVG: TSVGObject): Boolean
+      begin
+        Result := False;
+        if SVG is TSVGUse then
+          TSVGUse(SVG).Construct;
+      end);
   end;
 end;
 
@@ -2775,6 +2695,7 @@ begin
   else
     Result := inherited;
 end;
+{$ENDREGION}
 
 {$REGION 'TSVGRect'}
 
@@ -4123,10 +4044,6 @@ end;
 {$ENDREGION}
 
 {$REGION 'TSVGClipPath'}
-procedure TSVGClipPath.PaintToGraphics(Graphics: TGPGraphics);
-begin
-end;
-
 procedure TSVGClipPath.Clear;
 begin
   inherited;
@@ -4147,7 +4064,7 @@ end;
 
 class function TSVGClipPath.Features: TSVGElementFeatures;
 begin
-  Result := [sefMayHaveChildren, sefChildrenNeedPainting]
+  Result := [sefMayHaveChildren]
 end;
 
 function TSVGClipPath.GetClipPath: TGPGraphicsPath;
@@ -4157,12 +4074,6 @@ begin
   Result := FClipPath;
 end;
 
-procedure TSVGClipPath.ReadIn(const Reader: IXMLReader);
-begin
-  inherited;
-  ReadChildren(Reader);
-  Display := tbFalse;
-end;
 {$ENDREGION}
 
 {$REGION 'TSVGShape'}

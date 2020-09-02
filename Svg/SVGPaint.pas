@@ -61,15 +61,14 @@ type
     property Opacity: TFloat read FOpacity write FOpacity;
   end;
 
-  TSVGFiller = class(TSVGMatrix)
+  TSVGFiller = class abstract (TSVGMatrix)
   public
-    procedure ReadIn(const Reader: IXMLReader); override;
     function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; virtual; abstract;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
     procedure PaintToPath(Path: TGPGraphicsPath); override;
   end;
 
-  TSVGGradient = class(TSVGFiller)
+  TSVGGradient = class abstract (TSVGFiller)
   {
     SpreadMethod is not implemented
     Assumed to be repeat for LinearGradient and pad for RadialGradient
@@ -81,7 +80,6 @@ type
     procedure AssignTo(Dest: TPersistent); override;
     function GetColors(Alpha: Byte): TStopColors; virtual;
   public
-    procedure ReadIn(const Reader: IXMLReader); override;
     function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
 
     class function Features: TSVGElementFeatures; override;
@@ -220,31 +218,11 @@ procedure TSVGFiller.PaintToPath(Path: TGPGraphicsPath);
 begin
 end;
 
-procedure TSVGFiller.ReadIn(const Reader: IXMLReader);
-begin
-  inherited;
-  Display := tbFalse;
-end;
-
 procedure TSVGFiller.PaintToGraphics(Graphics: TGPGraphics);
 begin
 end;
 
 // TSVGGradient
-
-procedure TSVGGradient.ReadIn(const Reader: IXMLReader);
-begin
-  inherited;
-
-  ReadChildren(Reader);
-
-  if FURI <> '' then
-  begin
-    FURI := Trim(FURI);
-    if (FURI <> '') and (FURI[1] = '#') then
-      FURI := Copy(FURI, 2);
-  end;
-end;
 
 function TSVGGradient.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 begin
