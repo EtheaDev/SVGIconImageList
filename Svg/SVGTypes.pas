@@ -43,6 +43,9 @@ const
 type
   TFloat = single;
 
+  TSVGElementFeature = (sefMayHaveChildren, sefNeedsPainting, sefChildrenNeedPainting, sefHasPath);
+  TSVGElementFeatures = set of TSVGElementFeature;
+
   TListOfPoints = array of TPointF;
 
   TRectarray = packed array of TRectF;
@@ -62,7 +65,43 @@ type
 
   TTriStateBoolean = (tbFalse, tbTrue, tbInherit);
 
-TSVGAttribute  = (saStrokeWidth,
+TSVGAttribute  = (saId,
+                  saX,
+                  saY,
+                  saX1,
+                  saY1,
+                  saX2,
+                  saY2,
+                  saCx,
+                  saCy,
+                  saD,
+                  saDx,
+                  saDy,
+                  saFx,
+                  saFy,
+                  saR,
+                  saRx,
+                  saRy,
+                  saStyle,
+                  saClass,
+                  saXlinkHref,
+                  saHref,
+                  saPoints,
+                  saGradientUnits,
+                  saGradientTransform,
+                  saVisibility,
+                  saVersion,
+                  saWidth,
+                  saHeight,
+                  saViewBox,
+                  saTransform,
+                  saOffset,
+                  saStopOpacity,
+                  saStopColor,
+                  saSpacing,
+                  saStartOffset,
+                  saMethod,
+                  saStrokeWidth,
                   saLineWidth,
                   saOpacity,
                   saStrokeOpacity,
@@ -94,6 +133,7 @@ TSVGAttribute  = (saStrokeWidth,
     dy: Single;
 
     constructor Create(_m11, _m12, _m21, _m22, _dx, _dy: Single);
+    constructor FromGPMatrix(GPMatrix: TGPMatrix);
 
     function IsEmpty: Boolean;
     function IsIdentity: Boolean;
@@ -172,6 +212,20 @@ begin
   Result := Identity;
   Result.dx := ADeltaX;
   Result.dy := ADeltaY;
+end;
+
+constructor TAffineMatrix.FromGPMatrix(GPMatrix: TGPMatrix);
+Var
+  MA: Winapi.GDIPOBJ.TMatrixArray;
+begin
+  GPMatrix.GetElements(MA);
+
+  Self.m11 := MA[0];
+  Self.m12 := MA[1];
+  Self.m21 := MA[2];
+  Self.m22 := MA[3];
+  Self.dx := MA[4];
+  Self.dy := MA[5];
 end;
 
 function TAffineMatrix.IsEmpty: Boolean;

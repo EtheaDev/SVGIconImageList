@@ -46,7 +46,7 @@ function GetFactor(const SVGUnit: TSVGUnit): TFloat;
 
 function ParseDRect(const S: string): TRectF;
 
-function ParseURI(const URI: string): string;
+function ParseURI(const URI: string; EmptyOnFail: Boolean = True): string;
 
 function ParseTransform(const ATransform: string): TAffineMatrix;
 
@@ -228,11 +228,14 @@ begin
   end;
 end;
 
-function ParseURI(const URI: string): string;
+function ParseURI(const URI: string; EmptyOnFail: Boolean): string;
 var
   S: string;
 begin
-  Result := '';
+  if EmptyOnFail then
+    Result := ''
+  else
+    Result := URI;
   if URI <> '' then
   begin
     S := Trim(URI);
