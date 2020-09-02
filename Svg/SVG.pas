@@ -207,6 +207,7 @@ type
       LengthType: TLengthType; var X: TFloat);
     procedure AssignTo(Dest: TPersistent); override;
     procedure ReadStyle(Style: TStyle); virtual;
+    function GetGPPath: TGPGraphicsPath2;
     procedure ConstructPath; virtual;
 
     function GetFillBrush: TGPBrush;
@@ -244,6 +245,7 @@ type
     property Height: TFloat read FHeight write FHeight;
     property RX: TFloat read FRX write FRX;
     property RY: TFloat read FRY write FRY;
+    property GPPath: TGPGraphicsPath2 read GetGPPath;
 
     property StrokeLineCap: TLineCap read GetStrokeLineCap;
     property StrokeLineJoin: TLineJoin read GetStrokeLineJoin;
@@ -379,7 +381,6 @@ end;
   protected
     procedure ConstructPath; override;
   public
-    procedure ReadIn(const Reader: IXMLReader); override;
     function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
@@ -396,7 +397,6 @@ end;
   public
     constructor Create; override;
     procedure Clear; override;
-    procedure ReadIn(const Reader: IXMLReader); override;
     function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
@@ -416,7 +416,6 @@ end;
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
-    procedure ReadIn(const Reader: IXMLReader); override;
     function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
@@ -458,7 +457,7 @@ end;
     class function Features: TSVGElementFeatures; override;
   end;
 
-  TSVGCustomText = class(TSVGBasic)
+  TSVGCustomText = class abstract (TSVGBasic)
   private
     FText: string;
     FUnderlinePath: TGPGraphicsPath;
@@ -520,7 +519,6 @@ end;
     FSpacing: TTextPathSpacing;
   protected
     procedure ConstructPath; override;
-    procedure ReadTextNodes(const Reader: IXMLReader); override;
   public
     procedure Clear; override;
     function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
@@ -1068,12 +1066,12 @@ procedure TSVGBasic.BeforePaint(const Graphics: TGPGraphics;
 Var
   SolidBrush : TGPBrush;
 begin
-  if (Brush is TGPPathGradientBrush) and (FPath <> nil) and (FFillColor <> SVG_INHERIT_COLOR) then
+  if (Brush is TGPPathGradientBrush) and (GPPath <> nil) and (FFillColor <> SVG_INHERIT_COLOR) then
   begin
     // Fill with solid color
     SolidBrush :=  TGPSolidBrush.Create(TGPColor(FFillColor));
     try
-      Graphics.FillPath(SolidBrush, FPath);
+      Graphics.FillPath(SolidBrush, GPPath);
     finally
       SolidBrush.Free;
       FFillColor := SVG_INHERIT_COLOR;
@@ -1129,7 +1127,7 @@ var
 
   TGP: TGPMatrix;
 begin
-  if (FPath = nil) {or (FPath.GetLastStatus <> OK)} then
+  if (GPPath = nil) {or (GPPath.GetLastStatus <> OK)} then
     Exit;
 
   try
@@ -1153,10 +1151,10 @@ begin
       try
         BeforePaint(Graphics, Brush, Pen);
         if Assigned(Brush) and (Brush.GetLastStatus = OK) then
-          Graphics.FillPath(Brush, FPath);
+          Graphics.FillPath(Brush, GPPath);
 
         if Assigned(Pen) and (Pen.GetLastStatus = OK) then
-          Graphics.DrawPath(Pen, FPath);
+          Graphics.DrawPath(Pen, GPPath);
 
         AfterPaint(Graphics, Brush, Pen);
       finally
@@ -1186,8 +1184,8 @@ begin
       Obj.PaintToPath(Path);
     end;
 
-  if (sefHasPath in Features) and Assigned(FPath) then
-    Path.AddPath(FPath, False);
+  if Assigned(GPPath) then
+    Path.AddPath(GPPath, False);
 
   if not LocalMatrix.IsEmpty then
   begin
@@ -2064,6 +2062,13 @@ begin
   end;
 end;
 
+function TSVGBasic.GetGPPath: TGPGraphicsPath2;
+begin
+  if (FPath = nil) and (sefHasPath in Features) then
+    ConstructPath;
+  Result := FPath;
+end;
+
 function TSVGBasic.GetFontSize: TFloat;
 var
   SVG: TSVGObject;
@@ -2388,45 +2393,45 @@ end;
 procedure TSVG.Paint(const Graphics: TGPGraphics; Rects: PRectArray;
   RectCount: Integer);
 
-  function InBounds(Item: TSVGObject): Boolean;
-  var
-    C: Integer;
-    Bounds: TRectF;
-  begin
-    Result := True;
-    if RectCount > 0 then
-    begin
-      for C := 0 to RectCount - 1 do
-      begin
-        Bounds := Item.ObjectBounds(True, True);
-        if Bounds.IntersectsWith(Rects^[C]) then
-          Exit;
-      end;
-      Result := False;
-    end;
-  end;
-
-  function NeedsPainting(Item: TSVGObject): Boolean;
-  begin
-    Result := (Item.Display = tbTrue) and (Item.Visible = tbTrue);
-  end;
-
   procedure PaintItem(const Item: TSVGObject);
+
+    function NeedsPainting: Boolean;
+    begin
+      Result := (sefNeedsPainting in Item.Features) and
+        (Item.Display = tbTrue) and (Item.Visible = tbTrue);
+    end;
+
+    function InBounds: Boolean;
+    var
+      C: Integer;
+      Bounds: TRectF;
+    begin
+      Result := True;
+      if RectCount > 0 then
+      begin
+        for C := 0 to RectCount - 1 do
+        begin
+          Bounds := Item.ObjectBounds(True, True);
+          if Bounds.IntersectsWith(Rects^[C]) then
+            Exit;
+        end;
+        Result := False;
+      end;
+    end;
+
   var
     C: Integer;
     LItem: TSVGObject;
   begin
-    if NeedsPainting(Item) then
-    begin
-      if InBounds(Item) then
-        Item.PaintToGraphics(Graphics);
+    if NeedsPainting and ((RectCount = 0) or InBounds) then
+      Item.PaintToGraphics(Graphics);
 
+    if sefChildrenNeedPainting in Item.Features then
       for C := 0 to Item.Count - 1 do
       begin
         LItem := Item[C];
         if Item is TSVGBasic then PaintItem(LItem);
       end;
-    end;
   end;
 
 begin
@@ -2782,8 +2787,6 @@ begin
 
   if FRY > FHeight / 2 then
     FRY := FHeight / 2;
-
-  ConstructPath;
 end;
 
 function TSVGRect.ObjectBounds(IncludeStroke: Boolean; ApplyTranform: Boolean): TRectF;
@@ -2816,12 +2819,6 @@ end;
 {$ENDREGION}
 
 {$REGION 'TSVGLine'}
-procedure TSVGLine.ReadIn(const Reader: IXMLReader);
-begin
-  inherited;
-  ConstructPath;
-end;
-
 function TSVGLine.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 begin
   Result := True;
@@ -2973,12 +2970,6 @@ begin
   SL.Free;
 end;
 
-procedure TSVGPolyLine.ReadIn(const Reader: IXMLReader);
-begin
-  inherited;
-  ConstructPath;
-end;
-
 function TSVGPolyLine.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 var
   S: string;
@@ -3021,12 +3012,6 @@ end;
 {$ENDREGION}
 
 {$REGION 'TSVGEllipse'}
-procedure TSVGEllipse.ReadIn(const Reader: IXMLReader);
-begin
-  inherited;
-  ConstructPath;
-end;
-
 function TSVGEllipse.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 begin
   Result := True;
@@ -3362,8 +3347,6 @@ begin
   finally
     SL.Free;
   end;
-
-  ConstructPath;
 end;
 
 {$ENDREGION}
@@ -3562,7 +3545,7 @@ end;
 class function TSVGCustomText.Features: TSVGElementFeatures;
 begin
   // It has children but it needs special treatment
-  Result := [sefNeedsPainting, sefHasPath];
+  Result := [sefNeedsPainting, sefHasPath, sefChildrenNeedPainting];
 end;
 
 procedure TSVGCustomText.BeforePaint(const Graphics: TGPGraphics;
@@ -3884,10 +3867,12 @@ var
   TGP: TGPMatrix;
 {$ENDIF}
 begin
+{$IFDEF USE_TEXT}
+  // not tested
+
   if FText = '' then
     Exit;
 
-{$IFDEF USE_TEXT}
   try
     SetClipPath(Graphics);
 
@@ -3941,7 +3926,6 @@ begin
     FillChar(TSpan.FLocalMatrix, SizeOf(TSpan.FLocalMatrix), 0);
     SetString(TSpan.FText, pValue, Len);
     TSpan.SetSize;
-    TSpan.ConstructPath;
   end
   else if NodeType = XmlNodeType.Element then
   begin
@@ -4009,49 +3993,6 @@ begin
 end;
 {$ENDREGION}
 
-{$REGION 'TSVGClipPath'}
-procedure TSVGClipPath.PaintToGraphics(Graphics: TGPGraphics);
-begin
-end;
-
-procedure TSVGClipPath.Clear;
-begin
-  inherited;
-  FreeAndNil(FClipPath);
-end;
-
-procedure TSVGClipPath.ConstructClipPath;
-begin
-  FClipPath := TGPGraphicsPath.Create;
-  PaintToPath(FClipPath);
-end;
-
-destructor TSVGClipPath.Destroy;
-begin
-  FreeAndNil(FClipPath);
-  inherited;
-end;
-
-class function TSVGClipPath.Features: TSVGElementFeatures;
-begin
-  Result := [sefMayHaveChildren, sefChildrenNeedPainting]
-end;
-
-function TSVGClipPath.GetClipPath: TGPGraphicsPath;
-begin
-  if not Assigned(FClipPath) then
-    ConstructClipPath;
-  Result := FClipPath;
-end;
-
-procedure TSVGClipPath.ReadIn(const Reader: IXMLReader);
-begin
-  inherited;
-  ReadChildren(Reader);
-  Display := tbFalse;
-end;
-{$ENDREGION}
-
 {$REGION 'TSVGTextPath'}
 procedure TSVGTextPath.Clear;
 begin
@@ -4095,7 +4036,7 @@ var
       SF := TGPStringFormat.Create(TGPStringFormat.GenericTypographic);
       SF.SetFormatFlags(StringFormatFlagsMeasureTrailingSpaces);
 
-      PT := TGPPathText.Create(GuidePath.FPath);
+      PT := TGPPathText.Create(GuidePath.GPPath);
 
       if not Element.FLocalMatrix.IsEmpty then
         Matrix := Element.FLocalMatrix.ToGPMatrix
@@ -4116,6 +4057,7 @@ var
 
       Size := Element.GetFontSize;
       Position := Position +
+        // TODO Is Trim needed here?
         PT.AddPathText(Element.FPath, Trim(Element.FText), Position,
           FF, FontStyle, Size, SF);
 
@@ -4148,7 +4090,7 @@ begin
     Exit;
 
   if FOffsetIsPercent and (FOffset <> 0) then
-    Position := TGPPathText.GetPathLength(GuidePath.FPath) * FOffset
+    Position := TGPPathText.GetPathLength(GuidePath.GPPath) * FOffset
   else
     Position := FOffset;
 
@@ -4178,19 +4120,56 @@ begin
   else
     Result := inherited;
 end;
+{$ENDREGION}
 
-procedure TSVGTextPath.ReadTextNodes(const Reader: IXMLReader);
+{$REGION 'TSVGClipPath'}
+procedure TSVGClipPath.PaintToGraphics(Graphics: TGPGraphics);
+begin
+end;
+
+procedure TSVGClipPath.Clear;
 begin
   inherited;
-  ConstructPath;
+  FreeAndNil(FClipPath);
+end;
+
+procedure TSVGClipPath.ConstructClipPath;
+begin
+  FClipPath := TGPGraphicsPath.Create;
+  PaintToPath(FClipPath);
+end;
+
+destructor TSVGClipPath.Destroy;
+begin
+  FreeAndNil(FClipPath);
+  inherited;
+end;
+
+class function TSVGClipPath.Features: TSVGElementFeatures;
+begin
+  Result := [sefMayHaveChildren, sefChildrenNeedPainting]
+end;
+
+function TSVGClipPath.GetClipPath: TGPGraphicsPath;
+begin
+  if not Assigned(FClipPath) then
+    ConstructClipPath;
+  Result := FClipPath;
+end;
+
+procedure TSVGClipPath.ReadIn(const Reader: IXMLReader);
+begin
+  inherited;
+  ReadChildren(Reader);
+  Display := tbFalse;
 end;
 {$ENDREGION}
 
-{ TSVGShape }
-
+{$REGION 'TSVGShape'}
 class function TSVGShape.Features: TSVGElementFeatures;
 begin
   Result := [sefNeedsPainting, sefHasPath];
 end;
+{$ENDREGION}
 
 end.
