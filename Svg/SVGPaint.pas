@@ -51,7 +51,7 @@ type
   public
     procedure Clear; override;
     procedure ReadIn(const Reader: IXMLReader); override;
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
     procedure PaintToPath(Path: TGPGraphicsPath); override;
 
@@ -80,7 +80,7 @@ type
     procedure AssignTo(Dest: TPersistent); override;
     function GetColors(Alpha: Byte): TStopColors; virtual;
   public
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
 
     class function Features: TSVGElementFeatures; override;
   end;
@@ -94,7 +94,7 @@ type
   protected
     procedure AssignTo(Dest: TPersistent); override;
   public
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
     function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; override;
     procedure Clear; override;
 
@@ -116,7 +116,7 @@ type
   public
     procedure Clear; override;
     procedure ReadIn(const Reader: IXMLReader); override;
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
     function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; override;
 
     property CX: TFloat read FCX write FCX;
@@ -180,14 +180,16 @@ begin
     FStopColor := GetRoot.FixedColor;
 end;
 
-function TSVGStop.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGStop.ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'offset' then FStop := ParsePercent(AttrValue)
-  else if AttrName = 'stop-opacity' then FOpacity := EnsureRange(ParsePercent(AttrValue), 0, 1)
-  else if AttrName = 'stop-color' then FStopColor := GetSVGColor(AttrValue)
+  case SVGAttr of
+    saOffset: FStop := ParsePercent(AttrValue);
+    saStopOpacity: FOpacity := EnsureRange(ParsePercent(AttrValue), 0, 1);
+    saStopColor: FStopColor := GetSVGColor(AttrValue);
   else
     Result := inherited;
+  end;
 end;
 
 procedure TSVGStop.AssignTo(Dest: TPersistent);
@@ -224,29 +226,33 @@ end;
 
 // TSVGGradient
 
-function TSVGGradient.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGGradient.ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'gradientUnits' then FGradientUnits := ParseGradientUnits(AttrValue)
-  else if AttrName = 'xlink:href' then FURI := AttrValue
-  else if AttrName = 'href' then FURI := AttrValue
-  else if AttrName = 'gradientTransform' then LocalMatrix := ParseTransform(AttrValue)
+  case SVGAttr of
+    saGradientUnits: FGradientUnits := ParseGradientUnits(AttrValue);
+    saXlinkHref: FURI := AttrValue;
+    saHref: FURI := AttrValue;
+    saGradientTransform: LocalMatrix := ParseTransform(AttrValue);
   else
     Result := inherited;
+  end;
 end;
 
 // TSVGLinearGradient
 
-function TSVGLinearGradient.ReadInAttr(const AttrName,
-  AttrValue: string): Boolean;
+function TSVGLinearGradient.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'x1' then FX1 := ParseLength(AttrValue)
-  else if AttrName = 'x2' then FX2 := ParseLength(AttrValue)
-  else if AttrName = 'y1' then FY1 := ParseLength(AttrValue)
-  else if AttrName = 'y2' then FY2 := ParseLength(AttrValue)
+  case SVGAttr of
+    saX1: FX1 := ParseLength(AttrValue);
+    saX2: FX2 := ParseLength(AttrValue);
+    saY1: FY1 := ParseLength(AttrValue);
+    saY2: FY2 := ParseLength(AttrValue);
   else
     Result := inherited;
+  end;
 end;
 
 procedure TSVGLinearGradient.AssignTo(Dest: TPersistent);
@@ -342,17 +348,19 @@ begin
     FFY := FCY;
 end;
 
-function TSVGRadialGradient.ReadInAttr(const AttrName,
-  AttrValue: string): Boolean;
+function TSVGRadialGradient.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'cx' then FCX := ParseLength(AttrValue)
-  else if AttrName = 'cy' then FCY := ParseLength(AttrValue)
-  else if AttrName = 'r' then FR := ParseLength(AttrValue)
-  else if AttrName = 'fx' then FFX := ParseLength(AttrValue)
-  else if AttrName = 'fy' then FFY := ParseLength(AttrValue)
+  case SVGAttr of
+    saCx: FCX := ParseLength(AttrValue);
+    saCy: FCY := ParseLength(AttrValue);
+    saR: FR := ParseLength(AttrValue);
+    saFx: FFX := ParseLength(AttrValue);
+    saFy: FFY := ParseLength(AttrValue);
   else
     Result := inherited;
+  end;
 end;
 
 function TSVGRadialGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush;

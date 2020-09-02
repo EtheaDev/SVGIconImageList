@@ -110,7 +110,7 @@ type
 
     procedure PaintToGraphics(Graphics: TGPGraphics); virtual; abstract;
     procedure PaintToPath(Path: TGPGraphicsPath); virtual; abstract;
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; virtual;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; virtual;
     procedure ReadIn(const Reader: IXMLReader); virtual;
 
     property Items[const Index: Integer]: TSVGObject read GetItem write SetItem; default;
@@ -138,7 +138,7 @@ type
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
     property FullMatrix: TAffineMatrix read FFullMatrix;
     property LocalMatrix: TAffineMatrix read FLocalMatrix write SetPureMatrix;
   end;
@@ -228,7 +228,7 @@ type
 
     procedure PaintToPath(Path: TGPGraphicsPath); override;
     procedure ReadIn(const Reader: IXMLReader); override;
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
 
@@ -295,7 +295,7 @@ end;
 
     procedure Clear; override;
     procedure ReadIn(const Reader: IXMLReader); override;
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
 
     procedure DeReferenceUse;
     function GetStyleValue(const Name, Key: string): string;
@@ -356,7 +356,7 @@ end;
     procedure Construct;
   public
     procedure Clear; override;
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
 
     class function Features: TSVGElementFeatures; override;
   end;
@@ -378,7 +378,7 @@ end;
   protected
     procedure ConstructPath; override;
   public
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
   end;
@@ -394,7 +394,7 @@ end;
   public
     constructor Create; override;
     procedure Clear; override;
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
   end;
@@ -413,7 +413,7 @@ end;
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
     property CX: TFloat read FCX write FCX;
@@ -428,7 +428,7 @@ end;
   protected
     procedure ConstructPath; override;
   public
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
   end;
@@ -446,7 +446,7 @@ end;
     procedure Clear; override;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
     procedure ReadIn(const Reader: IXMLReader); override;
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
     property Data: TMemoryStream read FStream;
@@ -487,7 +487,7 @@ end;
     constructor Create; override;
     procedure Clear; override;
     procedure ReadIn(const Reader: IXMLReader); override;
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; override;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
@@ -518,7 +518,7 @@ end;
     procedure ConstructPath; override;
   public
     procedure Clear; override;
-    function ReadInAttr(const AttrName, AttrValue: string): Boolean; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
   end;
 
   TSVGClipPath = class(TSVGBasic)
@@ -645,7 +645,43 @@ begin
   SvgElements.Add('radialGradient', TSVGRadialGradient);
   SvgElements.Add('stop', TSVGStop);
 
-  SVGAttributes := TDictionary<string, TSVGAttribute>.Create(64);
+  SVGAttributes := TDictionary<string, TSVGAttribute>.Create(256);
+  SVGAttributes.Add('id', saId);
+  SVGAttributes.Add('x', saX);
+  SVGAttributes.Add('y', saY);
+  SVGAttributes.Add('x1', saX1);
+  SVGAttributes.Add('y1', saY1);
+  SVGAttributes.Add('x2', saX2);
+  SVGAttributes.Add('y2', saY2);
+  SVGAttributes.Add('cx', saCx);
+  SVGAttributes.Add('cy', saCy);
+  SVGAttributes.Add('d', saD);
+  SVGAttributes.Add('dx', saDx);
+  SVGAttributes.Add('dy', saDy);
+  SVGAttributes.Add('fx', saFx);
+  SVGAttributes.Add('fy', saFy);
+  SVGAttributes.Add('r', saR);
+  SVGAttributes.Add('rx', saRx);
+  SVGAttributes.Add('ry', saRy);
+  SVGAttributes.Add('style', saStyle);
+  SVGAttributes.Add('class', saClass);
+  SVGAttributes.Add('xlink:href', saXlinkHref);
+  SVGAttributes.Add('href', saHref);
+  SVGAttributes.Add('points', saPoints);
+  SVGAttributes.Add('gradientUnits', saGradientUnits);
+  SVGAttributes.Add('gradientTransform', saGradientTransform);
+  SVGAttributes.Add('visibility', saVisibility);
+  SVGAttributes.Add('version', saVersion);
+  SVGAttributes.Add('width', saWidth);
+  SVGAttributes.Add('height', saHeight);
+  SVGAttributes.Add('viewBox', saViewBox);
+  SVGAttributes.Add('transform', saTransform);
+  SVGAttributes.Add('offset', saOffset);
+  SVGAttributes.Add('stop-opacity', saStopOpacity);
+  SVGAttributes.Add('stop-color', saStopColor);
+  SVGAttributes.Add('startOffset', saStartOffset);
+  SVGAttributes.Add('method', saMethod);
+  SVGAttributes.Add('spacing', saSpacing);
   SVGAttributes.Add('stroke-width', saStrokeWidth);
   SVGAttributes.Add('line-width', saLineWidth);
   SVGAttributes.Add('opacity', saOpacity);
@@ -751,7 +787,7 @@ begin
   begin
     SVG := Dest as TSVGObject;
     SVG.FVisible := FVisible;
-    SVG.Display := FDisplay;
+    SVG.FDisplay := FDisplay;
     SVG.FID := FID;
     SVG.FObjectName := FObjectName;
 
@@ -860,21 +896,19 @@ begin
   end;
 end;
 
-function TSVGObject.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGObject.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'id' then
-    FID := AttrValue
-  else if AttrName = 'display' then
-    FDisplay := ParseDisplay(AttrValue)
-  else if AttrName = 'visibility' then
-    FDisplay := ParseVisibility(AttrValue)
-  else if AttrName = 'style' then
-    ObjectStyle.SetValues(AttrValue)
-  else if AttrName = 'class' then
-    FClasses := ParseClass(AttrValue)
+  case SVGAttr of
+    saId: FID := AttrValue;
+    saVisibility: FVisible := ParseVisibility(AttrValue);
+    saStyle: ObjectStyle.SetValues(AttrValue);
+    saClass: FClasses := ParseClass(AttrValue);
+    saDisplay: FDisplay := ParseDisplay(AttrValue);
   else
     Result := False;
+  end;
 end;
 
 procedure TSVGObject.ReadChildren(const Reader: IXMLReader);
@@ -926,6 +960,7 @@ var
   pValue: PWidechar;
   Len: LongWord;
   HRes: HRESULT;
+  SVGAttr: TSVGAttribute;
 begin
   Reader.GetLocalName(pName, Len);
   SetString(FObjectName, pName, Len);
@@ -938,7 +973,9 @@ begin
     Reader.GetValue(pValue, Len);
     SetString(AttrValue, pValue, Len);
 
-    if not ReadInAttr(AttrName, AttrValue) then
+    if not (SVGAttributes.TryGetValue(AttrName, SVGAttr) and
+    ReadInAttr(SVGAttr, AttrValue)) and not AttrName.StartsWith('xmlns')
+    then
       ObjectStyle.AddStyle(AttrName, AttrValue);
     HRes := Reader.MoveToNextAttribute;
   end;
@@ -990,10 +1027,11 @@ begin
   FillChar(FFullMatrix, SizeOf(FFullMatrix), 0);
 end;
 
-function TSVGMatrix.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGMatrix.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'transform' then
+  if SVGAttr = saTransform then
     FLocalMatrix := ParseTransform(AttrValue)
   else
     Result := inherited;
@@ -1282,19 +1320,22 @@ begin
   UpdateStyle;
 end;
 
-function TSVGBasic.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGBasic.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'fill' then FFillURI := AttrValue
-  else if AttrName = 'stroke' then FStrokeURI := AttrValue
-  else if AttrName = 'x' then ParseLengthAttr(AttrValue, ltHorz, FX)
-  else if AttrName = 'y' then ParseLengthAttr(AttrValue, ltVert, FY)
-  else if AttrName = 'width' then ParseLengthAttr(AttrValue, ltHorz, FWidth)
-  else if AttrName = 'height' then ParseLengthAttr(AttrValue, ltVert, FHeight)
-  else if AttrName = 'rx' then ParseLengthAttr(AttrValue, ltOther, FRX)
-  else if AttrName = 'ry' then ParseLengthAttr(AttrValue, ltOther, FRY)
+  case SVGAttr of
+    saFill: FFillURI := AttrValue;
+    saStroke: FStrokeURI := AttrValue;
+    saX: ParseLengthAttr(AttrValue, ltHorz, FX);
+    saY: ParseLengthAttr(AttrValue, ltVert, FY);
+    saWidth: ParseLengthAttr(AttrValue, ltHorz, FWidth);
+    saHeight: ParseLengthAttr(AttrValue, ltVert, FHeight);
+    saRx: ParseLengthAttr(AttrValue, ltOther, FRX);
+    saRy: ParseLengthAttr(AttrValue, ltOther, FRY);
   else
     Result := inherited;
+  end;
 end;
 
 procedure TSVGBasic.AfterPaint(const Graphics: TGPGraphics;
@@ -2563,7 +2604,7 @@ begin
   DeReferenceUse;
 end;
 
-function TSVG.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVG.ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean;
 {
   % width and height do not make sense in stand-alone svgs
   and they centainly do not refer to % size of the svg content
@@ -2572,29 +2613,30 @@ function TSVG.ReadInAttr(const AttrName, AttrValue: string): Boolean;
 }
 begin
   Result := True;
-  if AttrName.StartsWith('xmlns') then begin end // ignore
-  else if AttrName = 'version' then begin end // ignore
-  else if AttrName = 'width' then
-  begin
-    if (ParseUnit(AttrValue) = suPercent) then
-      FWidth := 0
-    else
-      ParseLengthAttr(AttrValue, ltHorz, FWidth);
-  end
-  else if AttrName = 'height' then
-  begin
-    if (ParseUnit(AttrValue) = suPercent) then
-      FHeight := 0
-    else
-      ParseLengthAttr(AttrValue, ltVert, FHeight)
-  end
-  else if AttrName = 'viewBox' then
-  begin
-    if AttrValue <> '' then
-      FViewBox := ParseDRect(AttrValue);
-  end
+  case SVGAttr of
+    saVersion: begin end; // ignore
+    saWidth:
+      begin
+        if (ParseUnit(AttrValue) = suPercent) then
+          FWidth := 0
+        else
+          ParseLengthAttr(AttrValue, ltHorz, FWidth);
+      end;
+    saHeight:
+      begin
+        if (ParseUnit(AttrValue) = suPercent) then
+          FHeight := 0
+        else
+          ParseLengthAttr(AttrValue, ltVert, FHeight)
+      end;
+    saViewBox:
+      begin
+        if AttrValue <> '' then
+          FViewBox := ParseDRect(AttrValue);
+      end;
   else
     Result := inherited;
+  end;
 end;
 
 procedure TSVG.DeReferenceUse;
@@ -2687,11 +2729,12 @@ begin
 end;
 
 
-function TSVGUse.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGUse.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'xlink:href' then FReference := AttrValue
-  else if AttrName = 'href' then FReference := AttrValue
+  if SVGAttr = saXlinkHref then FReference := AttrValue
+  else if SVGAttr = saHref then FReference := AttrValue
   else
     Result := inherited;
 end;
@@ -2740,15 +2783,18 @@ end;
 {$ENDREGION}
 
 {$REGION 'TSVGLine'}
-function TSVGLine.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGLine.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'x1' then ParseLengthAttr(AttrValue, ltHorz, FX)
-  else if AttrName = 'y1' then ParseLengthAttr(AttrValue, ltVert, FY)
-  else if AttrName = 'x2' then ParseLengthAttr(AttrValue, ltHorz, FWidth)
-  else if AttrName = 'y2' then ParseLengthAttr(AttrValue, ltVert, FHeight)
+  case SVGAttr of
+    saX1: ParseLengthAttr(AttrValue, ltHorz, FX);
+    saY1: ParseLengthAttr(AttrValue, ltVert, FY);
+    saX2: ParseLengthAttr(AttrValue, ltHorz, FWidth);
+    saY2: ParseLengthAttr(AttrValue, ltVert, FHeight);
   else
     Result := inherited;
+  end;
 end;
 
 function TSVGLine.ObjectBounds(IncludeStroke: Boolean; ApplyTranform: Boolean): TRectF;
@@ -2891,12 +2937,13 @@ begin
   SL.Free;
 end;
 
-function TSVGPolyLine.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGPolyLine.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 var
   S: string;
 begin
   Result := True;
-  if AttrName = 'points' then
+  if SVGAttr = saPoints then
   begin
     S := AttrValue;
     S := StringReplace(S, ',', ' ', [rfReplaceAll]);
@@ -2933,21 +2980,24 @@ end;
 {$ENDREGION}
 
 {$REGION 'TSVGEllipse'}
-function TSVGEllipse.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGEllipse.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'cx' then ParseLengthAttr(AttrValue, ltHorz, FCX)
-  else if AttrName = 'cy' then ParseLengthAttr(AttrValue, ltVert, FCY)
-  else if AttrName = 'r' then
-  begin
-    if FObjectName = 'circle' then
-    begin
-      ParseLengthAttr(AttrValue, ltOther,  FRX);
-      FRY := FRX;
-    end;
-  end
+  case SVGAttr of
+    saCx: ParseLengthAttr(AttrValue, ltHorz, FCX);
+    saCy: ParseLengthAttr(AttrValue, ltVert, FCY);
+    saR:
+      begin
+        if FObjectName = 'circle' then
+        begin
+          ParseLengthAttr(AttrValue, ltOther,  FRX);
+          FRY := FRX;
+        end;
+      end;
   else
     Result := inherited;
+  end;
 end;
 
 function TSVGEllipse.ObjectBounds(IncludeStroke: Boolean; ApplyTranform: Boolean): TRectF;
@@ -3200,7 +3250,8 @@ begin
   end;
 end;
 
-function TSVGPath.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGPath.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 var
   S: string;
   SL: TStrings;
@@ -3211,7 +3262,7 @@ var
   LastElement: TSVGPathElement;
 begin
   Result := True;
-  if AttrName = 'd' then
+  if SVGAttr = saD then
   begin
     if AttrValue.Length > 0 then
     begin
@@ -3445,11 +3496,12 @@ begin
   end;
 end;
 
-function TSVGImage.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGImage.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'xlink:href' then FImageURI := AttrValue
-  else if AttrName = 'href' then FImageURI := AttrValue
+  if SVGAttr = saXlinkHref then FImageURI := AttrValue
+  else if SVGAttr = saHref then FImageURI := AttrValue
   else
     Result := inherited;
 end;
@@ -3876,23 +3928,26 @@ begin
   ReadTextNodes(Reader);
 end;
 
-function TSVGCustomText.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGCustomText.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'x' then
-  begin
-    ParseLengthAttr(AttrValue, ltHorz, FX);
-    FHasX := True;
-  end
-  else if AttrName = 'y' then
-  begin
-    ParseLengthAttr(AttrValue, ltVert, FY);
-    FHasY := True;
-  end
-  else if AttrName = 'dx' then ParseLengthAttr(AttrValue, ltHorz, FDX)
-  else if AttrName = 'dy' then ParseLengthAttr(AttrValue, ltVert, FDY)
+  case SVGAttr of
+    saX:
+      begin
+        ParseLengthAttr(AttrValue, ltHorz, FX);
+        FHasX := True;
+      end;
+    saY:
+      begin
+        ParseLengthAttr(AttrValue, ltVert, FY);
+        FHasY := True;
+      end;
+    saDx: ParseLengthAttr(AttrValue, ltHorz, FDX);
+    saDy: ParseLengthAttr(AttrValue, ltVert, FDY);
   else
     Result := inherited;
+  end;
 end;
 
 procedure TSVGCustomText.ReadTextNodes(const Reader: IXMLReader);
@@ -4021,25 +4076,27 @@ begin
   RenderTextElement(Self);
 end;
 
-function TSVGTextPath.ReadInAttr(const AttrName, AttrValue: string): Boolean;
+function TSVGTextPath.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 begin
   Result := True;
-  if AttrName = 'xlink:href' then FPathRef := AttrValue
-  else if AttrName = 'href' then FPathRef := AttrValue
-  else if AttrName = 'startOffset' then
-    FOffset := ParseLength(AttrValue, FOffsetIsPercent)
-  else if AttrName = 'method' then
-  begin
-  if AttrValue = 'stretch' then
-    FMethod := tpmStretch;
-  end
-  else if AttrName = 'spacing' then
-  begin
-  if AttrValue = 'exact' then
-    FSpacing := tpsExact;
-  end
+  case SVGAttr of
+    saXlinkHref: FPathRef := AttrValue;
+    saHref: FPathRef := AttrValue;
+    saStartOffset: FOffset := ParseLength(AttrValue, FOffsetIsPercent);
+    saMethod:
+      begin
+      if AttrValue = 'stretch' then
+        FMethod := tpmStretch;
+      end;
+    saSpacing:
+      begin
+      if AttrValue = 'exact' then
+        FSpacing := tpsExact;
+      end;
   else
     Result := inherited;
+  end;
 end;
 {$ENDREGION}
 
