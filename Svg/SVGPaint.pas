@@ -64,7 +64,8 @@ type
 
   TSVGFiller = class abstract (TSVGMatrix)
   public
-    function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; virtual; abstract;
+    function GetBrush(Alpha: Byte; const DestObject: TSVGBasic;
+      IsStrokeBrush: Boolean = False): TGPBrush; virtual; abstract;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
     procedure PaintToPath(Path: TGPGraphicsPath); override;
   end;
@@ -96,7 +97,8 @@ type
     procedure AssignTo(Dest: TPersistent); override;
   public
     function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
-    function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; override;
+    function GetBrush(Alpha: Byte; const DestObject: TSVGBasic;
+      IsStrokeBrush: Boolean = False): TGPBrush; override;
     procedure Clear; override;
 
     property X1: TFloat read FX1 write FX1;
@@ -118,7 +120,8 @@ type
     procedure Clear; override;
     procedure ReadIn(const Reader: IXMLReader); override;
     function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
-    function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; override;
+    function GetBrush(Alpha: Byte; const DestObject: TSVGBasic;
+      IsStrokeBrush: Boolean = False): TGPBrush; override;
 
     property CX: TFloat read FCX write FCX;
     property CY: TFloat read FCY write FCY;
@@ -277,19 +280,26 @@ begin
   FY2 := UndefinedFloat;
 end;
 
-function TSVGLinearGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush;
+function TSVGLinearGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic;
+  IsStrokeBrush: Boolean): TGPBrush;
 var
   Brush: TGPLinearGradientBrush;
   TGP: TGPMatrix;
   Colors: TStopColors;
   BoundsRect: TRectF;
   MX1, MX2, MY1, MY2: TFloat;
+  SWAdj: TFloat;
 begin
+  if IsStrokeBrush then
+    SWAdj := DestObject.StrokeWidth / 2
+  else
+    SWAdj := 0;
   BoundsRect :=  DestObject.ObjectBounds;
-  if HasValue(FX1) then MX1 := FX1 else MX1 := BoundsRect.Left;
-  if HasValue(FX2) then MX2 := FX2 else MX2 := BoundsRect.Right;
-  if HasValue(FY1) then MY1 := FY1 else MY1 := BoundsRect.Top;
-  if HasValue(FY2) then MY2 := FY2 else MY2 := BoundsRect.Top;
+  BoundsRect.Inflate(SWAdj, SWAdj);
+  if HasValue(FX1) then MX1 := FX1 - SWAdj else MX1 := BoundsRect.Left;
+  if HasValue(FX2) then MX2 := FX2 + SWAdj else MX2 := BoundsRect.Right;
+  if HasValue(FY1) then MY1 := FY1 - SWAdj else MY1 := BoundsRect.Top;
+  if HasValue(FY2) then MY2 := FY2 + SWAdj else MY2 := BoundsRect.Top;
   if FGradientUnits = guObjectBoundingBox then begin
     // X1, X2, Y1, Y2 are relative to the Object Bounding Rect
     if HasValue(FX1) then MX1 := BoundsRect.Left + FX1 * BoundsRect.Width;
@@ -300,17 +310,18 @@ begin
 
   Brush := TGPLinearGradientBrush.Create(MakePoint(MX1, MY1), MakePoint(MX2, MY2), 0, 0);
 
-  Colors := GetColors(Alpha);
-
-  Brush.SetInterpolationColors(PGPColor(Colors.Colors),
-    PSingle(Colors.Positions), Colors.Count);
-
   if not LocalMatrix.IsEmpty then
   begin
     TGP := LocalMatrix.ToGPMatrix;
     Brush.SetTransform(TGP);
     TGP.Free;
   end;
+
+  Colors := GetColors(Alpha);
+
+  Brush.SetInterpolationColors(PGPColor(Colors.Colors),
+    PSingle(Colors.Positions), Colors.Count);
+
 
   Result := Brush;
 end;
@@ -364,7 +375,8 @@ begin
   end;
 end;
 
-function TSVGRadialGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush;
+function TSVGRadialGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic;
+  IsStrokeBrush: Boolean): TGPBrush;
 var
   Brush: TGPPathGradientBrush;
   Path: TGPGraphicsPath;
@@ -373,15 +385,22 @@ var
   RevColors: TStopColors;
   BoundsRect: TRectF;
   MCX, MCY, MR, MFX, MFY: TFloat;
+  SWAdj: TFloat;
   i: integer;
 begin
+  if IsStrokeBrush then
+    SWAdj := DestObject.StrokeWidth / 2
+  else
+    SWAdj := 0;
   BoundsRect :=  DestObject.ObjectBounds;
+  BoundsRect.Inflate(SWAdj, SWAdj);
+
   if HasValue(FCX) then MCX := FCX else MCX := BoundsRect.Left + 0.5 * BoundsRect.Width;
   if HasValue(FFX) then MFX := FFX else MFX := MCX;
   if HasValue(FCY) then MCY := FCY else MCY := BoundsRect.Top + 0.5 * BoundsRect.Height;
   if HasValue(FFY) then MFY := FFY else MFY := MCY;
   if HasValue(FR) then
-    MR := FR
+    MR := FR + SWAdj
   else
     MR := 0.5 * Sqrt(Sqr(BoundsRect.Width) + Sqr(BoundsRect.Height))/Sqrt(2);
   if FGradientUnits = guObjectBoundingBox then begin
