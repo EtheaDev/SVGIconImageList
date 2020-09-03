@@ -1594,7 +1594,7 @@ begin
   begin
     Filler := GetRoot.FindByID(FStrokeURI);
     if Assigned(Filler) and (Filler is TSVGFiller) then
-      Result := TSVGFiller(Filler).GetBrush(Opacity, Self);
+      Result := TSVGFiller(Filler).GetBrush(Opacity, Self, True);
   end else
     if (Color <> SVG_INHERIT_COLOR) and (Color <> SVG_NONE_COLOR) then
       Result := TGPSolidBrush.Create(ConvertColor(Color, Opacity));
