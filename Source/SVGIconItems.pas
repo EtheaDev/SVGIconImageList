@@ -365,20 +365,23 @@ end;
 procedure TSVGIconItems.Update(Item: TCollectionItem);
 begin
   inherited;
-  System.Messaging.TMessageManager.DefaultManager.SendMessage(Self,
-    TSVGItemsUpdateMessage.Create);
-
-  {$IFDEF D10_3+}
-  if Owner is TSVGIconImageCollection then
+  if UpdateCount = 0 then
   begin
-    if Item = nil then
-      TSVGIconImageCollection(Owner).Change
-    else
-      System.Messaging.TMessageManager.DefaultManager.SendMessage(nil,
-        TImageCollectionChangedMessage.Create(TSVGIconImageCollection(Owner),
-          Item.Index, TSVGIconItem(Item).IconName));
+    System.Messaging.TMessageManager.DefaultManager.SendMessage(Self,
+      TSVGItemsUpdateMessage.Create);
+
+    {$IFDEF D10_3+}
+    if Owner is TSVGIconImageCollection then
+    begin
+      if Item = nil then
+        TSVGIconImageCollection(Owner).Change
+      else
+        System.Messaging.TMessageManager.DefaultManager.SendMessage(nil,
+          TImageCollectionChangedMessage.Create(TSVGIconImageCollection(Owner),
+            Item.Index, TSVGIconItem(Item).IconName));
+    end;
+    {$ENDIF}
   end;
-  {$ENDIF}
 end;
 
 end.
