@@ -192,8 +192,6 @@ begin
   if (Index >= 0) and (Index < FSVGItems.Count) then
   begin
     FSVGItems.Delete(Index);
-    TMessageManager.DefaultManager.SendMessage(nil,
-      TImageCollectionChangedMessage.Create(Self, -1, ''));
   end;
 end;
 
@@ -207,8 +205,6 @@ begin
   if (ACategory = '') and (AStartIndex <= 0) and ((AEndIndex < 0) or (AEndIndex >= FSVGItems.Count - 1)) then
   begin
     FSVGItems.Clear;
-    TMessageManager.DefaultManager.SendMessage(nil,
-      TImageCollectionChangedMessage.Create(Self, -1, ''));
     Exit;
   end;
 
@@ -220,9 +216,6 @@ begin
   for I := AEndIndex downto AStartIndex do
     if (ACategory = '') or SameText(ACategory, FSVGItems[I].Category) then
       FSVGItems.Delete(I);
-
-  TMessageManager.DefaultManager.SendMessage(nil,
-    TImageCollectionChangedMessage.Create(Self, -1, ''));
 end;
 
 destructor TSVGIconImageCollection.Destroy;
