@@ -27,6 +27,7 @@
 { Kiriakos Vlahos (fixed loadlength)                               }
 { Kiriakos Vlahos (Fixed currentColor and default fillcolor)       }
 { Kiriakos Vlahos (Replacement of MSXLML with XMLite)              }
+{ Kiriakos Vlahos (Refactoring parsing)                            }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }

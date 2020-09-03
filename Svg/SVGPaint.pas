@@ -1,4 +1,4 @@
-﻿{******************************************************************}
+{******************************************************************}
 { SVG fill classes                                                 }
 {                                                                  }
 { home page : http://www.mwcs.de                                   }
@@ -14,6 +14,7 @@
 { Kiriakos Vlahos (deprecated xlink:href to href)                  }
 { Kiriakos Vlahos (fixed gradient transform)                       }
 { Kiriakos Vlahos (fixed LinearGradient and RadialGradient)        }
+{ Kiriakos Vlahos (Refactoring parsing)                            }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }

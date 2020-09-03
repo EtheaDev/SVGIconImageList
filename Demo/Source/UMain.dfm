@@ -223,7 +223,6 @@ object MainForm: TMainForm
       Margins.Right = 10
       Margins.Bottom = 10
       AutoSize = False
-      Proportional = False
       ImageList = SVGIconVirtualImageList
       ImageIndex = 100
       Align = alBottom
