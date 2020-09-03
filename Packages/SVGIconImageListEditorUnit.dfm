@@ -541,12 +541,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       end
     end
   end
-  object OpenDialog: TOpenPictureDialog
-    Filter = 'Scalable Vector Graphics (*.svg)|*.svg'
-    Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
-    Left = 328
-    Top = 96
-  end
   object SaveDialog: TSavePictureDialog
     DefaultExt = 'svg'
     Filter = 'Bitmaps (*.bmp)|*.bmp'
