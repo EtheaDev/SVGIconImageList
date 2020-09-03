@@ -59,10 +59,19 @@ function ParseClass(const AClass: string): TArray<string>;
 
 function ParseGradientUnits(const AGradientUnit: string): TGradientUnits;
 
+function ParseFontWeight(const S: string): Integer;
+
+procedure ParseTextDecoration(const S: string; var TD: TTextDecoration);
+
+function ParseFontStyle(AFontStyle: string): Integer;
+
 implementation
 
 uses
-  System.SysUtils, System.Math, System.StrUtils,
+  Winapi.Windows,
+  System.SysUtils,
+  System.Math,
+  System.StrUtils,
   SVGCommon;
 
 function ParseAngle(const Angle: string): TFloat;
@@ -490,5 +499,57 @@ begin
   if AGradientUnit = 'userSpaceOnUse' then
     Result := guUserSpaceOnUse
 end;
+
+function ParseFontWeight(const S: string): Integer;
+begin
+  Result := FW_NORMAL;
+  if S = 'normal' then Result := FW_NORMAL
+  else if S = 'bold' then Result := FW_BOLD
+  else if S = 'bolder' then Result := FW_EXTRABOLD
+  else if S = 'lighter' then Result := FW_LIGHT
+  else TryStrToInt(S, Result);
+end;
+
+procedure ParseTextDecoration(const S: string; var TD: TTextDecoration);
+Var
+  SL: TStringList;
+begin
+ SL := TStringList.Create;
+ try
+   SL.Delimiter := ' ';
+   SL.DelimitedText := S;
+
+   if SL.IndexOf('underline') > -1 then
+   begin
+     Exclude(TD, tdInherit);
+     Include(TD, tdUnderLine);
+   end;
+
+   if SL.IndexOf('overline') > -1 then
+   begin
+     Exclude(TD, tdInherit);
+     Include(TD, tdOverLine);
+   end;
+
+   if SL.IndexOf('line-through') > -1 then
+   begin
+     Exclude(TD, tdInherit);
+     Include(TD, tdStrikeOut);
+   end;
+
+   if SL.IndexOf('none') > -1 then
+     TD := [];
+   finally
+     SL.Free;
+   end;
+end;
+
+function ParseFontStyle(AFontStyle: string): Integer;
+begin
+   Result := FontNormal;
+   if AFontStyle = 'italic' then
+     Result := SVGTypes.FontItalic;
+end;
+
 
 end.

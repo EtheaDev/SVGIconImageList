@@ -193,7 +193,6 @@ type
     function GetFontSize: TFloat;
     function GetFontStyle: Integer;
     function GetTextDecoration: TTextDecoration;
-    procedure ParseFontWeight(const S: string);
     procedure UpdateStyle;
     procedure OnStyleChanged(Sender: TObject);
     procedure SetClipPath(Graphics: TGPGraphics);
@@ -211,6 +210,7 @@ type
       LengthType: TLengthType; var X: TFloat);
     procedure AssignTo(Dest: TPersistent); override;
     procedure ReadStyle(Style: TStyle); virtual;
+    procedure ProcessFontAttribute(SVGAttr: TSVGAttribute; const Value: string);
     function GetGPPath: TGPGraphicsPath2;
     procedure ConstructPath; virtual;
 
@@ -1334,6 +1334,11 @@ begin
     saHeight: ParseLengthAttr(AttrValue, ltVert, FHeight);
     saRx: ParseLengthAttr(AttrValue, ltOther, FRX);
     saRy: ParseLengthAttr(AttrValue, ltOther, FRY);
+    saFontFamily,
+    saFontWeight,
+    saFontSize,
+    saTextDecoration,
+    saFontStyle: ProcessFontAttribute(SVGAttr, AttrValue);
   else
     Result := inherited;
   end;
@@ -1399,116 +1404,22 @@ begin
   end;
 end;
 
+procedure TSVGBasic.ProcessFontAttribute(SVGAttr: TSVGAttribute; const Value: string);
+begin
+   case SVGAttr of
+     saFontFamily: FFontName := Value;
+     saFontWeight: FFontWeight := ParseFontWeight(Value);
+     saFontSize: FFontSize := ParseLength(Value);
+     saTextDecoration: ParseTextDecoration(Value, FTextDecoration);
+     saFontStyle: FFontStyle := ParseFontStyle(Value);
+   end;
+end;
+
 procedure TSVGBasic.ReadStyle(Style: TStyle);
-
-  procedure ConstructFont;
-  var
-    Bold, Italic: Integer;
-    FN: string;
-  begin
-    Bold := Pos('Bold', FFontName);
-    Italic := Pos('Italic', FFontName);
-
-    FN := FFontName;
-
-    // Check for Bold
-    if Bold <> 0 then
-    begin
-      FFontName := Copy(FN, 1, Bold - 1) + Copy(FN, Bold + 4, MaxInt);
-      if Copy(FFontName, Length(FFontName), 1) = '-' then
-        FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
-      if IsFontAvailable then
-      begin
-        Style['font-weight'] := 'bold';
-        Exit;
-      end;
-      if Copy(FFontName, Length(FFontName) - 1, 2) = 'MT' then
-      begin
-        FFontName := Copy(FFontName, 1, Length(FFontName) - 2);
-        if Copy(FFontName, Length(FFontName), 1) = '-' then
-          FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
-        if IsFontAvailable then
-        begin
-          Style['font-weight'] := 'bold';
-          Exit;
-        end;
-      end;
-    end;
-
-    // Check for Italic
-    if Italic <> 0 then
-    begin
-      FFontName := Copy(FN, 1, Italic - 1) + Copy(FN, Italic + 6, MaxInt);
-      if Copy(FFontName, Length(FFontName), 1) = '-' then
-        FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
-      if IsFontAvailable then
-      begin
-        Style['font-style'] := 'italic';
-        Exit;
-      end;
-      if Copy(FFontName, Length(FFontName) - 1, 2) = 'MT' then
-      begin
-        FFontName := Copy(FFontName, 1, Length(FFontName) - 2);
-        if Copy(FFontName, Length(FFontName), 1) = '-' then
-          FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
-        if IsFontAvailable then
-        begin
-          Style['font-style'] := 'italic';
-          Exit;
-        end;
-      end;
-    end;
-
-    // Check for Bold and Italic
-    if (Bold <> 0) and (Italic <> 0) then
-    begin
-      FFontName := Copy(FN, 1, Bold - 1) + Copy(FN, Bold + 4, MaxInt);
-      if Copy(FFontName, Length(FFontName), 1) = '-' then
-        FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
-      Italic := Pos('Italic', FFontName);
-
-      FFontName := Copy(FFontName, 1, Italic - 1) + Copy(FFontName, Italic + 6, MaxInt);
-      if Copy(FFontName, Length(FFontName), 1) = '-' then
-        FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
-
-      if IsFontAvailable then
-      begin
-        Style['font-weight'] := 'bold';
-        Style['font-style'] := 'italic';
-        Exit;
-      end;
-      if Copy(FFontName, Length(FFontName) - 1, 2) = 'MT' then
-      begin
-        FFontName := Copy(FFontName, 1, Length(FFontName) - 2);
-        if Copy(FFontName, Length(FFontName), 1) = '-' then
-          FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
-        if IsFontAvailable then
-        begin
-          Style['font-weight'] := 'bold';
-          Style['font-style'] := 'italic';
-          Exit;
-        end;
-      end;
-    end;
-
-    FFontName := FN;
-    if Copy(FFontName, Length(FFontName) - 1, 2) = 'MT' then
-    begin
-      FFontName := Copy(FFontName, 1, Length(FFontName) - 2);
-      if Copy(FFontName, Length(FFontName), 1) = '-' then
-        FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
-      if IsFontAvailable then
-        Exit;
-    end;
-
-    FFontName := FN;
-  end;
-
 var
   I: integer;
   Key : string;
   Value: string;
-  SL: TStringList;
   SVGAttr: TSVGAttribute;
 begin
   for I := 0 to Style.Count - 1 do
@@ -1565,52 +1476,11 @@ begin
             fFillMode := FillModeAlternate
           else
             fFillMode := FillModeWinding;
-        saFontFamily:
-          begin
-            FFontName := Value;
-            if not IsFontAvailable then
-              ConstructFont;
-          end;
-        saFontWeight:
-          ParseFontWeight(Value);
-        saFontSize:
-          FFontSize := ParseLength(Value);
-        saTextDecoration:
-          begin
-            SL := TStringList.Create;
-            try
-              SL.Delimiter := ' ';
-              SL.DelimitedText := Value;
-
-              if SL.IndexOf('underline') > -1 then
-              begin
-                Exclude(FTextDecoration, tdInherit);
-                Include(FTextDecoration, tdUnderLine);
-              end;
-
-              if SL.IndexOf('overline') > -1 then
-              begin
-                Exclude(FTextDecoration, tdInherit);
-                Include(FTextDecoration, tdOverLine);
-              end;
-
-              if SL.IndexOf('line-through') > -1 then
-              begin
-                Exclude(FTextDecoration, tdInherit);
-                Include(FTextDecoration, tdStrikeOut);
-              end;
-
-              if SL.IndexOf('none') > -1 then
-                FTextDecoration := [];
-            finally
-              SL.Free;
-            end;
-          end;
-        saFontStyle:
-            if Value = 'normal' then
-              FFontStyle := FontNormal
-            else if Value = 'italic' then
-              FFontStyle := SVGTypes.FontItalic;
+        saFontFamily,
+        saFontWeight,
+        saFontSize,
+        saTextDecoration,
+        saFontStyle: ProcessFontAttribute(SVGAttr, Value);
         saDisplay:
           if Value = 'none' then
             FDisplay := tbFalse;
@@ -2102,30 +1972,6 @@ begin
       Break;
     end;
     SVG := SVG.FParent;
-  end;
-end;
-
-procedure TSVGBasic.ParseFontWeight(const S: string);
-begin
-  if S = 'normal' then
-  begin
-    FFontWeight := FW_NORMAL;
-  end
-  else if S = 'bold' then
-  begin
-    FFontWeight := FW_BOLD;
-  end
-  else if S = 'bolder' then
-  begin
-    FFontWeight := FW_EXTRABOLD;
-  end
-  else if S = 'lighter' then
-  begin
-    FFontWeight := FW_LIGHT;
-  end
-  else
-  begin
-    TryStrToInt(S, FFontWeight);
   end;
 end;
 
@@ -3924,8 +3770,115 @@ begin
 end;
 
 procedure TSVGCustomText.ReadIn(const Reader: IXMLReader);
+
+  procedure ProcessFontName;
+  var
+    Bold, Italic: Integer;
+    FN: string;
+  begin
+    if FFontName = '' then Exit;
+
+    Bold := Pos('Bold', FFontName);
+    Italic := Pos('Italic', FFontName);
+
+    FN := FFontName;
+
+    // Check for Bold
+    if Bold <> 0 then
+    begin
+      FFontName := Copy(FN, 1, Bold - 1) + Copy(FN, Bold + 4, MaxInt);
+      if Copy(FFontName, Length(FFontName), 1) = '-' then
+        FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
+      if IsFontAvailable then
+      begin
+        FFontWeight := FW_BOLD;
+        Exit;
+      end;
+      if Copy(FFontName, Length(FFontName) - 1, 2) = 'MT' then
+      begin
+        FFontName := Copy(FFontName, 1, Length(FFontName) - 2);
+        if Copy(FFontName, Length(FFontName), 1) = '-' then
+          FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
+        if IsFontAvailable then
+        begin
+          FFontWeight := FW_BOLD;
+          Exit;
+        end;
+      end;
+    end;
+
+    // Check for Italic
+    if Italic <> 0 then
+    begin
+      FFontName := Copy(FN, 1, Italic - 1) + Copy(FN, Italic + 6, MaxInt);
+      if Copy(FFontName, Length(FFontName), 1) = '-' then
+        FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
+      if IsFontAvailable then
+      begin
+        FFontStyle := SVGTypes.FontItalic;
+        Exit;
+      end;
+      if Copy(FFontName, Length(FFontName) - 1, 2) = 'MT' then
+      begin
+        FFontName := Copy(FFontName, 1, Length(FFontName) - 2);
+        if Copy(FFontName, Length(FFontName), 1) = '-' then
+          FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
+        if IsFontAvailable then
+        begin
+          FFontStyle := SVGTypes.FontItalic;
+          Exit;
+        end;
+      end;
+    end;
+
+    // Check for Bold and Italic
+    if (Bold <> 0) and (Italic <> 0) then
+    begin
+      FFontName := Copy(FN, 1, Bold - 1) + Copy(FN, Bold + 4, MaxInt);
+      if Copy(FFontName, Length(FFontName), 1) = '-' then
+        FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
+      Italic := Pos('Italic', FFontName);
+
+      FFontName := Copy(FFontName, 1, Italic - 1) + Copy(FFontName, Italic + 6, MaxInt);
+      if Copy(FFontName, Length(FFontName), 1) = '-' then
+        FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
+
+      if IsFontAvailable then
+      begin
+        FFontWeight := FW_BOLD;
+        FFontStyle := SVGTypes.FontItalic;
+        Exit;
+      end;
+      if Copy(FFontName, Length(FFontName) - 1, 2) = 'MT' then
+      begin
+        FFontName := Copy(FFontName, 1, Length(FFontName) - 2);
+        if Copy(FFontName, Length(FFontName), 1) = '-' then
+          FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
+        if IsFontAvailable then
+        begin
+          FFontWeight := FW_BOLD;
+          FFontStyle := SVGTypes.FontItalic;
+          Exit;
+        end;
+      end;
+    end;
+
+    FFontName := FN;
+    if Copy(FFontName, Length(FFontName) - 1, 2) = 'MT' then
+    begin
+      FFontName := Copy(FFontName, 1, Length(FFontName) - 2);
+      if Copy(FFontName, Length(FFontName), 1) = '-' then
+        FFontName := Copy(FFontName, 1, Length(FFontName) - 1);
+      if IsFontAvailable then
+        Exit;
+    end;
+
+    FFontName := FN;
+  end;
+
 begin
   inherited;
+  ProcessFontName;
   ReadTextNodes(Reader);
 end;
 
