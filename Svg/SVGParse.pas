@@ -14,6 +14,7 @@
 { Kiriakos Vlahos (fixed GetFactor)                                }
 { Kiriakos Vlahos (Added parse length in percent)                  }
 { Kiriakos Vlahos (Refactoring parsing)                            }
+{ Kiriakos Vlahos (Refactoring parsing Font)                       }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }
