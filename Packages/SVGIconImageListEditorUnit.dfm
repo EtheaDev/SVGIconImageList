@@ -480,7 +480,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Width = 154
           Height = 154
           AutoSize = False
-          Proportional = False
           Align = alClient
         end
       end

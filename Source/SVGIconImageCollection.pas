@@ -98,7 +98,8 @@ type
     function Add(const ASVG: ISVG; const AIconName: string;
        const AGrayScale: Boolean = False;
        const AFixedColor: TColor = SVG_INHERIT_COLOR): Integer;
-    procedure Delete(const Index: Integer);
+    procedure Delete(const Index: Integer); overload;
+    procedure Delete(const ACategory: String; AStartIndex, AEndIndex: Integer); overload;
     procedure Remove(const Name: string);
     function IndexOf(const Name: string): Integer;
     procedure ClearIcons;
@@ -115,7 +116,8 @@ type
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils
+  , System.Messaging;
 
 { TSVGIconImageCollection }
 
@@ -188,7 +190,39 @@ end;
 procedure TSVGIconImageCollection.Delete(const Index: Integer);
 begin
   if (Index >= 0) and (Index < FSVGItems.Count) then
+  begin
     FSVGItems.Delete(Index);
+    TMessageManager.DefaultManager.SendMessage(nil,
+      TImageCollectionChangedMessage.Create(Self, -1, ''));
+  end;
+end;
+
+procedure TSVGIconImageCollection.Delete(const ACategory: String; AStartIndex, AEndIndex: Integer);
+var
+  I: Integer;
+begin
+  if FSVGItems.Count = 0 then
+    Exit;
+
+  if (ACategory = '') and (AStartIndex <= 0) and ((AEndIndex < 0) or (AEndIndex >= FSVGItems.Count - 1)) then
+  begin
+    FSVGItems.Clear;
+    TMessageManager.DefaultManager.SendMessage(nil,
+      TImageCollectionChangedMessage.Create(Self, -1, ''));
+    Exit;
+  end;
+
+  if AStartIndex < 0 then
+    AStartIndex := 0;
+  if (AEndIndex < 0) or (AEndIndex > FSVGItems.Count - 1) then
+    AEndIndex := FSVGItems.Count - 1;
+
+  for I := AEndIndex downto AStartIndex do
+    if (ACategory = '') or SameText(ACategory, FSVGItems[I].Category) then
+      FSVGItems.Delete(I);
+
+  TMessageManager.DefaultManager.SendMessage(nil,
+    TImageCollectionChangedMessage.Create(Self, -1, ''));
 end;
 
 destructor TSVGIconImageCollection.Destroy;

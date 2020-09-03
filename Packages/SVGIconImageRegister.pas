@@ -96,8 +96,8 @@ implementation
 
 uses
   SysUtils
-  , ShellApi
-  , Windows
+  , Winapi.ShellApi
+  , Winapi.Windows
   , SVGIconImage
   , SVGIconImageListBase
   , SVGIconImageList

@@ -13,6 +13,9 @@
 {                                                                  }
 { Thanks to:                                                       }
 { Kiriakos Vlahos (New Types)                                      }
+{ Kiriakos Vlahos (Enhanced TSVG attributes)                       }
+{ Kiriakos Vlahos (added TSVGElementFeature)                       }
+{ Kiriakos Vlahos (Added TSVGElementFeatures)                      }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }
@@ -41,6 +44,13 @@ const
   UndefinedInt = -2147483648; // Integer.MinValue
 
 type
+  //Redefine to compile with older Delphi Versions
+  {$IFDEF NEXTGEN}
+  PUTF8Char = _PAnsiChar;
+  {$ELSE}
+  PUTF8Char = PAnsiChar;
+  {$ENDIF}
+
   TFloat = single;
 
   TSVGElementFeature = (sefMayHaveChildren, sefNeedsPainting, sefChildrenNeedPainting, sefHasPath);
