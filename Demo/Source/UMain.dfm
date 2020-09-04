@@ -169,37 +169,31 @@ object MainForm: TMainForm
       Left = 0
       Top = 0
       Action = DisabledAction
-      ImageName = 'Business\businessman'
     end
     object ToolButton2: TToolButton
       Left = 39
       Top = 0
       Action = DeleteIconAction
-      ImageName = 'cancel'
     end
     object ToolButton3: TToolButton
       Left = 78
       Top = 0
       ImageIndex = 2
-      ImageName = 'calendar'
     end
     object ToolButton4: TToolButton
       Left = 117
       Top = 0
       ImageIndex = 3
-      ImageName = 'about'
     end
     object ToolButton5: TToolButton
       Left = 156
       Top = 0
       ImageIndex = 4
-      ImageName = 'calculator'
     end
     object ToolButton6: TToolButton
       Left = 195
       Top = 0
       Action = ChangeIconAction
-      ImageName = 'synchronize'
     end
     object ToolButton7: TToolButton
       Left = 234
@@ -207,7 +201,6 @@ object MainForm: TMainForm
       Caption = 'Change Color'
       Enabled = False
       ImageIndex = 7
-      ImageName = 'advertising'
       OnClick = ChangeColorActionExecute
     end
   end
@@ -242,7 +235,6 @@ object MainForm: TMainForm
       Height = 60
       Action = DeleteIconAction
       ImageAlignment = iaTop
-      ImageName = 'cancel'
       Images = SVGIconVirtualImageList
       TabOrder = 0
     end
@@ -253,7 +245,6 @@ object MainForm: TMainForm
       Height = 60
       Action = ChangeIconAction
       ImageAlignment = iaTop
-      ImageName = 'synchronize'
       Images = SVGIconVirtualImageList
       TabOrder = 1
     end
@@ -264,7 +255,6 @@ object MainForm: TMainForm
       Height = 60
       Action = NewFormAction
       ImageAlignment = iaTop
-      ImageName = 'frame'
       Images = SVGIconVirtualImageList
       TabOrder = 2
     end
