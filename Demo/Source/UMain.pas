@@ -84,6 +84,7 @@ type
     SVGIconVirtualImageList: TSVGIconVirtualImageList;
     NewFormButton: TButton;
     NewFormAction: TAction;
+    tmrTrackbar: TTimer;
     procedure ChangeIconActionExecute(Sender: TObject);
     procedure SelectThemeRadioGroupClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -101,6 +102,7 @@ type
     procedure GrayScaleCheckBoxClick(Sender: TObject);
     procedure FixedColorComboBoxSelect(Sender: TObject);
     procedure NewFormActionExecute(Sender: TObject);
+    procedure tmrTrackbarTimer(Sender: TObject);
   private
     {$IFDEF D10_3+}
     VirtualImageList: TVirtualImageList;
@@ -349,6 +351,20 @@ begin
     SVGIconImage.ImageIndex := SVGIconImage.ImageIndex - 1;
 end;
 
+procedure TMainForm.tmrTrackbarTimer(Sender: TObject);
+begin
+  // Disable trackbar while updating. Otherwise a second event will be fired
+  TrackBar.Enabled := false;
+  try
+    tmrTrackbar.Enabled := false;
+    //Resize all icons into ImageList
+    SVGIconVirtualImageList.Size := TrackBar.Position;
+    UpdateGUI;
+  finally
+    TrackBar.Enabled := true;
+  end;
+end;
+
 procedure TMainForm.updateGUI;
 var
   LSize: Integer;
@@ -410,9 +426,7 @@ end;
 
 procedure TMainForm.TrackBarChange(Sender: TObject);
 begin
-  //Resize all icons into ImageList
-  SVGIconVirtualImageList.Size := TrackBar.Position;
-  UpdateGUI;
+  tmrTrackbar.Enabled := true;
 end;
 
 initialization
