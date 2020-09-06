@@ -131,6 +131,7 @@ type
 //     W1012 Constant expression violates subrange bounds (Delphi)
 //     for older Delphi/FPC try supporessing them with *temporary* {$WARNINGS OFF} instead.
 {$WARN BOUNDS_ERROR OFF}
+{$IFOPT R+}{$DEFINE RANGEON}{$R-}{$ELSE}{$UNDEF RANGEON}{$ENDIF}
   XmlError = (
     MX_E_MX                         =  $C00CEE00,
     MX_E_INPUTEND,                  // 0xC00CEE01 unexpected end of input
@@ -223,6 +224,7 @@ type
     XML_E_INVALID_UNICODE           =  $C00CE01F,
     XML_E_INVALIDENCODING           =  $C00CE06E
   );
+{$IFDEF RANGEON}{$R+}{$UNDEF RANGEON}{$ENDIF}
 {$WARN BOUNDS_ERROR DEFAULT}
 
 type
