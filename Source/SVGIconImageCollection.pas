@@ -92,6 +92,10 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
+
+    function LoadFromFiles(const AFileNames: TStrings;
+      const AAppend: Boolean = True): Integer;
+
     function Add(const ASVG: ISVG; const AIconName: string;
        const AGrayScale: Boolean = False;
        const AFixedColor: TColor = SVG_INHERIT_COLOR): Integer;
@@ -231,6 +235,17 @@ begin
     if FSVGItems[Result].IconName = Name then
       Exit;
   Result := -1;
+end;
+
+function TSVGIconImageCollection.LoadFromFiles(const AFileNames: TStrings;
+  const AAppend: Boolean): Integer;
+begin
+  SVGIconItems.BeginUpdate;
+  try
+    Result := SVGIconItems.LoadFromFiles(AFileNames, AAppend);
+  finally
+    SVGIconItems.EndUpdate;
+  end;
 end;
 
 function TSVGIconImageCollection.LoadFromResource(const hInstance: THandle; const ResourceName, IconName: string) : integer;

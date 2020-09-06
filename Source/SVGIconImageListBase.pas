@@ -127,8 +127,8 @@ type
     constructor Create(AOwner : TComponent);override;
     destructor Destroy;override;
     procedure Assign(Source: TPersistent); override;
-    function LoadFromFiles(const AFileNames: TStrings; const AAppend: Boolean = True): Integer;
-
+    function LoadFromFiles(const AFileNames: TStrings;
+      const AAppend: Boolean = True): Integer;
     procedure DPIChanged(Sender: TObject; const OldDPI, NewDPI: Integer); virtual;
     {$IFDEF D10_4+}
     function IsImageNameAvailable: Boolean; override;

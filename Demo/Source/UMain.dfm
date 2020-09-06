@@ -358,7 +358,6 @@ object MainForm: TMainForm
   object SVGIconVirtualImageList: TSVGIconVirtualImageList
     Size = 32
     ImageCollection = ImageDataModule.SVGIconImageCollection
-    Scaled = True
     Left = 424
     Top = 336
   end

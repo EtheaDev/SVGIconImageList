@@ -56,6 +56,7 @@ uses
   SysUtils
   , Windows
   , Themes
+  , SVGIconImageCOllection
   {$IFDEF D10_3}
   , VirtualImageList
   {$ENDIF}
@@ -87,15 +88,20 @@ begin
     for I := 0 to Result -1 do
     begin
       if (LImageList is TSVGIconImageListBase) then
+        LItem := TSVGIconImageListBase(LImageList).SVGIconItems[I]
+      {$IFDEF D10_3}
+      else if (LImageList is TVirtualImageList) and
+        (TVirtualImageList(LImageList).ImageCollection is TSVGIconImageCollection) then
+        LItem := TSVGIconImageCollection(TVirtualImageList(LImageList).ImageCollection).SVGIconItems[I]
+      {$ENDIF}
+      else
+        Continue;
+      if (ACategory = '') or
+       (LowerCase(ACategory) = LowerCase(LItem.Category)) then
       begin
-        LItem := TSVGIconImageListBase(LImageList).SVGIconItems[I];
-        if (ACategory = '') or
-         (LowerCase(ACategory) = LowerCase(LItem.Category)) then
-        begin
-          LListItem := AListView.Items.Add;
-          LListItem.Caption := GetItemCaption;
-          LListItem.ImageIndex := I;
-        end;
+        LListItem := AListView.Items.Add;
+        LListItem.Caption := GetItemCaption;
+        LListItem.ImageIndex := I;
       end;
     end;
   finally
@@ -120,9 +126,9 @@ begin
     Result := LImageList.Count;
     for I := 0 to Result -1 do
     begin
-      if (LImageList is TSVGIconImageList) then
+      if (LImageList is TSVGIconImageListBase) then
       begin
-        LItem := TSVGIconImageList(LImageList).SVGIconItems[I];
+        LItem := TSVGIconImageListBase(LImageList).SVGIconItems[I];
         LListItem := AListView.Items[I];
         if AShowCaption then
         begin
