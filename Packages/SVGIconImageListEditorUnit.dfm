@@ -480,7 +480,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Width = 154
           Height = 154
           AutoSize = False
-          Proportional = False
           Align = alClient
         end
       end
@@ -541,12 +540,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         OnExit = CategoryEditExit
       end
     end
-  end
-  object OpenDialog: TOpenPictureDialog
-    Filter = 'Scalable Vector Graphics (*.svg)|*.svg'
-    Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
-    Left = 328
-    Top = 96
   end
   object SaveDialog: TSavePictureDialog
     DefaultExt = 'svg'

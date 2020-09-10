@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{AC5E58B2-BDF0-4A77-9084-92441FBD9BC2}</ProjectGuid>
         <MainSource>dclSVGIconImageListFMX.dpk</MainSource>
-        <ProjectVersion>19.0</ProjectVersion>
+        <ProjectVersion>19.1</ProjectVersion>
         <FrameworkType>FMX</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>

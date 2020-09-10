@@ -61,10 +61,14 @@ resourcestring
   SELECT_DIR = 'Select directory';
   FILES_SAVED = '%d File(s) saved into "%s" folder';
 type
+  TOpenPictureDialogSvg = class(TOpenPictureDialog)
+  public
+    function Execute(ParentWnd: HWND): Boolean; override;
+  end;
+
   TSVGIconImageListEditor = class(TForm)
     OKButton: TButton;
     CancelButton: TButton;
-    OpenDialog: TOpenPictureDialog;
     SaveDialog: TSavePictureDialog;
     ImageListGroup: TGroupBox;
     paTop: TPanel;
@@ -153,6 +157,7 @@ type
     procedure DeleteButtonClick(Sender: TObject);
     procedure CategoryEditExit(Sender: TObject);
   private
+    FOpenDialog: TOpenPictureDialogSvg;
     FSelectedCategory: string;
     FSourceList, FEditingList: TSVGIconImageList;
     FTotIconsLabel: string;
@@ -192,6 +197,8 @@ uses
   , Winapi.ShellAPI
   , Vcl.FileCtrl
   , Xml.XMLDoc
+  , Vcl.Themes
+  , Winapi.CommDlg
   , SVGIconUtils;
 
 var
@@ -210,7 +217,6 @@ begin
       try
         FSourceList := AImageList;
         FEditingList.Assign(AImageList);
-        OpacitySpinEdit.Value := FSourceList.Opacity;
         UpdateGUI;
       finally
         Screen.Cursor := crDefault;
@@ -248,8 +254,6 @@ begin
         FSourceList := TSVGIconImageList.Create(LEditor);
         FSourceList.Assign(AImageList);
         FEditingList.Assign(AImageList);
-        OpacitySpinEdit.Value := FSourceList.Opacity;
-        OpacitySpinEdit.Value := AImageList.Opacity;
         UpdateGUI;
       finally
         Screen.Cursor := crDefault;
@@ -291,7 +295,6 @@ begin
         ImageListGroupBox.Visible := False;
         FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
         FEditingList.Assign(FSourceList);
-        OpacitySpinEdit.Value := FSourceList.Opacity;
         UpdateGUI;
       finally
         Screen.Cursor := crDefault;
@@ -335,11 +338,11 @@ end;
 
 procedure TSVGIconImageListEditor.AddButtonClick(Sender: TObject);
 begin
-  if OpenDialog.Execute then
+  if FOpenDialog.Execute then
   begin
     Screen.Cursor := crHourGlass;
     try
-      FEditingList.SvgIconItems.LoadFromFiles(OpenDialog.Files);
+      FEditingList.SvgIconItems.LoadFromFiles(FOpenDialog.Files);
       BuildList(MaxInt);
       FChanged := True;
       UpdateGUI;
@@ -396,6 +399,7 @@ begin
     ImageListGroup.Caption := Format(FTotIconsLabel, [FEditingList.Count]);
     GrayScaleCheckBox.Checked := SVGIconImageList.GrayScale;
     FixedColorComboBox.Selected := SVGIconImageList.FixedColor;
+    OpacitySpinEdit.Value := SVGIconImageList.Opacity;
     if LIsItemSelected then
     begin
       IconImage.ImageIndex := SelectedIcon.Index;
@@ -516,17 +520,17 @@ var
   FileName: string;
   Item: TSVGIconItem;
 begin
-  if OpenDialog.Execute then
+  if FOpenDialog.Execute then
   begin
     Screen.Cursor := crHourGlass;
     FEditingList.BeginUpdate;
     try
       SVG := GlobalSVGFactory.NewSvg;
-      for LIndex := 0 to OpenDialog.Files.Count - 1 do
+      for LIndex := 0 to FOpenDialog.Files.Count - 1 do
       begin
-        FileName := ChangeFileExt(ExtractFileName(OpenDialog.Files[LIndex]), '');
+        FileName := ChangeFileExt(ExtractFileName(FOpenDialog.Files[LIndex]), '');
         try
-          SVG.LoadFromFile(OpenDialog.Files[LIndex]);
+          SVG.LoadFromFile(FOpenDialog.Files[LIndex]);
           Item := FEditingList.SVGIconItems[ImageView.ItemIndex];
           Item.IconName := FileName;
           Item.SVG := SVG;
@@ -605,6 +609,7 @@ procedure TSVGIconImageListEditor.SVGTextChange(Sender: TObject);
 begin
   if FUpdating then Exit;
   SelectedIcon.SVGText := SVGText.Lines.Text;
+  IconImage.Invalidate;
   UpdateGUI;
 end;
 
@@ -709,6 +714,9 @@ procedure TSVGIconImageListEditor.FormCreate(Sender: TObject);
 begin
   inherited;
   FEditingList := TSVGIconImageList.Create(Self);
+  FOpenDialog := TOpenPictureDialogSvg.Create(Self);
+  FOpenDialog.Filter := 'Scalable Vector Graphics (*.svg)|*.svg';
+  FOpenDialog.Options := [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing];
   ImageView.LargeImages := FEditingList;
   IconImage.DoubleBuffered := True;
   IconImage.ImageList := FEditingList;
@@ -783,7 +791,7 @@ var
   end;
 
 begin
-  FDir := ExtractFilePath(OpenDialog.FileName);
+  FDir := ExtractFilePath(FOpenDialog.FileName);
   if Win32MajorVersion >= 6 then
     with TFileOpenDialog.Create(nil) do
       try
@@ -881,6 +889,14 @@ begin
   ShellExecute(handle, 'open',
     PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Component-Editor-(VCL)'), nil, nil,
     SW_SHOWNORMAL)
+end;
+
+{ TOpenPictureDialogSvg }
+
+function TOpenPictureDialogSvg.Execute(ParentWnd: HWND): Boolean;
+begin
+  Template := 'DLGTEMPLATE';
+  Result := DoExecute(@GetOpenFileName, ParentWnd);
 end;
 
 initialization

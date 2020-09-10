@@ -46,8 +46,9 @@ uses
   , System.Classes
   , Vcl.Controls
   , Vcl.Graphics
-  , SVGInterfaces
-  , SVGIconImageListBase;
+  , Vcl.ImgList
+  , SVGIconItems
+  , SVGInterfaces;
 
 type
   TSVGIconImage = class(TCustomControl)
@@ -60,35 +61,32 @@ type
     FScale: Double;
     FOpacity: Byte;
     FFileName: TFileName;
-    FImageList: TSVGIconImageListBase;
+    FImageList: TCustomImageList;
     FImageIndex: Integer;
     procedure SetCenter(Value: Boolean);
     procedure SetProportional(Value: Boolean);
     procedure SetOpacity(Value: Byte);
     procedure SetFileName(const Value: TFileName);
-    //procedure ReadData(Stream: TStream);
-    //procedure WriteData(Stream: TStream);
     procedure SetImageIndex(const Value: Integer);
     procedure SetStretch(const Value: Boolean);
     procedure SetScale(const Value: Double);
+    procedure SetImageList(const Value: TCustomImageList);
     procedure SetAutoSizeImage(const Value: Boolean);
   private
     function GetSVGText: string;
     procedure SetSVGText(const AValue: string);
     function StoreScale: Boolean;
     function UsingSVGText: Boolean;
-    procedure SetImageList(const Value: TSVGIconImageListBase);
   protected
     procedure Paint; override;
-    //procedure DefineProperties(Filer: TFiler); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure CheckAutoSize;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Clear;
+    function SVGIconItems: TSVGIconItems;
     function Empty: Boolean;
-    //procedure Paint; override;
     procedure LoadFromFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
     procedure SaveToFile(const FileName: string);
@@ -99,13 +97,14 @@ type
     property Center: Boolean read FCenter write SetCenter default True;
     property ParentDoubleBuffered;
     property DoubleBuffered;
-    property Proportional: Boolean read FProportional write SetProportional;
+    property ParentBackground default True;
+    property Proportional: Boolean read FProportional write SetProportional default False;
     property Stretch: Boolean read FStretch write SetStretch default True;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
     property Scale: Double read FScale write SetScale stored StoreScale;
-    property FileName: TFileName read FFileName write SetFileName;
-    property ImageList: TSVGIconImageListBase read FImageList write SetImageList;
+    property ImageList: TCustomImageList read FImageList write SetImageList;
     property ImageIndex: Integer read FImageIndex write SetImageIndex default -1;
+    property FileName: TFileName read FFileName write SetFileName;
     property SVGText: string read GetSVGText write SetSVGText stored UsingSVGText;
     property Enabled;
     property Visible;
@@ -119,7 +118,6 @@ type
     property OnMouseMove;
     property OnMouseUp;
   end;
-
 
   TSVGGraphic = class(TGraphic)
   strict private
@@ -168,6 +166,13 @@ type
 
 implementation
 
+uses
+  SVGIconImageListBase
+  {$IFDEF D10_3+}
+  , Vcl.VirtualImageList
+  {$ENDIF}
+  , SVGIconImageCollection;
+
 constructor TSVGIconImage.Create(AOwner: TComponent);
 begin
   inherited;
@@ -178,6 +183,7 @@ begin
   FOpacity := 255;
   FScale := 1;
   FImageIndex := -1;
+  ParentBackground := True;
 end;
 
 destructor TSVGIconImage.Destroy;
@@ -208,9 +214,21 @@ end;
 function TSVGIconImage.GetSVGText: string;
 begin
   if not UsingSVGText then
-    Result := FImageList.Images[FImageIndex].Source
+    Result := SVGIconItems.Items[FImageIndex].SVGText
   else
     Result := FSVG.Source;
+end;
+
+function TSVGIconImage.SVGIconItems: TSVGIconItems;
+begin
+  Result := nil;
+  if FImageList is TSVGIconImageListBase then
+    Result := TSVGIconImageListBase(FImageList).SVGIconItems;
+  {$IFDEF D10_3+}
+  if (FImageList is TVirtualImageList) and
+    (TVirtualImageList(FImageList).ImageCollection is TSVGIconImageCollection) then
+    Result := TSVGIconImageCollection(TVirtualImageList(FImageList).ImageCollection).SVGIconItems;
+  {$ENDIF}
 end;
 
 function TSVGIconImage.UsingSVGText: Boolean;
@@ -221,18 +239,18 @@ end;
 
 procedure TSVGIconImage.Paint;
 var
-  SVG: ISVG;
+  LSVG: ISVG;
 begin
   if not UsingSVGText then
-    SVG := FImageList.Images[FImageIndex]
+    LSVG := SVGIconItems.Items[FImageIndex].SVG
   else
-    SVG := FSVG;
+    LSVG := FSVG;
 
-  if not SVG.IsEmpty then
+  if not LSVG.IsEmpty then
   begin
-    SVG.Opacity := FOpacity / 255;
-    SVG.PaintTo(Canvas.Handle, TRectF.Create(TPointF.Create(0, 0), Width, Height), FProportional);
-    SVG.Opacity := 1;
+    LSVG.Opacity := FOpacity / 255;
+    LSVG.PaintTo(Canvas.Handle, TRectF.Create(TPointF.Create(0, 0), Width, Height), FProportional);
+    LSVG.Opacity := 1;
   end;
 
   if csDesigning in ComponentState then
@@ -376,7 +394,7 @@ begin
   Repaint;
 end;
 
-procedure TSVGIconImage.SetImageList(const Value: TSVGIconImageListBase);
+procedure TSVGIconImage.SetImageList(const Value: TCustomImageList);
 begin
   FImageList := Value;
   SVGText := '';

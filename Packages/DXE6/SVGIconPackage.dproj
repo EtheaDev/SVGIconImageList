@@ -58,7 +58,7 @@
         <DCC_Description>Ethea SVGIconImageList VCL components</DCC_Description>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DllSuffix>_DXE6</DllSuffix>
-        <DCC_UnitSearchPath>..\..\svg;..\..\GDIP;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\svg;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
@@ -97,16 +97,13 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="xmlrtl.dcp"/>
         <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="IndyProtocols.dcp"/>
-        <DCCReference Include="IndyCore.dcp"/>
-        <DCCReference Include="IndySystem.dcp"/>
         <DCCReference Include="..\..\svg\SVG.pas"/>
         <DCCReference Include="..\..\Svg\SVGColor.pas"/>
         <DCCReference Include="..\..\Svg\SVGCommon.pas"/>
         <DCCReference Include="..\..\Svg\SVGPaint.pas"/>
         <DCCReference Include="..\..\Svg\SVGParse.pas"/>
         <DCCReference Include="..\..\Svg\SVGPath.pas"/>
-        <DCCReference Include="..\..\Svg\SVGProperties.pas"/>
+        <DCCReference Include="..\..\Svg\XmlLite.pas"/>
         <DCCReference Include="..\..\Svg\SVGStyle.pas"/>
         <DCCReference Include="..\..\Svg\SVGTypes.pas"/>
         <DCCReference Include="..\..\Svg\GDIPKerning.pas"/>

@@ -13,6 +13,8 @@
 { Thanks to:                                                       }
 { Kiriakos Vlahos (fixed GetFactor)                                }
 { Kiriakos Vlahos (Added parse length in percent)                  }
+{ Kiriakos Vlahos (Refactoring parsing)                            }
+{ Kiriakos Vlahos (Refactoring parsing Font)                       }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }
@@ -24,7 +26,9 @@ unit SVGParse;
 interface
 
 uses
-  System.Types, System.Classes, System.Math.Vectors,
+  System.Types,
+  System.Classes,
+  System.Generics.Collections,
   SVGTypes;
 
 function ParseAngle(const Angle: string): TFloat;
@@ -44,14 +48,31 @@ function GetFactor(const SVGUnit: TSVGUnit): TFloat;
 
 function ParseDRect(const S: string): TRectF;
 
-function ParseURI(const URI: string): string;
+function ParseURI(const URI: string; EmptyOnFail: Boolean = True): string;
 
-function ParseTransform(const ATransform: string): TMatrix;
+function ParseTransform(const ATransform: string): TAffineMatrix;
+
+function ParseDisplay(const ADisplay: string): TTriStateBoolean;
+
+function ParseVisibility(const AVisibility: string): TTriStateBoolean;
+
+function ParseClass(const AClass: string): TArray<string>;
+
+function ParseGradientUnits(const AGradientUnit: string): TGradientUnits;
+
+function ParseFontWeight(const S: string): Integer;
+
+procedure ParseTextDecoration(const S: string; var TD: TTextDecoration);
+
+function ParseFontStyle(AFontStyle: string): Integer;
 
 implementation
 
 uses
-  System.SysUtils, System.Math, System.StrUtils,
+  Winapi.Windows,
+  System.SysUtils,
+  System.Math,
+  System.StrUtils,
   SVGCommon;
 
 function ParseAngle(const Angle: string): TFloat;
@@ -131,100 +152,36 @@ end;
 
 function ParseLength(const S: string; var IsPercent: Boolean): TFloat; overload;
 var
-  U: string;
   SVGUnit: TSVGUnit;
   Factor: TFloat;
 begin
   SVGUnit := ParseUnit(S);
   IsPercent := SVGUnit = suPercent;
-  if SVGUnit = suPercent then
-    U := Copy(S, Length(S), 1)
-  else
-    if SVGUnit <> suNone then
-      U := Copy(S, Length(S) - 1, 2);
 
   Factor := GetFactor(SVGUnit);
-  if U = 'px' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 2))
-  else
-  if U = 'pt' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 2)) * Factor
-  else
-  if U = 'pc' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 2)) * Factor
-  else
-  if U = 'mm' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 2)) * Factor
-  else
-  if U = 'cm' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 2)) * Factor
-  else
-  if U = 'in' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 2)) * Factor
-  else
-  if U = '%' then
-    Result := StrToTFloat(Copy(S, 1, Length(S) - 1)) * Factor
-  else
-    Result := StrToTFloat(S);
+  case SVGUnit of
+    suNone: Result := StrToTFloat(S);
+    suPercent: Result := StrToTFloat(Copy(S, 1, Length(S) - 1)) * Factor;
+    else
+      Result := StrToTFloat(Copy(S, 1, Length(S) - 2)) * Factor;
+  end;
 end;
 
 function ParseUnit(const S: string): TSVGUnit;
+Var
+  LastTwo: string;
 begin
   Result := suNone;
-
-  if Copy(S, Length(S) - 1, 2) = 'px' then
-  begin
-    Result := suPx;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'pt' then
-  begin
-    Result := suPt;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'pc' then
-  begin
-    Result := suPC;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'mm' then
-  begin
-    Result := suMM;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'cm' then
-  begin
-    Result := suCM;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'in' then
-  begin
-    Result := suIN;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'em' then
-  begin
-    Result := suEM;
-    Exit;
-  end;
-
-  if Copy(S, Length(S) - 1, 2) = 'ex' then
-  begin
-    Result := suEX;
-    Exit;
-  end;
-
-  if Copy(S, Length(S), 1) = '%' then
-  begin
-    Result := suPercent;
-    Exit;
-  end;
+  LastTwo := Copy(S, Length(S) - 1, 2);
+  if LastTwo = 'px' then Result := suPx
+  else if LastTwo = 'pt' then Result := suPt
+  else if LastTwo = 'pc' then Result := suPC
+  else if LastTwo = 'mm' then Result := suMM
+  else if LastTwo = 'cm' then Result := suCM
+  else if LastTwo = 'in' then Result := suIN
+  else if LastTwo = 'em' then Result := suEM
+  else if LastTwo = 'ex' then Result := suEX
+  else if Copy(S, Length(S), 1) = '%' then Result := suPercent;
 end;
 
 function GetFactor(const SVGUnit: TSVGUnit): TFloat;
@@ -282,11 +239,14 @@ begin
   end;
 end;
 
-function ParseURI(const URI: string): string;
+function ParseURI(const URI: string; EmptyOnFail: Boolean): string;
 var
   S: string;
 begin
-  Result := '';
+  if EmptyOnFail then
+    Result := ''
+  else
+    Result := URI;
   if URI <> '' then
   begin
     S := Trim(URI);
@@ -295,11 +255,11 @@ begin
   end;
 end;
 
-function GetMatrix(const S: string): TMatrix;
+function GetMatrix(const S: string): TAffineMatrix;
 var
   SL: TStrings;
 begin
-  Result := TMatrix.Identity;
+  Result := TAffineMatrix.Identity;
   SL := GetValues(S, ',');
   try
     if SL.Count = 6 then
@@ -308,15 +268,15 @@ begin
       Result.m12 := StrToTFloat(SL[1]);
       Result.m21 := StrToTFloat(SL[2]);
       Result.m22 := StrToTFloat(SL[3]);
-      Result.m31 := StrToTFloat(SL[4]);
-      Result.m32 := StrToTFloat(SL[5]);
+      Result.dx := StrToTFloat(SL[4]);
+      Result.dy := StrToTFloat(SL[5]);
     end;
   finally
     SL.Free;
   end;
 end;
 
-function GetTranslate(const S: string): TMatrix;
+function GetTranslate(const S: string): TAffineMatrix;
 var
   SL: TStrings;
 begin
@@ -328,14 +288,14 @@ begin
 
     if SL.Count = 2 then
     begin
-      Result := TMatrix.CreateTranslation(StrToTFloat(SL[0]), StrToTFloat(SL[1]));
+      Result := TAffineMatrix.CreateTranslation(StrToTFloat(SL[0]), StrToTFloat(SL[1]));
     end;
   finally
     SL.Free;
   end;
 end;
 
-function GetScale(const S: string): TMatrix;
+function GetScale(const S: string): TAffineMatrix;
 var
   SL: TStrings;
 begin
@@ -346,14 +306,14 @@ begin
       SL.Add(SL[0]);
     if SL.Count = 2 then
     begin
-      Result := TMatrix.CreateScaling(StrToTFloat(SL[0]), StrToTFloat(SL[1]));
+      Result := TAffineMatrix.CreateScaling(StrToTFloat(SL[0]), StrToTFloat(SL[1]));
     end;
   finally
     SL.Free;
   end;
 end;
 
-function GetRotation(const S: string): TMatrix;
+function GetRotation(const S: string): TAffineMatrix;
 var
   SL: TStrings;
   X, Y, Angle: TFloat;
@@ -381,12 +341,12 @@ begin
     SL.Free;
   end;
 
-  Result := TMatrix.CreateTranslation(X, Y);
-  Result := TMatrix.CreateRotation(Angle) * Result;
-  Result := TMatrix.CreateTranslation(-X, -Y) * Result;
+  Result := TAffineMatrix.CreateTranslation(X, Y);
+  Result := TAffineMatrix.CreateRotation(Angle) * Result;
+  Result := TAffineMatrix.CreateTranslation(-X, -Y) * Result;
 end;
 
-function GetSkewX(const S: string): TMatrix;
+function GetSkewX(const S: string): TAffineMatrix;
 var
   SL: TStrings;
 begin
@@ -396,7 +356,7 @@ begin
   try
     if SL.Count = 1 then
     begin
-      Result := TMatrix.Identity;
+      Result := TAffineMatrix.Identity;
       Result.m21 := Tan(StrToTFloat(SL[0]));
     end;
   finally
@@ -404,7 +364,7 @@ begin
   end;
 end;
 
-function GetSkewY(const S: string): TMatrix;
+function GetSkewY(const S: string): TAffineMatrix;
 var
   SL: TStrings;
 begin
@@ -414,7 +374,7 @@ begin
   try
     if SL.Count = 1 then
     begin
-      Result := TMatrix.Identity;
+      Result := TAffineMatrix.Identity;
       Result.m12 := Tan(StrToTFloat(SL[0]));
     end;
   finally
@@ -422,14 +382,14 @@ begin
   end;
 end;
 
-function ParseTransform(const ATransform: string): TMatrix;
+function ParseTransform(const ATransform: string): TAffineMatrix;
 var
   Start: Integer;
   Stop: Integer;
   TType: string;
   Values: string;
   S: string;
-  M: TMatrix;
+  M: TAffineMatrix;
 begin
   FillChar(Result, SizeOf(Result), 0);
 
@@ -444,7 +404,6 @@ begin
     TType := Trim(Copy(S, 1, Start - 1));
     Values := Trim(Copy(S, Start + 1, Stop - Start - 1));
     Values := StringReplace(Values, ' ', ',', [rfReplaceAll]);
-    M.m33 := 0;
 
     if TType = 'matrix' then
     begin
@@ -471,9 +430,9 @@ begin
       M := GetSkewY(Values);
     end;
 
-    if M.m33 = 1 then
+    if not M.IsEmpty then
     begin
-      if Result.m33 = 0 then
+      if Result.IsEmpty then
         Result := M
       else
         Result := M * Result;
@@ -482,5 +441,116 @@ begin
     S := Trim(Copy(S, Stop + 1, Length(S)));
   end;
 end;
+
+function ParseDisplay(const ADisplay: string): TTriStateBoolean;
+begin
+  if ADisplay = 'inherit' then
+    Result := tbInherit
+  else if ADisplay = 'none' then
+    Result := tbFalse
+  else
+    Result := tbTrue;
+end;
+
+function ParseVisibility(const AVisibility: string): TTriStateBoolean;
+begin
+  if AVisibility = 'inherit' then
+    Result := tbInherit
+  else if AVisibility = 'visible' then
+    Result := tbTrue
+  else
+    Result := tbFalse;
+end;
+
+function ParseClass(const AClass: string): TArray<string>;
+
+  {$IF CompilerVersion < 28}
+  procedure DeleteElement(var A: TArray<string>; const Index: Cardinal;
+      Count: Cardinal = 1);
+  var
+    ALength: Cardinal;
+    i: Cardinal;
+  begin
+    ALength := Length(A);
+    for i := Index + Count to ALength - 1 do
+      A[i - Count] := A[i];
+    SetLength(A, ALength - Count);
+  end;
+  {$IFEND}
+
+Var
+  I: Integer;
+begin
+  Result := AClass.Split([',']);
+  for I := Length(Result) - 1 downto 0 do
+  begin
+    Result[I] := Trim(Result[I]);
+    if Result[I] = '' then
+      {$IF CompilerVersion < 28}
+      DeleteElement(Result, I, 1);
+      {$ELSE}
+      System.Delete(Result, I , 1);
+      {$IFEND}
+  end;
+end;
+
+function ParseGradientUnits(const AGradientUnit: string): TGradientUnits;
+begin
+  Result := guObjectBoundingBox;  // 'objectBoundingBox' default
+  if AGradientUnit = 'userSpaceOnUse' then
+    Result := guUserSpaceOnUse
+end;
+
+function ParseFontWeight(const S: string): Integer;
+begin
+  Result := FW_NORMAL;
+  if S = 'normal' then Result := FW_NORMAL
+  else if S = 'bold' then Result := FW_BOLD
+  else if S = 'bolder' then Result := FW_EXTRABOLD
+  else if S = 'lighter' then Result := FW_LIGHT
+  else TryStrToInt(S, Result);
+end;
+
+procedure ParseTextDecoration(const S: string; var TD: TTextDecoration);
+Var
+  SL: TStringList;
+begin
+ SL := TStringList.Create;
+ try
+   SL.Delimiter := ' ';
+   SL.DelimitedText := S;
+
+   if SL.IndexOf('underline') > -1 then
+   begin
+     Exclude(TD, tdInherit);
+     Include(TD, tdUnderLine);
+   end;
+
+   if SL.IndexOf('overline') > -1 then
+   begin
+     Exclude(TD, tdInherit);
+     Include(TD, tdOverLine);
+   end;
+
+   if SL.IndexOf('line-through') > -1 then
+   begin
+     Exclude(TD, tdInherit);
+     Include(TD, tdStrikeOut);
+   end;
+
+   if SL.IndexOf('none') > -1 then
+     TD := [];
+   finally
+     SL.Free;
+   end;
+end;
+
+function ParseFontStyle(AFontStyle: string): Integer;
+begin
+   Result := FontNormal;
+   if AFontStyle = 'italic' then
+     Result := SVGTypes.FontItalic;
+end;
+
 
 end.

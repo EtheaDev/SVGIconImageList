@@ -271,9 +271,6 @@ procedure TSVGIconImageListEditorFMX.UpdateGUI;
 var
   LIsItemSelected: Boolean;
   LIconItem: TSVGIconSourceItem;
-  {$IFNDEF UNICODE}
-  S: WideString;
-  {$ENDIF}
 begin
   FUpdating := True;
   try

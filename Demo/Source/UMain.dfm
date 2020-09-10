@@ -223,7 +223,6 @@ object MainForm: TMainForm
       Margins.Right = 10
       Margins.Bottom = 10
       AutoSize = False
-      Proportional = False
       ImageList = SVGIconVirtualImageList
       ImageIndex = 100
       Align = alBottom
@@ -367,5 +366,12 @@ object MainForm: TMainForm
     Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
     Left = 472
     Top = 72
+  end
+  object tmrTrackbar: TTimer
+    Enabled = False
+    Interval = 200
+    OnTimer = tmrTrackbarTimer
+    Left = 250
+    Top = 486
   end
 end

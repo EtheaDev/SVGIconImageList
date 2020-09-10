@@ -248,44 +248,55 @@ begin
     //Read Count of Images
     if Stream.Read(LCount, SizeOf(Integer)) > 0 then
     begin
-      LSVG := GlobalSVGFactory.NewSvg;
       for C := 0 to LCount - 1 do
       begin
-        //Read IconName
-        Stream.Read(LSize, SizeOf(Integer));
-        SetLength(LIconName, LSize);
-        Stream.Read(PChar(LIconName)^, LSize * SizeOf(Char));
-        //Read SVG Stream Size
-        Stream.Read(LSize, SizeOf(Integer));
-        LStream.CopyFrom(Stream, LSize);
-        //Read SVG Stream data
-        LSVG.LoadFromStream(LStream);
+        LSVG := GlobalSVGFactory.NewSvg;
+        try
+          //Read IconName
+          Stream.Read(LSize, SizeOf(Integer));
+          SetLength(LIconName, LSize);
+          Stream.Read(PChar(LIconName)^, LSize * SizeOf(Char));
+          //Read SVG Stream Size
+          Stream.Read(LSize, SizeOf(Integer));
+          LStream.CopyFrom(Stream, LSize);
+          //Read SVG Stream data
+          try
+            LSVG.LoadFromStream(LStream);
+          except
+            on E: Exception do
+              raise Exception.CreateFmt('Detected "old" binary image stream of %s! '+
+                'You must disable Direct2D (removing $DEFINE PreferNativeSvgSupport from SVGIconImageList.inc), '+
+                'recompile SVGIconImageList packages, and try again',
+                [Owner.Name+'.'+Self.Name]);
+          end;
+          //Check for FixedColor attribute
+          LPos := Stream.Position;
+          LFixedColor := SVG_INHERIT_COLOR;
+          SetLength(LTag, 10);
+          Stream.Read(Pointer(LTag)^, 10);
+          SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 10);
+          if LFixedColorStr = 'FixedColor' then
+            //Read Fixed Color value
+            Stream.Read(LFixedColor, SizeOf(Integer))
+          else
+            Stream.Position := LPos;
 
-        //Check for FixedColor attribute
-        LPos := Stream.Position;
-        LFixedColor := SVG_INHERIT_COLOR;
-        SetLength(LTag, 10);
-        Stream.Read(Pointer(LTag)^, 10);
-        SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 10);
-        if LFixedColorStr = 'FixedColor' then
-          //Read Fixed Color value
-          Stream.Read(LFixedColor, SizeOf(Integer))
-        else
-          Stream.Position := LPos;
+          //Check for GrayScale attribute
+          LPos := Stream.Position;
+          LGrayScale := False;
+          SetLength(LTag, 9);
+          Stream.Read(Pointer(LTag)^, 9);
+          SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 9);
+          if LFixedColorStr = 'GrayScale' then
+            LGrayScale := True
+          else
+            Stream.Position := LPos;
 
-        //Check for GrayScale attribute
-        LPos := Stream.Position;
-        LGrayScale := False;
-        SetLength(LTag, 9);
-        Stream.Read(Pointer(LTag)^, 9);
-        SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 9);
-        if LFixedColorStr = 'GrayScale' then
-          LGrayScale := True
-        else
-          Stream.Position := LPos;
-
-        Add(LSVG, LIconName, LGrayScale, LFixedColor);
-        LStream.Clear;
+          Add(LSVG, LIconName, LGrayScale, LFixedColor);
+          LStream.Clear;
+        finally
+          LSVG := nil;
+        end;
       end;
     end;
   finally

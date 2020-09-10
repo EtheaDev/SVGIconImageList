@@ -14,6 +14,7 @@
 { Kiriakos Vlahos (deprecated xlink:href to href)                  }
 { Kiriakos Vlahos (fixed gradient transform)                       }
 { Kiriakos Vlahos (fixed LinearGradient and RadialGradient)        }
+{ Kiriakos Vlahos (Refactoring parsing)                            }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }
@@ -30,7 +31,7 @@ uses
   Winapi.GDIPAPI,
   System.UITypes,
   System.Classes,
-  Xml.XmlIntf,
+  XmlLite,
   SVGTypes,
   SVG;
 
@@ -46,11 +47,12 @@ type
     FStop: TFloat;
     FStopColor: TColor;
     FOpacity: TFloat;
-
   protected
     procedure AssignTo(Dest: TPersistent); override;
   public
-    procedure ReadIn(const Node: IXMLNode); override;
+    procedure Clear; override;
+    procedure ReadIn(const Reader: IXMLReader); override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
     procedure PaintToPath(Path: TGPGraphicsPath); override;
 
@@ -60,15 +62,15 @@ type
     property Opacity: TFloat read FOpacity write FOpacity;
   end;
 
-  TSVGFiller = class(TSVGMatrix)
+  TSVGFiller = class abstract (TSVGMatrix)
   public
-    procedure ReadIn(const Node: IXMLNode); override;
-    function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; virtual; abstract;
+    function GetBrush(Alpha: Byte; const DestObject: TSVGBasic;
+      IsStrokeBrush: Boolean = False): TGPBrush; virtual; abstract;
     procedure PaintToGraphics(Graphics: TGPGraphics); override;
     procedure PaintToPath(Path: TGPGraphicsPath); override;
   end;
 
-  TSVGGradient = class(TSVGFiller)
+  TSVGGradient = class abstract (TSVGFiller)
   {
     SpreadMethod is not implemented
     Assumed to be repeat for LinearGradient and pad for RadialGradient
@@ -80,7 +82,9 @@ type
     procedure AssignTo(Dest: TPersistent); override;
     function GetColors(Alpha: Byte): TStopColors; virtual;
   public
-    procedure ReadIn(const Node: IXMLNode); override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
+
+    class function Features: TSVGElementFeatures; override;
   end;
 
   TSVGLinearGradient = class(TSVGGradient)
@@ -92,8 +96,9 @@ type
   protected
     procedure AssignTo(Dest: TPersistent); override;
   public
-    procedure ReadIn(const Node: IXMLNode); override;
-    function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
+    function GetBrush(Alpha: Byte; const DestObject: TSVGBasic;
+      IsStrokeBrush: Boolean = False): TGPBrush; override;
     procedure Clear; override;
 
     property X1: TFloat read FX1 write FX1;
@@ -113,8 +118,10 @@ type
     procedure AssignTo(Dest: TPersistent); override;
   public
     procedure Clear; override;
-    procedure ReadIn(const Node: IXMLNode); override;
-    function GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush; override;
+    procedure ReadIn(const Reader: IXMLReader); override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
+    function GetBrush(Alpha: Byte; const DestObject: TSVGBasic;
+      IsStrokeBrush: Boolean = False): TGPBrush; override;
 
     property CX: TFloat read FCX write FCX;
     property CY: TFloat read FCY write FCY;
@@ -129,11 +136,9 @@ uses
   System.Types,
   System.SysUtils,
   System.Math,
-  System.Math.Vectors,
   SVGCommon,
   SVGParse,
   SVGStyle,
-  SVGProperties,
   SVGColor;
 
 // TSVGStop
@@ -142,40 +147,53 @@ procedure TSVGStop.PaintToPath(Path: TGPGraphicsPath);
 begin
 end;
 
-procedure TSVGStop.ReadIn(const Node: IXMLNode);
-var
+procedure TSVGStop.ReadIn(const Reader: IXMLReader);
+Var
   S: string;
 begin
   inherited;
-  LoadPercent(Node, 'offset', FStop);
 
-  LoadString(Node, 'stop-color', S);
-  if GetRoot.Grayscale then
-    FStopColor := GetSVGGrayscale(GetSVGColor(S))
-   else
-    FStopColor := GetSVGColor(S);
+  // opacity and stop-color are CSS properties
+  if not HasValue(FOpacity) then
+  begin
+    if Assigned(FStyle) then
+    begin
+      S := FStyle['stop-opacity'];
+      if S <> '' then
+        FOpacity := EnsureRange(ParsePercent(S), 0, 1);
+    end
+  end;
+  if not HasValue(FOpacity) then FOpacity := 1;  //  default
 
   if FStopColor = SVG_INHERIT_COLOR then
   begin
-    S := FStyle['stop-color'];
-    if GetRoot.Grayscale then
-      FStopColor := GetSVGGrayscale(GetSVGColor(S))
-    else
-      FStopColor := GetSVGColor(S);
+    if Assigned(FStyle) then
+    begin
+      S := FStyle['stop-color'];
+      if S <> '' then
+        FStopColor := GetSVGColor(S);
+    end
   end;
+  if FStopColor = SVG_INHERIT_COLOR then FStopColor := TColors.Black; // default
 
-  if (GetRoot.FixedColor  <> SVG_INHERIT_COLOR) and
-     (integer(FStopColor) <> SVG_INHERIT_COLOR) and
-     (integer(FStopColor) <> SVG_NONE_COLOR) then
+  if GetRoot.Grayscale then
+    FStopColor := GetSVGGrayscale(FStopColor)
+  else if (GetRoot.FixedColor  <> SVG_INHERIT_COLOR) and
+    (FStopColor <> SVG_NONE_COLOR)
+  then
     FStopColor := GetRoot.FixedColor;
+end;
 
-  S := FStyle['stop-opacity'];
-  if (S <> '') then
-    FOpacity := ParsePercent(S)
+function TSVGStop.ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean;
+begin
+  Result := True;
+  case SVGAttr of
+    saOffset: FStop := ParsePercent(AttrValue);
+    saStopOpacity: FOpacity := EnsureRange(ParsePercent(AttrValue), 0, 1);
+    saStopColor: FStopColor := GetSVGColor(AttrValue);
   else
-    FOpacity := 1;
-
-  FOpacity := EnsureRange(FOpacity, 0, 1);
+    Result := inherited;
+  end;
 end;
 
 procedure TSVGStop.AssignTo(Dest: TPersistent);
@@ -189,6 +207,13 @@ begin
   end;
 end;
 
+procedure TSVGStop.Clear;
+begin
+  inherited;
+  FOpacity := UndefinedFloat;
+  FStopColor := SVG_INHERIT_COLOR;
+end;
+
 procedure TSVGStop.PaintToGraphics(Graphics: TGPGraphics);
 begin
 end;
@@ -199,65 +224,39 @@ procedure TSVGFiller.PaintToPath(Path: TGPGraphicsPath);
 begin
 end;
 
-procedure TSVGFiller.ReadIn(const Node: IXMLNode);
-begin
-  inherited;
-  Display := tbFalse;
-end;
-
 procedure TSVGFiller.PaintToGraphics(Graphics: TGPGraphics);
 begin
 end;
 
 // TSVGGradient
 
-procedure TSVGGradient.ReadIn(const Node: IXMLNode);
-var
-  C: Integer;
-  Stop: TSVGStop;
-  Matrix: TMatrix;
+function TSVGGradient.ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean;
 begin
-  inherited;
-
-  LoadGradientUnits(Node, FGradientUnits);
-
-  for C := 0 to Node.childNodes.count - 1 do
-   if Node.childNodes[C].nodeName = 'stop' then
-   begin
-     Stop := TSVGStop.Create(Self);
-     Stop.ReadIn(Node.childNodes[C]);
-   end;
-
-  FURI := FStyle['xlink:href'];
-  if FURI = '' then
-    FURI := FStyle['href'];
-  if FURI = '' then
-    LoadString(Node, 'xlink:href', FURI);
-  if FURI = '' then
-    LoadString(Node, 'href', FURI);
-
-
-  if FURI <> '' then
-  begin
-    FURI := Trim(FURI);
-    if (FURI <> '') and (FURI[1] = '#') then
-      FURI := Copy(FURI, 2, MaxInt);
+  Result := True;
+  case SVGAttr of
+    saGradientUnits: FGradientUnits := ParseGradientUnits(AttrValue);
+    saXlinkHref: FURI := AttrValue;
+    saHref: FURI := AttrValue;
+    saGradientTransform: LocalMatrix := ParseTransform(AttrValue);
+  else
+    Result := inherited;
   end;
-
-  FillChar(Matrix, SizeOf(Matrix), 0);
-  LoadTransform(Node, 'gradientTransform', Matrix);
-  PureMatrix := Matrix;
 end;
 
 // TSVGLinearGradient
 
-procedure TSVGLinearGradient.ReadIn(const Node: IXMLNode);
+function TSVGLinearGradient.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
 begin
-  inherited;
-  LoadLength(Node, 'x1', FX1);
-  LoadLength(Node, 'y1', FY1);
-  LoadLength(Node, 'x2', FX2);
-  LoadLength(Node, 'y2', FY2);
+  Result := True;
+  case SVGAttr of
+    saX1: FX1 := ParseLength(AttrValue);
+    saX2: FX2 := ParseLength(AttrValue);
+    saY1: FY1 := ParseLength(AttrValue);
+    saY2: FY2 := ParseLength(AttrValue);
+  else
+    Result := inherited;
+  end;
 end;
 
 procedure TSVGLinearGradient.AssignTo(Dest: TPersistent);
@@ -281,19 +280,26 @@ begin
   FY2 := UndefinedFloat;
 end;
 
-function TSVGLinearGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush;
+function TSVGLinearGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic;
+  IsStrokeBrush: Boolean): TGPBrush;
 var
   Brush: TGPLinearGradientBrush;
   TGP: TGPMatrix;
   Colors: TStopColors;
   BoundsRect: TRectF;
   MX1, MX2, MY1, MY2: TFloat;
+  SWAdj: TFloat;
 begin
+  if IsStrokeBrush then
+    SWAdj := DestObject.StrokeWidth / 2
+  else
+    SWAdj := 0;
   BoundsRect :=  DestObject.ObjectBounds;
-  if HasValue(FX1) then MX1 := FX1 else MX1 := BoundsRect.Left;
-  if HasValue(FX2) then MX2 := FX2 else MX2 := BoundsRect.Right;
-  if HasValue(FY1) then MY1 := FY1 else MY1 := BoundsRect.Top;
-  if HasValue(FY2) then MY2 := FY2 else MY2 := BoundsRect.Top;
+  BoundsRect.Inflate(SWAdj, SWAdj);
+  if HasValue(FX1) then MX1 := FX1 - SWAdj else MX1 := BoundsRect.Left;
+  if HasValue(FX2) then MX2 := FX2 + SWAdj else MX2 := BoundsRect.Right;
+  if HasValue(FY1) then MY1 := FY1 - SWAdj else MY1 := BoundsRect.Top;
+  if HasValue(FY2) then MY2 := FY2 + SWAdj else MY2 := BoundsRect.Top;
   if FGradientUnits = guObjectBoundingBox then begin
     // X1, X2, Y1, Y2 are relative to the Object Bounding Rect
     if HasValue(FX1) then MX1 := BoundsRect.Left + FX1 * BoundsRect.Width;
@@ -304,17 +310,18 @@ begin
 
   Brush := TGPLinearGradientBrush.Create(MakePoint(MX1, MY1), MakePoint(MX2, MY2), 0, 0);
 
+  if not LocalMatrix.IsEmpty then
+  begin
+    TGP := LocalMatrix.ToGPMatrix;
+    Brush.SetTransform(TGP);
+    TGP.Free;
+  end;
+
   Colors := GetColors(Alpha);
 
   Brush.SetInterpolationColors(PGPColor(Colors.Colors),
     PSingle(Colors.Positions), Colors.Count);
 
-  if PureMatrix.m33 = 1 then
-  begin
-    TGP := ToGPMatrix(PureMatrix);
-    Brush.SetTransform(TGP);
-    TGP.Free;
-  end;
 
   Result := Brush;
 end;
@@ -344,21 +351,32 @@ begin
   FFY := FCY;
 end;
 
-procedure TSVGRadialGradient.ReadIn(const Node: IXMLNode);
+procedure TSVGRadialGradient.ReadIn(const Reader: IXMLReader);
 begin
   inherited;
-  LoadLength(Node, 'cx', FCX);
-  LoadLength(Node, 'cy', FCY);
-  LoadLength(Node, 'r', FR);
-  LoadLength(Node, 'fx', FFX);
-  LoadLength(Node, 'fy', FFY);
   if not HasValue(FFX) then
     FFX := FCX;
   if not HasValue(FFY) then
     FFY := FCY;
 end;
 
-function TSVGRadialGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic): TGPBrush;
+function TSVGRadialGradient.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
+begin
+  Result := True;
+  case SVGAttr of
+    saCx: FCX := ParseLength(AttrValue);
+    saCy: FCY := ParseLength(AttrValue);
+    saR: FR := ParseLength(AttrValue);
+    saFx: FFX := ParseLength(AttrValue);
+    saFy: FFY := ParseLength(AttrValue);
+  else
+    Result := inherited;
+  end;
+end;
+
+function TSVGRadialGradient.GetBrush(Alpha: Byte; const DestObject: TSVGBasic;
+  IsStrokeBrush: Boolean): TGPBrush;
 var
   Brush: TGPPathGradientBrush;
   Path: TGPGraphicsPath;
@@ -367,15 +385,22 @@ var
   RevColors: TStopColors;
   BoundsRect: TRectF;
   MCX, MCY, MR, MFX, MFY: TFloat;
+  SWAdj: TFloat;
   i: integer;
 begin
+  if IsStrokeBrush then
+    SWAdj := DestObject.StrokeWidth / 2
+  else
+    SWAdj := 0;
   BoundsRect :=  DestObject.ObjectBounds;
+  BoundsRect.Inflate(SWAdj, SWAdj);
+
   if HasValue(FCX) then MCX := FCX else MCX := BoundsRect.Left + 0.5 * BoundsRect.Width;
   if HasValue(FFX) then MFX := FFX else MFX := MCX;
   if HasValue(FCY) then MCY := FCY else MCY := BoundsRect.Top + 0.5 * BoundsRect.Height;
   if HasValue(FFY) then MFY := FFY else MFY := MCY;
   if HasValue(FR) then
-    MR := FR
+    MR := FR + SWAdj
   else
     MR := 0.5 * Sqrt(Sqr(BoundsRect.Width) + Sqr(BoundsRect.Height))/Sqrt(2);
   if FGradientUnits = guObjectBoundingBox then begin
@@ -416,9 +441,9 @@ begin
   if HasValue(FFX) and HasValue(FFY) then
     Brush.SetCenterPoint(MakePoint(MFX, MFY));
 
-  if PureMatrix.m33 = 1 then
+  if not LocalMatrix.IsEmpty then
   begin
-    TGP := ToGPMatrix(PureMatrix);
+    TGP := LocalMatrix.ToGPMatrix;
     Brush.SetTransform(TGP);
     TGP.Free;
   end;
@@ -434,6 +459,11 @@ begin
     TSVGGradient(Dest).FURI := FURI;
     TSVGGradient(Dest).FGradientUnits := FGradientUnits;
   end;
+end;
+
+class function TSVGGradient.Features: TSVGElementFeatures;
+begin
+  Result := [sefMayHaveChildren];
 end;
 
 function TSVGGradient.GetColors(Alpha: Byte): TStopColors;
@@ -477,7 +507,7 @@ begin
     Result.Positions[0] := 0;
   end;
 
-  for C := 0 to Item.Count - 1 do
+   for C := 0 to Item.Count - 1 do
   begin
     Stop := TSVGStop(Item.Items[C]);
     Result.Colors[C + Start] := ConvertColor(Stop.StopColor, Round(Alpha * Stop.Opacity));

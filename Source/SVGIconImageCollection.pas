@@ -78,9 +78,6 @@ type
     procedure WriteLeft(Writer: TWriter);
     procedure WriteTop(Writer: TWriter);
 
-    procedure ReadImageData(Stream: TStream);
-    procedure WriteImageData(Stream: TStream);
-
     procedure DefineProperties(Filer: TFiler); override;
 
   public
@@ -95,15 +92,21 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
+
+    function LoadFromFiles(const AFileNames: TStrings;
+      const AAppend: Boolean = True): Integer;
+
     function Add(const ASVG: ISVG; const AIconName: string;
        const AGrayScale: Boolean = False;
        const AFixedColor: TColor = SVG_INHERIT_COLOR): Integer;
-    procedure Delete(const Index: Integer);
+    procedure Delete(const Index: Integer); overload;
+    procedure Delete(const ACategory: String; AStartIndex, AEndIndex: Integer); overload;
     procedure Remove(const Name: string);
     function IndexOf(const Name: string): Integer;
     procedure ClearIcons;
 
-    procedure LoadFromResource(const hInstance : THandle; const ResourceName : string; const IconName : string);
+    function LoadFromResource(const hInstance : THandle; const ResourceName : string; const IconName : string) : integer;
+    function LoadFromString(const Source : string; const IconName : string) : integer;
 
   published
     property SVGIconItems: TSVGIconItems read FSVGItems write SetSVGIconItems;
@@ -114,7 +117,8 @@ type
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils
+  , System.Messaging;
 
 { TSVGIconImageCollection }
 
@@ -179,15 +183,44 @@ begin
     Info := Ancestor.DesignInfo;
   Filer.DefineProperty('Left', ReadLeft, WriteLeft, LongRec(DesignInfo).Lo <> LongRec(Info).Lo);
   Filer.DefineProperty('Top', ReadTop, WriteTop, LongRec(DesignInfo).Hi <> LongRec(Info).Hi);
-
-  Filer.DefineBinaryProperty('Images', ReadImageData, WriteImageData, False);
-
 end;
 
 procedure TSVGIconImageCollection.Delete(const Index: Integer);
 begin
   if (Index >= 0) and (Index < FSVGItems.Count) then
+  begin
     FSVGItems.Delete(Index);
+  end;
+end;
+
+procedure TSVGIconImageCollection.Delete(const ACategory: String; AStartIndex, AEndIndex: Integer);
+var
+  I: Integer;
+begin
+  if FSVGItems.Count = 0 then
+    Exit;
+
+  if (ACategory = '') and (AStartIndex <= 0) and ((AEndIndex < 0) or (AEndIndex >= FSVGItems.Count - 1)) then
+  begin
+    FSVGItems.Clear;
+    Exit;
+  end;
+
+  if AStartIndex < 0 then
+    AStartIndex := 0;
+  if (AEndIndex < 0) or (AEndIndex > FSVGItems.Count - 1) then
+    AEndIndex := FSVGItems.Count - 1;
+
+  FSVGItems.BeginUpdate;
+  try
+    for I := AEndIndex downto AStartIndex do
+      if (ACategory = '') or SameText(ACategory, FSVGItems[I].Category) then
+      begin
+          FSVGItems.Delete(I);
+      end;
+  finally
+    FSVGItems.EndUpdate;
+  end;
 end;
 
 destructor TSVGIconImageCollection.Destroy;
@@ -204,7 +237,18 @@ begin
   Result := -1;
 end;
 
-procedure TSVGIconImageCollection.LoadFromResource(const hInstance: THandle; const ResourceName, IconName: string);
+function TSVGIconImageCollection.LoadFromFiles(const AFileNames: TStrings;
+  const AAppend: Boolean): Integer;
+begin
+  SVGIconItems.BeginUpdate;
+  try
+    Result := SVGIconItems.LoadFromFiles(AFileNames, AAppend);
+  finally
+    SVGIconItems.EndUpdate;
+  end;
+end;
+
+function TSVGIconImageCollection.LoadFromResource(const hInstance: THandle; const ResourceName, IconName: string) : integer;
 var
   ResStream: TResourceStream;
   Svg : ISVG;
@@ -213,78 +257,19 @@ begin
   try
     Svg := GlobalSVGFactory.NewSvg;
     Svg.LoadFromStream(ResStream);
-    Add(Svg, IconName);
+    result := Add(Svg, IconName);
   finally
     ResStream.Free;
   end;
 end;
 
-procedure TSVGIconImageCollection.ReadImageData(Stream: TStream);
+function TSVGIconImageCollection.LoadFromString(const Source,  IconName: string): integer;
 var
-  LStream: TMemoryStream;
-  LCount, LSize: Integer;
-  LSVG: ISVG;
-  C: Integer;
-  LPos: Int64;
-  LIconName: string;
-  LTag: TBytes;
-  LFixedColorStr: AnsiString;
-  LGrayScale: Boolean;
-  LFixedColor: TColor;
+  Svg : ISVG;
 begin
-  //Only for backward compatibility: load images stored in old format
-  LStream := nil;
-  LSVG := nil;
-  FSVGItems.BeginUpdate;
-  try
-    LStream := TMemoryStream.Create;
-    //Read Count of Images
-    if Stream.Read(LCount, SizeOf(Integer)) > 0 then
-    begin
-      LSVG := GlobalSVGFactory.NewSvg;
-      for C := 0 to LCount - 1 do
-      begin
-        //Read IconName
-        Stream.Read(LSize, SizeOf(Integer));
-        SetLength(LIconName, LSize);
-        Stream.Read(PChar(LIconName)^, LSize * SizeOf(Char));
-        //Read SVG Stream Size
-        Stream.Read(LSize, SizeOf(Integer));
-        LStream.CopyFrom(Stream, LSize);
-        //Read SVG Stream data
-        LSVG.LoadFromStream(LStream);
-
-        //Check for FixedColor attribute
-        LPos := Stream.Position;
-        LFixedColor := SVG_INHERIT_COLOR;
-        SetLength(LTag, 10);
-        Stream.Read(Pointer(LTag)^, 10);
-        SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 10);
-        if LFixedColorStr = 'FixedColor' then
-          //Read Fixed Color value
-          Stream.Read(LFixedColor, SizeOf(Integer))
-        else
-          Stream.Position := LPos;
-
-        //Check for GrayScale attribute
-        LPos := Stream.Position;
-        LGrayScale := False;
-        SetLength(LTag, 9);
-        Stream.Read(Pointer(LTag)^, 9);
-        SetString(LFixedColorStr, PAnsiChar(@LTag[0]), 9);
-        if LFixedColorStr = 'GrayScale' then
-          LGrayScale := True
-        else
-          Stream.Position := LPos;
-
-        Add(LSVG, LIconName, LGrayScale, LFixedColor);
-        LStream.Clear;
-      end;
-    end;
-  finally
-    LStream.Free;
-    FSVGItems.EndUpdate;
-  end;
+  Svg := GlobalSVGFactory.NewSvg;
+  Svg.Source := Source;
+  result := Add(Svg, IconName);
 end;
 
 procedure TSVGIconImageCollection.ReadLeft(Reader: TReader);
@@ -351,11 +336,6 @@ begin
   end;
 end;
 
-procedure TSVGIconImageCollection.WriteImageData(Stream: TStream);
-begin
-  Exit;
-end;
-
 procedure TSVGIconImageCollection.WriteLeft(Writer: TWriter);
 begin
   Writer.WriteInteger(LongRec(DesignInfo).Lo);
@@ -378,7 +358,9 @@ end;
 function TSVGIconImageCollection.GetNameByIndex(AIndex: Integer): String;
 begin
   if (AIndex >= 0) and (AIndex < Count) then
-    Result := FSVGItems[AIndex].IconName;
+    Result := FSVGItems[AIndex].IconName
+  else
+    result := '';
 end;
 
 function TSVGIconImageCollection.GetIndexByName(const AName: String): Integer;

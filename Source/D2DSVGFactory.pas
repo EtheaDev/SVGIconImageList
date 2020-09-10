@@ -103,6 +103,7 @@ var
   Root: ID2D1SvgElement;
   ViewBox: D2D1_SVG_VIEWBOX;
 begin
+  fsvgDoc := nil;
   XStream := TStreamAdapter.Create(Stream, soReference);
   if Supports(RenderTarget, ID2D1DeviceContext5, DeviceContext5) then
   begin
@@ -152,13 +153,20 @@ procedure TD2DSVG.LoadFromSource;
 var
   MStream: TMemoryStream;
 begin
-  MStream := TMemoryStream.Create;
+  fSvgDoc := nil;
+  if fSource = '' then Exit;
+
   try
-    SaveToStream(MStream);
-    MStream.Position := 0;
-    SvgFromStream(MStream);
-  finally
-    MStream.Free;
+    MStream := TMemoryStream.Create;
+    try
+      SaveToStream(MStream);
+      MStream.Position := 0;
+      SvgFromStream(MStream);
+    finally
+      MStream.Free;
+    end;
+  except
+    fSource := '';
   end;
 end;
 
@@ -319,6 +327,7 @@ end;
 procedure TD2DSVG.SetFixedColor(const Color: TColor);
 Var
   Root: ID2D1SvgElement;
+  NewColor: TD2D1ColorF;
 begin
   if Color = fFixedColor then Exit;
 
@@ -336,8 +345,13 @@ begin
   if FFixedColor <> TColors.SysDefault then
   begin
     fSvgDoc.GetRoot(Root);
+
     with TColors(fFixedColor) do
-      RecolorSubtree(Root, D2D1ColorF(r/255, g/255, b/255, 1));
+      NewColor :=  D2D1ColorF(r/255, g/255, b/255, 1);
+
+    Root.SetAttributeValue('fill', D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
+              @NewColor, SizeOf(NewColor));
+    RecolorSubtree(Root, NewColor);
   end;
 end;
 

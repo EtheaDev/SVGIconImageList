@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{099DEF19-06D1-4B7C-A46A-EE1940BAF102}</ProjectGuid>
         <MainSource>SVGIconPackage.dpk</MainSource>
-        <ProjectVersion>19.0</ProjectVersion>
+        <ProjectVersion>19.1</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
@@ -103,7 +103,7 @@
         <DCCReference Include="..\..\Svg\SVGPaint.pas"/>
         <DCCReference Include="..\..\Svg\SVGParse.pas"/>
         <DCCReference Include="..\..\Svg\SVGPath.pas"/>
-        <DCCReference Include="..\..\Svg\SVGProperties.pas"/>
+        <DCCReference Include="..\..\Svg\XmlLite.pas"/>
         <DCCReference Include="..\..\Svg\SVGStyle.pas"/>
         <DCCReference Include="..\..\Svg\SVGTypes.pas"/>
         <DCCReference Include="..\..\Svg\GDIPKerning.pas"/>

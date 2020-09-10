@@ -23,6 +23,7 @@ const
 type
   //  Abstraction of an SVG document
   ISVG = interface
+    ['{70F71B0C-95FA-4D2D-84F6-481BD871B20B}']
     // property access methods
     function GetWidth: Single;
     function GetHeight: Single;
