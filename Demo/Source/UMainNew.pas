@@ -84,6 +84,7 @@ type
     NewFormButton: TButton;
     NewFormAction: TAction;
     tmrTrackbar: TTimer;
+    procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI, NewDPI: Integer);
     procedure ChangeIconActionExecute(Sender: TObject);
     procedure SelectThemeRadioGroupClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -104,11 +105,8 @@ type
     procedure tmrTrackbarTimer(Sender: TObject);
   private
     FUpdating: Boolean;
-    {$IFDEF HiDPISupport}
-    procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI, NewDPI: Integer);
-    {$ENDIF}
     procedure UpdateButtons;
-    procedure UpdateGUI;
+    procedure UpdateGUI(UpdateIcons: Boolean = True);
     procedure UpdateListView;
     procedure UpdateTreeView;
   public
@@ -197,12 +195,10 @@ begin
   end;
 end;
 
-{$IFDEF HiDPISupport}
 procedure TMainForm.FormAfterMonitorDpiChanged(Sender: TObject; OldDPI, NewDPI: Integer);
 begin
-  UpdateGUI;
+  UpdateGUI(False);
 end;
-{$ENDIF}
 
 procedure TMainForm.FixedColorComboBoxSelect(Sender: TObject);
 begin
@@ -275,7 +271,7 @@ begin
     if TStyleManager.ActiveStyle.Name <> LStyleName then
       TStyleManager.TrySetStyle(LStyleName);
     //UpdateIconFontsColorByStyle(IconFontsImageList); TODO
-    UpdateGUI;
+    UpdateGUI(False);
   finally
     Screen.Cursor := crDefault;
   end;
@@ -322,13 +318,13 @@ begin
     tmrTrackbar.Enabled := false;
     //Resize all icons into ImageList
     VirtualImageList.SetSize(TrackBar.Position, TrackBar.Position);
-    UpdateGUI;
+    UpdateGUI(False);
   finally
     TrackBar.Enabled := true;
   end;
 end;
 
-procedure TMainForm.updateGUI;
+procedure TMainForm.updateGUI(UpdateIcons: Boolean = True);
 var
   LSize: Integer;
 begin
@@ -336,15 +332,20 @@ begin
     Exit;
   FUpdating := True;
   try
-    LSize := VirtualImageList.Height;
-    //Fill VirtualImageList with all icons in the collection of SVGIconVirtualImageList
-    VirtualImageList.BeginUpdate;
-    try
-      VirtualImageList.Clear;
-      VirtualImageList.Add('', 0, ImageDataModule.SVGIconImageCollection.Count-1 );
-    finally
-      VirtualImageList.EndUpdate;
+    if UpdateIcons then
+    begin
+      //Fill VirtualImageList with all icons in the collection of SVGIconVirtualImageList
+      //it's only a demo: normally a VirtualImageList contains only the icons needed for
+      //the Form
+      VirtualImageList.BeginUpdate;
+      try
+        VirtualImageList.Clear;
+        VirtualImageList.Add('', 0, ImageDataModule.SVGIconImageCollection.Count-1 );
+      finally
+        VirtualImageList.EndUpdate;
+      end;
     end;
+    LSize := VirtualImageList.Height;
     IconSizeLabel.Caption := Format('Icons size: %d',[LSize]);
     TopToolBar.ButtonHeight := LSize + 2;
     TopToolBar.ButtonWidth := LSize + 2;

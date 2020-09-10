@@ -17,6 +17,7 @@ object MainForm: TMainForm
   Font.Style = []
   OldCreateOrder = False
   ShowHint = True
+  OnAfterMonitorDpiChanged = FormAfterMonitorDpiChanged
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -227,7 +228,6 @@ object MainForm: TMainForm
       ImageIndex = 100
       Align = alBottom
       OnMouseDown = SVGIconImageMouseDown
-      ExplicitLeft = 0
     end
     object DeleteButton: TButton
       Left = 3
