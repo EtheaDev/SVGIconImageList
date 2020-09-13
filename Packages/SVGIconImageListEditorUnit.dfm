@@ -370,6 +370,16 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       TabOrder = 3
       OnClick = HelpButtonClick
     end
+    object SVGErrorStaticText: TStaticText
+      Left = 6
+      Top = 3
+      Width = 406
+      Height = 30
+      Anchors = [akLeft, akTop, akRight]
+      AutoSize = False
+      TabOrder = 4
+      Transparent = False
+    end
   end
   object paIcon: TPanel
     Left = 0
@@ -501,6 +511,9 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         ScrollBars = ssBoth
         TabOrder = 6
         OnChange = SVGTextChange
+        OnEnter = SVGTextEnter
+        OnExit = SVGTextExit
+        OnKeyDown = SVGTextKeyDown
       end
       object FixedColorItemComboBox: TColorBox
         Left = 415

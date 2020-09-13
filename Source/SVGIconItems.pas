@@ -135,8 +135,8 @@ end;
 
 constructor TSVGIconItem.Create(Collection: TCollection);
 begin
-  inherited Create(Collection);
   FSVG := GlobalSVGFactory.NewSvg;
+  inherited Create(Collection);
   FFixedColor := SVG_INHERIT_COLOR;
 end;
 

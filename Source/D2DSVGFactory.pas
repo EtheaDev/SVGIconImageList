@@ -18,6 +18,9 @@ function RenderTarget: ID2D1DCRenderTarget;
 // Support functions
 function WinSvgSupported: Boolean;
 
+resourcestring
+  D2D_ERROR_PARSING_SVG_TEXT = 'Error parsing SVG Text: %s';
+
 implementation
 
 Uses
@@ -166,7 +169,8 @@ begin
       MStream.Free;
     end;
   except
-    fSource := '';
+    on E: Exception do
+      raise Exception.CreateFmt(D2D_ERROR_PARSING_SVG_TEXT, [E.Message]);
   end;
 end;
 

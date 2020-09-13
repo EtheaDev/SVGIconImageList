@@ -59,6 +59,9 @@ uses
   SVGStyle,
   SVGColor;
 
+resourcestring
+  SVG_ERROR_PARSING_SVG_TEXT = 'Error parsing SVG Text: %s';
+  SVG_ERROR_TAG_SVG = 'Error: Tag "svg" not found.';
 type
   TSVG = class;
   TSVGObject = class;
@@ -1991,10 +1994,11 @@ var
   NodeType: XmlNodeType;
   Name: PWideChar;
   Len: LongWord;
+  LOldText: string;
 begin
+  LOldText := FSource;
   Clear;
   if Text = '' then Exit;
-
   try
     Reader := CreateXmlLite.Data(Text).Reader;
     while not Reader.IsEOF do
@@ -2003,18 +2007,27 @@ begin
       if NodeType = XmlNodeType.Element then
       begin
         Reader.GetLocalName(Name, Len);
-        if Name = 'svg' then
-        begin
-          FSource := Text;
-          ReadIn(Reader);
-          break;
-        end
-        else
-          Exit;
+        try
+          if Name = 'svg' then
+          begin
+            FSource := Text;
+            ReadIn(Reader);
+            break;
+          end
+          else
+            raise Exception.Create(SVG_ERROR_TAG_SVG);
+        except
+          on E: Exception do
+          begin
+            FSource := LOldText;
+            raise Exception.CreateFmt(SVG_ERROR_PARSING_SVG_TEXT, [E.Message]);
+          end;
+        end;
       end;
     end;
   except
     FSource := '';
+    raise;
   end;
 end;
 
