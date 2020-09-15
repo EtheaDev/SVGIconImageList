@@ -119,4 +119,5 @@
 {$ENDIF}
 
 {$DEFINE PreferNativeSvgSupport}
+{.$DEFINE UseCairoSvgSupport}
 {.$DEFINE GPUSupport}

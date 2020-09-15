@@ -71,7 +71,11 @@ Uses
   {$IFDEF PreferNativeSvgSupport}
   D2DSVGFactory,
   {$ENDIF}
+  {$IFDEF UseCairoSvgSupport}
+  CairoSVGFactory;
+  {$ELSE}
   PasSVGFactory;
+  {$ENDIF}
 
 Var
  FGlobalSVGFactory: ISVGFactory;
@@ -85,7 +89,11 @@ begin
       FGlobalSVGFactory := GetD2DSVGFactory
     else
     {$ENDIF}
+    {$IFDEF UseCairoSvgSupport}
+      FGlobalSVGFactory := GetCairoSVGFactory;
+    {$ELSE}
       FGlobalSVGFactory := GetPasSVGFactory;
+    {$ENDIF}
   end;
   Result := FGlobalSVGFactory;
 end;
