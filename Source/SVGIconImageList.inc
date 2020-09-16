@@ -118,6 +118,7 @@
   {$Define HiDPISupport}
 {$ENDIF}
 
-{$DEFINE PreferNativeSvgSupport}
-{.$DEFINE UseCairoSvgSupport}
+{.$DEFINE SVGEngine}
+{$DEFINE D2DEngine}
+{.$DEFINE CairoEngine}
 {.$DEFINE GPUSupport}

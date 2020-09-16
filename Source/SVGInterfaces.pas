@@ -68,14 +68,18 @@ implementation
 {$INCLUDE SVGIconImageList.inc}
 
 Uses
-  {$IFDEF PreferNativeSvgSupport}
-  D2DSVGFactory,
-  {$ENDIF}
-  {$IFDEF UseCairoSvgSupport}
+{$IF DEFINED(D2DEngine)}
+  {$MESSAGE HINT 'Using Direct-2D SVG-Engine'}
+  D2DSVGFactory;
+{$ELSEIF DEFINED(CairoEngine)}
+  {$MESSAGE HINT 'Using Cairo SVG-Engine'}
   CairoSVGFactory;
-  {$ELSE}
+{$ELSEIF DEFINED(SVGEngine)}
+  {$MESSAGE HINT 'Using Pascal SVG-Engine'}
   PasSVGFactory;
-  {$ENDIF}
+{$ELSE}
+  {$MESSAGE FATAL 'You must define exactly one of (D2DEngine, CairoEngine, SVGEnging)'}
+{$ENDIF}
 
 Var
  FGlobalSVGFactory: ISVGFactory;
@@ -84,16 +88,14 @@ function GlobalSVGFactory: ISVGFactory;
 begin
   if not Assigned(FGlobalSVGFactory) then
   begin
-    {$IFDEF PreferNativeSvgSupport}
+{$IF DEFINED(D2DEngine)}
     if WinSvgSupported then
       FGlobalSVGFactory := GetD2DSVGFactory
-    else
-    {$ENDIF}
-    {$IFDEF UseCairoSvgSupport}
-      FGlobalSVGFactory := GetCairoSVGFactory;
-    {$ELSE}
-      FGlobalSVGFactory := GetPasSVGFactory;
-    {$ENDIF}
+{$ELSEIF DEFINED(CairoEngine)}
+    FGlobalSVGFactory := GetCairoSVGFactory;
+{$ELSEIF DEFINED(SVGEngine)}
+    FGlobalSVGFactory := GetPasSVGFactory;
+{$ENDIF}
   end;
   Result := FGlobalSVGFactory;
 end;
