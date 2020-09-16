@@ -346,7 +346,7 @@ begin
     fFixedColor := Color;
 
   fGrayScale := False;
-  if FFixedColor <> TColors.SysDefault then
+  if (FFixedColor <> TColors.SysDefault) and Assigned(fSvgDoc) then
   begin
     fSvgDoc.GetRoot(Root);
 
