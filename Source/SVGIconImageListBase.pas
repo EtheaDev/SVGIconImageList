@@ -48,7 +48,7 @@ uses
   SvgInterfaces;
 
 const
-  SVGIconImageListVersion = '2.1.0';
+  SVGIconImageListVersion = '2.1.1';
   DEFAULT_SIZE = 16;
 
 type

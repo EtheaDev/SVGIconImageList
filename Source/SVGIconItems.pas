@@ -107,6 +107,7 @@ implementation
 
 uses
   System.SysUtils,
+  VCL.Themes,
 {$IFDEF D10_3+}
   BaseImageCollection,
 {$ENDIF}
@@ -169,7 +170,10 @@ begin
 
   Result := TBitmap.Create;
   Result.PixelFormat := pf32bit;
-  Result.Canvas.Brush.Color := $00FFFFFF;
+  if TStyleManager.IsCustomStyleActive then
+    Result.Canvas.Brush.Color := StyleServices.GetSystemColor(clWindow)
+  else
+    Result.Canvas.Brush.Color := ColorToRGB(clWindow);
   Result.SetSize(AWidth, AHeight);
 
   FSVG.PaintTo(Result.Canvas.Handle, TRectF.Create(0, 0, AWidth, AHeight));

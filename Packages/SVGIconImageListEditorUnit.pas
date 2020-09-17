@@ -691,11 +691,11 @@ end;
 procedure TSVGIconImageListEditor.DeleteSelectedItems;
 var
   LIndex: Integer;
-  Selected: Integer;
+  LSelectedImageIndex: Integer;
 begin
   Screen.Cursor := crHourGlass;
   try
-    Selected := ImageView.ItemIndex;
+    LSelectedImageIndex := ImageView.Items[ImageView.ItemIndex].ImageIndex;
     FEditingList.BeginUpdate;
     try
       for LIndex := ImageView.Items.Count - 1 downto 0 do
@@ -705,7 +705,7 @@ begin
       FEditingList.EndUpdate;
     end;
     FChanged := True;
-    BuildList(Selected);
+    BuildList(LSelectedImageIndex);
   finally
     Screen.Cursor := crDefault;
   end;
@@ -718,18 +718,17 @@ end;
 
 procedure TSVGIconImageListEditor.DeleteButtonClick(Sender: TObject);
 var
-  LIndex: Integer;
+  LSelectedImageIndex: Integer;
 begin
   FEditingList.BeginUpdate;
   try
-    LIndex := ImageView.ItemIndex;
-    FEditingList.SVGIconItems.Delete(ImageView.Items[LIndex].ImageIndex);
+    LSelectedImageIndex := ImageView.Items[ImageView.ItemIndex].ImageIndex;
+    FEditingList.SVGIconItems.Delete(ImageView.Items[ImageView.ItemIndex].ImageIndex);
   finally
     FEditingList.EndUpdate;
   end;
   FChanged := True;
-  if ImageView.Items.Count > 1 then
-    BuildList(ImageView.Items[LIndex-1].ImageIndex);
+  BuildList(LSelectedImageIndex);
 end;
 
 procedure TSVGIconImageListEditor.FixedColorComboBoxSelect(Sender: TObject);

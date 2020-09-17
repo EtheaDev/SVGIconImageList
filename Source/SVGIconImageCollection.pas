@@ -87,6 +87,8 @@ type
     function GetNameByIndex(AIndex: Integer): String; override;
     function GetBitmap(AIndex: Integer; AWidth, AHeight: Integer): TBitmap; override;
     procedure Draw(ACanvas: TCanvas; ARect: TRect; AIndex: Integer; AProportional: Boolean = False); override;
+    {$ELSE}
+    procedure Change;
     {$ENDIF}
 
     constructor Create(AOwner: TComponent); override;
@@ -407,6 +409,12 @@ begin
   LSVG.Opacity := 1;
 
   LSVG.PaintTo(ACanvas.Handle, TRectF.Create(ARect), AProportional);
+end;
+{$ELSE}
+procedure TSVGIconImageCollection.Change;
+begin
+  FSVGItems.BeginUpdate;
+  FSVGItems.EndUpdate;
 end;
 {$ENDIF}
 
