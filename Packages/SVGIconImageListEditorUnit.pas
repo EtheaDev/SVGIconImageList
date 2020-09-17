@@ -122,6 +122,8 @@ type
     CategoryEdit: TEdit;
     CategoryLabel: TLabel;
     SVGErrorStaticText: TStaticText;
+    AntiAliasColorLabel: TLabel;
+    AntialiasColorComboBox: TColorBox;
     procedure FormCreate(Sender: TObject);
     procedure ApplyButtonClick(Sender: TObject);
     procedure ClearAllButtonClick(Sender: TObject);
@@ -151,6 +153,7 @@ type
     procedure GrayScaleCheckBoxClick(Sender: TObject);
     procedure FixedColorComboBoxSelect(Sender: TObject);
     procedure FixedColorItemComboBoxSelect(Sender: TObject);
+    procedure AntialiasColorComboBoxSelect(Sender: TObject);
     procedure GrayScaleItemCheckBoxClick(Sender: TObject);
     procedure ReformatXMLButtonClick(Sender: TObject);
     procedure CategoryListBoxClick(Sender: TObject);
@@ -299,6 +302,7 @@ begin
         FSourceList.Size := 64; //Force 64 pixel size for image collection icons
         FSourceList.GrayScale := AImageCollection.GrayScale;
         FSourceList.FixedColor := AImageCollection.FixedColor;
+        FSourceList.AntiAliasColor := AImageCollection.AntiAliasColor;
         ImageListGroupBox.Visible := False;
         FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
         FEditingList.Assign(FSourceList);
@@ -314,6 +318,7 @@ begin
           AImageCollection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
           AImageCollection.GrayScale := GrayScaleCheckBox.Checked;
           AImageCollection.FixedColor := FixedColorComboBox.Selected;
+          AImageCollection.AntiAliasColor := AntialiasColorComboBox.Selected;
         finally
           Screen.Cursor := crDefault;
         end;
@@ -406,6 +411,7 @@ begin
     ImageListGroup.Caption := Format(FTotIconsLabel, [FEditingList.Count]);
     GrayScaleCheckBox.Checked := SVGIconImageList.GrayScale;
     FixedColorComboBox.Selected := SVGIconImageList.FixedColor;
+    AntialiasColorComboBox.Selected := SVGIconImageList.AntiAliasColor;
     OpacitySpinEdit.Value := SVGIconImageList.Opacity;
     if LIsItemSelected then
     begin
@@ -738,6 +744,20 @@ begin
     if FixedColorComboBox.ItemIndex >= 0 then
     begin
       FEditingList.FixedColor := FixedColorComboBox.Selected;
+      UpdateGUI;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TSVGIconImageListEditor.AntialiasColorComboBoxSelect(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    if AntialiasColorComboBox.ItemIndex >= 0 then
+    begin
+      FEditingList.AntiAliasColor := AntialiasColorComboBox.Selected;
       UpdateGUI;
     end;
   finally
