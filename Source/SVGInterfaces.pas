@@ -78,7 +78,7 @@ Uses
   {$MESSAGE HINT 'Using Pascal SVG-Engine'}
   PasSVGFactory;
 {$ELSE}
-  {$MESSAGE FATAL 'You must define exactly one of (D2DEngine, CairoEngine, SVGEnging)'}
+  {$MESSAGE FATAL 'You must define exactly one of (D2DEngine, CairoEngine, SVGEngine)'}
 {$ENDIF}
 
 Var
