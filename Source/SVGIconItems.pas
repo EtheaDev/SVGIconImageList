@@ -77,7 +77,7 @@ type
     function GetDisplayName: string; override;
     function GetBitmap(const AWidth, AHeight: Integer;
       const AFixedColor: TColor; const AOpacity: Byte;
-      const AGrayScale: Boolean; const AAntiAliasColor: TColor): TBitmap;
+      const AGrayScale: Boolean; const AAntiAliasColor: TColor = clBtnFace): TBitmap;
     constructor Create(Collection: TCollection); override;
     property SVG: ISVG read FSVG write SetSVG;
     property Name: string read GetName write SetName;
@@ -161,7 +161,7 @@ end;
 
 function TSVGIconItem.GetBitmap(const AWidth, AHeight: Integer;
   const AFixedColor: TColor; const AOpacity: Byte;
-  const AGrayScale: Boolean; const AAntiAliasColor: TColor): TBitmap;
+  const AGrayScale: Boolean; const AAntiAliasColor: TColor = clBtnFace): TBitmap;
 var
   LAntiAliasColor: TColor;
 begin

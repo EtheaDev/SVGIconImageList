@@ -462,15 +462,10 @@ procedure TSVGIconImageListBase.SetFixedColor(const Value: TColor);
 begin
   if FFixedColor <> Value then
   begin
-    BeginUpdate;
-    try
-      FFixedColor := Value;
-      if FFixedColor <> SVG_INHERIT_COLOR then
-        FGrayScale := False;
-      //Change;
-    finally
-      EndUpdate;
-    end;
+    FFixedColor := Value;
+    if FFixedColor <> SVG_INHERIT_COLOR then
+      FGrayScale := False;
+    Change;
   end;
 end;
 
@@ -478,13 +473,7 @@ procedure TSVGIconImageListBase.SetAntiAliasColor(const Value: TColor);
 begin
   if FAntiAliasColor <> Value then
   begin
-    BeginUpdate;
-    try
-      FAntiAliasColor := Value;
-    finally
-      //Change;
-      EndUpdate;
-    end;
+    FAntiAliasColor := Value;
   end;
 end;
 
@@ -492,15 +481,10 @@ procedure TSVGIconImageListBase.SetGrayScale(const Value: Boolean);
 begin
   if FGrayScale <> Value then
   begin
-    BeginUpdate;
-    try
-      FGrayScale := Value;
-      if FGrayScale then
-        FixedColor := SVG_INHERIT_COLOR;
-      Change;
-    finally
-      EndUpdate;
-    end;
+    FGrayScale := Value;
+    if FGrayScale then
+      FFixedColor := SVG_INHERIT_COLOR;
+    Change;
   end;
 end;
 

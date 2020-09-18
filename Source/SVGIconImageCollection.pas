@@ -41,8 +41,8 @@ uses
   , System.UITypes
   , System.Classes
   , WinApi.Windows
-{$IFDEF D10_3+}
   , Vcl.Graphics
+{$IFDEF D10_3+}
   , Vcl.BaseImageCollection
 {$ENDIF}
   , SvgInterfaces
