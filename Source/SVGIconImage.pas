@@ -44,6 +44,7 @@ uses
   , System.UITypes
 {$ENDIF}
   , System.Classes
+  , System.UITypes
   , Vcl.Controls
   , Vcl.Graphics
   , Vcl.ImgList
@@ -62,16 +63,18 @@ type
     FOpacity: Byte;
     FFileName: TFileName;
     FImageList: TCustomImageList;
-    FImageIndex: Integer;
+    FImageIndex: System.UITypes.TImageIndex;
+    FImageChangeLink: TChangeLink;
     procedure SetCenter(Value: Boolean);
     procedure SetProportional(Value: Boolean);
     procedure SetOpacity(Value: Byte);
     procedure SetFileName(const Value: TFileName);
-    procedure SetImageIndex(const Value: Integer);
+    procedure SetImageIndex(const Value: System.UITypes.TImageIndex);
     procedure SetStretch(const Value: Boolean);
     procedure SetScale(const Value: Double);
     procedure SetImageList(const Value: TCustomImageList);
     procedure SetAutoSizeImage(const Value: Boolean);
+    procedure ImageListChange(Sender: TObject);
   private
     function GetSVGText: string;
     procedure SetSVGText(const AValue: string);
@@ -103,7 +106,7 @@ type
     property Opacity: Byte read FOpacity write SetOpacity default 255;
     property Scale: Double read FScale write SetScale stored StoreScale;
     property ImageList: TCustomImageList read FImageList write SetImageList;
-    property ImageIndex: Integer read FImageIndex write SetImageIndex default -1;
+    property ImageIndex: System.UITypes.TImageIndex read FImageIndex write SetImageIndex default -1;
     property FileName: TFileName read FFileName write SetFileName;
     property SVGText: string read GetSVGText write SetSVGText stored UsingSVGText;
     property Enabled;
@@ -184,10 +187,13 @@ begin
   FScale := 1;
   FImageIndex := -1;
   ParentBackground := True;
+  FImageChangeLink := TChangeLink.Create;
+  FImageChangeLink.OnChange := ImageListChange;
 end;
 
 destructor TSVGIconImage.Destroy;
 begin
+  FImageChangeLink.Free;
   inherited;
 end;
 
@@ -217,6 +223,12 @@ begin
     Result := SVGIconItems.Items[FImageIndex].SVGText
   else
     Result := FSVG.Source;
+end;
+
+procedure TSVGIconImage.ImageListChange(Sender: TObject);
+begin
+  if Sender = FImageList then
+    Invalidate;
 end;
 
 function TSVGIconImage.SVGIconItems: TSVGIconItems;
@@ -385,7 +397,7 @@ begin
   LoadFromFile(Value);
 end;
 
-procedure TSVGIconImage.SetImageIndex(const Value: Integer);
+procedure TSVGIconImage.SetImageIndex(const Value: System.UITypes.TImageIndex);
 begin
   if FImageIndex = Value then
     Exit;
@@ -396,8 +408,14 @@ end;
 
 procedure TSVGIconImage.SetImageList(const Value: TCustomImageList);
 begin
+  if FImageList <> nil then FImageList.UnRegisterChanges(FImageChangeLink);
   FImageList := Value;
-  SVGText := '';
+  if FImageList <> nil then
+  begin
+    FImageList.RegisterChanges(FImageChangeLink);
+    FImageList.FreeNotification(Self);
+    SVGText := '';
+  end;
 end;
 
 constructor TSVGGraphic.Create;
