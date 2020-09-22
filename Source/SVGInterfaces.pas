@@ -68,6 +68,9 @@ implementation
 {$INCLUDE SVGIconImageList.inc}
 
 Uses
+// If you want to use the Cairo Engine, you have to unpack and copy the corresponding 
+// librsvg dlls from Cairo/Dlls into the executable folder of your application.
+
 {$IF DEFINED(Cairo_SVGEngine) and DEFINED(Delphi_SVGEngine)}
   {$MESSAGE FATAL 'You must define only one engine (Cairo_SVGEngine or Delphi_SVGEngine) into SVGIconImageList.inc)'}
 {$ENDIF}
