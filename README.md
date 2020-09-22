@@ -19,6 +19,18 @@ Although TVirtualImageList does not have the FixedColor, GrayScale and Opacity p
 
 We advise that TSVGIconVirtualImageList should be used only for versions of Delphi before 10.3. For recent versions of Delphi the recommended combination should be **TSVGIconImageCollection + TVirtualImageList**. Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to "True", everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.
 
+## Performance comparison
+
+This table shows the performance of the tree rendering engines tested with SVGExplorer, using a significant amount of icons from different sets, rendered at 48x48 pixels.
+
+Count | Icon set        |     D2D |   Cairo |    TSVG |  D2D | Cairo | TSVG |
+  --: | :--             |     --: |     --: |     --: |  --: |   --: |  --: |
+ 996  | Font-Awesome    |  1469ms |  1218ms |  1470ms | 121% |  100% | 121% |
+ 655  | Papirus         |  1219ms |  1656ms |  1890ms | 100% |  136% | 155% |
+5366  | Material-Design | 12016ms |  9594ms | 10531ms | 125% |  100% | 110% |
+
+As you can see, the three engines perform differently depending on the icons and their complexity. There's no clear favourite.
+
 ### New in version 2.0: choose your preferred engine
 
 There are two implementation: the pascal one based on Martin's work which is using GDI+ and the native Windows one which is using Direct2D, as explained [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories-(Direct-2D-or-GDI-))
