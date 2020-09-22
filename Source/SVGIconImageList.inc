@@ -118,5 +118,14 @@
   {$Define HiDPISupport}
 {$ENDIF}
 
+//Prefer Engine Direct2D by Kiriakos Vlahos
+//if supported by Windows Platform (from Windows Creators update)
 {$DEFINE PreferNativeSvgSupport}
 {.$DEFINE GPUSupport}
+
+//if PreferNativeSvgSupport not active or not available:
+//use Delphi Engine TSVG by Martin Walter (included into SVG folder)
+{$DEFINE Delphi_SVGEngine}
+//or use Engine Cairo wrapper (included by Lübbe Onken in Cairo folder)
+{.$DEFINE Cairo_SVGEngine}
+
