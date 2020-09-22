@@ -40,9 +40,6 @@ uses
   , Winapi.Messages
   , System.SysUtils
   , System.Types
-{$IFDEF D10_4+}
-  , System.UITypes
-{$ENDIF}
   , System.Classes
   , System.UITypes
   , Vcl.Controls

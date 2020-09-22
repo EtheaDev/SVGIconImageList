@@ -55,7 +55,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '2.1.0';
+  SVGIconImageListVersion = '2.2.0';
 
 resourcestring
   ERROR_LOADING_FILES = 'SVG error loading files:';
