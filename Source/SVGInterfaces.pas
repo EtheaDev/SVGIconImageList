@@ -102,7 +102,8 @@ begin
     if WinSvgSupported then
       FGlobalSVGFactory := GetD2DSVGFactory
     else
-    {$ELSEIF DEFINED(Delphi_SVGEngine)}
+    {$ENDIF}
+    {$IF DEFINED(Delphi_SVGEngine)}
       FGlobalSVGFactory := GetPasSVGFactory;
     {$ELSEIF DEFINED(Cairo_SVGEngine)}
       FGlobalSVGFactory := GetCairoSVGFactory;

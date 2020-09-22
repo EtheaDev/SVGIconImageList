@@ -268,7 +268,7 @@ begin
           except
             on E: Exception do
               raise Exception.CreateFmt('Detected "old" binary image stream of %s! '+
-                'You must disable Direct2D (removing $DEFINE D2DEngine from SVGIconImageList.inc), '+
+                'You must disable Direct2D (removing $DEFINE PreferNativeSvgSupport from SVGIconImageList.inc), '+
                 'recompile SVGIconImageList packages, and try again',
                 [Owner.Name+'.'+Self.Name]);
           end;
