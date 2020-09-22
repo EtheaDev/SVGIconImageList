@@ -1,6 +1,6 @@
 # SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## Two engines to render SVG (GDI+ or Direct2D) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
+## Three engines to render SVG (GDI+, Direct2D or Cairo) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
 ### Actual official version 2.1.1 (VCL+FMX)
 
@@ -20,7 +20,7 @@ Although TVirtualImageList does not have the FixedColor, GrayScale and Opacity p
 We advise that TSVGIconVirtualImageList should be used only for versions of Delphi before 10.3. For recent versions of Delphi the recommended combination should be **TSVGIconImageCollection + TVirtualImageList**. Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to "True", everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.
 
 ### New in version 2.0: choose your preferred engine
-There are two implementation: the pascal one based on Martin's work which is using GDI+ and the native Windows one which is using Direct2D﻿, as explained [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories-(Direct-2D-or-GDI-))
+There are two implementation: the pascal one based on Martin's work which is using GDI+ and the native Windows one which is using Direct2D, as explained [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories-(Direct-2D-or-GDI-))
 
 ### Available from Delphi XE6 to Delphi 10.4
 ![Delphi 10.4 Sydney Support](/Demo/Images/SupportingDelphi.jpg)
