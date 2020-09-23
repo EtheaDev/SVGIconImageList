@@ -25,7 +25,7 @@ There are three implementation: the "Delphi one" based on Martin's work which is
 
 ## Performance comparison
 
-This table shows the performance of the tree rendering engines tested with SVGExplorer, using a significant amount of icons from different sets, rendered at 48x48 pixels.
+This table shows the performance of the three rendering engines tested with SVGExplorer, using a significant amount of icons from different sets, rendered at 48x48 pixels.
 
 Count | Icon set        |     D2D |   Cairo |    TSVG |  D2D | Cairo | TSVG |
   --: | :--             |     --: |     --: |     --: |  --: |   --: |  --: |
