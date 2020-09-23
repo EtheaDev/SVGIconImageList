@@ -56,12 +56,15 @@ type
     // procedures and functions
     function IsEmpty: Boolean;
     procedure Clear;
-    procedure SaveToStream(AStream: TStream);
-    procedure SaveToFile(const AFileName: string);
-    procedure LoadFromSource;
-    procedure LoadFromStream(AStream: TStream);
-    procedure LoadFromFile(const AFileName: string);
     procedure PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean = True);
+    procedure LoadFromSource(const ASource: string);
+    procedure LoadFromFile(const AFileName: string);
+    procedure LoadFromStream(AStream: TStream);
+    procedure SaveToFile(const AFileName: string); overload;
+    procedure SaveToStream(AStream: TStream); overload;
+    procedure SaveToStream(AStream: TStream; const ASource: string); overload;
+    procedure SourceFromStream(AStream: TStream);
+    procedure SvgFromStream(AStream: TStream);
   public
     constructor Create;
   end;
@@ -142,33 +145,34 @@ begin
   end;
 end;
 
-procedure TCairoSVG.LoadFromSource;
+procedure TCairoSVG.LoadFromSource(const ASource: string);
 var
-  LStream: TMemoryStream;
+  LMemoryStream: TMemoryStream;
 begin
-  if FSource = '' then
+  if ASource = '' then
     Clear;
 
-  LStream := TMemoryStream.Create;
+  LMemoryStream := TMemoryStream.Create;
   try
-    SaveToStream(LStream);
-    LStream.Position := 0;
-    LoadFromStream(LStream);
+    SaveToStream(LMemoryStream, ASource);
+    LMemoryStream.Position := 0;
+    SvgFromStream(LMemoryStream);
   finally
-    LStream.Free;
+    LMemoryStream.Free;
   end;
 end;
 
 procedure TCairoSVG.LoadFromStream(AStream: TStream);
+Var
+  LStreamPos: Int64;
 begin
-  try
-    FSvgObject := TRSVGObject.Create(AStream);
-    FHeight := FSvgObject.Dimensions.height;
-    FWidth := FSvgObject.Dimensions.width;
-  except
-    on E: Exception do
-      raise Exception.CreateFmt(CAIRO_ERROR_PARSING_SVG_TEXT, [E.Message]);
-  end;
+  // read and save the Source
+  LStreamPos := AStream.Position;
+  SourceFromStream(AStream);
+  // Restore Position
+  AStream.Position := LStreamPos;
+  // Now create the SVG
+  SvgFromStream(AStream);
 end;
 
 procedure TCairoSVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
@@ -214,12 +218,17 @@ begin
   end;
 end;
 
-procedure TCairoSVG.SaveToStream(AStream: TStream);
+procedure TCairoSVG.SaveToStream(AStream: TStream; const ASource: string);
 var
   LBuffer: TBytes;
 begin
-  LBuffer := TEncoding.UTF8.GetBytes(FSource);
+  LBuffer := TEncoding.UTF8.GetBytes(ASource);
   AStream.WriteBuffer(LBuffer, Length(LBuffer))
+end;
+
+procedure TCairoSVG.SaveToStream(AStream: TStream);
+begin
+  SaveToStream(AStream, FSource);
 end;
 
 procedure TCairoSVG.SetFixedColor(const AColor: TColor);
@@ -242,8 +251,31 @@ begin
   if FSource <> ASource then
     begin
       FSource := ASource;
-      LoadFromSource;
+      LoadFromSource(ASource);
     end;
+end;
+
+procedure TCairoSVG.SourceFromStream(AStream: TStream);
+var
+  LSize  : Integer;
+  LBuffer: TBytes;
+begin
+  LSize := AStream.Size - AStream.Position;
+  SetLength(LBuffer, LSize);
+  AStream.Read(LBuffer, 0, LSize);
+  FSource := TEncoding.UTF8.GetString(LBuffer);
+end;
+
+procedure TCairoSVG.SvgFromStream(AStream: TStream);
+begin
+  try
+    FSvgObject := TRSVGObject.Create(AStream);
+    FHeight := FSvgObject.Dimensions.height;
+    FWidth := FSvgObject.Dimensions.width;
+  except
+    on E: Exception do
+      raise Exception.CreateFmt(CAIRO_ERROR_PARSING_SVG_TEXT, [E.Message]);
+  end;
 end;
 
 end.

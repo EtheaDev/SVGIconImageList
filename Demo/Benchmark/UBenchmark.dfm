@@ -2,8 +2,8 @@ object frmBenchmark: TfrmBenchmark
   Left = 0
   Top = 0
   Caption = 'Benchmark'
-  ClientHeight = 342
-  ClientWidth = 719
+  ClientHeight = 361
+  ClientWidth = 784
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,23 +11,24 @@ object frmBenchmark: TfrmBenchmark
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  OnCreate = FormCreate
-  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
-  object lblLoops: TLabel
-    Left = 304
-    Top = 316
-    Width = 28
-    Height = 13
-    Caption = '&Loops'
-    FocusControl = speLoops
+  object Splitter1: TSplitter
+    Left = 460
+    Top = 0
+    Height = 321
+    Align = alRight
+    Beveled = True
+    ExplicitLeft = 632
+    ExplicitTop = 176
+    ExplicitHeight = 100
   end
   object memOutput: TMemo
-    Left = 24
-    Top = 24
-    Width = 385
-    Height = 281
+    Left = 0
+    Top = 0
+    Width = 460
+    Height = 321
+    Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -35,51 +36,113 @@ object frmBenchmark: TfrmBenchmark
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-  end
-  object btnClear: TButton
-    Left = 24
-    Top = 311
-    Width = 100
-    Height = 25
-    Caption = '&Clear'
-    TabOrder = 1
-    OnClick = btnClearClick
-  end
-  object btnLoad: TButton
-    Left = 130
-    Top = 311
-    Width = 100
-    Height = 25
-    Caption = 'L&oad Image'
-    TabOrder = 2
-    OnClick = btnLoadClick
+    ExplicitLeft = 24
+    ExplicitTop = 24
+    ExplicitWidth = 385
+    ExplicitHeight = 281
   end
   object SVGIconImage: TSVGIconImage
-    Left = 424
-    Top = 24
-    Width = 281
-    Height = 281
+    Left = 463
+    Top = 0
+    Width = 321
+    Height = 321
     AutoSize = False
     ImageList = imlIcons
+    Align = alRight
+    ExplicitLeft = 483
   end
-  object btnRunBenchmark: TButton
-    Left = 447
-    Top = 309
-    Width = 100
-    Height = 25
-    Caption = '&Benchmark'
-    TabOrder = 4
-    OnClick = btnRunBenchmarkClick
-  end
-  object speLoops: TSpinEdit
-    Left = 360
-    Top = 311
-    Width = 81
-    Height = 22
-    MaxValue = 999
-    MinValue = 10
-    TabOrder = 5
-    Value = 100
+  object pnlBottom: TPanel
+    Left = 0
+    Top = 321
+    Width = 784
+    Height = 40
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 2
+    ExplicitTop = 302
+    ExplicitWidth = 712
+    object lblLoops: TLabel
+      AlignWithMargins = True
+      Left = 550
+      Top = 12
+      Width = 28
+      Height = 20
+      Margins.Left = 5
+      Margins.Top = 12
+      Margins.Right = 5
+      Margins.Bottom = 8
+      Align = alRight
+      Caption = '&Loops'
+      FocusControl = speLoops
+      ExplicitLeft = 480
+      ExplicitTop = 20
+      ExplicitHeight = 13
+    end
+    object btnClear: TButton
+      AlignWithMargins = True
+      Left = 109
+      Top = 3
+      Width = 100
+      Height = 34
+      Align = alLeft
+      Caption = '&Clear'
+      TabOrder = 0
+      OnClick = btnClearClick
+      ExplicitLeft = 8
+      ExplicitTop = 6
+      ExplicitHeight = 25
+    end
+    object btnLoad: TButton
+      AlignWithMargins = True
+      Left = 3
+      Top = 3
+      Width = 100
+      Height = 34
+      Align = alLeft
+      Caption = 'L&oad Image'
+      TabOrder = 1
+      OnClick = btnLoadClick
+      ExplicitLeft = 114
+      ExplicitTop = 6
+      ExplicitHeight = 25
+    end
+    object btnRunBenchmark: TButton
+      AlignWithMargins = True
+      Left = 679
+      Top = 5
+      Width = 100
+      Height = 30
+      Margins.Left = 5
+      Margins.Top = 5
+      Margins.Right = 5
+      Margins.Bottom = 5
+      Align = alRight
+      Caption = '&Benchmark'
+      TabOrder = 2
+      OnClick = btnRunBenchmarkClick
+      ExplicitLeft = 607
+      ExplicitTop = 16
+      ExplicitHeight = 25
+    end
+    object speLoops: TSpinEdit
+      AlignWithMargins = True
+      Left = 588
+      Top = 8
+      Width = 81
+      Height = 24
+      Margins.Left = 5
+      Margins.Top = 8
+      Margins.Right = 5
+      Margins.Bottom = 8
+      Align = alRight
+      MaxValue = 999
+      MinValue = 10
+      TabOrder = 3
+      Value = 50
+      ExplicitLeft = 520
+      ExplicitTop = 19
+      ExplicitHeight = 22
+    end
   end
   object SVGIconImageCollection: TSVGIconImageCollection
     SVGIconItems = <>
