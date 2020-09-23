@@ -2,7 +2,7 @@
 
 ## Three engines to render SVG (GDI+, Direct2D or Cairo) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 2.1.1 (VCL+FMX)
+### Actual official version 2.2.0 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -19,6 +19,10 @@ Although TVirtualImageList does not have the FixedColor, GrayScale and Opacity p
 
 We advise that TSVGIconVirtualImageList should be used only for versions of Delphi before 10.3. For recent versions of Delphi the recommended combination should be **TSVGIconImageCollection + TVirtualImageList**. Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to "True", everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.
 
+### New in version 2.2: three SVG engines available!
+
+There are three implementation: the "Delphi one" based on Martin's work which is using GDI+, the native Windows one which is using Direct2D or the new "Cairo" wrapper, as explained [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories-(Direct-2D-or-GDI-))
+
 ## Performance comparison
 
 This table shows the performance of the tree rendering engines tested with SVGExplorer, using a significant amount of icons from different sets, rendered at 48x48 pixels.
@@ -30,10 +34,6 @@ Count | Icon set        |     D2D |   Cairo |    TSVG |  D2D | Cairo | TSVG |
 5366  | Material-Design | 12016ms |  9594ms | 10531ms | 125% |  100% | 110% |
 
 As you can see, the three engines perform differently depending on the icons and their complexity. There's no clear favourite.
-
-### New in version 2.0: choose your preferred engine
-
-There are two implementation: the pascal one based on Martin's work which is using GDI+ and the native Windows one which is using Direct2D, as explained [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories-(Direct-2D-or-GDI-))
 
 ### Available from Delphi XE6 to Delphi 10.4
 
@@ -58,7 +58,12 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 
 ### RELEASE NOTES
 
-16 Sep 2020: version 2.1.1 (VCL) 1.5.1 (FMX)
+22 Sep 2020: versoin 2.2.0 (VCL+FMX)
+- Added "Cairo" SVG Engine
+- Added AntialiasColor to perfect antialias effect
+- Added ImageIndex property editor for SVGIconImage
+
+16 Sep 2020: version 2.1.1 (VCL) 2.1.0 (FMX)
 
 - Fixed issues (#110, #111, #113)
 - Editing SVG text in editor shows errors without losing content
