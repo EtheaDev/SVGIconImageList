@@ -58,10 +58,11 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 
 ### RELEASE NOTES
 
-22 Sep 2020: versoin 2.2.0 (VCL+FMX)
+23 Sep 2020: versoin 2.2.0 (VCL+FMX)
 - Added "Cairo" SVG Engine
 - Added AntialiasColor to perfect antialias effect
 - Added ImageIndex property editor for SVGIconImage
+- Added FixedColor and GrayScale to TSVGIconImage component
 
 16 Sep 2020: version 2.1.1 (VCL) 2.1.0 (FMX)
 
