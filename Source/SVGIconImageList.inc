@@ -122,6 +122,12 @@
 //if supported by Windows Platform (from Windows Creators update)
 {$DEFINE PreferNativeSvgSupport}
 {.$DEFINE GPUSupport}
+{$IFDEF PreferNativeSvgSupport}
+  // Throw an exception if the SVG contains text elements or class attributes
+  // which are not supported by Windows SVG. Since it costs some performance,
+  // you should only turn it on during debugging or if it's absolutely necessary.
+  {.$DEFINE CheckForUnsupportedSvg}
+{$ENDIF}
 
 //if PreferNativeSvgSupport not active or not available:
 //use Delphi Engine TSVG by Martin Walter (included into SVG folder)
