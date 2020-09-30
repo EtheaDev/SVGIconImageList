@@ -23,6 +23,8 @@ type
     lblLoops: TLabel;
     pnlBottom: TPanel;
     Splitter1: TSplitter;
+    chkGrayScale: TCheckBox;
+    chkFixedColor: TCheckBox;
     procedure btnClearClick(Sender: TObject);
     procedure btnLoadClick(Sender: TObject);
     procedure btnRunBenchmarkClick(Sender: TObject);
@@ -30,13 +32,14 @@ type
     FSvg      : string;
     FStartTick: Int64;
     FLastTick : Int64;
+    FLine     : string;
 
     procedure BenchmarkLoad;
     procedure BenchmarkGrayScale;
     procedure BenchmarkFixedColor;
     procedure BenchmarkDraw;
 
-    procedure LogTicks(var AMessage: string; const ASuffix: string; ATick: Int64);
+    procedure LogTicks(var AMessage: string; ATick: Int64);
     procedure RunBenchmark(AFactoryName: string; AFactory: ISVGFactory);
   public
     { Public-Deklarationen }
@@ -137,6 +140,8 @@ begin
 end;
 
 procedure TfrmBenchmark.btnRunBenchmarkClick(Sender: TObject);
+var
+  LLine: string;
 begin
   if (FSvg = '') then
     memOutput.Lines.Add('Please load a SVG image first')
@@ -144,8 +149,16 @@ begin
     begin
       SVGIconImage.ImageIndex := -1;
 
+      LLine := 'Factory    |  Load  |  Draw  ';
+      if chkGrayScale.Checked then
+        LLine := LLine + '|  Gray  |  Draw  ';
+      if chkFixedColor.Checked then
+        LLine := LLine + '|  Fixed |  Draw  ';
+      LLine := LLine + '|  Total';
+
       memOutput.Lines.Add(Format('Repeat %d times', [speLoops.Value]));
-      memOutput.Lines.Add('Factory    |  Load  |  Draw  |  Gray  |  Draw  |  Fixed |  Draw  |  Total |');
+
+      memOutput.Lines.Add(LLine);
       RunBenchmark('Pascal', GetPasSVGFactory);
       RunBenchmark('Direct 2D', GetD2DSVGFactory);
       RunBenchmark('Cairo', GetCairoSVGFactory);
@@ -154,47 +167,52 @@ begin
     end;
 end;
 
-procedure TfrmBenchmark.LogTicks(var AMessage: string; const ASuffix: string; ATick: Int64);
+procedure TfrmBenchmark.LogTicks(var AMessage: string; ATick: Int64);
 var
   LCurrentTick: Int64;
 begin
   LCurrentTick := GetTickCount;
-  AMessage := Format('%s | %6d%s', [AMessage, LCurrentTick - ATick, ASuffix]);
+  AMessage := Format('%s | %6d', [AMessage, LCurrentTick - ATick]);
   memOutput.Lines[memOutput.Lines.Count - 1] := AMessage;
   FLastTick := LCurrentTick;
 end;
 
 procedure TfrmBenchmark.RunBenchmark(AFactoryName: string; AFactory: ISVGFactory);
-var
-  LLine: string;
+
+  procedure Benchmark(AProc: TPRoc);
+  begin
+    if Assigned(AProc) then
+      begin
+        AProc;
+        LogTicks(FLine, FLastTick);
+      end;
+  end;
+
 begin
   SetGlobalSvgFactory(AFactory);
 
-  LLine := Format('%-10s', [AFactoryName]);
-  memOutput.Lines.Add(LLine);
+  FLine := Format('%-10s', [AFactoryName]);
+  memOutput.Lines.Add(FLine);
 
   FStartTick := GetTickCount;
   FLastTick := FStartTick;
 
-  BenchmarkLoad;
-  LogTicks(LLine, '', FLastTick);
+  Benchmark(BenchmarkLoad);
+  Benchmark(BenchmarkDraw);
 
-  BenchmarkDraw;
-  LogTicks(LLine, '', FLastTick);
+  if chkGrayScale.Checked then
+    begin
+      Benchmark(BenchmarkGrayScale);
+      Benchmark(BenchmarkDraw);
+    end;
 
-  BenchmarkGrayScale;
-  LogTicks(LLine, '', FLastTick);
+  if chkFixedColor.Checked then
+    begin
+      Benchmark(BenchmarkFixedColor);
+      Benchmark(BenchmarkDraw);
+    end;
 
-  BenchmarkDraw;
-  LogTicks(LLine, '', FLastTick);
-
-  BenchmarkFixedColor;
-  LogTicks(LLine, '', FLastTick);
-
-  BenchmarkDraw;
-  LogTicks(LLine, '', FLastTick);
-
-  LogTicks(LLine, ' |', FStartTick);
+  LogTicks(FLine, FStartTick);
 end;
 
 end.
