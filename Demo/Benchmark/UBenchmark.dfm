@@ -36,10 +36,6 @@ object frmBenchmark: TfrmBenchmark
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitLeft = 24
-    ExplicitTop = 24
-    ExplicitWidth = 385
-    ExplicitHeight = 281
   end
   object SVGIconImage: TSVGIconImage
     Left = 463
@@ -49,7 +45,6 @@ object frmBenchmark: TfrmBenchmark
     AutoSize = False
     ImageList = imlIcons
     Align = alRight
-    ExplicitLeft = 483
   end
   object pnlBottom: TPanel
     Left = 0
@@ -59,8 +54,6 @@ object frmBenchmark: TfrmBenchmark
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitTop = 302
-    ExplicitWidth = 712
     object lblLoops: TLabel
       AlignWithMargins = True
       Left = 550
@@ -74,8 +67,6 @@ object frmBenchmark: TfrmBenchmark
       Align = alRight
       Caption = '&Loops'
       FocusControl = speLoops
-      ExplicitLeft = 480
-      ExplicitTop = 20
       ExplicitHeight = 13
     end
     object btnClear: TButton
@@ -88,9 +79,6 @@ object frmBenchmark: TfrmBenchmark
       Caption = '&Clear'
       TabOrder = 0
       OnClick = btnClearClick
-      ExplicitLeft = 8
-      ExplicitTop = 6
-      ExplicitHeight = 25
     end
     object btnLoad: TButton
       AlignWithMargins = True
@@ -102,9 +90,6 @@ object frmBenchmark: TfrmBenchmark
       Caption = 'L&oad Image'
       TabOrder = 1
       OnClick = btnLoadClick
-      ExplicitLeft = 114
-      ExplicitTop = 6
-      ExplicitHeight = 25
     end
     object btnRunBenchmark: TButton
       AlignWithMargins = True
@@ -120,9 +105,6 @@ object frmBenchmark: TfrmBenchmark
       Caption = '&Benchmark'
       TabOrder = 2
       OnClick = btnRunBenchmarkClick
-      ExplicitLeft = 607
-      ExplicitTop = 16
-      ExplicitHeight = 25
     end
     object speLoops: TSpinEdit
       AlignWithMargins = True
@@ -136,12 +118,37 @@ object frmBenchmark: TfrmBenchmark
       Margins.Bottom = 8
       Align = alRight
       MaxValue = 999
-      MinValue = 10
+      MinValue = 1
       TabOrder = 3
       Value = 50
-      ExplicitLeft = 520
-      ExplicitTop = 19
-      ExplicitHeight = 22
+    end
+    object chkGrayScale: TCheckBox
+      AlignWithMargins = True
+      Left = 342
+      Top = 3
+      Width = 97
+      Height = 34
+      Align = alRight
+      Caption = '&Grayscale'
+      Checked = True
+      State = cbChecked
+      TabOrder = 4
+      ExplicitLeft = 333
+      ExplicitTop = 6
+    end
+    object chkFixedColor: TCheckBox
+      AlignWithMargins = True
+      Left = 445
+      Top = 3
+      Width = 97
+      Height = 34
+      Align = alRight
+      Caption = '&Fixed Color'
+      Checked = True
+      State = cbChecked
+      TabOrder = 5
+      ExplicitLeft = 263
+      ExplicitTop = 6
     end
   end
   object SVGIconImageCollection: TSVGIconImageCollection
