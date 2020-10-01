@@ -21,18 +21,26 @@ type
     btnRunBenchmark: TButton;
     speLoops: TSpinEdit;
     lblLoops: TLabel;
-    pnlBottom: TPanel;
-    Splitter1: TSplitter;
+    pnlButtons: TPanel;
     chkGrayScale: TCheckBox;
     chkFixedColor: TCheckBox;
+    splHorizontal: TSplitter;
+    pnlLoops: TPanel;
+    grpFactory: TRadioGroup;
     procedure btnClearClick(Sender: TObject);
     procedure btnLoadClick(Sender: TObject);
     procedure btnRunBenchmarkClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure grpFactoryClick(Sender: TObject);
   private
-    FSvg      : string;
-    FStartTick: Int64;
-    FLastTick : Int64;
-    FLine     : string;
+    FSvgSource  : string;
+    FStartTick  : Int64;
+    FLastTick   : Int64;
+    FLine       : string;
+    FInBenchmark: boolean;
+
+    function GetFactoryName: string;
+    procedure SetFactory(AIndex: integer);
 
     procedure BenchmarkLoad;
     procedure BenchmarkGrayScale;
@@ -40,9 +48,9 @@ type
     procedure BenchmarkDraw;
 
     procedure LogTicks(var AMessage: string; ATick: Int64);
-    procedure RunBenchmark(AFactoryName: string; AFactory: ISVGFactory);
-  public
-    { Public-Deklarationen }
+    procedure PrepareBenchmark(ACaption: string);
+    procedure ReloadImage;
+    procedure RunBenchmark(AIndex: integer);
   end;
 
 var
@@ -55,6 +63,7 @@ uses
   D2DSVGFactory,
   PasSVGFactory,
   System.IOUtils,
+  System.TypInfo,
   System.Types;
 
 {$R *.dfm}
@@ -80,6 +89,7 @@ begin
     begin
       LSize := LSize + LStep;
       LRect := TRect.Create(0, 0, Round(LSize), Round(LSize));
+
       SvgIconImageCollection.Draw(TCanvasImage(SVGIconImage).Canvas, LRect, 0, true);
     end;
 end;
@@ -108,7 +118,7 @@ begin
     for I := 1 to speLoops.Value do
       begin
         LSvg := GlobalSvgFactory.NewSvg;
-        LSvg.Source := FSvg;
+        LSvg.Source := FSvgSource;
         SVGIconImageCollection.Add(LSvg, '');
       end;
   finally
@@ -119,7 +129,6 @@ end;
 procedure TfrmBenchmark.btnClearClick(Sender: TObject);
 begin
   memOutput.Clear;
-  SVGIconImageCollection.ClearIcons;
 end;
 
 procedure TfrmBenchmark.btnLoadClick(Sender: TObject);
@@ -128,14 +137,20 @@ var
 begin
   if OpenDialog.Execute then
     begin
-      FSvg := TFile.ReadAllText(OpenDialog.FileName);
+      FSvgSource := TFile.ReadAllText(OpenDialog.FileName);
+
+      PrepareBenchmark('Factory    |  Load  |  Draw  | Total');
 
       LSvg := GlobalSvgFactory.NewSvg;
-      LSvg.Source := FSvg;
+      LSvg.Source := FSvgSource;
+      LogTicks(FLine, FLastTick);
 
       SVGIconImageCollection.SVGIconItems.Clear;
       SVGIconImageCollection.Add(LSvg, '');
       SVGIconImage.ImageIndex := 0;
+
+      LogTicks(FLine, FLastTick);
+      LogTicks(FLine, FStartTick);
     end;
 end;
 
@@ -143,27 +158,59 @@ procedure TfrmBenchmark.btnRunBenchmarkClick(Sender: TObject);
 var
   LLine: string;
 begin
-  if (FSvg = '') then
+  if (FSvgSource = '') then
     memOutput.Lines.Add('Please load a SVG image first')
   else
     begin
-      SVGIconImage.ImageIndex := -1;
+      FInBenchmark := true;
+      try
+        SVGIconImage.ImageIndex := -1;
 
-      LLine := 'Factory    |  Load  |  Draw  ';
-      if chkGrayScale.Checked then
-        LLine := LLine + '|  Gray  |  Draw  ';
-      if chkFixedColor.Checked then
-        LLine := LLine + '|  Fixed |  Draw  ';
-      LLine := LLine + '|  Total';
+        LLine := 'Factory    |  Load  |  Draw  ';
+        if chkGrayScale.Checked then
+          LLine := LLine + '|  Gray  |  Draw  ';
+        if chkFixedColor.Checked then
+          LLine := LLine + '|  Fixed |  Draw  ';
+        LLine := LLine + '|  Total';
 
-      memOutput.Lines.Add(Format('Repeat %d times', [speLoops.Value]));
+        memOutput.Lines.Add('');
+        memOutput.Lines.Add(Format('Benchmark Repeat %d times', [speLoops.Value]));
 
-      memOutput.Lines.Add(LLine);
-      RunBenchmark('Pascal', GetPasSVGFactory);
-      RunBenchmark('Direct 2D', GetD2DSVGFactory);
-      RunBenchmark('Cairo', GetCairoSVGFactory);
+        memOutput.Lines.Add(LLine);
+        RunBenchmark(0);
+        RunBenchmark(1);
+        RunBenchmark(2);
 
-      SVGIconImage.ImageIndex := 0;
+        SVGIconImage.ImageIndex := 0;
+      finally
+        FInBenchmark := false;
+      end;
+    end;
+end;
+
+procedure TfrmBenchmark.FormCreate(Sender: TObject);
+begin
+  FInBenchmark := false;
+  grpFactory.Items.Add('Pascal');
+  grpFactory.Items.Add('Direct 2D');
+  grpFactory.Items.Add('Cairo');
+  SetFactory(0);
+end;
+
+function TfrmBenchmark.GetFactoryName: string;
+begin
+  if grpFactory.ItemIndex > -1 then
+    Result := grpFactory.Items[grpFactory.ItemIndex]
+  else
+    Result := '';
+end;
+
+procedure TfrmBenchmark.grpFactoryClick(Sender: TObject);
+begin
+  if not FInBenchmark then
+    begin
+      SetFactory(grpFactory.ItemIndex);
+      ReloadImage;
     end;
 end;
 
@@ -177,7 +224,40 @@ begin
   FLastTick := LCurrentTick;
 end;
 
-procedure TfrmBenchmark.RunBenchmark(AFactoryName: string; AFactory: ISVGFactory);
+procedure TfrmBenchmark.PrepareBenchmark(ACaption: string);
+begin
+  if ACaption <> '' then
+    memOutput.Lines.Add(ACaption);
+
+  FLine := Format('%-10s', [GetFactoryName]);
+  memOutput.Lines.Add(FLine);
+
+  FStartTick := GetTickCount;
+  FLastTick := FStartTick;
+end;
+
+procedure TfrmBenchmark.ReloadImage;
+var
+  LSvg: ISvg;
+begin
+  if FSvgSource <> '' then
+    begin
+      PrepareBenchmark('Factory    |  Load  |  Draw  | Total');
+
+      LSvg := GlobalSvgFactory.NewSvg;
+      LSvg.Source := FSvgSource;
+      LogTicks(FLine, FLastTick);
+
+      SVGIconImage.ImageIndex := -1;
+      SVGIconImageCollection.SVGIconItems.Clear;
+      SVGIconImageCollection.Add(LSvg, '');
+      SVGIconImage.ImageIndex := 0;
+      LogTicks(FLine, FLastTick);
+      LogTicks(FLine, FStartTick);
+    end;
+end;
+
+procedure TfrmBenchmark.RunBenchmark(AIndex: integer);
 
   procedure Benchmark(AProc: TPRoc);
   begin
@@ -189,13 +269,9 @@ procedure TfrmBenchmark.RunBenchmark(AFactoryName: string; AFactory: ISVGFactory
   end;
 
 begin
-  SetGlobalSvgFactory(AFactory);
+  SetFactory(AIndex);
 
-  FLine := Format('%-10s', [AFactoryName]);
-  memOutput.Lines.Add(FLine);
-
-  FStartTick := GetTickCount;
-  FLastTick := FStartTick;
+  PrepareBenchmark('');
 
   Benchmark(BenchmarkLoad);
   Benchmark(BenchmarkDraw);
@@ -213,6 +289,19 @@ begin
     end;
 
   LogTicks(FLine, FStartTick);
+end;
+
+procedure TfrmBenchmark.SetFactory(AIndex: integer);
+begin
+  case AIndex of
+    0:
+      SetGlobalSvgFactory(GetPasSVGFactory);
+    1:
+      SetGlobalSvgFactory(GetD2DSVGFactory);
+    2:
+      SetGlobalSvgFactory(GetCairoSVGFactory);
+  end;
+  grpFactory.ItemIndex := AIndex;
 end;
 
 end.
