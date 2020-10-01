@@ -2163,8 +2163,7 @@ begin
    if not FIdDict.TryGetValue(Name, Result) then
    begin
      Result := inherited FindById(Name);
-     if not FIdDict.ContainsKey(Name) then
-       FIdDict.Add(Name, Result);
+     FIdDict.Add(Name, Result);
    end;
 end;
 
