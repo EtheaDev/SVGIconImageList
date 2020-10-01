@@ -2163,7 +2163,8 @@ begin
    if not FIdDict.TryGetValue(Name, Result) then
    begin
      Result := inherited FindById(Name);
-     FIdDict.TryAdd(Name, Result);
+     if not FIdDict.ContainsKey(Name) then
+       FIdDict.Add(Name, Result);
    end;
 end;
 
@@ -4123,7 +4124,8 @@ function TSVGClipPath.ReadInAttr(SVGAttr: TSVGAttribute;
 begin
   Result := inherited;
   if FID <> '' then
-    Root.IdDict.TryAdd(FID, Self);
+    if not Root.IdDict.ContainsKey(FID) then
+      Root.IdDict.Add(FID, Self);
 end;
 
 {$ENDREGION}
