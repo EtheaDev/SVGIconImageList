@@ -29,6 +29,7 @@
 { Kiriakos Vlahos (Replacement of MSXLML with XMLite)              }
 { Kiriakos Vlahos (Refactoring parsing)                            }
 { Kiriakos Vlahos (Refactoring parsing Font)                       }
+{ Kiriakos Vlahos (Increase performances using Dictionary)         }
 {                                                                  }
 { This Software is distributed on an "AS IS" basis, WITHOUT        }
 { WARRANTY OF ANY KIND, either express or implied.                 }
@@ -107,7 +108,7 @@ type
     procedure Delete(Index: Integer);
     function Remove(Item: TSVGObject): Integer;
     function IndexOf(Item: TSVGObject): Integer;
-    function FindByID(const Name: string): TSVGObject;
+    function FindByID(const Name: string): TSVGObject; virtual;
     procedure CalculateMatrices;
     function ObjectBounds(IncludeStroke: Boolean = False;
       ApplyTranform: Boolean = False): TRectF; virtual;
@@ -278,6 +279,7 @@ end;
     FFileName: string;
     FGrayscale: Boolean;
     FFixedColor: TColor;
+    FIdDict: TDictionary<string, TSVGObject>;
 
     procedure SetViewBox(const Value: TRectF);
 
@@ -304,6 +306,7 @@ end;
 
     procedure DeReferenceUse;
     function GetStyleValue(const Name, Key: string): string;
+    function FindByID(const Name: string): TSVGObject; override;
 
     procedure LoadFromText(const Text: string);
     procedure LoadFromFile(const FileName: string);
@@ -329,6 +332,7 @@ end;
     property ViewBox: TRectF read FViewBox write SetViewBox;
     property Grayscale: boolean read FGrayscale write SetGrayscale;
     property FixedColor: TColor read FFixedColor write SetFixedColor;
+    property IdDict : TDictionary<string, TSVGObject> read FIdDict;
 
     class function Features: TSVGElementFeatures; override;
   end;
@@ -535,6 +539,8 @@ end;
   public
     destructor Destroy; override;
     procedure Clear; override;
+    function ReadInAttr(SVGAttr: TSVGAttribute; const AttrValue: string): Boolean; override;
+
     property ClipPath: TGPGraphicsPath read GetClipPath;
 
     class function Features: TSVGElementFeatures; override;
@@ -2137,17 +2143,28 @@ begin
   FillChar(FInitialMatrix, SizeOf(FInitialMatrix), 0);
   FGrayscale  := False;
   FFixedColor := SVG_INHERIT_COLOR;
+  FIdDict := TDictionary<string, TSVGObject>.Create;
 end;
 
 destructor TSVG.Destroy;
 begin
   FreeAndNil(FStyles);
+  FreeAndNil(FidDict);
   inherited;
 end;
 
 class function TSVG.Features: TSVGElementFeatures;
 begin
   Result := [sefMayHaveChildren, sefChildrenNeedPainting];
+end;
+
+function TSVG.FindByID(const Name: string): TSVGObject;
+begin
+   if not FIdDict.TryGetValue(Name, Result) then
+   begin
+     Result := inherited FindById(Name);
+     FIdDict.TryAdd(Name, Result);
+   end;
 end;
 
 procedure TSVG.Clear;
@@ -2158,6 +2175,8 @@ begin
 
   if Assigned(FStyles) then
     FStyles.Clear;
+  if Assigned(FIdDict) then
+    FIdDict.Clear;
 
   FillChar(FViewBox, SizeOf(FViewBox), 0);
   FillChar(FInitialMatrix, SizeOf(FInitialMatrix), 0);
@@ -4097,6 +4116,14 @@ begin
   if not Assigned(FClipPath) then
     ConstructClipPath;
   Result := FClipPath;
+end;
+
+function TSVGClipPath.ReadInAttr(SVGAttr: TSVGAttribute;
+  const AttrValue: string): Boolean;
+begin
+  Result := inherited;
+  if FID <> '' then
+    Root.IdDict.TryAdd(FID, Self);
 end;
 
 {$ENDREGION}

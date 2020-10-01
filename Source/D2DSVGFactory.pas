@@ -70,7 +70,9 @@ type
     procedure LoadFromSource;
     procedure SourceFromStream(Stream: TStream);
     procedure SvgFromStream(Stream: TStream);
+    {$IFDEF CheckForUnsupportedSvg}
     procedure CheckForUnsupportedSvg;
+    {$ENDIF}
   public
     constructor Create;
   end;
@@ -89,6 +91,7 @@ type
 
 { TD2DSVG }
 
+{$IFDEF CheckForUnsupportedSvg}
 procedure TD2DSVG.CheckForUnsupportedSvg;
 const
   cRegEx = '(\<(style|text)|class=\")';
@@ -96,6 +99,7 @@ begin
   if TRegEx.IsMatch(FSource, cRegEx, [roIgnoreCase]) then
     raise Exception.CreateRes(@D2D_ERROR_UNSUPPORTED_SVG);
 end;
+{$ENDIF}
 
 procedure TD2DSVG.Clear;
 Const
