@@ -38,10 +38,13 @@ type
   private const
     cEmptySvg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
   private
-    FSource   : string;
-    FSvgObject: IRSVGObject;
-    FHeight   : Single;
-    FWidth    : Single;
+    FSource    : string;
+    FSvgObject : IRSVGObject;
+    FWidth     : Single;
+    FHeight    : Single;
+    FFixedColor: TColor;
+    FGrayScale : Boolean;
+    FOpacity   : Single;
     // property access methods
     function GetWidth: Single;
     function GetHeight: Single;
@@ -96,16 +99,19 @@ end;
 constructor TCairoSVG.Create;
 begin
   FSvgObject := TRSVGObject.Create;
+  FFixedColor := TColors.SysDefault; // clDefault
+  FGrayScale := false;
+  FOpacity := 1.0;
 end;
 
 function TCairoSVG.GetFixedColor: TColor;
 begin
-
+  Result := FFixedColor;
 end;
 
 function TCairoSVG.GetGrayScale: Boolean;
 begin
-
+  Result := FGrayScale;
 end;
 
 function TCairoSVG.GetHeight: Single;
@@ -115,7 +121,7 @@ end;
 
 function TCairoSVG.GetOpacity: Single;
 begin
-
+  Result := FOpacity;
 end;
 
 function TCairoSVG.GetSource: string;
@@ -233,17 +239,17 @@ end;
 
 procedure TCairoSVG.SetFixedColor(const AColor: TColor);
 begin
-
+  // TODO: Implement recoloring
 end;
 
 procedure TCairoSVG.SetGrayScale(const IsGrayScale: Boolean);
 begin
-
+  // TODO: Implement recoloring
 end;
 
 procedure TCairoSVG.SetOpacity(const AOpacity: Single);
 begin
-
+  // TODO: Implement setting opacity
 end;
 
 procedure TCairoSVG.SetSource(const ASource: string);
