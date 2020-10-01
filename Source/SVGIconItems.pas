@@ -110,6 +110,7 @@ implementation
 
 uses
   System.SysUtils,
+  VCL.Controls,
   VCL.Themes,
 {$IFDEF D10_3+}
   BaseImageCollection,
