@@ -2,7 +2,7 @@ object frmBenchmark: TfrmBenchmark
   Left = 0
   Top = 0
   Caption = 'Benchmark'
-  ClientHeight = 361
+  ClientHeight = 545
   ClientWidth = 784
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -11,144 +11,208 @@ object frmBenchmark: TfrmBenchmark
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
-  object Splitter1: TSplitter
-    Left = 460
-    Top = 0
-    Height = 321
-    Align = alRight
-    Beveled = True
-    ExplicitLeft = 632
-    ExplicitTop = 176
-    ExplicitHeight = 100
+  object splHorizontal: TSplitter
+    Left = 0
+    Top = 422
+    Width = 784
+    Height = 3
+    Cursor = crVSplit
+    Align = alBottom
+    ExplicitTop = 400
   end
   object memOutput: TMemo
     Left = 0
-    Top = 0
-    Width = 460
-    Height = 321
-    Align = alClient
+    Top = 425
+    Width = 784
+    Height = 120
+    Align = alBottom
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'Consolas'
     Font.Style = []
     ParentFont = False
+    ReadOnly = True
+    ScrollBars = ssVertical
     TabOrder = 0
   end
   object SVGIconImage: TSVGIconImage
-    Left = 463
-    Top = 0
-    Width = 321
-    Height = 321
-    AutoSize = False
-    ImageList = imlIcons
-    Align = alRight
-  end
-  object pnlBottom: TPanel
     Left = 0
-    Top = 321
-    Width = 784
-    Height = 40
-    Align = alBottom
+    Top = 0
+    Width = 634
+    Height = 422
+    AutoSize = False
+    ParentDoubleBuffered = False
+    DoubleBuffered = True
+    ImageList = imlIcons
+    Align = alClient
+    ExplicitLeft = 463
+    ExplicitWidth = 321
+    ExplicitHeight = 321
+  end
+  object pnlButtons: TPanel
+    Left = 634
+    Top = 0
+    Width = 150
+    Height = 422
+    Align = alRight
     BevelOuter = bvNone
     TabOrder = 2
-    object lblLoops: TLabel
-      AlignWithMargins = True
-      Left = 550
-      Top = 12
-      Width = 28
-      Height = 20
-      Margins.Left = 5
-      Margins.Top = 12
-      Margins.Right = 5
-      Margins.Bottom = 8
-      Align = alRight
-      Caption = '&Loops'
-      FocusControl = speLoops
-      ExplicitHeight = 13
-    end
     object btnClear: TButton
       AlignWithMargins = True
-      Left = 109
-      Top = 3
-      Width = 100
-      Height = 34
-      Align = alLeft
-      Caption = '&Clear'
+      Left = 10
+      Top = 387
+      Width = 130
+      Height = 30
+      Margins.Left = 10
+      Margins.Top = 5
+      Margins.Right = 10
+      Margins.Bottom = 5
+      Align = alBottom
+      Caption = '&Clear Output'
       TabOrder = 0
       OnClick = btnClearClick
+      ExplicitLeft = 13
+      ExplicitTop = 401
     end
     object btnLoad: TButton
       AlignWithMargins = True
-      Left = 3
-      Top = 3
-      Width = 100
-      Height = 34
-      Align = alLeft
+      Left = 10
+      Top = 5
+      Width = 130
+      Height = 30
+      Margins.Left = 10
+      Margins.Top = 5
+      Margins.Right = 10
+      Margins.Bottom = 5
+      Align = alTop
       Caption = 'L&oad Image'
       TabOrder = 1
       OnClick = btnLoadClick
+      ExplicitLeft = 3
+      ExplicitTop = 52
+      ExplicitWidth = 94
     end
     object btnRunBenchmark: TButton
       AlignWithMargins = True
-      Left = 679
-      Top = 5
-      Width = 100
+      Left = 10
+      Top = 347
+      Width = 130
       Height = 30
-      Margins.Left = 5
+      Margins.Left = 10
       Margins.Top = 5
-      Margins.Right = 5
+      Margins.Right = 10
       Margins.Bottom = 5
-      Align = alRight
+      Align = alBottom
       Caption = '&Benchmark'
       TabOrder = 2
       OnClick = btnRunBenchmarkClick
-    end
-    object speLoops: TSpinEdit
-      AlignWithMargins = True
-      Left = 588
-      Top = 8
-      Width = 81
-      Height = 24
-      Margins.Left = 5
-      Margins.Top = 8
-      Margins.Right = 5
-      Margins.Bottom = 8
-      Align = alRight
-      MaxValue = 999
-      MinValue = 1
-      TabOrder = 3
-      Value = 50
+      ExplicitLeft = 5
+      ExplicitTop = 317
+      ExplicitWidth = 90
     end
     object chkGrayScale: TCheckBox
       AlignWithMargins = True
-      Left = 342
-      Top = 3
-      Width = 97
-      Height = 34
-      Align = alRight
+      Left = 10
+      Top = 257
+      Width = 130
+      Height = 20
+      Margins.Left = 10
+      Margins.Top = 5
+      Margins.Right = 10
+      Margins.Bottom = 5
+      Align = alBottom
       Caption = '&Grayscale'
       Checked = True
       State = cbChecked
-      TabOrder = 4
-      ExplicitLeft = 333
-      ExplicitTop = 6
+      TabOrder = 3
+      ExplicitTop = 230
     end
     object chkFixedColor: TCheckBox
       AlignWithMargins = True
-      Left = 445
-      Top = 3
-      Width = 97
-      Height = 34
-      Align = alRight
+      Left = 10
+      Top = 287
+      Width = 130
+      Height = 20
+      Margins.Left = 10
+      Margins.Top = 5
+      Margins.Right = 10
+      Margins.Bottom = 5
+      Align = alBottom
       Caption = '&Fixed Color'
       Checked = True
       State = cbChecked
+      TabOrder = 4
+      ExplicitTop = 200
+    end
+    object pnlLoops: TPanel
+      Left = 0
+      Top = 312
+      Width = 150
+      Height = 30
+      Align = alBottom
+      BevelOuter = bvNone
       TabOrder = 5
-      ExplicitLeft = 263
-      ExplicitTop = 6
+      ExplicitTop = 352
+      ExplicitWidth = 100
+      object lblLoops: TLabel
+        AlignWithMargins = True
+        Left = 10
+        Top = 8
+        Width = 28
+        Height = 17
+        Margins.Left = 10
+        Margins.Top = 8
+        Margins.Right = 5
+        Margins.Bottom = 5
+        Align = alLeft
+        Caption = '&Loops'
+        FocusControl = speLoops
+        ExplicitLeft = 6
+        ExplicitTop = 13
+        ExplicitHeight = 88
+      end
+      object speLoops: TSpinEdit
+        AlignWithMargins = True
+        Left = 48
+        Top = 5
+        Width = 92
+        Height = 22
+        Margins.Left = 5
+        Margins.Top = 5
+        Margins.Right = 10
+        Margins.Bottom = 5
+        Align = alClient
+        MaxValue = 999
+        MinValue = 1
+        TabOrder = 0
+        Value = 50
+        ExplicitLeft = 68
+        ExplicitTop = 0
+        ExplicitWidth = 50
+        ExplicitHeight = 30
+      end
+    end
+    object grpFactory: TRadioGroup
+      AlignWithMargins = True
+      Left = 10
+      Top = 45
+      Width = 130
+      Height = 105
+      Margins.Left = 10
+      Margins.Top = 5
+      Margins.Right = 10
+      Margins.Bottom = 5
+      Align = alTop
+      Caption = 'SVG Factory'
+      TabOrder = 6
+      OnClick = grpFactoryClick
+      ExplicitLeft = 40
+      ExplicitTop = 96
+      ExplicitWidth = 185
     end
   end
   object SVGIconImageCollection: TSVGIconImageCollection
