@@ -214,6 +214,23 @@ object frmBenchmark: TfrmBenchmark
       ExplicitTop = 96
       ExplicitWidth = 185
     end
+    object chkDrawVisible: TCheckBox
+      AlignWithMargins = True
+      Left = 10
+      Top = 227
+      Width = 130
+      Height = 20
+      Margins.Left = 10
+      Margins.Top = 5
+      Margins.Right = 10
+      Margins.Bottom = 5
+      Align = alBottom
+      Caption = '&Draw visible'
+      Checked = True
+      State = cbChecked
+      TabOrder = 7
+      ExplicitTop = 230
+    end
   end
   object SVGIconImageCollection: TSVGIconImageCollection
     SVGIconItems = <>
