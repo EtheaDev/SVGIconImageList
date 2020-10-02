@@ -92,6 +92,7 @@ type
     procedure Draw(ACanvas: TCanvas; ARect: TRect; AIndex: Integer; AProportional: Boolean = False); override;
     {$ELSE}
     procedure Change;
+    procedure Draw(ACanvas: TCanvas; ARect: TRect; AIndex: Integer; AProportional: Boolean = False);
     {$ENDIF}
 
     constructor Create(AOwner: TComponent); override;
@@ -421,6 +422,14 @@ begin
     Result := nil;
 end;
 
+{$ELSE}
+procedure TSVGIconImageCollection.Change;
+begin
+  FSVGItems.BeginUpdate;
+  FSVGItems.EndUpdate;
+end;
+{$ENDIF}
+
 procedure TSVGIconImageCollection.Draw(ACanvas: TCanvas; ARect: TRect; AIndex: Integer;
   AProportional: Boolean = False);
 var
@@ -441,12 +450,5 @@ begin
 
   LSVG.PaintTo(ACanvas.Handle, TRectF.Create(ARect), AProportional);
 end;
-{$ELSE}
-procedure TSVGIconImageCollection.Change;
-begin
-  FSVGItems.BeginUpdate;
-  FSVGItems.EndUpdate;
-end;
-{$ENDIF}
 
 end.

@@ -2090,6 +2090,7 @@ begin
   Graphics := TGPGraphics.Create(DC);
   try
     Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+    Graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
     PaintTo(Graphics, Bounds, Rects, RectCount);
   finally
     Graphics.Free;
@@ -2104,6 +2105,7 @@ begin
   Graphics := TGPGraphics.Create(MetaFile);
   try
     Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+    Graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
     PaintTo(Graphics, Bounds, Rects, RectCount);
   finally
     Graphics.Free;
@@ -2387,6 +2389,7 @@ begin
     Graphics := TGPGraphics.Create(Bitmap);
     try
       Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+      Graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
       R := FittedRect(MakeRect(0.0, 0.0, Width, Height), FWidth, FHeight);
       PaintTo(Graphics, R, nil, 0);
     finally
@@ -2413,6 +2416,7 @@ begin
     Graphics := TGPGraphics.Create(Bitmap);
     try
       Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
+      Graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
       R := FittedRect(MakeRect(0.0, 0, Size, Size), Width, Height);
       PaintTo(Graphics, R, nil, 0);
     finally
@@ -2434,13 +2438,12 @@ begin
   ViewBoxMatrix := TAffineMatrix.CreateTranslation(-FViewBox.Left, -FViewBox.Top);
   BoundsMatrix := TAffineMatrix.CreateTranslation(FRootBounds.X, FRootBounds.Y);
 
-  // The -1 below is for fixing #14. There may well be a better way.
   if (FViewBox.Width > 0) and (FRootBounds.Width > 0) then
-    ScaleX := (FRootBounds.Width - 1) / FViewBox.Width
+    ScaleX := (FRootBounds.Width) / FViewBox.Width
   else
     ScaleX := 1;
   if (FViewBox.Height > 0) and (FRootBounds.Height > 0) then
-    ScaleY := (FRootBounds.Height - 1)/ FViewBox.Height
+    ScaleY := (FRootBounds.Height)/ FViewBox.Height
   else
     ScaleY := 1;
   ScaleMatrix := TAffineMatrix.CreateScaling(ScaleX, ScaleY);
