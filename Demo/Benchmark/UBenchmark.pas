@@ -34,6 +34,7 @@ type
     splHorizontal: TSplitter;
     pnlLoops: TPanel;
     grpFactory: TRadioGroup;
+    chkDrawVisible: TCheckBox;
     SVGIconVirtualImageList: TSVGIconVirtualImageList;
     procedure btnClearClick(Sender: TObject);
     procedure btnLoadClick(Sender: TObject);
@@ -71,6 +72,7 @@ uses
   D2DSVGFactory,
   PasSVGFactory,
   System.IOUtils,
+  System.StrUtils,
   System.TypInfo,
   System.Types;
 
@@ -84,21 +86,43 @@ type
   end;
 
 procedure TfrmBenchmark.BenchmarkDraw;
+
+  procedure DrawOnCanvas(ACanvas: TCanvas);
+  var
+    I    : integer;
+    LStep: real;
+    LSize: real;
+    LRect: TRect;
+  begin
+    LStep := ACanvas.ClipRect.Height / speLoops.Value;
+    LSize := 0;
+
+    for I := 1 to speLoops.Value do
+      begin
+        LSize := LSize + LStep;
+        LRect := TRect.Create(0, 0, Round(LSize), Round(LSize));
+
+        SvgIconImageCollection.Draw(ACanvas, LRect, 0, true);
+      end;
+  end;
+
 var
-  I    : integer;
-  LStep: real;
-  LSize: real;
-  LRect: TRect;
+  LBitmap: TBitmap;
 begin
   // Benchmark Draw
-  LStep := SvgIconImage.Height / speLoops.Value;
-  LSize := 0;
-  for I := 1 to speLoops.Value do
+  if chkDrawVisible.Checked then
+    DrawOnCanvas(TCanvasImage(SVGIconImage).Canvas)
+  else
     begin
-      LSize := LSize + LStep;
-      LRect := TRect.Create(0, 0, Round(LSize), Round(LSize));
+      LBitmap := TBitmap.Create;
+      try
+        LBitmap.Width := SvgIconImage.Height;
+        LBitmap.Width := SvgIconImage.Width;
 
-      SvgIconImageCollection.Draw(TCanvasImage(SVGIconImage).Canvas, LRect, 0, true);
+        DrawOnCanvas(LBitmap.Canvas);
+      finally
+        LBitmap.Free;
+      end;
     end;
 end;
 
@@ -182,7 +206,7 @@ begin
         LLine := LLine + '|  Total';
 
         memOutput.Lines.Add('');
-        memOutput.Lines.Add(Format('Benchmark Repeat %d times', [speLoops.Value]));
+        memOutput.Lines.Add(Format('Benchmark: Repeat %d times. Draw %svisible.', [speLoops.Value, IfThen(chkDrawVisible.Checked, '', 'in')]));
 
         memOutput.Lines.Add(LLine);
         RunBenchmark(0);
