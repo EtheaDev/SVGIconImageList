@@ -15,7 +15,7 @@ uses
   Vcl.ImgList,
   SVGInterfaces,
   SVGIconImageCollection, SVGIconImage, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  SVGIconImageListBase, SVGIconVirtualImageList;
+  SVGIconImageListBase, SVGIconVirtualImageList, Vcl.BaseImageCollection;
 
 type
   TfrmBenchmark = class(TForm)
@@ -72,6 +72,7 @@ uses
   D2DSVGFactory,
   PasSVGFactory,
   System.IOUtils,
+  System.Math,
   System.StrUtils,
   System.TypInfo,
   System.Types;
@@ -94,7 +95,7 @@ procedure TfrmBenchmark.BenchmarkDraw;
     LSize: real;
     LRect: TRect;
   begin
-    LStep := ACanvas.ClipRect.Height / speLoops.Value;
+    LStep := Min(ACanvas.ClipRect.Width, ACanvas.ClipRect.Height) / speLoops.Value;
     LSize := 0;
 
     for I := 1 to speLoops.Value do
