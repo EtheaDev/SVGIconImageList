@@ -1,18 +1,25 @@
+{-----------------------------------------------------------------------------
+ Unit Name: UBenchmark
+ Author:    Lübbe Onken
+ Purpose:   Main form for SVG Factories Benchmark
+ History:
+-----------------------------------------------------------------------------}
 unit UBenchmark;
 
 interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, System.ImageList,
-  Vcl.ImgList, Vcl.VirtualImageList, Vcl.BaseImageCollection,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+  System.ImageList, //if you are compiling with older version than XE7 remove this line
+  Vcl.ImgList,
   SVGInterfaces,
-  SVGIconImageCollection, SVGIconImage, Vcl.Samples.Spin, Vcl.ExtCtrls;
+  SVGIconImageCollection, SVGIconImage, Vcl.Samples.Spin, Vcl.ExtCtrls,
+  SVGIconImageListBase, SVGIconVirtualImageList;
 
 type
   TfrmBenchmark = class(TForm)
     SVGIconImageCollection: TSVGIconImageCollection;
-    imlIcons: TVirtualImageList;
     memOutput: TMemo;
     btnClear: TButton;
     btnLoad: TButton;
@@ -27,7 +34,7 @@ type
     splHorizontal: TSplitter;
     pnlLoops: TPanel;
     grpFactory: TRadioGroup;
-    chkDrawVisible: TCheckBox;
+    SVGIconVirtualImageList: TSVGIconVirtualImageList;
     procedure btnClearClick(Sender: TObject);
     procedure btnLoadClick(Sender: TObject);
     procedure btnRunBenchmarkClick(Sender: TObject);
@@ -64,7 +71,6 @@ uses
   D2DSVGFactory,
   PasSVGFactory,
   System.IOUtils,
-  System.StrUtils,
   System.TypInfo,
   System.Types;
 
@@ -78,43 +84,21 @@ type
   end;
 
 procedure TfrmBenchmark.BenchmarkDraw;
-
-  procedure DrawOnCanvas(ACanvas: TCanvas);
-  var
-    I    : integer;
-    LStep: real;
-    LSize: real;
-    LRect: TRect;
-  begin
-    LStep := ACanvas.ClipRect.Height / speLoops.Value;
-    LSize := 0;
-
-    for I := 1 to speLoops.Value do
-      begin
-        LSize := LSize + LStep;
-        LRect := TRect.Create(0, 0, Round(LSize), Round(LSize));
-
-        SvgIconImageCollection.Draw(ACanvas, LRect, 0, true);
-      end;
-  end;
-
 var
-  LBitmap: TBitmap;
+  I    : integer;
+  LStep: real;
+  LSize: real;
+  LRect: TRect;
 begin
   // Benchmark Draw
-  if chkDrawVisible.Checked then
-    DrawOnCanvas(TCanvasImage(SVGIconImage).Canvas)
-  else
+  LStep := SvgIconImage.Height / speLoops.Value;
+  LSize := 0;
+  for I := 1 to speLoops.Value do
     begin
-      LBitmap := TBitmap.Create;
-      try
-        LBitmap.Width := SvgIconImage.Height;
-        LBitmap.Width := SvgIconImage.Width;
+      LSize := LSize + LStep;
+      LRect := TRect.Create(0, 0, Round(LSize), Round(LSize));
 
-        DrawOnCanvas(LBitmap.Canvas);
-      finally
-        LBitmap.Free;
-      end;
+      SvgIconImageCollection.Draw(TCanvasImage(SVGIconImage).Canvas, LRect, 0, true);
     end;
 end;
 
@@ -198,7 +182,7 @@ begin
         LLine := LLine + '|  Total';
 
         memOutput.Lines.Add('');
-        memOutput.Lines.Add(Format('Benchmark: Repeat %d times. Draw %svisible.', [speLoops.Value, IfThen(chkDrawVisible.Checked, '', 'in')]));
+        memOutput.Lines.Add(Format('Benchmark Repeat %d times', [speLoops.Value]));
 
         memOutput.Lines.Add(LLine);
         RunBenchmark(0);
@@ -214,6 +198,7 @@ end;
 
 procedure TfrmBenchmark.FormCreate(Sender: TObject);
 begin
+  Caption := Application.Title;
   FInBenchmark := false;
   grpFactory.Items.Add('Pascal');
   grpFactory.Items.Add('Direct 2D');

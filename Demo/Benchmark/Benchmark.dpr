@@ -8,6 +8,7 @@ uses
 
 begin
   Application.Initialize;
+  Application.Title := 'SVG Icons - Factories Benchmark';
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TfrmBenchmark, frmBenchmark);
   Application.Run;
