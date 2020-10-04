@@ -431,9 +431,9 @@ end;
 
   TSVGPath = class(TSVGShape)
   private
-    procedure PrepareMoveLineCurveArc(const ACommand: Char; SL: TStrings);
-    procedure SeparateValues(const ACommand: Char; const S: string; Values: TStrings);
-    function Split(const S: string): TStrings;
+    function SeparateValues(const ACommand: Char; const S: string; CommandList:
+        TList<Char>; ValueList: TList<TFloat>): Boolean;
+    procedure Split(const S: string; CommandList: TList<Char>;  ValueList: TList<TFloat>);
   protected
     procedure ConstructPath; override;
   public
@@ -2989,46 +2989,19 @@ begin
   end;
 end;
 
-procedure TSVGPath.PrepareMoveLineCurveArc(const ACommand: Char; SL: TStrings);
-var
-  C: Integer;
-  D: Integer;
-  Command: Char;
-begin
-  case ACommand of
-    'M': Command := 'L';
-    'm': Command := 'l';
-  else
-    Command := ACommand;
-  end;
-
-  case Command of
-    'A', 'a':                     D := 7;
-    'C', 'c':                     D := 6;
-    'S', 's', 'Q', 'q':           D := 4;
-    'T', 't', 'M', 'm', 'L', 'l': D := 2;
-    'H', 'h', 'V', 'v':           D := 1;
-  else
-    D := 0;
-  end;
-
-  if (D = 0) or (SL.Count = D + 1) or ((SL.Count - 1) mod D = 1) then
-    Exit;
-
-  for C := SL.Count - D downto (D + 1) do
-  begin
-    if (C - 1) mod D = 0 then
-      SL.Insert(C, Command);
-  end;
-end;
-
-procedure TSVGPath.SeparateValues(const ACommand: Char;
-  const S: string; Values: TStrings);
+function TSVGPath.SeparateValues(const ACommand: Char;
+  const S: string; CommandList: TList<Char>;  ValueList: TList<TFloat>): Boolean;
 var
   I, NumStart: Integer;
   HasDot: Boolean;
   HasExp: Boolean;
+  OldCount: Integer;
+  AddedCount: Integer;
+  ExpectedValueCount: Integer;
+  RepeatCommand: Char;
 begin
+  OldCount := ValueList.Count;
+
   HasDot := False;
   HasExp := False;
   NumStart := 1;
@@ -3040,7 +3013,7 @@ begin
         begin
           if HasDot or HasExp then
           begin
-            Values.Add(Copy(S, NumStart, I - NumStart));
+            ValueList.Add(StrToTFloat(Copy(S, NumStart, I - NumStart)));
             NumStart := I;
             HasExp := False;
           end;
@@ -3052,7 +3025,7 @@ begin
           if I > NumStart then
           begin
             if not HasExp or (UpCase(S[I-1]) <> 'E') then begin
-              Values.Add(Copy(S, NumStart, I-NumStart));
+              ValueList.Add(StrToTFloat(Copy(S, NumStart, I-NumStart)));
               HasDot := False;
               HasExp := False;
               NumStart := I;
@@ -3065,7 +3038,7 @@ begin
         begin
           if I > NumStart then
           begin
-            Values.Add(Copy(S, NumStart, I-NumStart));
+            ValueList.Add(StrToTFloat(Copy(S, NumStart, I-NumStart)));
             HasDot := False;
             HasExp := False;
           end;
@@ -3076,60 +3049,63 @@ begin
 
   if S.Length  + 1 > NumStart then
   begin
-    Values.Add(Copy(S, NumStart, S.Length + 1 - NumStart));
+    ValueList.Add(StrToTFloat(Copy(S, NumStart, S.Length + 1 - NumStart)));
   end;
 
-  Values.Insert(0, ACommand);
+  AddedCount := ValueList.Count - OldCount;
 
-  if Values.Count > 0 then
+  case AnsiChar(ACommand) of
+    'A', 'a':                     ExpectedValueCount := 7;
+    'C', 'c':                     ExpectedValueCount := 6;
+    'S', 's', 'Q', 'q':           ExpectedValueCount := 4;
+    'T', 't', 'M', 'm', 'L', 'l': ExpectedValueCount := 2;
+    'H', 'h', 'V', 'v':           ExpectedValueCount := 1;
+  else
+    ExpectedValueCount := 0;
+  end;
+
+  Result := ((ExpectedValueCount = 0) and (AddedCount = 0)) or
+    ((AddedCount >= ExpectedValueCount) and (AddedCount mod ExpectedValueCount = 0));
+
+  if Result then
   begin
-    if ACommand.IsInArray(['M', 'm', 'L', 'l', 'H', 'h', 'V', 'v',
-      'C', 'c', 'S', 's', 'Q', 'q', 'T', 't', 'A', 'a']) then
+    CommandList.Add(ACommand);
+    if AddedCount > ExpectedValueCount then
     begin
-      PrepareMoveLineCurveArc(ACommand, Values);
-    end
-    else if (ACommand = 'Z') or (ACommand = 'z') then
-    begin
-      while Values.Count > 1 do
-      begin
-        Values.Delete(1);
+      case ACommand of
+        'M': RepeatCommand := 'L';
+        'm': RepeatCommand := 'l';
+      else
+        RepeatCommand := ACommand;
       end;
+      for I := 2 to AddedCount div ExpectedValueCount do
+        CommandList.Add(RepeatCommand);
     end;
   end;
 end;
 
-function TSVGPath.Split(const S: string): TStrings;
+procedure TSVGPath.Split(const S: string; CommandList: TList<Char>;  ValueList: TList<TFloat>);
 var
   Part: string;
-  SL: TStrings;
   Found: Integer;
   StartIndex: Integer;
   SLength: Integer;
 const
-  IDs: array [0..19] of Char = ('M', 'm', 'L', 'l', 'H', 'h', 'V', 'v',
-    'C', 'c', 'S', 's', 'Q', 'q', 'T', 't', 'A', 'a', 'Z', 'z');
+  IDs: TSysCharSet = ['M', 'm', 'L', 'l', 'H', 'h', 'V', 'v',
+    'C', 'c', 'S', 's', 'Q', 'q', 'T', 't', 'A', 'a', 'Z', 'z'];
 begin
-  Result := TStringList.Create;
-
-  StartIndex := 0;
+  StartIndex := 1;
   SLength := Length(S);
-  SL := TStringList.Create;
-  try
-    while StartIndex < SLength do
-    begin
-      Found := S.IndexOfAny(IDs, StartIndex + 1);
-      if Found = -1 then
-      begin
-        Found := SLength;
-      end;
-      Part := S.Substring(StartIndex + 1, Found - StartIndex - 1).Trim;
-      SL.Clear;
-      SeparateValues(S[StartIndex + 1], Part, SL);
-      Result.AddStrings(SL);
-      StartIndex := Found;
-    end;
-  finally
-    SL.Free;
+  while StartIndex <= SLength do
+  begin
+    if not (AnsiChar(S[StartIndex]) in IDs) then Exit;  // invalid path
+    Found := StartIndex + 1;
+    while (Found <= SLength) and not (AnsiChar(S[Found]) in IDs) do
+      Inc(Found);
+    Part := Trim(Copy(S, StartIndex + 1, Found - StartIndex -1));
+    if not SeparateValues(S[StartIndex], Part, CommandList, ValueList) then
+      Break;
+    StartIndex := Found;
   end;
 end;
 
@@ -3137,9 +3113,13 @@ function TSVGPath.ReadInAttr(SVGAttr: TSVGAttribute;
   const AttrValue: string): Boolean;
 var
   S: string;
-  SL: TStrings;
   C: Integer;
   P: PChar;
+  Command: Char;
+  VListPos: Integer;
+
+  CommandList: TList<Char>;
+  ValueList: TList<TFloat>;
 
   Element: TSVGPathElement;
   LastElement: TSVGPathElement;
@@ -3163,44 +3143,48 @@ begin
 
   if S = '' then Exit;
 
-  SL := Split(S);
-
+  CommandList := TList<Char>.Create;
+  ValueList := TList<TFloat>.Create;
   try
-    C := 0;
+    Split(S, CommandList, ValueList);
+
     LastElement := nil;
+    VListPos := 0;
 
-    if SL.Count > 0 then
-      repeat
-        case SL[C][1] of
-          'M', 'm': Element := TSVGPathMove.Create(Self);
+    for C := 0 to CommandList.Count-1 do
+    begin
+      Command := CommandList[C];
 
-          'L', 'l': Element := TSVGPathLine.Create(Self);
+      case AnsiChar(Command) of
+        'M', 'm': Element := TSVGPathMove.Create(Self);
 
-          'H', 'h', 'V', 'v': Element := TSVGPathLine.Create(Self);
+        'L', 'l': Element := TSVGPathLine.Create(Self);
 
-          'C', 'c': Element := TSVGPathCurve.Create(Self);
+        'H', 'h', 'V', 'v': Element := TSVGPathLine.Create(Self);
 
-          'S', 's', 'Q', 'q': Element := TSVGPathCurve.Create(Self);
+        'C', 'c': Element := TSVGPathCurve.Create(Self);
 
-          'T', 't': Element := TSVGPathCurve.Create(Self);
+        'S', 's', 'Q', 'q': Element := TSVGPathCurve.Create(Self);
 
-          'A', 'a': Element := TSVGPathEllipticArc.Create(Self);
+        'T', 't': Element := TSVGPathCurve.Create(Self);
 
-          'Z', 'z': Element := TSVGPathClose.Create(Self);
+        'A', 'a': Element := TSVGPathEllipticArc.Create(Self);
 
-        else
-          Element := nil;
-        end;
+        'Z', 'z': Element := TSVGPathClose.Create(Self);
 
-        if Assigned(Element) then
-        begin
-          Element.Read(SL, C, LastElement);
-          LastElement := Element;
-        end;
-        Inc(C);
-      until C = SL.Count;
+      else
+        Element := nil;
+      end;
+
+      if Assigned(Element) then
+      begin
+        Element.Read(Command, ValueList, VListPos, LastElement);
+        LastElement := Element;
+      end;
+    end;
   finally
-    SL.Free;
+    CommandList.Free;
+    ValueList.Free;
   end;
 end;
 
