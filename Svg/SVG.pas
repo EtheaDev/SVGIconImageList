@@ -3113,7 +3113,6 @@ function TSVGPath.ReadInAttr(SVGAttr: TSVGAttribute;
   const AttrValue: string): Boolean;
 var
   C: Integer;
-  P: PChar;
   Command: Char;
   VListPos: Integer;
 
