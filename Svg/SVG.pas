@@ -3034,7 +3034,7 @@ begin
         end;
       'E', 'e':
         HasExp := True;
-      ' ', #9, #$A, #$D:
+      ' ', ',', #9, #$A, #$D:
         begin
           if I > NumStart then
           begin
@@ -3112,7 +3112,6 @@ end;
 function TSVGPath.ReadInAttr(SVGAttr: TSVGAttribute;
   const AttrValue: string): Boolean;
 var
-  S: string;
   C: Integer;
   P: PChar;
   Command: Char;
@@ -3127,26 +3126,18 @@ begin
   Result := True;
   if SVGAttr = saD then
   begin
-    if AttrValue.Length > 0 then
-    begin
-      SetString(S, PChar(AttrValue), AttrValue.Length); // UniqueString
-      P := PChar(S);
-      while P^ <> #0 do
-      begin
-        if P^ = ',' then
-          P^ := ' ';
-        Inc(P);
-      end;
-    end;
+    if AttrValue.Length = 0 then
+      Exit;
   end else
+  begin
     Result := inherited;
-
-  if S = '' then Exit;
+    Exit;
+  end;
 
   CommandList := TList<Char>.Create;
   ValueList := TList<TFloat>.Create;
   try
-    Split(S, CommandList, ValueList);
+    Split(AttrValue, CommandList, ValueList);
 
     LastElement := nil;
     VListPos := 0;
