@@ -57,7 +57,7 @@
         <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
         <SanitizedProjectName>SVGExplorer</SanitizedProjectName>
-        <DCC_UnitSearchPath>..\..\SVGIconImageList\Svg;..\..\SVGIconImageList\Source;..\..\SVGIconImageList\GDIP;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\SVGIconImageList\Svg;..\..\SVGIconImageList\Source;..\..\SVGIconImageList\Cairo;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_Locale>1040</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=Ethea S.r.l.;FileDescription=SVG Icon Explorer;FileVersion=1.1.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=;ProductName=SVG Icon Explorer;ProductVersion=1.1;Comments=</VerInfo_Keys>
         <DCC_ExeOutput>.\Bin</DCC_ExeOutput>
@@ -134,11 +134,6 @@
                     <Source Name="MainSource">SVGExplorer.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\dclLiscorRTL_10_3.bpl">*** Liscor RTL Design Package for D10.3 ***</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\dclLiscorVCL_D10_3.bpl">*** Liscor VCL Design Package for D10.3 ***</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\XDBLISCOR10_3CL.bpl">*** Liscor - XDB Components for Delphi Rio 10.3 e ReportBuilder 20 ***</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\dclDCPcrypt_D10_3.bpl">DCPcrypt cryptographic component library v2 B3</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k260.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
