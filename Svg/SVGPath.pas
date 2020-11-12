@@ -181,7 +181,10 @@ end;
 
 procedure TSVGPathMove.AddToPath(Path: TGPGraphicsPath);
 begin
-  Path.CloseFigure;
+  if Assigned(Parent) and (Parent is TSvgPath) and
+    (TSvgPath(Parent).FillColor <> SVG_NONE_COLOR)
+  then
+    Path.CloseFigure;
   Path.StartFigure;
 end;
 
@@ -326,6 +329,11 @@ begin
     begin
       FControl1X := FStartX + (FStartX - TSVGPathCurve(Previous).FControl2X);
       FControl1Y := FStartY + (FStartY - TSVGPathCurve(Previous).FControl2Y);
+    end
+    else
+    begin
+      FControl1X := FStartX;
+      FControl1Y := FStartY;
     end;
 
     if Command = 's' then
