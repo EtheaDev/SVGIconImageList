@@ -87,21 +87,11 @@ begin
   Result := True;
 end;
 
-function IsFloat(const S: string): Boolean;
-var
-  C: Integer;
-begin
-  Result := False;
-  for C := 1 to Length(S) do
-    if not (((S[C] >= '0') and (S[C] <= '9')) or (S[C] = '.')) then
-      Exit;
-  Result := True;
-end;
-
 function DecodeSVGColorToInt(const S: string): Integer;
 var
   C: Integer;
   Percent: Boolean;
+  ColorFloat: Extended;
   Help: string;
   LFormatSettings: TFormatSettings;
 begin
@@ -126,13 +116,16 @@ begin
     if Percent then
       C := Round(C * 2.55);
   end
-  else if IsFloat(Help) then
+  else
   begin
     LFormatSettings.DecimalSeparator := '.';
-    if Percent then
-      C := Round(StrToFloat(Help, LFormatSettings)*2.55)
-    else
-      C := Round(StrToFloat(Help, LFormatSettings));
+    If TryStrToFloat(Help, ColorFloat, LFormatSettings) then
+    begin
+      if Percent then
+        C := Round(ColorFloat * 2.55)
+      else
+        C := Round(ColorFloat);
+    end;
   end;
   if C = SVG_INHERIT_COLOR then
     Exit;
