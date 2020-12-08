@@ -227,11 +227,8 @@ end;
 
 procedure TSVGIconFixedBitmapItem.SetSize(const AValue: Integer);
 begin
-  if (Trunc(AValue) > 0) and (AValue <> FSize) then
-  begin
-    FSize := AValue;
-    DrawSVGIcon;
-  end;
+  FSize := AValue;
+  DrawSVGIcon;
 end;
 
 procedure TSVGIconFixedBitmapItem.SetSVGText(const Value: string);
@@ -271,14 +268,14 @@ end;
 
 procedure TSVGIconImage.SetBitmapSize(const AValue: Integer);
 begin
-  if AValue <> 0 then
+  if (AValue <> 0) and not (csLoading in Self.ComponentState) then
     FSVGIconMultiResBitmap.UpdateImageSize(AValue);
 end;
 
 procedure TSVGIconImage.SetBounds(X, Y, AWidth, AHeight: Single);
 begin
   inherited;
-  BitmapSize := Trunc(Min(AWidth, AHeight));
+  BitmapSize := Round(Min(AWidth, AHeight));
 end;
 
 initialization

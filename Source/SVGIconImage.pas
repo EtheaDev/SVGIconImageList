@@ -76,6 +76,7 @@ type
     procedure ImageListChange(Sender: TObject);
     procedure SetFixedColor(const Value: TColor);
     procedure SetGrayScale(const Value: Boolean);
+    function GetInheritedFixedColor: TColor;
   private
     function GetSVGText: string;
     procedure SetSVGText(const AValue: string);
@@ -222,6 +223,14 @@ begin
   Empty := FSVG.IsEmpty;
 end;
 
+function TSVGIconImage.GetInheritedFixedColor: TColor;
+begin
+  if FImageList is TSVGIconImageListBase then
+    Result := TSVGIconImageListBase(FImageList).FixedColor
+  else
+    Result := SVG_INHERIT_COLOR;
+end;
+
 function TSVGIconImage.GetSVGText: string;
 begin
   if not UsingSVGText then
@@ -266,7 +275,10 @@ begin
   if not LSVG.IsEmpty then
   begin
     LSVG.Opacity := FOpacity / 255;
-    LSVG.FixedColor := FFixedColor;
+    if FFixedColor <> SVG_INHERIT_COLOR then
+      LSVG.FixedColor := FFixedColor
+    else
+      LSVG.FixedColor := GetInheritedFixedColor;
     LSVG.GrayScale := FGrayScale;
     LSVG.PaintTo(Canvas.Handle, TRectF.Create(TPointF.Create(0, 0), Width, Height), FProportional);
     LSVG.Opacity := 1;
@@ -290,6 +302,7 @@ begin
     FFileName := FileName;
   except
     Clear;
+    raise;
   end;
   CheckAutoSize;
   Repaint;
@@ -301,6 +314,8 @@ begin
     FFileName := '';
     FSVG.LoadFromStream(Stream);
   except
+    FSVG.Clear;
+    raise;
   end;
   CheckAutoSize;
   Repaint;
@@ -465,11 +480,7 @@ procedure TSVGGraphic.Assign(Source: TPersistent);
 begin
   if (Source is TSVGGraphic) then
   begin
-    try
-      //AssignSVG(TSVGGraphic(Source).FSVG);
-      FSVG := TSVGGraphic(Source).FSVG;
-    except
-    end;
+    FSVG := TSVGGraphic(Source).FSVG;
     Changed(Self);
   end;
 end;
@@ -593,10 +604,7 @@ end;
 
 procedure TSVGGraphic.LoadFromStream(Stream: TStream);
 begin
-  try
-    FSVG.LoadFromStream(Stream);
-  except
-  end;
+  FSVG.LoadFromStream(Stream);
   Changed(Self);
 end;
 

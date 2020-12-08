@@ -64,7 +64,7 @@ function ParseFontWeight(const S: string): Integer;
 
 procedure ParseTextDecoration(const S: string; var TD: TTextDecoration);
 
-function ParseFontStyle(AFontStyle: string): Integer;
+function ParseFontStyle(const AFontStyle: string): Integer;
 
 implementation
 
@@ -545,7 +545,7 @@ begin
    end;
 end;
 
-function ParseFontStyle(AFontStyle: string): Integer;
+function ParseFontStyle(const AFontStyle: string): Integer;
 begin
    Result := FontNormal;
    if AFontStyle = 'italic' then

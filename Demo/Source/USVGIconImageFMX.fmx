@@ -16,7 +16,6 @@ object SVGIconImageForm: TSVGIconImageForm
     MultiResBitmap.Width = 16
     MultiResBitmap = <
       item
-        Opacity = 1.000000000000000000
         Size = 182
         IconName = 'low-priority'
         SVGText = 
