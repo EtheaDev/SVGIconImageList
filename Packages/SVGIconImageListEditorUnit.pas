@@ -169,6 +169,8 @@ type
     FOpenDialog: TOpenPictureDialogSvg;
     FSelectedCategory: string;
     FSourceList, FEditingList: TSVGIconImageList;
+    FImageCollection: TSVGIconImageCollection;
+    FSVGIconVirtualImageList: TSVGIconVirtualImageList;
     FTotIconsLabel: string;
     FUpdating: Boolean;
     FChanged: Boolean;
@@ -177,6 +179,8 @@ type
     procedure BuildList(Selected: Integer);
     procedure UpdateCategories;
     procedure Apply;
+    procedure ApplyToImageCollection;
+    procedure ApplyToSVGIconVirtualImageList;
     procedure UpdateGUI;
     function SelectedIcon: TSVGIconItem;
     procedure UpdateSizeGUI;
@@ -261,6 +265,7 @@ begin
     try
       Screen.Cursor := crHourglass;
       try
+        FSVGIconVirtualImageList := AImageList;
         FSourceList := TSVGIconImageList.Create(LEditor);
         FSourceList.Assign(AImageList);
         FEditingList.Assign(AImageList);
@@ -273,8 +278,7 @@ begin
       begin
         Screen.Cursor := crHourglass;
         try
-          AImageList.ImageCollection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
-          AImageList.Assign(LEditor.FEditingList);
+          ApplyToSVGIconVirtualImageList;
         finally
           Screen.Cursor := crDefault;
         end;
@@ -297,6 +301,7 @@ begin
     try
       Screen.Cursor := crHourglass;
       try
+        FImageCollection := AImageCollection;
         FSourceList := TSVGIconImageList.Create(LEditor);
         FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
         FSourceList.Size := 64; //Force 64 pixel size for image collection icons
@@ -315,10 +320,7 @@ begin
       begin
         Screen.Cursor := crHourglass;
         try
-          AImageCollection.SVGIconItems.Assign(LEditor.FEditingList.SVGIconItems);
-          AImageCollection.GrayScale := GrayScaleCheckBox.Checked;
-          AImageCollection.FixedColor := FixedColorComboBox.Selected;
-          AImageCollection.AntiAliasColor := AntialiasColorComboBox.Selected;
+          ApplyToImageCollection;
         finally
           Screen.Cursor := crDefault;
         end;
@@ -329,9 +331,7 @@ begin
       Free;
     end;
   end;
-
 end;
-
 
 { TSVGIconImageListEditor }
 
@@ -346,6 +346,20 @@ procedure TSVGIconImageListEditor.ApplyButtonClick(Sender: TObject);
 begin
   Apply;
   UpdateGUI;
+end;
+
+procedure TSVGIconImageListEditor.ApplyToImageCollection;
+begin
+  FImageCollection.SVGIconItems.Assign(FEditingList.SVGIconItems);
+  FImageCollection.GrayScale := GrayScaleCheckBox.Checked;
+  FImageCollection.FixedColor := FixedColorComboBox.Selected;
+  FImageCollection.AntiAliasColor := AntialiasColorComboBox.Selected;
+end;
+
+procedure TSVGIconImageListEditor.ApplyToSVGIconVirtualImageList;
+begin
+  FSVGIconVirtualImageList.ImageCollection.SVGIconItems.Assign(FEditingList.SVGIconItems);
+  FSVGIconVirtualImageList.Assign(FEditingList);
 end;
 
 procedure TSVGIconImageListEditor.AddButtonClick(Sender: TObject);
@@ -407,6 +421,10 @@ begin
     SetCategoriesButton.Enabled := LIsItemSelected;
     ApplyButton.Enabled := FChanged;
     NameEdit.Enabled := LIsItemSelected;
+    CategoryEdit.Enabled := LIsItemSelected;
+    FixedColorItemComboBox.Enabled := LIsItemSelected;
+    GrayScaleItemCheckBox.Enabled := LIsItemSelected;
+    IconIndexEdit.Enabled := LIsItemSelected;
     SVGText.Enabled := LIsItemSelected;
     ImageListGroup.Caption := Format(FTotIconsLabel, [FEditingList.Count]);
     GrayScaleCheckBox.Checked := SVGIconImageList.GrayScale;
@@ -416,6 +434,9 @@ begin
     if LIsItemSelected then
     begin
       IconImage.ImageIndex := SelectedIcon.Index;
+      IconImage.Opacity := SVGIconImageList.Opacity;
+      IconImage.FixedColor := SelectedIcon.FixedColor;
+      IconImage.GrayScale := SVGIconImageList.GrayScale or SelectedIcon.GrayScale;
       NameEdit.Text := LIconItem.Name;
       CategoryEdit.Text := LIconItem.Category;
       IconIndexEdit.Text := LIconItem.Index.ToString;
@@ -429,6 +450,10 @@ begin
       ItemGroupBox.Caption := '';
       NameEdit.Text := '';
       SVGText.Lines.Text := '';
+      CategoryEdit.Text := '';
+      FixedColorItemComboBox.Selected := clDefault;
+      GrayScaleItemCheckBox.Checked := False;
+      IconIndexEdit.Text := '';
     end;
   finally
     FUpdating := False;
@@ -809,14 +834,14 @@ begin
     Exit;
   Screen.Cursor := crHourGlass;
   try
-    FSourceList.BeginUpdate;
-    Try
+    if Assigned(FImageCollection) then
+      ApplyToImageCollection
+    else if Assigned(FSVGIconVirtualImageList) then
+      ApplyToSVGIconVirtualImageList
+    else
       FSourceList.Assign(FEditingList);
-      FChanged := False;
-      FModified := True;
-    Finally
-      FSourceList.EndUpdate;
-    End;
+    FChanged := False;
+    FModified := True;
   finally
     Screen.Cursor := crDefault;
   end;

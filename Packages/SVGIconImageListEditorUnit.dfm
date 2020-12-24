@@ -40,7 +40,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 784
     object paClient: TPanel
       Left = 0
       Top = 0
@@ -49,7 +48,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 784
       object ImageListGroupBox: TGroupBox
         Left = 0
         Top = 0
@@ -58,7 +56,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         Align = alTop
         Caption = 'Properties of ImageList'
         TabOrder = 0
-        ExplicitWidth = 784
         object SizeLabel: TLabel
           Left = 8
           Top = 15
@@ -127,7 +124,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         Height = 315
         Align = alClient
         TabOrder = 1
-        ExplicitWidth = 784
         object CategorySplitter: TSplitter
           Left = 186
           Top = 1
@@ -145,7 +141,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Align = alClient
           Caption = '%d Icons collection'
           TabOrder = 1
-          ExplicitWidth = 450
           object ImageView: TListView
             Left = 2
             Top = 17
@@ -164,7 +159,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             OnDragOver = ImageViewDragOver
             OnKeyDown = ImageViewKeyDown
             OnSelectItem = ImageViewSelectItem
-            ExplicitWidth = 446
           end
         end
         object paButtons: TPanel
@@ -175,7 +169,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Align = alRight
           BevelOuter = bvNone
           TabOrder = 2
-          ExplicitLeft = 640
           object AddButton: TButton
             Left = 4
             Top = 17
@@ -353,7 +346,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitWidth = 784
     DesignSize = (
       791
       38)
@@ -368,7 +360,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       ModalResult = 1
       TabOrder = 0
       OnClick = OkButtonClick
-      ExplicitLeft = 418
     end
     object ApplyButton: TButton
       Left = 608
@@ -379,7 +370,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Caption = '&Apply'
       TabOrder = 2
       OnClick = ApplyButtonClick
-      ExplicitLeft = 601
     end
     object CancelButton: TButton
       Left = 517
@@ -391,7 +381,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Caption = 'Cancel'
       ModalResult = 2
       TabOrder = 1
-      ExplicitLeft = 510
     end
     object HelpButton: TButton
       Left = 700
@@ -402,7 +391,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Caption = '&Help'
       TabOrder = 3
       OnClick = HelpButtonClick
-      ExplicitLeft = 693
     end
     object SVGErrorStaticText: TStaticText
       Left = 6
@@ -413,7 +401,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       AutoSize = False
       TabOrder = 4
       Transparent = False
-      ExplicitWidth = 406
     end
   end
   object paIcon: TPanel
@@ -424,18 +411,16 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 784
     object IconButtonsPanel: TPanel
-      Left = 698
+      Left = 694
       Top = 0
-      Width = 93
+      Width = 97
       Height = 200
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitLeft = 691
       object NewButton: TButton
-        Left = 2
+        Left = 6
         Top = 6
         Width = 85
         Height = 25
@@ -444,8 +429,8 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         OnClick = NewButtonClick
       end
       object ReformatXMLButton: TButton
-        Left = 2
-        Top = 152
+        Left = 6
+        Top = 163
         Width = 85
         Height = 25
         Caption = 'Reformat &XML'
@@ -453,7 +438,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         OnClick = ReformatXMLButtonClick
       end
       object DeleteButton: TButton
-        Left = 2
+        Left = 6
         Top = 37
         Width = 85
         Height = 25
@@ -465,14 +450,13 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
     object ItemGroupBox: TGroupBox
       Left = 0
       Top = 0
-      Width = 698
+      Width = 694
       Height = 200
       Align = alClient
       Caption = 'Selected Icon'
       TabOrder = 0
-      ExplicitWidth = 691
       DesignSize = (
-        698
+        694
         200)
       object IconNameLabel: TLabel
         Left = 176
@@ -542,7 +526,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       object SVGText: TMemo
         Left = 176
         Top = 54
-        Width = 514
+        Width = 510
         Height = 134
         Hint = 'SVG Text content'
         Anchors = [akLeft, akTop, akRight, akBottom]
@@ -552,7 +536,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         OnEnter = SVGTextEnter
         OnExit = SVGTextExit
         OnKeyDown = SVGTextKeyDown
-        ExplicitWidth = 507
       end
       object FixedColorItemComboBox: TColorBox
         Left = 415
@@ -568,7 +551,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       object GrayScaleItemCheckBox: TCheckBox
         Left = 563
         Top = 30
-        Width = 85
+        Width = 81
         Height = 17
         Caption = 'GrayScale'
         TabOrder = 4

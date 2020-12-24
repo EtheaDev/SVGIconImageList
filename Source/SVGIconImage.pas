@@ -225,10 +225,20 @@ end;
 
 function TSVGIconImage.GetInheritedFixedColor: TColor;
 begin
+  Result := SVG_INHERIT_COLOR;
+  if not Assigned(FImageList) then
+    Exit;
   if FImageList is TSVGIconImageListBase then
-    Result := TSVGIconImageListBase(FImageList).FixedColor
-  else
-    Result := SVG_INHERIT_COLOR;
+  begin
+    if FImageIndex >= 0 then
+    begin
+      if FImageIndex < SVGIconItems.Count then
+        Result := TSVGIconImageListBase(FImageList).SVGIconItems[FImageIndex].FixedColor;
+      if Result <> SVG_INHERIT_COLOR then
+        exit;
+    end;
+    Result := TSVGIconImageListBase(FImageList).FixedColor;
+  end;
 end;
 
 function TSVGIconImage.GetSVGText: string;
@@ -260,7 +270,7 @@ end;
 function TSVGIconImage.UsingSVGText: Boolean;
 begin
   Result := not (Assigned(FImageList) and (FImageIndex >= 0) and
-     (FImageIndex < FImagelist.Count));
+    (FImageIndex < SVGIconItems.Count));
 end;
 
 procedure TSVGIconImage.Paint;

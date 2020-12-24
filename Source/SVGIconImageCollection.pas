@@ -360,13 +360,7 @@ end;
 
 procedure TSVGIconImageCollection.SetSVGIconItems(const Value: TSVGIconItems);
 begin
-  //shouldn't this use assign?
-  //FSVGItems := Value;
-
-  if FSVGItems <> Value then
-  begin
-    FSVGItems.Assign(Value);
-  end;
+  FSVGItems.Assign(Value);
 end;
 
 procedure TSVGIconImageCollection.WriteLeft(Writer: TWriter);
