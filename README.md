@@ -2,7 +2,7 @@
 
 ## Three engines to render SVG (GDI+, Direct2D or Cairo) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 2.2.1 (VCL+FMX)
+### Actual official version 2.2.2 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -57,6 +57,11 @@ The [SVG Icon Explorer](https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIco
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 ### RELEASE NOTES
+24 Dec 2020: version 2.2.2 (VCL+FMX)
+- Added Width, Height and Zoom property for FMX components
+- Redesigned FMX component editor
+- Fixed VCL component editor
+
 08 Dec 2020: version 2.2.1 (VCL+FMX)
 - Added 64bit platforms for packages
 - Minor fixes (empty except blocks)
