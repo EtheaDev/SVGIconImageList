@@ -51,12 +51,17 @@ uses
   , SVG
   ;
 
+const
+  DEFAULT_SIZE = 32;
+  ZOOM_DEFAULT = 100;
+
 type
   TSVGIconFixedMultiResBitmap = class;
 
   TSVGIconFixedBitmapItem = class(TFixedBitmapItem)
   private
-    FSize: Integer;
+    FWidth, FHeight: Single;
+    FZoom: Integer;
     FOpacity: Single;
     FOwnerCollection: TSVGIconFixedMultiResBitmap;
     FIconName: string;
@@ -64,7 +69,9 @@ type
     function StoreOpacity: Boolean;
     procedure SetBitmap(const AValue: TBitmapOfItem);
     function GetBitmap: TBitmapOfItem;
-    procedure SetSize(const AValue: Integer);
+    procedure SetIconSize(const AWidth, AHeight: Single;
+      const AZoom: Integer);
+    procedure DrawSVGIcon;
     procedure SetOpacity(const AValue: Single);
     procedure SetIconName(const AValue: string);
     function GetSVGText: string;
@@ -74,13 +81,12 @@ type
     function GetDisplayName: string; override;
   public
     constructor Create(Collection: TCollection); override;
+    procedure Assign(Source: TPersistent); override;
     destructor Destroy; override;
-    procedure DrawSVGIcon;
     property SVG: TSVG read FSVG;
   published
     property Bitmap: TBitmapOfItem read GetBitmap write SetBitmap stored False;
     property Opacity: Single read FOpacity write SetOpacity stored StoreOpacity;
-    property Size: Integer read FSize write SetSize;
     property IconName: string read FIconName write SetIconName;
     property SVGText: string read GetSVGText write SetSVGText;
   end;
@@ -91,7 +97,9 @@ type
   TSVGIconFixedMultiResBitmap = class(TFixedMultiResBitmap)
   private
     FOwnerImage: TSVGIconImage;
-    procedure UpdateImageSize(const ASize: Integer);
+    procedure OnDrawImage(Sender: TObject);
+    procedure UpdateImageSize(const AWidth, AHeight: Single;
+      const AZoom: Integer);
   public
     constructor Create(AOwner: TPersistent; ItemClass: TSVGIconFixedBitmapItemClass); overload;
     constructor Create(AOwner: TPersistent); overload;
@@ -99,9 +107,11 @@ type
 
   TSVGIconImage = class(TImage)
   private
+    FZoom: Integer;
     FSVGIconMultiResBitmap: TSVGIconFixedMultiResBitmap;
-    function GetBitmapSize: Integer;
-    procedure SetBitmapSize(const AValue: Integer);
+    procedure SetBitmapZoom(const AValue: Integer);
+    procedure SetIconSize(const AWidth, AHeight: Single;
+      const AZoom: Integer);
   protected
     function CreateMultiResBitmap: TFixedMultiResBitmap; override;
   public
@@ -109,7 +119,7 @@ type
     destructor Destroy; override;
     procedure SetBounds(X, Y, AWidth, AHeight: Single); override;
   published
-    property BitmapSize: Integer read GetBitmapSize write SetBitmapSize;
+    property BitmapZoom: Integer read FZoom write SetBitmapZoom default ZOOM_DEFAULT;
   end;
 
 implementation
@@ -133,6 +143,12 @@ begin
     FOwnerImage := TSVGIconImage(AOwner);
 end;
 
+procedure TSVGIconFixedMultiResBitmap.OnDrawImage(Sender: TObject);
+begin
+  if Assigned(FOwnerImage) then
+    FOwnerImage.Repaint;
+end;
+
 constructor TSVGIconFixedMultiResBitmap.Create(AOwner: TPersistent; ItemClass: TSVGIconFixedBitmapItemClass);
 begin
   inherited Create(AOwner, ItemClass);
@@ -140,7 +156,8 @@ begin
     FOwnerImage := TSVGIconImage(AOwner);
 end;
 
-procedure TSVGIconFixedMultiResBitmap.UpdateImageSize(const ASize: Integer);
+procedure TSVGIconFixedMultiResBitmap.UpdateImageSize(const AWidth, AHeight: Single;
+  const AZoom: Integer);
 var
   I, J: Integer;
   LItem: TFixedBitmapItem;
@@ -151,12 +168,24 @@ begin
     begin
       LItem := Items[J];
       if LItem is TSVGIconFixedBitmapItem then
-        TSVGIconFixedBitmapItem(LItem).Size := ASize;
+        TSVGIconFixedBitmapItem(LItem).SetIconSize(AWidth, AHeight, AZoom);
     end;
   end;
 end;
 
 { TSVGIconFixedBitmapItem }
+
+procedure TSVGIconFixedBitmapItem.Assign(Source: TPersistent);
+begin
+  if Source is TSVGIconSourceItem then
+  begin
+    Opacity := TSVGIconSourceItem(Source).Opacity;
+    IconName := TSVGIconSourceItem(Source).IconName;
+    SVGText := TSVGIconSourceItem(Source).SVGText;
+  end
+  else
+    inherited;
+end;
 
 function TSVGIconFixedBitmapItem.BitmapStored: Boolean;
 begin
@@ -168,7 +197,7 @@ begin
   inherited;
   if Collection is TSVGIconFixedMultiResBitmap then
     FOwnerCollection := Collection as TSVGIconFixedMultiResBitmap;
-  FSize := 16;
+  FZoom := ZOOM_DEFAULT;
   FOpacity := 1;
   FSVG := TSVG.Create;
 end;
@@ -182,14 +211,24 @@ end;
 procedure TSVGIconFixedBitmapItem.DrawSVGIcon;
 var
   LBitmap: TBitmap;
-  LBitmapSize: Single;
+  LBitmapWidth, LBitmapHeight: Integer;
 begin
+  if (FWidth <= 0) or (FHeight <= 0) or (FZoom <= 0) or (FZoom >= 100) then
+    Exit;
   LBitmap := inherited Bitmap;
-  LBitmap.Clear(talphacolors.Null);
-  LBitmapSize := Size * Scale;
-  LBitmap.Width  := Round(LBitmapSize);
-  LBitmap.Height := Round(LBitmapSize);
-  PaintToBitmap(LBitmap, FSVG);
+  LBitmapWidth := Round(FWidth * Scale);
+  LBitmapHeight := Round(FHeight * Scale);
+  LBitmap.Width  := LBitmapWidth;
+  LBitmap.Height := LBitmapHeight;
+  LBitmap.Canvas.BeginScene;
+  try
+    LBitmap.Clear(talphacolors.Null);
+    PaintToBitmap(LBitmap, FSVG, FZoom);
+  finally
+    LBitmap.Canvas.EndScene;
+  if Assigned(FOwnerCollection) then
+    FOwnerCollection.OnDrawImage(Self);
+  end;
 end;
 
 function TSVGIconFixedBitmapItem.GetBitmap: TBitmapOfItem;
@@ -219,21 +258,29 @@ begin
   FIconName := AValue;
 end;
 
-procedure TSVGIconFixedBitmapItem.SetOpacity(const AValue: Single);
-begin
-  FOpacity := AValue;
-  DrawSVGIcon;
-end;
-
-procedure TSVGIconFixedBitmapItem.SetSize(const AValue: Integer);
-begin
-  FSize := AValue;
-  DrawSVGIcon;
-end;
 
 procedure TSVGIconFixedBitmapItem.SetSVGText(const Value: string);
 begin
   FSVG.LoadFromText(Value);
+end;
+
+procedure TSVGIconFixedBitmapItem.SetIconSize(const AWidth, AHeight:Single;
+  const AZoom: Integer);
+begin
+  if (AWidth <> 0) and (AHeight <> 0) and
+    ((AWidth <> FWidth) or (AHeight <> FHeight) or (AZoom <> FZoom)) then
+  begin
+    FWidth := AWidth;
+    FHeight := AHeight;
+    FZoom := AZoom;
+    DrawSVGIcon;
+  end;
+end;
+
+procedure TSVGIconFixedBitmapItem.SetOpacity(const AValue: Single);
+begin
+  FOpacity := AValue;
+  DrawSVGIcon;
 end;
 
 function TSVGIconFixedBitmapItem.StoreOpacity: Boolean;
@@ -248,6 +295,7 @@ begin
   inherited;
   DisableInterpolation := True;
   FSVGIconMultiResBitmap := MultiResBitmap as TSVGIconFixedMultiResBitmap;
+  FZoom := ZOOM_DEFAULT;
 end;
 
 function TSVGIconImage.CreateMultiResBitmap: TFixedMultiResBitmap;
@@ -261,21 +309,25 @@ begin
   FSVGIconMultiResBitmap := nil;
 end;
 
-function TSVGIconImage.GetBitmapSize: Integer;
+procedure TSVGIconImage.SetIconSize(const AWidth, AHeight: Single;
+  const AZoom: Integer);
 begin
-  Result := Round(Inherited width);
-end;
-
-procedure TSVGIconImage.SetBitmapSize(const AValue: Integer);
-begin
-  if (AValue <> 0) and not (csLoading in Self.ComponentState) then
-    FSVGIconMultiResBitmap.UpdateImageSize(AValue);
+  inherited Width := AWidth;
+  inherited height := AHeight;
+  FZoom := AZoom;
+  FSVGIconMultiResBitmap.UpdateImageSize(AWidth, AHeight, AZoom);
 end;
 
 procedure TSVGIconImage.SetBounds(X, Y, AWidth, AHeight: Single);
 begin
   inherited;
-  BitmapSize := Round(Min(AWidth, AHeight));
+  SetIconSize(AWidth, AHeight, FZoom);
+end;
+
+procedure TSVGIconImage.SetBitmapZoom(const AValue: Integer);
+begin
+  if (FZoom <> AValue) and (AValue <= 100) and (AValue >= 10) then
+    SetIconSize(Width, Height, AValue);
 end;
 
 initialization

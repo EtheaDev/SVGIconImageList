@@ -25,7 +25,6 @@ type
     ImageView: TListBox;
     ListBoxItem1: TListBoxItem;
     ListBoxItem2: TListBoxItem;
-    SpinBox1: TSpinBox;
     ListBoxItem3: TListBoxItem;
     TopPanel: TPanel;
     Glyph2: TGlyph;
@@ -34,13 +33,15 @@ type
     SVGIconImageList: TSVGIconImageList;
     OpenDialog: TOpenDialog;
     GrayScaleCheckBox: TCheckBox;
+    ZoomSpinBox: TSpinBox;
+    ZoomLabel: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure NextButtonClick(Sender: TObject);
     procedure RandomButtonClick(Sender: TObject);
     procedure AutoSizeCheckBoxChange(Sender: TObject);
     procedure PrevButtonClick(Sender: TObject);
     procedure ShowEditorButtonClick(Sender: TObject);
-    procedure SpinBox1Change(Sender: TObject);
+    procedure ZoomSpinBoxChange(Sender: TObject);
     procedure GrayScaleCheckBoxChange(Sender: TObject);
   private
     procedure UpdateGUI;
@@ -100,9 +101,9 @@ begin
   {$IFDEF MSWINDOWS}EditSVGIconImageList(SVGIconImageList);{$ENDIF}
 end;
 
-procedure TSVGIconImageListForm.SpinBox1Change(Sender: TObject);
+procedure TSVGIconImageListForm.ZoomSpinBoxChange(Sender: TObject);
 begin
-  SVGIconImageList.Size := Round(SpinBox1.Value);
+  SVGIconImageList.Zoom := Round(ZoomSpinBox.Value);
 end;
 
 procedure TSVGIconImageListForm.UpdateGUI;

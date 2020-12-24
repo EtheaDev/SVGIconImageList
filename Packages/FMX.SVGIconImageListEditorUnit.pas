@@ -39,42 +39,49 @@ uses
 
 type
   TSVGIconImageListEditorFMX = class(TForm)
-    PaButtons: TPanel;
-    AddButton: TButton;
-    DeleteButton: TButton;
-    ClearAllButton: TButton;
-    paTop: TPanel;
-    Panel4: TPanel;
+    ListBoxItemStyleBook: TStyleBook;
+    OpenDialog: TOpenDialog;
+    BottomPanel: TPanel;
     OKButton: TButton;
     CancelButton: TButton;
     HelpButton: TButton;
+    TopPanel: TPanel;
+    ButtonsPanel: TPanel;
+    AddButton: TButton;
+    DeleteButton: TButton;
+    ClearAllButton: TButton;
+    NewButton: TButton;
     paClient: TPanel;
     ImageListGroupBox: TGroupBox;
     AutoSizeCheckBox: TCheckBox;
     DefaultOpacitySpinBox: TSpinBox;
     DefaultOpacityLabel: TLabel;
+    SizeSpinBox: TSpinBox;
+    SizeLabel: TLabel;
+    FixedColorComboBox: TComboBox;
+    FixedColorLabel: TLabel;
+    GrayScaleCheckBox: TCheckBox;
+    ItemPanel: TPanel;
     ItemGroupBox: TGroupBox;
     IconName: TEdit;
     IconNameLabel: TLabel;
     OpacityLabel: TLabel;
     OpacitySpinBox: TSpinBox;
-    IconPanel: TPanel;
-    IconImage: TGlyph;
-    ListBoxItemStyleBook: TStyleBook;
-    SizeSpinBox: TSpinBox;
-    SizeLabel: TLabel;
-    IconsGroupBox: TGroupBox;
-    ImageView: TListBox;
-    TopSplitter: TSplitter;
     SVGText: TMemo;
-    NewButton: TButton;
-    OpenDialog: TOpenDialog;
-    FixedColorComboBox: TComboBox;
-    FixedColorLabel: TLabel;
-    GrayScaleCheckBox: TCheckBox;
     GrayScaleItemCheckBox: TCheckBox;
     FixedColorItemLabel: TLabel;
     FixedColorItemComboBox: TComboBox;
+    IconPanel: TPanel;
+    IconImage: TGlyph;
+    WidthLabel: TLabel;
+    WidthSpinBox: TSpinBox;
+    HeightLabel: TLabel;
+    HeightSpinBox: TSpinBox;
+    ZoomLabel: TLabel;
+    ZoomSpinBox: TSpinBox;
+    IconsGroupBox: TGroupBox;
+    ImageView: TListBox;
+    BottomSplitter: TSplitter;
     procedure ClearAllButtonClick(Sender: TObject);
     procedure DeleteButtonClick(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
@@ -102,11 +109,12 @@ type
       var Allow: Boolean);
     procedure ImageViewDragDrop(Sender: TObject; const Data: TDragObject;
       const Point: TPointF);
+    procedure ZoomChange(Sender: TObject);
   private
     FIconIndexLabel: string;
     FTotIconsLabel: string;
     FUpdating: Boolean;
-    SVGIconImageList: TSVGIconImageList;
+    FEditingList: TSVGIconImageList;
     procedure AddNewItem;
     procedure DeleteSelectedItem;
     procedure ClearAllImages;
@@ -128,12 +136,13 @@ uses
   Winapi.Messages
   , Winapi.Windows
   , Winapi.shellApi
+  , System.Math
   , SVG
   , SVGColor;
 
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
-  paTopHeight: Single;
+  ItemPanelHeight: Single;
 
 function UpdateSVGIconListView(const AListBox: TListBox): Integer;
 var
@@ -199,8 +208,12 @@ begin
     try
       //Screen.Cursor := crHourglass;
       try
-        SVGIconImageList.Assign(AImageList);
-        ImageView.Images := SVGIconImageList;
+        FEditingList.Assign(AImageList);
+        SizeSpinBox.Value := Max(FEditingList.Width, FEditingList.Height);
+        WidthSpinBox.Value := FEditingList.Width;
+        HeightSpinBox.Value := FEditingList.Height;
+        ZoomSpinBox.Value := FEditingList.Zoom;
+        ImageView.Images := FEditingList;
         UpdateSVGIconListView(ImageView);
         //UpdateGUI;
         if ImageView.Items.Count > 0 then
@@ -214,13 +227,13 @@ begin
       begin
         //Screen.Cursor := crHourglass;
         try
-        AImageList.Assign(SVGIconImageList);
+        AImageList.Assign(FEditingList);
         finally
           //Screen.Cursor := crDefault;
         end;
       end;
       SavedBounds := Bounds;
-      paTopHeight := paTop.Height;
+      ItemPanelHeight := ItemPanel.Height;
     finally
       DisposeOf;
     end;
@@ -238,8 +251,16 @@ end;
 
 procedure TSVGIconImageListEditorFMX.SizeChange(Sender: TObject);
 begin
-  SVGIconImageList.Size := Round(SizeSpinBox.Value);
-  UpdateGUI;
+  if not FUpdating then
+  begin
+    if Sender = SizeSpinBox then
+      FEditingList.Size := Round(SizeSpinBox.Value);
+    if Sender = WidthSpinBox then
+      FEditingList.Width := Round(WidthSpinBox.Value);
+    if Sender = HeightSpinBox then
+      FEditingList.Height := Round(HeightSpinBox.Value);
+    UpdateGUI;
+  end;
 end;
 
 procedure TSVGIconImageListEditorFMX.SVGTextExit(Sender: TObject);
@@ -250,7 +271,7 @@ end;
 
 procedure TSVGIconImageListEditorFMX.AutoSizeCheckBoxClick(Sender: TObject);
 begin
-  SVGIconImageList.AutoSizeBitmaps := AutoSizeCheckBox.IsChecked;
+  FEditingList.AutoSizeBitmaps := AutoSizeCheckBox.IsChecked;
   UpdateGUI;
 end;
 
@@ -274,21 +295,26 @@ var
 begin
   FUpdating := True;
   try
+    SizeSpinBox.Value := Max(FEditingList.Width, FEditingList.Height);
+    WidthSpinBox.Value := FEditingList.Width;
+    HeightSpinBox.Value := FEditingList.Height;
+    ZoomSpinBox.Value := FEditingList.Zoom;
+    ImageView.ItemHeight := SizeSpinBox.Value;
     LIconItem := SelectedSVGIcon;
     LIsItemSelected := LIconItem <> nil;
-    ClearAllButton.Enabled := SVGIconImageList.Count > 0;
+    ClearAllButton.Enabled := FEditingList.Count > 0;
     DeleteButton.Enabled := LIsItemSelected;
     OpacitySpinBox.Enabled := LIsItemSelected;
     IconName.Enabled := LIsItemSelected;
     SVGText.Enabled := LIsItemSelected;
-    //ShowCharMapButton.Enabled := (SVGIconImageList.FontName <> '');
-    IconsGroupBox.Text := Format(FTotIconsLabel, [SVGIconImageList.Count]);
-    SizeSpinBox.Value := SVGIconImageList.Size;
-    AutoSizeCheckBox.IsChecked := SVGIconImageList.AutoSizeBitmaps;
-    DefaultOpacitySpinBox.Value := SVGIconImageList.Opacity * 100;
+    //ShowCharMapButton.Enabled := (FEditingList.FontName <> '');
+    IconsGroupBox.Text := Format(FTotIconsLabel, [FEditingList.Count]);
+    SizeSpinBox.Value := FEditingList.Size;
+    AutoSizeCheckBox.IsChecked := FEditingList.AutoSizeBitmaps;
+    DefaultOpacitySpinBox.Value := FEditingList.Opacity * 100;
     FixedColorComboBox.ItemIndex :=
-      FixedColorComboBox.Items.IndexOfObject(TObject(SVGIconImageList.FixedColor));
-    GrayScaleCheckBox.IsChecked := SVGIconImageList.GrayScale;
+      FixedColorComboBox.Items.IndexOfObject(TObject(FEditingList.FixedColor));
+    GrayScaleCheckBox.IsChecked := FEditingList.GrayScale;
     if LIsItemSelected then
     begin
       ItemGroupBox.Text := Format(FIconIndexLabel,[LIconItem.Index]);
@@ -312,12 +338,18 @@ begin
   end;
 end;
 
+procedure TSVGIconImageListEditorFMX.ZoomChange(Sender: TObject);
+begin
+  if not FUpdating then
+    FEditingList.Zoom := Round(ZoomSpinBox.Value);
+end;
+
 procedure TSVGIconImageListEditorFMX.DeleteSelectedItem;
 var
   LIndex: Integer;
 begin
   LIndex := ImageView.Selected.Index;
-  SVGIconImageList.DeleteIcon(LIndex);
+  FEditingList.DeleteIcon(LIndex);
   UpdateSVGIconListView(ImageView);
   if LIndex < ImageView.Items.Count then
     ImageView.ItemIndex := LIndex
@@ -335,7 +367,7 @@ procedure TSVGIconImageListEditorFMX.ClearAllImages;
 begin
   //Screen.Cursor := crHourglass;
   try
-    SVGIconImageList.ClearIcons;
+    FEditingList.ClearIcons;
   finally
     //Screen.Cursor := crDefault;
   end;
@@ -349,7 +381,7 @@ begin
   begin
     if FCharMap.CharsEdit.Text <> '' then
     begin
-      SVGIconImageList.AddIcons(FCharMap.CharsEdit.Text, FCharMap.DefaultFontName.Text);
+      FEditingList.AddIcons(FCharMap.CharsEdit.Text, FCharMap.DefaultFontName.Text);
       UpdateSVGIconListView(ImageView);
     end;
   end;
@@ -392,20 +424,20 @@ begin
   LSourceIndex := SourceItem.Index;
   LNewIndex := DestItem.Index;
   if LNewIndex < 0 then LNewIndex := 0;
-  if LNewIndex > SVGIconImageList.Count then LNewIndex := SVGIconImageList.Count;
+  if LNewIndex > FEditingList.Count then LNewIndex := FEditingList.Count;
 
-  LOriginalIcon := SVGIconImageList.Source.Items[LSourceIndex] as TSVGIconSourceItem;
+  LOriginalIcon := FEditingList.Source.Items[LSourceIndex] as TSVGIconSourceItem;
   LIconName := LOriginalIcon.IconName;
 
   if LSourceIndex < LNewIndex then
   begin
-    LIcon := SVGIconImageList.CloneIcon(LSourceIndex, LNewIndex + 1);
-    SVGIconImageList.DeleteIcon(LSourceIndex);
+    LIcon := FEditingList.CloneIcon(LSourceIndex, LNewIndex + 1);
+    FEditingList.DeleteIcon(LSourceIndex);
   end
   else
   begin
-    LIcon := SVGIconImageList.CloneIcon(LSourceIndex, LNewIndex);
-    SVGIconImageList.DeleteIcon(LSourceIndex + 1);
+    LIcon := FEditingList.CloneIcon(LSourceIndex, LNewIndex);
+    FEditingList.DeleteIcon(LSourceIndex + 1);
   end;
 
   LIcon.IconName := LIconName;
@@ -423,7 +455,7 @@ begin
   LFiles := TStringList.Create;
   LFiles.AddStrings(TArray<string>(Data.Files));
   try
-    SVGIconImageList.LoadFromFiles(LFiles);
+    FEditingList.LoadFromFiles(LFiles);
   finally
     FreeAndNil(LFiles);
   end;
@@ -471,7 +503,7 @@ begin
   //Screen.Cursor := crHourGlass;
   try
     if FixedColorComboBox.ItemIndex >= 0 then begin
-      SVGIconImageList.FixedColor :=
+      FEditingList.FixedColor :=
         TColor(FixedColorComboBox.Items.Objects[FixedColorComboBox.ItemIndex]);
       UpdateGUI;
     end;
@@ -504,17 +536,18 @@ procedure TSVGIconImageListEditorFMX.FormCreate(Sender: TObject);
 begin
   Caption := Format(Caption, [SVGIconImageListVersion]);
   FUpdating := True;
-  SVGIconImageList := TSVGIconImageList.Create(nil);
+  FEditingList := TSVGIconImageList.Create(nil);
   FIconIndexLabel := ItemGroupBox.Text;
   FTotIconsLabel := IconsGroupBox.Text;
-  IconImage.Images := SVGIconImageList;
+  IconImage.Images := FEditingList;
+  BottomSplitter.Position.X := 1;
   AssignSVGColorList(FixedColorComboBox.Items);
   AssignSVGColorList(FixedColorItemComboBox.Items);
 end;
 
 procedure TSVGIconImageListEditorFMX.FormDestroy(Sender: TObject);
 begin
-  FreeAndNil(SVGIconImageList);
+  FreeAndNil(FEditingList);
   //Screen.Cursors[crColorPick] := 0;
 end;
 
@@ -528,8 +561,8 @@ end;
 
 function TSVGIconImageListEditorFMX.SelectedSVGIcon: TSVGIconSourceItem;
 begin
-  if (ImageView.Selected <> nil) and (ImageView.Selected.Index < SVGIconImageList.Source.Count) then
-    Result := SVGIconImageList.Source.Items[ImageView.Selected.Index] as TSVGIconSourceItem
+  if (ImageView.Selected <> nil) and (ImageView.Selected.Index < FEditingList.Source.Count) then
+    Result := FEditingList.Source.Items[ImageView.Selected.Index] as TSVGIconSourceItem
   else
     Result := nil;
 end;
@@ -540,7 +573,7 @@ begin
   begin
     //Screen.Cursor := crHourGlass;
     try
-      SVGIconImageList.LoadFromFiles(OpenDialog.Files);
+      FEditingList.LoadFromFiles(OpenDialog.Files);
     finally
       UpdateSVGIconListView(ImageView);
       //Screen.Cursor := crDefault;
@@ -553,8 +586,8 @@ begin
   if SavedBounds.Right - SavedBounds.Left > 0 then
     SetBounds(SavedBounds.Left, SavedBounds.Top, SavedBounds.Width, SavedBounds.Height);
 
-  if paTopHeight <> 0 then
-    paTop.Height := paTopHeight;
+  if ItemPanelHeight <> 0 then
+    ItemPanel.Height := ItemPanelHeight;
 
   if ImageView.CanFocus then
     ImageView.SetFocus;
@@ -562,7 +595,7 @@ end;
 
 procedure TSVGIconImageListEditorFMX.GrayScaleCheckBoxChange(Sender: TObject);
 begin
-  SVGIconImageList.GrayScale := GrayScaleCheckBox.IsChecked;
+  FEditingList.GrayScale := GrayScaleCheckBox.IsChecked;
   UpdateGUI;
 end;
 
@@ -582,12 +615,12 @@ begin
     LInsertIndex := ImageView.Selected.Index +1
   else
     LInsertIndex := ImageView.Items.Count;
-  SVGIconImageList.InsertIcon(LInsertIndex,'','');
+  FEditingList.InsertIcon(LInsertIndex,'','');
   UpdateSVGIconListView(ImageView);
   ImageView.ItemIndex := LInsertIndex;
 end;
 
 initialization
-  paTopHeight := 0;
+  ItemPanelHeight := 0;
 
 end.
