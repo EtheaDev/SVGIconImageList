@@ -2091,6 +2091,7 @@ begin
   try
     Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
     Graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
+    Graphics.SetCompositingQuality(CompositingQualityHighQuality);
     PaintTo(Graphics, Bounds, Rects, RectCount);
   finally
     Graphics.Free;
@@ -2106,6 +2107,7 @@ begin
   try
     Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
     Graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
+    Graphics.SetCompositingQuality(CompositingQualityHighQuality);
     PaintTo(Graphics, Bounds, Rects, RectCount);
   finally
     Graphics.Free;
@@ -2390,6 +2392,7 @@ begin
     try
       Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
       Graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
+      Graphics.SetCompositingQuality(CompositingQualityHighQuality);
       R := FittedRect(MakeRect(0.0, 0.0, Width, Height), FWidth, FHeight);
       PaintTo(Graphics, R, nil, 0);
     finally
@@ -2417,6 +2420,7 @@ begin
     try
       Graphics.SetSmoothingMode(SmoothingModeAntiAlias);
       Graphics.SetPixelOffsetMode(PixelOffsetModeHalf);
+      Graphics.SetCompositingQuality(CompositingQualityHighQuality);
       R := FittedRect(MakeRect(0.0, 0, Size, Size), Width, Height);
       PaintTo(Graphics, R, nil, 0);
     finally
