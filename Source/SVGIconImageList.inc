@@ -135,3 +135,12 @@
 //or use Engine Cairo wrapper (included by Lübbe Onken in Cairo folder)
 {.$DEFINE Cairo_SVGEngine}
 
+
+// When IgnoreAntiAliasedColor is set it svgs paints well but not perfect on
+// all backgrounds.  Works best with Delphi_SVGEngine
+{.$DEFINE IgnoreAntiAliasedColor}
+{$IF defined(Delphi_SVGEngine) and not defined(PreferNativeSvgSupport)}
+  {$DEFINE IgnoreAntiAliasedColor}
+{$IFEND}
+
+
