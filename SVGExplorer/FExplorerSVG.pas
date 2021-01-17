@@ -91,6 +91,7 @@ type
     procedure ActionUpdate(Sender: TObject);
     procedure ShowTextCheckBoxClick(Sender: TObject);
     procedure TrackBarChange(Sender: TObject);
+    procedure paPreviewClick(Sender: TObject);
   private
     fpaPreviewSize: Integer;
     procedure LoadFilesDir(const APath: string; const AFilter: string = '');
@@ -110,6 +111,9 @@ implementation
 
 uses
   SVGIconUtils
+  {$IFDEF DEBUG}
+  , SVGIconImageListEditorUnit
+  {$ENDIF}
   , SVGInterfaces
   , UITypes
   , D2DSVGFactory;
@@ -280,6 +284,14 @@ begin
     LFiles.Free;
     Screen.Cursor := crDefault;
   End;
+end;
+
+procedure TfmExplorerSVG.paPreviewClick(Sender: TObject);
+begin
+  {$IFDEF DEBUG}
+  //Image Editor for ImageList
+  EditSVGIconImageList(SVGIconImageList);
+  {$ENDIF}
 end;
 
 procedure TfmExplorerSVG.paPreviewResize(Sender: TObject);

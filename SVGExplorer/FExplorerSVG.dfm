@@ -219,6 +219,7 @@ object fmExplorerSVG: TfmExplorerSVG
     Height = 416
     Align = alRight
     TabOrder = 2
+    OnClick = paPreviewClick
     OnResize = paPreviewResize
     DesignSize = (
       90
@@ -235,6 +236,7 @@ object fmExplorerSVG: TfmExplorerSVG
       Margins.Right = 10
       Margins.Bottom = 10
       AutoSize = False
+      Proportional = True
       ImageList = SVGIconImageList
       Align = alTop
       OnMouseDown = SVGIconImageMouseDown

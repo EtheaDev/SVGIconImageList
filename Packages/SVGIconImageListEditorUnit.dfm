@@ -83,38 +83,32 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Caption = 'Height (in pixel)'
           Transparent = True
         end
-        object SizeSpinEdit: TSpinEdit
+        object SizeEdit: TEdit
           Left = 8
           Top = 32
           Width = 81
-          Height = 24
-          MaxValue = 0
-          MinValue = 0
+          Height = 23
+          NumbersOnly = True
           TabOrder = 0
-          Value = 0
-          OnChange = SizeSpinEditChange
+          OnExit = SizeEditChange
         end
-        object WidthSpinEdit: TSpinEdit
+        object WidthEdit: TEdit
           Left = 94
           Top = 32
           Width = 81
-          Height = 24
-          MaxValue = 0
-          MinValue = 0
+          Height = 23
+          NumbersOnly = True
           TabOrder = 1
-          Value = 0
-          OnChange = WidthSpinEditChange
+          OnExit = WidthEditChange
         end
-        object HeightSpinEdit: TSpinEdit
+        object HeightEdit: TEdit
           Left = 181
           Top = 32
           Width = 81
-          Height = 24
-          MaxValue = 0
-          MinValue = 0
+          Height = 23
+          NumbersOnly = True
           TabOrder = 2
-          Value = 0
-          OnChange = HeightSpinEditChange
+          OnExit = HeightEditChange
         end
       end
       object paImages: TPanel
@@ -507,11 +501,17 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         ParentCtl3D = False
         TabOrder = 0
         object IconImage: TSVGIconImage
+          AlignWithMargins = True
           Left = 2
           Top = 2
           Width = 154
           Height = 154
+          Margins.Left = 0
+          Margins.Top = 0
+          Margins.Right = 0
+          Margins.Bottom = 0
           AutoSize = False
+          Proportional = True
           Align = alClient
         end
       end

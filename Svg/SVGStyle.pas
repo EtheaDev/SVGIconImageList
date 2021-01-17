@@ -441,7 +441,7 @@ begin
   OutS := '';
   for C in S do
   begin
-    if C.IsWhiteSpace then Continue;
+    if C = ' ' then Continue;
     if C = '}' then
       OutS := OutS + C + SLineBreak
     else

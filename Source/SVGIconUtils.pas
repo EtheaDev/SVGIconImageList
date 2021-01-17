@@ -3,7 +3,7 @@
 {       Icon SVG ImageList: An extended ImageList for Delphi/VCL               }
 {       to simplify use of SVG Icons (resize, opacity and more...)             }
 {                                                                              }
-{       Copyright (c) 2019-2020 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2021 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors: Vincent Parrett, Kiriakos Vlahos                         }
 {                                                                              }
@@ -70,6 +70,7 @@ var
   LItem: TSVGIconItem;
   LListItem: TListItem;
   LImageList: TCustomImageList;
+  LIconItems: TSVGIconItems;
 
   function GetItemCaption: string;
   begin
@@ -84,18 +85,20 @@ begin
   AListView.Items.BeginUpdate;
   try
     AListView.Clear;
-    Result := LImageList.Count;
+    Result := 0;
+    if (LImageList is TSVGIconImageListBase) then
+      LIconItems := TSVGIconImageListBase(LImageList).SVGIconItems
+    {$IFDEF D10_3}
+    else if (LImageList is TVirtualImageList) and
+      (TVirtualImageList(LImageList).ImageCollection is TSVGIconImageCollection) then
+      LIconItems := TSVGIconImageCollection(TVirtualImageList(LImageList).ImageCollection).SVGIconItems
+    {$ENDIF}
+    else
+      Exit;
+    Result := LIconItems.Count;
     for I := 0 to Result -1 do
     begin
-      if (LImageList is TSVGIconImageListBase) then
-        LItem := TSVGIconImageListBase(LImageList).SVGIconItems[I]
-      {$IFDEF D10_3}
-      else if (LImageList is TVirtualImageList) and
-        (TVirtualImageList(LImageList).ImageCollection is TSVGIconImageCollection) then
-        LItem := TSVGIconImageCollection(TVirtualImageList(LImageList).ImageCollection).SVGIconItems[I]
-      {$ENDIF}
-      else
-        Continue;
+      LItem := LIconItems[I];
       if (ACategory = '') or
        (LowerCase(ACategory) = LowerCase(LItem.Category)) then
       begin

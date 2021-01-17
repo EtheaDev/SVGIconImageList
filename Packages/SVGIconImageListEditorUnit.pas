@@ -2,7 +2,7 @@
 {                                                                              }
 {       SVGIconImageList Component Editor                                      }
 {                                                                              }
-{       Copyright (c) 2019-2020 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2021 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors: Vincent Parrett, Kiriakos Vlahos                         }
 {                                                                              }
@@ -75,10 +75,10 @@ type
     paClient: TPanel;
     SVGText: TMemo;
     SizeLabel: TLabel;
-    SizeSpinEdit: TSpinEdit;
+    SizeEdit: TEdit;
     WidthLabel: TLabel;
-    WidthSpinEdit: TSpinEdit;
-    HeightSpinEdit: TSpinEdit;
+    WidthEdit: TEdit;
+    HeightEdit: TEdit;
     HeightLabel: TLabel;
     BottomPanel: TPanel;
     ApplyButton: TButton;
@@ -143,9 +143,9 @@ type
     procedure ImageViewDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure ReplaceButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
-    procedure SizeSpinEditChange(Sender: TObject);
-    procedure WidthSpinEditChange(Sender: TObject);
-    procedure HeightSpinEditChange(Sender: TObject);
+    procedure SizeEditChange(Sender: TObject);
+    procedure WidthEditChange(Sender: TObject);
+    procedure HeightEditChange(Sender: TObject);
     procedure OpacitySpinEditChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure NewButtonClick(Sender: TObject);
@@ -336,10 +336,41 @@ end;
 { TSVGIconImageListEditor }
 
 procedure TSVGIconImageListEditor.UpdateSizeGUI;
+var
+  LScale: double;
+  LIconPanelSize, LIconWidth, LIconHeight: Integer;
 begin
-  SizeSpinEdit.Value := FEditingList.Size;
-  WidthSpinEdit.Value := FEditingList.Width;
-  HeightSpinEdit.Value := FEditingList.Height;
+  FUpdating := True;
+  try
+    Screen.Cursor := crHourGlass;
+    SizeEdit.Text := IntToStr(FEditingList.Size);
+    WidthEdit.Text := IntToStr(FEditingList.Width);
+    HeightEdit.Text := IntToStr(FEditingList.Height);
+    LIconPanelSize := IconPanel.Height - (IconPanel.BorderWidth * 2);
+    if FEditingList.Width > FEditingList.Height then
+    begin
+      LIconWidth := LIconPanelSize;
+      LIconHeight := Round(LIconWidth * FEditingList.Height / FEditingList.Width);
+    end
+    else if FEditingList.Width < FEditingList.Height then
+    begin
+      LIconHeight := LIconPanelSize;
+      LIconWidth := Round(LIconHeight * FEditingList.Width / FEditingList.Height);
+    end
+    else
+    begin
+      LIconWidth := LIconPanelSize;
+      LIconHeight := LIconPanelSize;
+    end;
+    Iconimage.Margins.SetBounds(
+      (LIconPanelSize-LIconWidth) div 2,
+      (LIconPanelSize-LIconHeight) div 2,
+      (LIconPanelSize-LIconWidth) div 2,
+      (LIconPanelSize-LIconHeight) div 2);
+  finally
+    FUpdating := False;
+    Screen.Cursor := crDefault;
+  end;
 end;
 
 procedure TSVGIconImageListEditor.ApplyButtonClick(Sender: TObject);
@@ -460,10 +491,10 @@ begin
   end;
 end;
 
-procedure TSVGIconImageListEditor.WidthSpinEditChange(Sender: TObject);
+procedure TSVGIconImageListEditor.WidthEditChange(Sender: TObject);
 begin
   if FUpdating then Exit;
-  FEditingList.Width := WidthSpinEdit.Value;
+  FEditingList.Width := StrToInt(WidthEdit.Text);
   UpdateSizeGUI;
 end;
 
@@ -636,10 +667,10 @@ begin
   end;
 end;
 
-procedure TSVGIconImageListEditor.SizeSpinEditChange(Sender: TObject);
+procedure TSVGIconImageListEditor.SizeEditChange(Sender: TObject);
 begin
   if FUpdating then Exit;
-  FEditingList.Size := SizeSpinEdit.Value;
+  FEditingList.Size := StrToInt(SizeEdit.Text);
   UpdateSizeGUI;
 end;
 
@@ -978,10 +1009,10 @@ begin
   UpdateGUI;
 end;
 
-procedure TSVGIconImageListEditor.HeightSpinEditChange(Sender: TObject);
+procedure TSVGIconImageListEditor.HeightEditChange(Sender: TObject);
 begin
   if FUpdating then Exit;
-  FEditingList.Height := HeightSpinEdit.Value;
+  FEditingList.Height := StrToInt(HeightEdit.Text);
   UpdateSizeGUI;
 end;
 
