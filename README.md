@@ -39,6 +39,8 @@ As you can see, the three engines perform differently depending on the icons and
 
 ![Delphi 10.4 Sydney Support](/Demo/Images/SupportingDelphi.jpg)
 
+Related links: https://www.embarcadero.com/ - https://learndelphi.org/
+
 **Sample image of VCL version**
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/Sample.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/Sample.jpg)
 
