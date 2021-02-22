@@ -55,7 +55,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '2.2.3';
+  SVGIconImageListVersion = '2.2.5';
   DEFAULT_SIZE = 32;
   ZOOM_DEFAULT = 100;
 

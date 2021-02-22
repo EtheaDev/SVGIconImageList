@@ -32,7 +32,8 @@ package SVGIconImageList;
 
 requires
   vcl,
-  SVGIconPackage;
+  SVGIconPackage,
+  vclimg;
 
 contains
   SVGIconImage in '..\..\Source\SVGIconImage.pas',

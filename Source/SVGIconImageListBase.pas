@@ -48,7 +48,7 @@ uses
   SvgInterfaces;
 
 const
-  SVGIconImageListVersion = '2.2.4';
+  SVGIconImageListVersion = '2.2.5';
   DEFAULT_SIZE = 16;
 
 type
@@ -590,10 +590,10 @@ begin
   begin
     LWidthScaled := MulDiv(Width, TChangeScaleMessage(Msg).M, TChangeScaleMessage(Msg).D);
     LHeightScaled := MulDiv(Height, TChangeScaleMessage(Msg).M, TChangeScaleMessage(Msg).D);
-    FScaling := True;
-    try
-      if (Width <> LWidthScaled) or (Height <> LHeightScaled) then
-      begin
+    if (Width <> LWidthScaled) or (Height <> LHeightScaled) then
+    begin
+      FScaling := True;
+      try
         BeginUpdate;
         try
           Width := LWidthScaled;
@@ -602,9 +602,9 @@ begin
           EndUpdate;
         end;
         Change;
+      finally
+        FScaling := False;
       end;
-    finally
-      FScaling := False;
     end;
   end;
 end;

@@ -39,8 +39,10 @@ interface
 uses
   Classes
   , ImgList
+  , SVGInterfaces
   , SVGIconImageListBase
   , SVGIconImageList
+  , Windows
   , Graphics
   , ComCtrls;
 
@@ -49,18 +51,117 @@ function UpdateSVGIconListView(const AListView: TListView;
   const AIncludeIndex: Boolean = True): Integer;
 function UpdateSVGIconListViewCaptions(const AListView: TListView;
   const AShowCaption: Boolean = True): Integer;
+procedure SVGExportToPng(const AWidth, AHeight: Integer;
+  FSVG: ISVG; const AOutFolder: string;
+  const AFileName: string = '');
+{$IFDEF IgnoreAntiAliasedColor}
+procedure MakeTransparent(DC: THandle);
+{$ENDIF}
 
 implementation
 
 uses
-  SysUtils
-  , Windows
-  , Themes
+  System.SysUtils
+  , System.Types
+  , Vcl.Themes
+  , Vcl.Imaging.pngimage
   , SVGIconImageCOllection
+  {$IFDEF IgnoreAntiAliasedColor}
+  , Winapi.GDIPAPI
+  , Winapi.GDIPOBJ
+  {$ENDIF}
   {$IFDEF D10_3}
   , VirtualImageList
   {$ENDIF}
   ;
+
+// Source: http://www.entwickler-ecke.de/topic_Bitmap+pf32bit+mit+Alpha+afPremultipied+zu+PNG+speichern_103159,0.html
+type
+  TRGB = packed record B, G, R: byte end;
+  TRGBA = packed record B, G, R, A: byte end;
+  TRGBAArray = array[0..0] of TRGBA;
+
+function PNG4TransparentBitMap(aBitmap: TBitmap): TPNGImage;
+var
+  X, Y: integer;
+  BmpRGBA: ^TRGBAArray;
+  PngRGB: ^TRGB;
+begin
+  //201011 Thomas Wassermann
+  Result := TPNGImage.CreateBlank(COLOR_RGBALPHA, 8, aBitmap.Width , aBitmap.Height);
+
+  Result.CreateAlpha;
+  Result.Canvas.CopyMode:= cmSrcCopy;
+  Result.Canvas.Draw(0, 0, aBitmap);
+
+  for Y := 0 to Pred(aBitmap.Height) do
+  begin
+    BmpRGBA := aBitmap.ScanLine[Y];
+    PngRGB:= Result.Scanline[Y];
+
+    for X := 0 to Pred(aBitmap.width) do
+    begin
+      Result.AlphaScanline[Y][X] :=  BmpRGBA[X].A;
+      if aBitmap.AlphaFormat in [afDefined, afPremultiplied] then
+      begin
+        if BmpRGBA[X].A <> 0 then
+        begin
+          PngRGB^.B := Round(BmpRGBA[X].B / BmpRGBA[X].A * 255);
+          PngRGB^.R := Round(BmpRGBA[X].R / BmpRGBA[X].A * 255);
+          PngRGB^.G := Round(BmpRGBA[X].G / BmpRGBA[X].A * 255);
+        end else begin
+          PngRGB^.B := Round(BmpRGBA[X].B * 255);
+          PngRGB^.R := Round(BmpRGBA[X].R * 255);
+          PngRGB^.G := Round(BmpRGBA[X].G * 255);
+        end;
+      end;
+      Inc(PngRGB);
+    end;
+  end;
+end;
+
+{$IFDEF IgnoreAntiAliasedColor}
+procedure MakeTransparent(DC: THandle);
+var
+  Graphics: TGPGraphics;
+begin
+  Graphics := TGPGraphics.Create(DC);
+  try
+    Graphics.Clear(aclTransparent);
+  finally
+    Graphics.Free;
+  end;
+end;
+{$ENDIF}
+
+procedure SVGExportToPng(const AWidth, AHeight: Integer;
+  FSVG: ISVG; const AOutFolder: string;
+  const AFileName: string = '');
+var
+  LImagePng: TPngImage;
+  LBitmap: TBitmap;
+  LFileName: string;
+begin
+  LBitmap := nil;
+  LImagePng := nil;
+  try
+    LBitmap := TBitmap.Create;
+    LBitmap.PixelFormat := pf32bit;
+    LBitmap.SetSize(AWidth, AHeight);
+    {$IFDEF IgnoreAntiAliasedColor}
+    MakeTransparent(LBitmap.Canvas.Handle);
+    {$ENDIF}
+    FSVG.PaintTo(LBitmap.Canvas.Handle, TRectF.Create(0, 0, AWidth, AHeight));
+
+    LImagePng := PNG4TransparentBitMap(LBitmap);
+    LFileName := IncludeTrailingPathDelimiter(AOutFolder)+
+      StringReplace(AFileName, '\', '_',[rfReplaceAll])+'.png';
+    LImagePng.SaveToFile(LFileName);
+  finally
+    LBitmap.Free;
+    LImagePng.Free;
+  end;
+end;
 
 function UpdateSVGIconListView(const AListView: TListView;
   const ACategory: string = '';

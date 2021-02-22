@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{E2019DDD-8241-4D27-BDC9-9941252DAC1D}</ProjectGuid>
         <MainSource>dclSVGIconImageList.dpk</MainSource>
-        <ProjectVersion>19.1</ProjectVersion>
+        <ProjectVersion>19.2</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
@@ -106,6 +106,10 @@
         <DCCReference Include="..\SVGIconImageRegister.pas"/>
         <DCCReference Include="..\SVGTextPropertyEditorUnit.pas">
             <Form>SVGTextPropertyEditorForm</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\Source\dlgExportPNG.pas">
+            <Form>ExportToPNGDialog</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Release">

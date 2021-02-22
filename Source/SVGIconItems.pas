@@ -113,6 +113,7 @@ uses
   Winapi.GDIPAPI,
   Winapi.GDIPOBJ,
   {$ENDIF}
+  SVGIconUtils,
   System.SysUtils,
   VCL.Controls,
   VCL.Themes,
@@ -167,21 +168,6 @@ end;
 function TSVGIconItem.GetBitmap(const AWidth, AHeight: Integer;
   const AFixedColor: TColor; const AOpacity: Byte;
   const AGrayScale: Boolean; const AAntiAliasColor: TColor = clBtnFace): TBitmap;
-
-  {$IFDEF IgnoreAntiAliasedColor}
-  procedure MakeTransparent(DC: THandle);
-  var
-    Graphics: TGPGraphics;
-  begin
-    Graphics := TGPGraphics.Create(DC);
-    try
-      Graphics.Clear(aclTransparent);
-    finally
-      Graphics.Free;
-    end;
-  end;
-  {$ENDIF}
-
 var
   LAntiAliasColor: TColor;
 begin

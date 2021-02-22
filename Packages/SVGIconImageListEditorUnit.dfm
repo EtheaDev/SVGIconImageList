@@ -196,7 +196,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             Top = 138
             Width = 135
             Height = 25
-            Caption = '&Export...'
+            Caption = '&Export svg files...'
             Enabled = False
             TabOrder = 4
             OnClick = ExportButtonClick
@@ -439,6 +439,16 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         Caption = '&Delete'
         TabOrder = 1
         OnClick = DeleteButtonClick
+      end
+      object ExportPngButton: TButton
+        Left = 6
+        Top = 68
+        Width = 85
+        Height = 25
+        Caption = '&Export png...'
+        Enabled = False
+        TabOrder = 3
+        OnClick = ExportPngButtonClick
       end
     end
     object ItemGroupBox: TGroupBox

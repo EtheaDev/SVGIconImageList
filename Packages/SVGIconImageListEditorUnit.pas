@@ -124,6 +124,7 @@ type
     SVGErrorStaticText: TStaticText;
     AntiAliasColorLabel: TLabel;
     AntialiasColorComboBox: TColorBox;
+    ExportPngButton: TButton;
     procedure FormCreate(Sender: TObject);
     procedure ApplyButtonClick(Sender: TObject);
     procedure ClearAllButtonClick(Sender: TObject);
@@ -164,6 +165,7 @@ type
     procedure SVGTextEnter(Sender: TObject);
     procedure SVGTextKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure ExportPngButtonClick(Sender: TObject);
   private
     FOldSVGText: string;
     FOpenDialog: TOpenPictureDialogSvg;
@@ -208,12 +210,14 @@ implementation
 uses
   SVGInterfaces
   , System.Types
+  , System.IOUtils
   , Winapi.ShellAPI
   , Vcl.FileCtrl
   , Xml.XMLDoc
   , Vcl.Themes
   , Winapi.CommDlg
-  , SVGIconUtils;
+  , SVGIconUtils
+  , dlgExportPNG;
 
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
@@ -337,7 +341,6 @@ end;
 
 procedure TSVGIconImageListEditor.UpdateSizeGUI;
 var
-  LScale: double;
   LIconPanelSize, LIconWidth, LIconHeight: Integer;
 begin
   FUpdating := True;
@@ -447,6 +450,7 @@ begin
     ExportButton.Enabled := LIsItemSelected;
     DeleteAllButton.Enabled := LIsItemSelected;
     DeleteButton.Enabled := LIsItemSelected;
+    ExportPngButton.Enabled := LIsItemSelected;
     ReformatXMLButton.Enabled := LIsItemSelected;
     ReplaceButton.Enabled := LIsItemSelected;
     SetCategoriesButton.Enabled := LIsItemSelected;
@@ -941,6 +945,16 @@ begin
       ExtractFileDrive(FDir), FDir,
       [sdNewUI, sdNewFolder]) then
     SaveIconsToFiles(IncludeTrailingPathDelimiter(FDir));
+end;
+
+procedure TSVGIconImageListEditor.ExportPngButtonClick(Sender: TObject);
+var
+  LOutputPath: string;
+begin
+  LOutputPath := IncludeTrailingPathDelimiter(TPath.GetPicturesPath);
+  ExportToPNG(Self.ClientRect,
+    LOutputPath+SelectedIcon.IconName, SelectedIcon.SVGText,
+    True, SVGIconImageList.Size);
 end;
 
 procedure TSVGIconImageListEditor.FormDestroy(Sender: TObject);
