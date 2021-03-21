@@ -279,6 +279,7 @@ end;
     FFileName: string;
     FGrayscale: Boolean;
     FFixedColor: TColor;
+    fApplyFixedColorToRootOnly: Boolean;
     FIdDict: TDictionary<string, TSVGObject>;
 
     procedure SetViewBox(const Value: TRectF);
@@ -290,6 +291,7 @@ end;
   private
     FStyles: TStyleList;
     procedure SetFixedColor(const Value: TColor);
+    procedure SetApplyFixedColorToRootOnly(Value:Boolean);
     procedure ReloadFromText;
     procedure SetGrayscale(const Value: boolean);
   protected
@@ -331,6 +333,8 @@ end;
     property Angle: TFloat read FAngle write SetAngle;
     property ViewBox: TRectF read FViewBox write SetViewBox;
     property Grayscale: boolean read FGrayscale write SetGrayscale;
+    property ApplyFixedColorToRootOnly: Boolean read fApplyFixedColorToRootOnly
+      write SetApplyFixedColorToRootOnly;
     property FixedColor: TColor read FFixedColor write SetFixedColor;
     property IdDict : TDictionary<string, TSVGObject> read FIdDict;
 
@@ -2238,6 +2242,16 @@ begin
   end;
 end;
 
+procedure TSVG.SetApplyFixedColorToRootOnly(Value: Boolean);
+begin
+  if fApplyFixedColorToRootOnly <> Value then
+  begin
+    fApplyFixedColorToRootOnly := Value;
+    if fFixedColor <> TColors.SysDefault then
+      ReloadFromText;
+  end;
+end;
+
 procedure TSVG.SetBounds(const Bounds: TGPRectF);
 begin
   FRootBounds := Bounds;
@@ -3102,6 +3116,13 @@ begin
   SLength := Length(S);
   while StartIndex <= SLength do
   begin
+    // Trim initial whitespace
+    if S[StartIndex].IsWhiteSpace then
+    begin
+      Inc(StartIndex);
+      Continue;
+    end;
+
     if not (AnsiChar(S[StartIndex]) in IDs) then Exit;  // invalid path
     Found := StartIndex + 1;
     while (Found <= SLength) and not (AnsiChar(S[Found]) in IDs) do

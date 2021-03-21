@@ -330,6 +330,7 @@ begin
     if fFixedColor <> TColors.SysDefault then
     begin
        Color := fFixedColor;
+       fFixedColor := TColors.SysDefault;
        LoadFromSource;
        SetFixedColor(Color);
     end;
