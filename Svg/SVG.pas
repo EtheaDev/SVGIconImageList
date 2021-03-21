@@ -1292,6 +1292,7 @@ begin
       FFillColor   := GetSVGColor(FFillURI);
       if (LRoot.FixedColor <> SVG_INHERIT_COLOR) and
          (FFillColor <> SVG_INHERIT_COLOR) and (FFillColor <> SVG_NONE_COLOR)
+         and ((LRoot = Self) or not LRoot.ApplyFixedColorToRootOnly)
       then
         FFillColor := LRoot.FixedColor;
     end;
@@ -1308,6 +1309,7 @@ begin
       FStrokeColor   := GetSVGColor(FStrokeURI);
       if (LRoot.FixedColor <> SVG_INHERIT_COLOR) and
          (FStrokeColor <> SVG_INHERIT_COLOR) and (FStrokeColor <> SVG_NONE_COLOR)
+         and ((LRoot = Self) or not LRoot.ApplyFixedColorToRootOnly)
       then
         FStrokeColor := LRoot.FixedColor;
     end;
