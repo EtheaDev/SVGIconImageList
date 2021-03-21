@@ -4,22 +4,20 @@
  Purpose:   High-level encapsuation of Direct2D Svg functionality
  History:
 -----------------------------------------------------------------------------}
+{$INCLUDE SVGIconImageList.inc}
+
 unit D2DSVGFactory;
 
 interface
 Uses
   Winapi.D2D1,
   SVGInterfaces;
-
 // Factory Methods
 function GetD2DSVGFactory: ISVGFactory;
 function RenderTarget: ID2D1DCRenderTarget;
-
 // Support functions
 function WinSvgSupported: Boolean;
-
 implementation
-
 Uses
   Winapi.Windows,
   Winapi.Messages,
@@ -32,20 +30,19 @@ Uses
   System.SysUtils,
   System.Classes,
   System.RegularExpressions;
-
 resourcestring
   D2D_ERROR_NOT_AVAILABLE    = 'Windows SVG support is not available';
   D2D_ERROR_PARSING_SVG_TEXT = 'Error parsing SVG Text: %s';
   D2D_ERROR_UNSUPPORTED_SVG  = '<style> or <text> elements and class="" attributes are not supported by Windows SVG';
 
 type
-
   TD2DSVG = class(TInterfacedObject, ISVG)
   private
     fSource: String;
     fWidth: Single;
     fHeight: Single;
     fFixedColor: TColor;
+    fApplyFixedColorToRootOnly: Boolean;
     fGrayScale: Boolean;
     fSvgDoc: ID2D1SvgDocument;
     // property access methods
@@ -57,6 +54,8 @@ type
     procedure SetGrayScale(const IsGrayScale: Boolean);
     function GetFixedColor: TColor;
     procedure SetFixedColor(const Color: TColor);
+    function GetApplyFixedColorToRootOnly: Boolean;
+    procedure SetApplyFixedColorToRootOnly(Value:Boolean);
     function GetSource: string;
     procedure SetSource(const ASource: string);
     // procedures and functions
@@ -76,7 +75,6 @@ type
   public
     constructor Create;
   end;
-
   TD2DSVGHandler = class(TInterfacedObject, ISVGFactory)
     function NewSvg: ISVG;
     // class stuff
@@ -86,11 +84,7 @@ type
       factoryOptions: PD2D1FactoryOptions=nil): ID2D1Factory; static;
     class function RT: ID2D1DCRenderTarget; static;
   end;
-
-{$INCLUDE SVGIconImageList.inc}
-
 { TD2DSVG }
-
 {$IFDEF CheckForUnsupportedSvg}
 procedure TD2DSVG.CheckForUnsupportedSvg;
 const
@@ -107,13 +101,11 @@ Const
 begin
   SetSource(EmptySvg);
 end;
-
 constructor TD2DSVG.Create;
 begin
   inherited;
   fFixedColor:= TColors.SysDefault; // clDefault
 end;
-
 procedure TD2DSVG.SvgFromStream(Stream: TStream);
 var
   XStream: IStream;
@@ -154,7 +146,6 @@ begin
   else
     raise Exception.CreateRes(@D2D_ERROR_NOT_AVAILABLE);
 end;
-
 procedure TD2DSVG.LoadFromFile(const FileName: string);
 Var
   FileStream: TFileStream;
@@ -166,18 +157,15 @@ begin
     FileStream.Free;
   end;
 end;
-
 procedure TD2DSVG.LoadFromSource;
 var
   MStream: TMemoryStream;
 begin
   fSvgDoc := nil;
   if fSource = '' then Exit;
-
 {$IFDEF CheckForUnsupportedSvg}
   CheckForUnsupportedSvg;
 {$ENDIF}
-
   try
     MStream := TMemoryStream.Create;
     try
@@ -192,22 +180,23 @@ begin
       raise Exception.CreateFmt(D2D_ERROR_PARSING_SVG_TEXT, [E.Message]);
   end;
 end;
+function TD2DSVG.GetApplyFixedColorToRootOnly: Boolean;
+begin
+  Result := fApplyFixedColorToRootOnly;
+end;
 
 function TD2DSVG.GetFixedColor: TColor;
 begin
   Result := fFixedColor;
 end;
-
 function TD2DSVG.GetGrayScale: Boolean;
 begin
   Result := fGrayScale;
 end;
-
 function TD2DSVG.GetHeight: Single;
 begin
   Result := fHeight;
 end;
-
 function TD2DSVG.GetOpacity: Single;
 Var
   Root: ID2D1SvgElement;
@@ -220,27 +209,22 @@ begin
         @Result, SizeOf(Result));
   end;
 end;
-
 function TD2DSVG.GetSource: string;
 begin
   Result := FSource;
 end;
-
 function TD2DSVG.GetWidth: Single;
 begin
   Result := fWidth;
 end;
-
 function TD2DSVG.IsEmpty: Boolean;
 Var
   Root: ID2D1SvgElement;
 begin
   if fSvgDoc = nil then Exit(True);
-
   fSvgDoc.GetRoot(Root);
   Result := not Root.HasChildren;
 end;
-
 procedure TD2DSVG.LoadFromStream(Stream: TStream);
 Var
   OldPos : Int64;
@@ -253,7 +237,6 @@ begin
   // Now create the SVG
   SvgFromStream(Stream);
 end;
-
 procedure TD2DSVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
 var
   Matrix : TD2DMatrix3X2F;
@@ -262,7 +245,6 @@ var
   Ratio: Single;
 begin
   if not Assigned(fSvgDoc) then Exit;
-
   SvgRect:= R;
   if (fWidth > 0) and (fHeight > 0) then begin
     if KeepAspectRatio then
@@ -286,7 +268,6 @@ begin
     RT.EndDraw;
   end;
 end;
-
 procedure TD2DSVG.SaveToFile(const FileName: string);
 Var
   FileStream: TFileStream;
@@ -298,7 +279,6 @@ begin
     FileStream.Free;
   end;
 end;
-
 procedure TD2DSVG.SaveToStream(Stream: TStream);
 var
   Buffer: TBytes;
@@ -306,16 +286,13 @@ begin
   Buffer := TEncoding.UTF8.GetBytes(FSource);
   Stream.WriteBuffer(Buffer, Length(Buffer))
 end;
-
 type
   TSvgElementProc = reference to procedure(const Element: ID2D1SvgElement);
-
 procedure TransformSvgElement(const Element: ID2D1SvgElement; Proc: TSvgElementProc);
 Var
   Child, NextChild: ID2D1SvgElement;
 begin
   Proc(Element);
-
   Element.GetFirstChild(Child);
   while Assigned(Child) do
   begin
@@ -325,12 +302,10 @@ begin
     Child := NextChild;
   end;
 end;
-
 procedure RecolorSubtree(const Element: ID2D1SvgElement; NewColor: TD2D1ColorF);
 begin
   TransformSvgElement(Element,
     procedure(const Element: ID2D1SvgElement)
-
       procedure RecolorAttribute(Attr: PWideChar);
       Var
         IsInherited: Bool;
@@ -339,12 +314,26 @@ begin
           Element.SetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
               @NewColor, SizeOf(NewColor));
       end;
-
     begin
       RecolorAttribute('fill');
       RecolorAttribute('stroke');
       RecolorAttribute('stop-color');
     end);
+end;
+procedure TD2DSVG.SetApplyFixedColorToRootOnly(Value: Boolean);
+var
+  Color: TColor;
+begin
+  if fApplyFixedColorToRootOnly <> Value then
+  begin
+    fApplyFixedColorToRootOnly := Value;
+    if fFixedColor <> TColors.SysDefault then
+    begin
+       Color := fFixedColor;
+       LoadFromSource;
+       SetFixedColor(Color);
+    end;
+  end;
 end;
 
 procedure TD2DSVG.SetFixedColor(const Color: TColor);
@@ -353,31 +342,26 @@ Var
   NewColor: TD2D1ColorF;
 begin
   if Color = fFixedColor then Exit;
-
   if (fGrayScale and (Color <> TColors.SysDefault)) or
     ((fFixedColor <> TColors.SysDefault) and (Color = TColors.SysDefault))
   then
     LoadFromSource;
-
   if Color < 0  then
     fFixedColor := GetSysColor(Color and $000000FF)
   else
     fFixedColor := Color;
-
   fGrayScale := False;
   if (FFixedColor <> TColors.SysDefault) and Assigned(fSvgDoc) then
   begin
     fSvgDoc.GetRoot(Root);
-
     with TColors(fFixedColor) do
       NewColor :=  D2D1ColorF(r/255, g/255, b/255, 1);
-
     Root.SetAttributeValue('fill', D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
               @NewColor, SizeOf(NewColor));
-    RecolorSubtree(Root, NewColor);
+    if not fApplyFixedColorToRootOnly then
+      RecolorSubtree(Root, NewColor);
   end;
 end;
-
 // Converts any color to grayscale
 function GrayScaleColor(Color : TD2D1ColorF) : TD2D1ColorF;
 var
@@ -388,7 +372,6 @@ begin
   // set the result to the new grayscale color including the alpha info
   Result := D2D1ColorF(LGray, LGray, LGray, Color.A);
 end;
-
 procedure GrayScaleSubtree(const Element: ID2D1SvgElement);
 begin
   TransformSvgElement(Element,
@@ -396,7 +379,6 @@ begin
     Var
       OldColor: TD2D1ColorF;
       NewColor: TD2D1ColorF;
-
       procedure GrayScaleAttribute(Attr: PWideChar);
       Var
         IsInherited: Bool;
@@ -413,14 +395,12 @@ begin
           end;
         end;
       end;
-
     begin
       GrayScaleAttribute('fill');
       GrayScaleAttribute('stroke');
       GrayScaleAttribute('stop-color');
     end);
 end;
-
 procedure TD2DSVG.SetGrayScale(const IsGrayScale: Boolean);
 Var
   Root: ID2D1SvgElement;
@@ -428,17 +408,14 @@ begin
   if IsGrayScale = fGrayScale then Exit;
   if fGrayScale or (fFixedColor <> TColors.SysDefault) then
     LoadFromSource;
-
   fGrayScale := IsGrayScale;
   fFixedColor := TColors.SysDefault;
-
   if fGrayScale then
   begin
     fSvgDoc.GetRoot(Root);
     GrayScaleSubtree(Root);
   end;
 end;
-
 procedure TD2DSVG.SetOpacity(const Opacity: Single);
 Var
   Root: ID2D1SvgElement;
@@ -450,7 +427,6 @@ begin
         @Opacity, SizeOf(Opacity));
   end;
 end;
-
 procedure TD2DSVG.SetSource(const ASource: string);
 begin
   if FSource <> ASource then
@@ -459,7 +435,6 @@ begin
     LoadFromSource;
   end;
 end;
-
 procedure TD2DSVG.SourceFromStream(Stream: TStream);
 var
   Size: Integer;
@@ -470,14 +445,11 @@ begin
   Stream.Read(Buffer, 0, Size);
   FSource := TEncoding.UTF8.GetString(Buffer);
 end;
-
 { TD2DHandler }
-
 function TD2DSVGHandler.NewSvg: ISVG;
 begin
   Result := TD2DSVG.Create;
 end;
-
 class function TD2DSVGHandler.D2DFactory(factoryType: TD2D1FactoryType;
   factoryOptions: PD2D1FactoryOptions): ID2D1Factory;
 var
@@ -489,13 +461,11 @@ begin
       factoryOptions, LD2DFactory))
     then
       RaiseLastOSError;
-
     if InterlockedCompareExchangePointer(Pointer(SingletonD2DFactory), Pointer(LD2DFactory), nil) = nil then
       LD2DFactory._AddRef;
   end;
   Result := SingletonD2DFactory;
 end;
-
 class function TD2DSVGHandler.RT: ID2D1DCRenderTarget;
 Var
   RenderTarget: ID2D1DCRenderTarget;
@@ -514,7 +484,6 @@ begin
         RenderTarget))
     then
       RaiseLastOSError;
-
     if InterlockedCompareExchangePointer(Pointer(SingletonRenderTarget),
       Pointer(RenderTarget), nil) = nil
     then
@@ -522,22 +491,18 @@ begin
   end;
   Result := SingletonRenderTarget;
 end;
-
 // Factory methods
 function GetD2DSVGFactory: ISVGFactory;
 begin
   Result := TD2DSVGHandler.Create;
 end;
-
 function RenderTarget: ID2D1DCRenderTarget;
 begin
   Result := TD2DSVGHandler.RT;
 end;
-
 // Support functions
 function WinSvgSupported: Boolean;
 begin
   Result := TOSVersion.Check(10, 0) and (TOSVersion.Build >= 15063);
 end;
-
 end.

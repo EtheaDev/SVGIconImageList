@@ -33,6 +33,8 @@ type
     procedure SetGrayScale(const IsGrayScale: Boolean);
     function GetFixedColor: TColor;
     procedure SetFixedColor(const Color: TColor);
+    function GetApplyFixedColorToRootOnly: Boolean;
+    procedure SetApplyFixedColorToRootOnly(Value:Boolean);
     function GetSource: string;
     procedure SetSource(const ASource: string);
     // procedures and functions
@@ -49,6 +51,8 @@ type
     property Opacity: Single read GetOpacity write SetOpacity;
     property GrayScale: Boolean read GetGrayScale write SetGrayScale;
     property FixedColor: TColor read GetFixedColor write SetFixedColor;
+    property ApplyFixedColorToRootOnly: Boolean read GetApplyFixedColorToRootOnly
+      write SetApplyFixedColorToRootOnly;
     property Source: string read GetSource write SetSource;
   end;
 
