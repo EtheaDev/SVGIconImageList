@@ -3009,7 +3009,7 @@ type
     // string type.
     function GetAttributeValue(name: LPWSTR;
                                _type: D2D1_SVG_ATTRIBUTE_STRING_TYPE;
-                               out value: PWideChar;
+                               value: PWideChar;
                                valueCount: UINT32): HResult; overload; stdcall;
 
     // Gets the string length of an attribute of this element. The returned string
