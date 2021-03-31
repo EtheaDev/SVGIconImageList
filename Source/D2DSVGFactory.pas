@@ -302,31 +302,31 @@ begin
     Child := NextChild;
   end;
 end;
+procedure RecolorAttribute(const Element: ID2D1SvgElement; Attr: PWideChar; NewColor: TD2D1ColorF);
+Var
+  IsInherited: Bool;
+  TextValue: string;
+  Count: UINT32;
+begin
+  if Element.IsAttributeSpecified(Attr, @IsInherited) and not IsInherited then
+  begin
+    if not Succeeded(Element.GetAttributeValueLength(Attr, D2D1_SVG_ATTRIBUTE_STRING_TYPE_SVG, Count)) then Exit;
+    SetLength(TextValue, Count);
+    if not Succeeded(Element.GetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_STRING_TYPE_SVG, PWideChar(TextValue), Count+1)) then Exit;
+    if TextValue = 'none' then
+      Exit;
+    Element.SetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
+        @NewColor, SizeOf(NewColor));
+  end;
+end;
 procedure RecolorSubtree(const Element: ID2D1SvgElement; NewColor: TD2D1ColorF);
 begin
   TransformSvgElement(Element,
     procedure(const Element: ID2D1SvgElement)
-      procedure RecolorAttribute(Attr: PWideChar);
-      Var
-        IsInherited: Bool;
-        TextValue: string;
-        Count: UINT32;
-      begin
-        if Element.IsAttributeSpecified(Attr, @IsInherited) and not IsInherited then
-        begin
-          if not Succeeded(Element.GetAttributeValueLength(Attr, D2D1_SVG_ATTRIBUTE_STRING_TYPE_SVG, Count)) then Exit;
-          SetLength(TextValue, Count);
-          if not Succeeded(Element.GetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_STRING_TYPE_SVG, PWideChar(TextValue), Count+1)) then Exit;
-          if TextValue = 'none' then
-            Exit;
-          Element.SetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
-              @NewColor, SizeOf(NewColor));
-        end;
-      end;
     begin
-      RecolorAttribute('fill');
-      RecolorAttribute('stroke');
-      RecolorAttribute('stop-color');
+      RecolorAttribute(Element, 'fill', NewColor);
+      RecolorAttribute(Element, 'stroke', NewColor);
+      RecolorAttribute(Element, 'stop-color', NewColor);
     end);
 end;
 procedure TD2DSVG.SetApplyFixedColorToRootOnly(Value: Boolean);
@@ -369,7 +369,9 @@ begin
     Root.SetAttributeValue('fill', D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
               @NewColor, SizeOf(NewColor));
     if not fApplyFixedColorToRootOnly then
-      RecolorSubtree(Root, NewColor);
+      RecolorSubtree(Root, NewColor)
+    else
+      RecolorAttribute(Root, 'stroke', NewColor);
   end;
 end;
 // Converts any color to grayscale
