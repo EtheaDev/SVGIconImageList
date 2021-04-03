@@ -155,7 +155,8 @@ begin
 
     LImagePng := PNG4TransparentBitMap(LBitmap);
     LFileName := IncludeTrailingPathDelimiter(AOutFolder)+
-      StringReplace(AFileName, '\', '_',[rfReplaceAll])+'.png';
+      StringReplace(AFileName, '\', '_',[rfReplaceAll]);
+    ChangeFileExt(LFileName,'.png');
     LImagePng.SaveToFile(LFileName);
   finally
     LBitmap.Free;

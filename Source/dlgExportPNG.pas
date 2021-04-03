@@ -224,7 +224,7 @@ begin
   Result := FormatEdit.Text;
   Result := StringReplace(Result, '%FileName%', FIconName, [rfReplaceAll, rfIgnoreCase]);
   Result := StringReplace(Result, '%Size%', ASize.ToString, [rfReplaceAll, rfIgnoreCase]);
-  Result := Result + '.png';
+  Result := ChangeFileExt(Result,'.png');
 end;
 
 procedure TExportToPNGDialog.OutputButtonClick(Sender: TObject);
