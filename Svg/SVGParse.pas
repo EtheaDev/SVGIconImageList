@@ -252,6 +252,9 @@ begin
     S := Trim(URI);
     if (Copy(S, 1, 5) = 'url(#') and (S[Length(S)] = ')') then
       Result := Copy(S, 6, Length(S) - 6);
+    // Remove single quotes
+    if (Length(Result) > 0) and (Result[1] ='''') and (Result[Length(Result)]='''') then
+       Result := Copy(Result, 2, Length(Result) - 2);
   end;
 end;
 
