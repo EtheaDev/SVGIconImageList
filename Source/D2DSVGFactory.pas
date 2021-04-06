@@ -313,7 +313,7 @@ begin
     if not Succeeded(Element.GetAttributeValueLength(Attr, D2D1_SVG_ATTRIBUTE_STRING_TYPE_SVG, Count)) then Exit;
     SetLength(TextValue, Count);
     if not Succeeded(Element.GetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_STRING_TYPE_SVG, PWideChar(TextValue), Count+1)) then Exit;
-    if TextValue = 'none' then
+    if (TextValue = 'none') or TextValue.StartsWith('url') then
       Exit;
     Element.SetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
         @NewColor, SizeOf(NewColor));
