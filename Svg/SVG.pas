@@ -1251,6 +1251,7 @@ var
   LRoot: TSVG;
   C: Integer;
   Style: TStyle;
+  S: string;
 begin
   LRoot := GetRoot;
   for C := -2 to Length(FClasses) do
@@ -1282,39 +1283,44 @@ begin
       ReadStyle(Style);
   end;
 
-
   if FFillURI <> '' then
   begin
-    if LRoot.Grayscale then
-      FFillColor   := GetSVGGrayscale(GetSVGColor(FFillURI))
-    else
-    begin
-      FFillColor   := GetSVGColor(FFillURI);
-      if (LRoot.FixedColor <> SVG_INHERIT_COLOR) and
-         (FFillColor <> SVG_INHERIT_COLOR) and (FFillColor <> SVG_NONE_COLOR)
-         and ((LRoot = Self) or not LRoot.ApplyFixedColorToRootOnly)
-      then
-        FFillColor := LRoot.FixedColor;
-    end;
-
+    S := FFillURI;
     FFillURI := ParseURI(FFillURI);
+    if FFillURI = '' then
+    begin
+      if LRoot.Grayscale then
+        FFillColor   := GetSVGGrayscale(GetSVGColor(S))
+      else
+      begin
+        FFillColor   := GetSVGColor(S);
+        if (LRoot.FixedColor <> SVG_INHERIT_COLOR) and
+           (FFillColor <> SVG_INHERIT_COLOR) and (FFillColor <> SVG_NONE_COLOR)
+           and ((LRoot = Self) or not LRoot.ApplyFixedColorToRootOnly)
+        then
+          FFillColor := LRoot.FixedColor;
+      end;
+    end;
   end;
 
   if FStrokeURI <> '' then
   begin
-    if LRoot.Grayscale then
-      FStrokeColor   := GetSVGGrayscale(GetSVGColor(FStrokeURI))
-    else
-    begin
-      FStrokeColor   := GetSVGColor(FStrokeURI);
-      if (LRoot.FixedColor <> SVG_INHERIT_COLOR) and
-         (FStrokeColor <> SVG_INHERIT_COLOR) and (FStrokeColor <> SVG_NONE_COLOR)
-         and ((LRoot = Self) or not LRoot.ApplyFixedColorToRootOnly)
-      then
-        FStrokeColor := LRoot.FixedColor;
-    end;
-
+    S := FStrokeURI;
     FStrokeURI := ParseURI(FStrokeURI);
+    if FStrokeURI = '' then
+    begin
+      if LRoot.Grayscale then
+        FStrokeColor   := GetSVGGrayscale(GetSVGColor(S))
+      else
+      begin
+        FStrokeColor   := GetSVGColor(S);
+        if (LRoot.FixedColor <> SVG_INHERIT_COLOR) and
+           (FStrokeColor <> SVG_INHERIT_COLOR) and (FStrokeColor <> SVG_NONE_COLOR)
+           and ((LRoot = Self) or not LRoot.ApplyFixedColorToRootOnly)
+        then
+          FStrokeColor := LRoot.FixedColor;
+      end;
+    end;
   end;
 
   FStyleChanged := False;
