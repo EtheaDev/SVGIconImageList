@@ -78,6 +78,7 @@ type
   private
     FURI: string;
     FGradientUnits: TGradientUnits;
+    FMinOpacity: TFloat;
   protected
     procedure AssignTo(Dest: TPersistent); override;
     function GetColors(Alpha: Byte): TStopColors; virtual;
@@ -432,7 +433,7 @@ begin
     RevColors.Colors[i] := Colors.Colors[Colors.Count - 1 - i];
     RevColors.Positions[i] := 1 - Colors.Positions[Colors.Count - 1 - i];
   end;
-  if Colors.Count > 0 then
+  if (Colors.Count > 0) and (FMinOpacity = 1) then
     // Temporarily store last color. Used in TSVGBasic.BeforePaint
     DestObject.FillColor := Integer(RevColors.Colors[0]);
 
@@ -507,11 +508,14 @@ begin
     Result.Positions[0] := 0;
   end;
 
-   for C := 0 to Item.Count - 1 do
+  FMinOpacity := 1;
+  for C := 0 to Item.Count - 1 do
   begin
     Stop := TSVGStop(Item.Items[C]);
     Result.Colors[C + Start] := ConvertColor(Stop.StopColor, Round(Alpha * Stop.Opacity));
     Result.Positions[C + Start] := Stop.Stop;
+    if Stop.Opacity < FMinOpacity then
+      FMinOpacity := Stop.Opacity;
   end;
 
   if (ColorCount - Start) > Item.Count then
