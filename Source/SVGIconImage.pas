@@ -239,7 +239,7 @@ begin
       if FImageIndex < FImageList.Count then
         Result := SVGIconItem(FImageIndex).ApplyFixedColorToRootOnly;
     end;
-    Result := TSVGIconImageListBase(FImageList).ApplyFixedColorToRootOnly;
+    Result := Result or TSVGIconImageListBase(FImageList).ApplyFixedColorToRootOnly;
   end;
 end;
 

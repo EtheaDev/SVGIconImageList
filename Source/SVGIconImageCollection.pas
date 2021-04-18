@@ -464,13 +464,13 @@ begin
   LSVG := LItem.SVG;
   if LItem.FixedColor <> SVG_INHERIT_COLOR then
   begin
-    LSVG.FixedColor := LItem.FixedColor;
     LSVG.ApplyFixedColorToRootOnly := LItem.ApplyFixedColorToRootOnly;
+    LSVG.FixedColor := LItem.FixedColor;
   end
   else
   begin
-    LSVG.FixedColor := FFixedColor;
     LSVG.ApplyFixedColorToRootOnly := FApplyFixedColorToRootOnly;
+    LSVG.FixedColor := FFixedColor;
   end;
   if LItem.GrayScale or FGrayScale then
     LSVG.Grayscale := True
