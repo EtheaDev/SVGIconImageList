@@ -2,7 +2,7 @@
 
 ## Three engines to render SVG (GDI+, Direct2D or Cairo) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 2.2.5 (VCL+FMX)
+### Actual official version 2.2.6 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -63,6 +63,10 @@ You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtension
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 ### RELEASE NOTES
+18 Apr 2021: version 2.2.6 (VCL+FMX)
+- Added new ApplyFixedColorToRootOnly property
+- Added demo for new TControlList component (only for D10.4.2)
+
 22 Feb 2021: version 2.2.5 (VCL+FMX)
 - Added export to PNG option into Component editor
 
