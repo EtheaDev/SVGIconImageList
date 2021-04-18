@@ -63,12 +63,14 @@ type
   private
     FSVGItems: TSVGIconItems;
     FFixedColor: TColor;
+    FApplyFixedColorToRootOnly: Boolean;
     FGrayScale: Boolean;
     FAntiAliasColor: TColor;
     procedure SetSVGIconItems(const Value: TSVGIconItems);
     procedure SetFixedColor(const Value: TColor);
     procedure SetGrayScale(const Value: Boolean);
     procedure SetAntiAliasColor(const Value: TColor);
+    procedure SetApplyFixedColorToRootOnly(const Value: Boolean);
 
   protected
     {$IFDEF D10_3+}
@@ -83,7 +85,9 @@ type
     procedure DefineProperties(Filer: TFiler); override;
 
   public
-    procedure SetColors(AFixedColor: TColor; AAntiAliasColor: TColor = clBtnFace);
+    procedure SetColors(const AFixedColor: TColor = SVG_INHERIT_COLOR;
+      const AApplyToRootOnly: Boolean = False;
+      const AAntiAliasColor: TColor = clBtnFace);
     {$IFDEF D10_3+}
     function IsIndexAvailable(AIndex: Integer): Boolean; override;
     function GetIndexByName(const AName: String): Integer; override;
@@ -104,7 +108,8 @@ type
 
     function Add(const ASVG: ISVG; const AIconName: string;
        const AGrayScale: Boolean = False;
-       const AFixedColor: TColor = SVG_INHERIT_COLOR): Integer;
+       const AFixedColor: TColor = SVG_INHERIT_COLOR;
+       const AApplyToRootOnly: Boolean = False): Integer;
     procedure Delete(const Index: Integer); overload;
     procedure Delete(const ACategory: String; AStartIndex, AEndIndex: Integer); overload;
     procedure Remove(const Name: string);
@@ -117,6 +122,7 @@ type
   published
     property SVGIconItems: TSVGIconItems read FSVGItems write SetSVGIconItems;
     property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
+    property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default False;
     property AntiAliasColor: TColor read FAntiAliasColor write SetAntiAliasColor default clBtnFace;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
   end;
@@ -129,8 +135,11 @@ uses
 
 { TSVGIconImageCollection }
 
-function TSVGIconImageCollection.Add(const ASVG: ISVG; const AIconName: string;
-  const AGrayScale: Boolean; const AFixedColor: TColor): Integer;
+function TSVGIconImageCollection.Add(
+  const ASVG: ISVG; const AIconName: string;
+  const AGrayScale: Boolean = False;
+  const AFixedColor: TColor = SVG_INHERIT_COLOR;
+  const AApplyToRootOnly: Boolean = False): Integer;
 var
   Item: TSVGIconItem;
 begin
@@ -140,6 +149,7 @@ begin
     Item.SVG := ASVG;
     Item.IconName := AIconName;
     Item.FixedColor := AFixedColor;
+    Item.ApplyFixedColorToRootOnly := AApplyToRootOnly;
     Item.GrayScale := AGrayScale;
   finally
     FSVGItems.EndUpdate;
@@ -152,6 +162,7 @@ begin
   if Source is TSVGIconImageCollection then
   begin
     FFixedColor := TSVGIconImageCollection(Source).FFixedColor;
+    FApplyFixedColorToRootOnly := TSVGIconImageCollection(Source).FApplyFixedColorToRootOnly;
     FGrayScale := TSVGIconImageCollection(Source).FGrayScale;
     FSVGItems.Assign(TSVGIconImageCollection(Source).SVGIconItems)
   end
@@ -176,6 +187,7 @@ begin
   inherited;
   FSVGItems := TSVGIconItems.Create(Self);
   FFixedColor := SVG_INHERIT_COLOR;
+  FApplyFixedColorToRootOnly := False;
   FAntiAliasColor := clBtnFace;
   FGrayScale := False;
 end;
@@ -316,13 +328,16 @@ begin
   end;
 end;
 
-procedure TSVGIconImageCollection.SetColors(AFixedColor,
-  AAntiAliasColor: TColor);
+procedure TSVGIconImageCollection.SetColors(
+  const AFixedColor: TColor = SVG_INHERIT_COLOR;
+  const AApplyToRootOnly: Boolean = False;
+  const AAntiAliasColor: TColor = clBtnFace);
 begin
   FSVGItems.BeginUpdate;
   try
-    FixedColor := AFixedColor;
-    AntiAliasColor := AAntiAliasColor;
+    FFixedColor := AFixedColor;
+    FApplyFixedColorToRootOnly := AApplyToRootOnly;
+    FAntiAliasColor := AAntiAliasColor;
   finally
     FSVGItems.EndUpdate;
   end;
@@ -342,6 +357,21 @@ begin
     end;
   end;
 end;
+
+procedure TSVGIconImageCollection.SetApplyFixedColorToRootOnly(
+  const Value: Boolean);
+begin
+  if FApplyFixedColorToRootOnly <> Value then
+  begin
+    FSVGItems.BeginUpdate;
+    try
+      FApplyFixedColorToRootOnly := Value;
+    finally
+      FSVGItems.EndUpdate;
+    end;
+  end;
+end;
+
 
 procedure TSVGIconImageCollection.SetGrayScale(const Value: Boolean);
 begin
@@ -410,8 +440,8 @@ end;
 function TSVGIconImageCollection.GetBitmap(AIndex: Integer; AWidth, AHeight: Integer): TBitmap;
 begin
   if (AIndex >= 0) and (AIndex < FSVGItems.Count ) then
-    Result := FSVGItems[AIndex].GetBitmap(AWidth, AHeight, FFixedColor, 255,
-      FGrayScale, FAntiAliasColor)
+    Result := FSVGItems[AIndex].GetBitmap(AWidth, AHeight, FFixedColor,
+      FApplyFixedColorToRootOnly, 255, FGrayScale, FAntiAliasColor)
   else
     Result := nil;
 end;
@@ -433,9 +463,15 @@ begin
   LItem := FSVGItems.Items[AIndex];
   LSVG := LItem.SVG;
   if LItem.FixedColor <> SVG_INHERIT_COLOR then
-    LSVG.FixedColor := LItem.FixedColor
+  begin
+    LSVG.FixedColor := LItem.FixedColor;
+    LSVG.ApplyFixedColorToRootOnly := LItem.ApplyFixedColorToRootOnly;
+  end
   else
+  begin
     LSVG.FixedColor := FFixedColor;
+    LSVG.ApplyFixedColorToRootOnly := FApplyFixedColorToRootOnly;
+  end;
   if LItem.GrayScale or FGrayScale then
     LSVG.Grayscale := True
   else

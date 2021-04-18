@@ -3,7 +3,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   Top = 450
   Caption = 'SVG Icon ImageList Editor %s - Copyright Ethea S.r.l.'
   ClientHeight = 619
-  ClientWidth = 791
+  ClientWidth = 719
   Color = clBtnFace
   Constraints.MinHeight = 600
   Constraints.MinWidth = 700
@@ -23,7 +23,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   object BottomSplitter: TSplitter
     Left = 0
     Top = 377
-    Width = 791
+    Width = 719
     Height = 4
     Cursor = crVSplit
     Align = alBottom
@@ -250,9 +250,9 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           end
           object PropertiesGroupBox: TGroupBox
             Left = 0
-            Top = 154
+            Top = 138
             Width = 185
-            Height = 159
+            Height = 175
             Align = alBottom
             Caption = 'Global properties'
             TabOrder = 1
@@ -267,7 +267,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             end
             object OpacityLabel: TLabel
               Left = 6
-              Top = 105
+              Top = 127
               Width = 80
               Height = 15
               AutoSize = False
@@ -276,7 +276,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             end
             object AntiAliasColorLabel: TLabel
               Left = 6
-              Top = 62
+              Top = 84
               Width = 99
               Height = 15
               AutoSize = False
@@ -297,35 +297,44 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             end
             object GrayScaleCheckBox: TCheckBox
               Left = 73
-              Top = 128
+              Top = 150
               Width = 85
               Height = 17
               Caption = 'GrayScale'
-              TabOrder = 3
+              TabOrder = 4
               OnClick = GrayScaleCheckBoxClick
             end
             object OpacitySpinEdit: TSpinEdit
               Left = 5
-              Top = 122
+              Top = 144
               Width = 64
               Height = 24
               MaxValue = 255
               MinValue = 0
-              TabOrder = 2
+              TabOrder = 3
               Value = 0
               OnChange = OpacitySpinEditChange
             end
             object AntialiasColorComboBox: TColorBox
               Left = 6
-              Top = 79
+              Top = 101
               Width = 147
               Height = 22
               DefaultColorColor = clDefault
               NoneColorColor = clNone
               Selected = clNone
               Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
-              TabOrder = 1
+              TabOrder = 2
               OnSelect = AntialiasColorComboBoxSelect
+            end
+            object ApplyToRootOnlyCheckBox: TCheckBox
+              Left = 6
+              Top = 61
+              Width = 147
+              Height = 17
+              Caption = 'Apply to Root only'
+              TabOrder = 1
+              OnClick = ApplyToRootOnlyCheckBoxClick
             end
           end
         end
@@ -424,11 +433,11 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       end
       object ReformatXMLButton: TButton
         Left = 6
-        Top = 163
+        Top = 162
         Width = 85
         Height = 25
         Caption = 'Reformat &XML'
-        TabOrder = 2
+        TabOrder = 3
         OnClick = ReformatXMLButtonClick
       end
       object DeleteButton: TButton
@@ -447,7 +456,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         Height = 25
         Caption = '&Export png...'
         Enabled = False
-        TabOrder = 3
+        TabOrder = 2
         OnClick = ExportPngButtonClick
       end
     end
@@ -460,29 +469,29 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Caption = 'Selected Icon'
       TabOrder = 0
       DesignSize = (
-        694
+        622
         200)
       object IconNameLabel: TLabel
-        Left = 176
-        Top = 11
-        Width = 87
+        Left = 53
+        Top = 13
+        Width = 140
         Height = 15
         AutoSize = False
         Caption = 'Name'
         Transparent = True
       end
       object IconFixedColorLabel: TLabel
-        Left = 415
-        Top = 11
-        Width = 63
+        Left = 343
+        Top = 12
+        Width = 140
         Height = 15
         AutoSize = False
         Caption = 'Fixed Color'
         Transparent = True
       end
       object IconIndexLabel: TLabel
-        Left = 643
-        Top = 11
+        Left = 8
+        Top = 13
         Width = 38
         Height = 15
         AutoSize = False
@@ -490,32 +499,32 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         Transparent = True
       end
       object CategoryLabel: TLabel
-        Left = 295
-        Top = 11
-        Width = 87
+        Left = 198
+        Top = 13
+        Width = 140
         Height = 15
         AutoSize = False
         Caption = 'Category'
         Transparent = True
       end
       object IconPanel: TPanel
-        Left = 10
-        Top = 28
-        Width = 160
-        Height = 160
+        Left = 3
+        Top = 57
+        Width = 130
+        Height = 130
         BevelOuter = bvNone
         BorderWidth = 2
         BorderStyle = bsSingle
         Color = clWindow
         Ctl3D = False
         ParentCtl3D = False
-        TabOrder = 0
+        TabOrder = 6
         object IconImage: TSVGIconImage
           AlignWithMargins = True
           Left = 2
           Top = 2
-          Width = 154
-          Height = 154
+          Width = 153
+          Height = 125
           Margins.Left = 0
           Margins.Top = 0
           Margins.Right = 0
@@ -526,31 +535,31 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         end
       end
       object NameEdit: TEdit
-        Left = 176
-        Top = 28
-        Width = 114
+        Left = 53
+        Top = 30
+        Width = 140
         Height = 23
         TabOrder = 1
         OnExit = NameEditExit
       end
       object SVGText: TMemo
-        Left = 176
-        Top = 54
-        Width = 510
-        Height = 134
+        Left = 139
+        Top = 57
+        Width = 547
+        Height = 130
         Hint = 'SVG Text content'
         Anchors = [akLeft, akTop, akRight, akBottom]
         ScrollBars = ssBoth
-        TabOrder = 6
+        TabOrder = 7
         OnChange = SVGTextChange
         OnEnter = SVGTextEnter
         OnExit = SVGTextExit
         OnKeyDown = SVGTextKeyDown
       end
       object FixedColorItemComboBox: TColorBox
-        Left = 415
-        Top = 28
-        Width = 136
+        Left = 343
+        Top = 29
+        Width = 140
         Height = 22
         NoneColorColor = clNone
         Selected = clDefault
@@ -559,30 +568,39 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         OnSelect = FixedColorItemComboBoxSelect
       end
       object GrayScaleItemCheckBox: TCheckBox
-        Left = 563
-        Top = 30
-        Width = 81
+        Left = 487
+        Top = 15
+        Width = 88
         Height = 17
         Caption = 'GrayScale'
         TabOrder = 4
         OnClick = GrayScaleItemCheckBoxClick
       end
       object IconIndexEdit: TEdit
-        Left = 643
-        Top = 25
+        Left = 8
+        Top = 30
         Width = 40
         Height = 23
         Enabled = False
-        TabOrder = 5
+        TabOrder = 0
         OnExit = NameEditExit
       end
       object CategoryEdit: TEdit
-        Left = 295
-        Top = 28
-        Width = 114
+        Left = 198
+        Top = 30
+        Width = 140
         Height = 23
         TabOrder = 2
         OnExit = CategoryEditExit
+      end
+      object ApplyToRootOnlyItemCheckBox: TCheckBox
+        Left = 487
+        Top = 33
+        Width = 127
+        Height = 17
+        Caption = 'Apply to Root only'
+        TabOrder = 5
+        OnClick = ApplyToRootOnlyItemCheckBoxClick
       end
     end
   end

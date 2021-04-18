@@ -125,6 +125,8 @@ type
     AntiAliasColorLabel: TLabel;
     AntialiasColorComboBox: TColorBox;
     ExportPngButton: TButton;
+    ApplyToRootOnlyCheckBox: TCheckBox;
+    ApplyToRootOnlyItemCheckBox: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure ApplyButtonClick(Sender: TObject);
     procedure ClearAllButtonClick(Sender: TObject);
@@ -166,6 +168,8 @@ type
     procedure SVGTextKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure ExportPngButtonClick(Sender: TObject);
+    procedure ApplyToRootOnlyCheckBoxClick(Sender: TObject);
+    procedure ApplyToRootOnlyItemCheckBoxClick(Sender: TObject);
   private
     FOldSVGText: string;
     FOpenDialog: TOpenPictureDialogSvg;
@@ -311,6 +315,7 @@ begin
         FSourceList.Size := 64; //Force 64 pixel size for image collection icons
         FSourceList.GrayScale := AImageCollection.GrayScale;
         FSourceList.FixedColor := AImageCollection.FixedColor;
+        FSourceList.ApplyFixedColorToRootOnly := AImageCollection.ApplyFixedColorToRootOnly;
         FSourceList.AntiAliasColor := AImageCollection.AntiAliasColor;
         ImageListGroupBox.Visible := False;
         FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
@@ -387,7 +392,28 @@ begin
   FImageCollection.SVGIconItems.Assign(FEditingList.SVGIconItems);
   FImageCollection.GrayScale := GrayScaleCheckBox.Checked;
   FImageCollection.FixedColor := FixedColorComboBox.Selected;
+  FImageCollection.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
   FImageCollection.AntiAliasColor := AntialiasColorComboBox.Selected;
+end;
+
+procedure TSVGIconImageListEditor.ApplyToRootOnlyCheckBoxClick(Sender: TObject);
+begin
+  if FUpdating then Exit;
+  Screen.Cursor := crHourGlass;
+  try
+    FEditingList.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
+    UpdateGUI;
+  finally
+    Screen.Cursor := crDefault;
+  end;
+end;
+
+procedure TSVGIconImageListEditor.ApplyToRootOnlyItemCheckBoxClick(
+  Sender: TObject);
+begin
+  if FUpdating then Exit;
+  SelectedIcon.ApplyFixedColorToRootOnly := ApplyToRootOnlyItemCheckBox.Checked;
+  UpdateGUI;
 end;
 
 procedure TSVGIconImageListEditor.ApplyToSVGIconVirtualImageList;
@@ -458,12 +484,14 @@ begin
     NameEdit.Enabled := LIsItemSelected;
     CategoryEdit.Enabled := LIsItemSelected;
     FixedColorItemComboBox.Enabled := LIsItemSelected;
+    ApplyToRootOnlyItemCheckBox.Enabled := LIsItemSelected;
     GrayScaleItemCheckBox.Enabled := LIsItemSelected;
     IconIndexEdit.Enabled := LIsItemSelected;
     SVGText.Enabled := LIsItemSelected;
     ImageListGroup.Caption := Format(FTotIconsLabel, [FEditingList.Count]);
     GrayScaleCheckBox.Checked := SVGIconImageList.GrayScale;
     FixedColorComboBox.Selected := SVGIconImageList.FixedColor;
+    ApplyToRootOnlyCheckBox.Checked := SVGIconImageList.ApplyFixedColorToRootOnly;
     AntialiasColorComboBox.Selected := SVGIconImageList.AntiAliasColor;
     OpacitySpinEdit.Value := SVGIconImageList.Opacity;
     if LIsItemSelected then
@@ -471,12 +499,14 @@ begin
       IconImage.ImageIndex := SelectedIcon.Index;
       IconImage.Opacity := SVGIconImageList.Opacity;
       IconImage.FixedColor := SelectedIcon.FixedColor;
+      IconImage.ApplyFixedColorToRootOnly := SelectedIcon.ApplyFixedColorToRootOnly;
       IconImage.GrayScale := SVGIconImageList.GrayScale or SelectedIcon.GrayScale;
       NameEdit.Text := LIconItem.Name;
       CategoryEdit.Text := LIconItem.Category;
       IconIndexEdit.Text := LIconItem.Index.ToString;
       SVGText.Lines.Text := LIconItem.SVGText;
       FixedColorItemComboBox.Selected := LIconItem.FixedColor;
+      ApplyToRootOnlyItemCheckBox.Checked := LIconItem.ApplyFixedColorToRootOnly;
       GrayScaleItemCheckBox.Checked := SelectedIcon.GrayScale;
     end
     else
@@ -487,6 +517,7 @@ begin
       SVGText.Lines.Text := '';
       CategoryEdit.Text := '';
       FixedColorItemComboBox.Selected := clDefault;
+      ApplyToRootOnlyItemCheckBox.Checked := False;
       GrayScaleItemCheckBox.Checked := False;
       IconIndexEdit.Text := '';
     end;

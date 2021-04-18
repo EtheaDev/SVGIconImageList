@@ -35,7 +35,7 @@ uses
   System.Actions, FMX.Forms, FMX.Graphics, FMX.ActnList, FMX.StdCtrls, FMX.Colors, FMX.ListBox,
   FMX.Controls.Presentation, FMX.ImgList, FMX.Types, FMX.Layouts,
   System.ImageList, FMX.SVGIconImageList, FMX.Edit, FMX.EditBox, FMX.SpinBox,
-  FMX.ScrollBox, FMX.Memo, FMX.Dialogs;
+  FMX.ScrollBox, FMX.Memo, FMX.Dialogs, FMX.Memo.Types;
 
 type
   TSVGIconImageListEditorFMX = class(TForm)
@@ -82,6 +82,7 @@ type
     IconsGroupBox: TGroupBox;
     ImageView: TListBox;
     BottomSplitter: TSplitter;
+    ApplyToRootOnlyCheckBox: TCheckBox;
     procedure ClearAllButtonClick(Sender: TObject);
     procedure DeleteButtonClick(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
@@ -110,6 +111,7 @@ type
     procedure ImageViewDragDrop(Sender: TObject; const Data: TDragObject;
       const Point: TPointF);
     procedure ZoomChange(Sender: TObject);
+    procedure ApplyToRootOnlyCheckBoxChange(Sender: TObject);
   private
     FIconIndexLabel: string;
     FTotIconsLabel: string;
@@ -618,6 +620,14 @@ begin
   FEditingList.InsertIcon(LInsertIndex,'','');
   UpdateSVGIconListView(ImageView);
   ImageView.ItemIndex := LInsertIndex;
+end;
+
+procedure TSVGIconImageListEditorFMX.ApplyToRootOnlyCheckBoxChange(
+  Sender: TObject);
+begin
+  if FUpdating then Exit;
+  SelectedSVGIcon.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.IsChecked;
+  UpdateGUI;
 end;
 
 initialization

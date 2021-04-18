@@ -56,6 +56,7 @@ type
     FIconName: string;
     FSVG: ISVG;
     FFixedColor: TColor;
+    FApplyFixedColorToRootOnly: Boolean;
     FAntiAliasColor: TColor;
     FGrayScale: Boolean;
     procedure SetIconName(const Value: string);
@@ -72,11 +73,12 @@ type
     function ExtractCategory(const S: String): String;
     function ExtractName(const S: String): String;
     procedure BuildIconName(const ACategory, AName: String);
+    procedure SetApplyFixedColorToRootOnly(const Value: Boolean);
   public
     procedure Assign(Source: TPersistent); override;
     function GetDisplayName: string; override;
     function GetBitmap(const AWidth, AHeight: Integer;
-      const AFixedColor: TColor; const AOpacity: Byte;
+      const AFixedColor: TColor; const AApplyToRootOnly: Boolean; const AOpacity: Byte;
       const AGrayScale: Boolean; const AAntiAliasColor: TColor = clBtnFace): TBitmap;
     constructor Create(Collection: TCollection); override;
     property SVG: ISVG read FSVG write SetSVG;
@@ -86,6 +88,7 @@ type
     property IconName: string read FIconName write SetIconName;
     property SVGText: string read GetSVGText write SetSVGText;
     property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
+    property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default false;
     property AntiAliasColor: TColor read FAntiAliasColor write SetAntiAliasColor default clBtnFace;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
   end;
@@ -137,6 +140,7 @@ begin
   begin
     FIconName := TSVGIconItem(Source).FIconName;
     FFixedColor := TSVGIconItem(Source).FFixedColor;
+    FApplyFixedColorToRootOnly := TSVGIconItem(Source).FApplyFixedColorToRootOnly;
     FAntiAliasColor := TSVGIconItem(Source).FAntiAliasColor;
     FGrayScale := TSVGIconItem(Source).FGrayScale;
     FSVG.Source :=  TSVGIconItem(Source).FSVG.Source;
@@ -149,6 +153,7 @@ begin
   FSVG := GlobalSVGFactory.NewSvg;
   inherited Create(Collection);
   FFixedColor := SVG_INHERIT_COLOR;
+  FApplyFixedColorToRootOnly := False;
   FAntiAliasColor := clBtnFace;
 end;
 
@@ -166,15 +171,21 @@ begin
 end;
 
 function TSVGIconItem.GetBitmap(const AWidth, AHeight: Integer;
-  const AFixedColor: TColor; const AOpacity: Byte;
+  const AFixedColor: TColor; const AApplyToRootOnly: Boolean; const AOpacity: Byte;
   const AGrayScale: Boolean; const AAntiAliasColor: TColor = clBtnFace): TBitmap;
 var
   LAntiAliasColor: TColor;
 begin
   if FFixedColor <> SVG_INHERIT_COLOR then
-    FSVG.FixedColor := FFixedColor
+  begin
+    FSVG.FixedColor := FFixedColor;
+    FSVG.ApplyFixedColorToRootOnly := FApplyFixedColorToRootOnly;
+  end
   else
+  begin
     FSVG.FixedColor := AFixedColor;
+    FSVG.ApplyFixedColorToRootOnly := AApplyToRootOnly;
+  end;
 
   if FAntiAliasColor <> clBtnFace then
     LAntiAliasColor := FAntiAliasColor
@@ -231,6 +242,15 @@ begin
   if FAntiAliasColor <> Value then
   begin
     FAntiAliasColor := Value;
+    Changed(False);
+  end;
+end;
+
+procedure TSVGIconItem.SetApplyFixedColorToRootOnly(const Value: Boolean);
+begin
+  if FApplyFixedColorToRootOnly <> Value then
+  begin
+    FApplyFixedColorToRootOnly := Value;
     Changed(False);
   end;
 end;

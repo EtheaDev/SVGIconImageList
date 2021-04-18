@@ -84,6 +84,7 @@ type
     NewFormButton: TButton;
     NewFormAction: TAction;
     tmrTrackbar: TTimer;
+    ApplyToRootOnlyCheckBox: TCheckBox;
     procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI, NewDPI: Integer);
     procedure ChangeIconActionExecute(Sender: TObject);
     procedure SelectThemeRadioGroupClick(Sender: TObject);
@@ -103,6 +104,7 @@ type
     procedure FixedColorComboBoxSelect(Sender: TObject);
     procedure NewFormActionExecute(Sender: TObject);
     procedure tmrTrackbarTimer(Sender: TObject);
+    procedure ApplyToRootOnlyCheckBoxClick(Sender: TObject);
   private
     FUpdating: Boolean;
     procedure UpdateButtons;
@@ -141,6 +143,23 @@ var
 begin
   LItemsCount := UpdateSVGIconListView(ImageView);
   ImageListLabel.Caption := Format('SVG Image List Preview: %d icons',[LItemsCount]);
+end;
+
+procedure TMainForm.ApplyToRootOnlyCheckBoxClick(Sender: TObject);
+begin
+  Screen.Cursor := crHourGlass;
+  try
+    if FixedColorComboBox.ItemIndex >= 0 then
+    begin
+      //Warning: native VirtualImageList can change FixedColor only at Collection level
+      //so the changes are affected to all forms opened!
+      (VirtualImageList.ImageCollection as TSVGIconImageCollection).ApplyFixedColorToRootOnly :=
+        ApplyToRootOnlyCheckBox.Checked;
+      UpdateGUI;
+    end;
+  finally
+    Screen.Cursor := crDefault;
+  end;
 end;
 
 procedure TMainForm.BuildFromFilesButtonClick(Sender: TObject);
@@ -254,7 +273,8 @@ begin
   Screen.Cursor := crHourGlass;
   try
     //Warning: native VirtualImageList can change FixedColor only at Collection level
-    //so the changes are affected to all forms opened!    (VirtualImageList.ImageCollection as TSVGIconImageCollection).GrayScale :=
+    //so the changes are affected to all forms opened!
+    (VirtualImageList.ImageCollection as TSVGIconImageCollection).GrayScale :=
       GrayScaleCheckBox.Checked;
     UpdateGUI;
   finally

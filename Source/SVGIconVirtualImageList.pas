@@ -158,21 +158,21 @@ begin
     if LItem.FixedColor <> SVG_INHERIT_COLOR then
       LSVG.FixedColor := LItem.FixedColor
     else
-      LSVG.FixedColor := FFixedColor;
-    LOpacity := FOpacity;
+      LSVG.FixedColor := FixedColor;
+    LOpacity := Opacity;
     if AEnabled then
     begin
-      if LItem.GrayScale or FGrayScale then
+      if LItem.GrayScale or GrayScale then
         LSVG.Grayscale := True
       else
         LSVG.Grayscale := False;
     end
     else
     begin
-      if FDisabledGrayScale then
+      if DisabledGrayScale then
         LSVG.Grayscale := True
       else
-        LOpacity := FDisabledOpacity;
+        LOpacity := DisabledOpacity;
     end;
     LSVG.Opacity := LOpacity / 255;
     LSVG.PaintTo(ACanvas.Handle, TRectF.Create(TPointF.Create(X, Y), AWidth, AHeight));
@@ -186,6 +186,7 @@ var
   LItem: TSVGIconItem;
   BitMap: TBitmap;
   LFixedColor, LAntiAliasColor: TColor;
+  LApplyToRootOnly: Boolean;
   LGrayScale: Boolean;
 begin
   if not Assigned(FImageCollection) or
@@ -198,22 +199,28 @@ begin
   begin
     HandleNeeded;
     if FImageCollection.FixedColor <> SVG_INHERIT_COLOR then
-      LFixedColor := FImageCollection.FixedColor
+    begin
+      LFixedColor := FImageCollection.FixedColor;
+      LApplyToRootOnly := FImageCollection.ApplyFixedColorToRootOnly;
+    end
     else
-      LFixedColor := FFixedColor;
+    begin
+      LFixedColor := FixedColor;
+      LApplyToRootOnly := ApplyFixedColorToRootOnly;
+    end;
     if FImageCollection.AntiAliasColor <> clBtnFace then
       LAntiAliasColor := FImageCollection.AntiAliasColor
     else
-      LAntiAliasColor := FAntiAliasColor;
-    if FGrayScale or FImageCollection.GrayScale then
+      LAntiAliasColor := AntiAliasColor;
+    if GrayScale or FImageCollection.GrayScale then
       LGrayscale := True
     else
       LGrayscale := False;
     for C := 0 to FImageCollection.SVGIconItems.Count - 1 do
     begin
       LItem := FImageCollection.SVGIconItems[C];
-      Bitmap := LItem.GetBitmap(Width, Height, LFixedColor, FOpacity,
-        LGrayScale, LAntiAliasColor);
+      Bitmap := LItem.GetBitmap(Width, Height, LFixedColor, LApplyToRootOnly,
+        Opacity, LGrayScale, LAntiAliasColor);
       try
         ImageList_Add(Handle, Bitmap.Handle, 0);
       finally

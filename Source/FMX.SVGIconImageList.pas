@@ -55,7 +55,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '2.2.5';
+  SVGIconImageListVersion = '2.2.6';
   DEFAULT_SIZE = 32;
   ZOOM_DEFAULT = 100;
 
@@ -77,7 +77,7 @@ type
     procedure DrawSVGIcon;
     function GetSVG: TSVG;
     function GetGrayScale: Boolean;
-    function GetSVGColor: TAlphaColor;
+    function GetFixedColor: TAlphaColor;
     function GetOpacity: single;
     function GetSize: Integer;
     procedure SetIconSize(const AWidth, AHeight, AZoom: Integer);
@@ -89,6 +89,7 @@ type
     function StoreHeight: Boolean;
     function StoreSize: Boolean;
     procedure SetZoom(const AValue: Integer);
+    function GetApplyFixedColorToRootOnly: Boolean;
   protected
     function BitmapStored: Boolean; override;
     function GetDisplayName: string; override;
@@ -103,7 +104,8 @@ type
     property Height: Integer read GetHeight write SetHeight stored StoreHeight default DEFAULT_SIZE;
     property Zoom: Integer read FZoom write SetZoom default ZOOM_DEFAULT;
     //Readonly properties from Source Item
-    property FixedColor: TAlphaColor read GetSVGColor stored false;
+    property FixedColor: TAlphaColor read GetFixedColor stored false;
+    property ApplyFixedColorToRootOnly: Boolean read GetApplyFixedColorToRootOnly stored false;
     property GrayScale: Boolean read GetGrayScale stored false;
     property Opacity: single read GetOpacity stored false;
   end;
@@ -126,6 +128,7 @@ type
     FSVG: TSVG;
     FOpacity: single;
     FFixedColor: TAlphaColor;
+    FApplyFixedColorToRootOnly: Boolean;
     FGrayScale: Boolean;
     procedure UpdateAllItems;
     function GetSVGText: string;
@@ -142,7 +145,9 @@ type
     function GetOpacity: single;
     function GetDestinationItem: TCustomDestinationItem;
     procedure UpdateIconAttributes(const AFixedColor: TAlphaColor;
+      const ApplyToRootOnly: Boolean;
       const AReplaceFixedColor: Boolean = False);
+    procedure SetApplyFixedColorToRootOnly(const Value: Boolean);
   protected
     function GetDisplayName: string; override;
     function CreateMultiResBitmap: TMultiResBitmap; override;
@@ -157,6 +162,7 @@ type
     property IconName: string read GetIconName write SetIconName;
     property SVGText: string read GetSVGText write SetSVGText;
     property FixedColor: TAlphaColor read GetFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
+    property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default false;
     property GrayScale: Boolean read GetGrayScale write SetGrayScale default False;
     property Opacity: single read GetOpacity write SetOpacity stored StoreOpacity;
   end;
@@ -170,6 +176,7 @@ type
     FGrayScale: Boolean;
     FOpacity: single;
     FZoom: Integer;
+    FApplyFixedColorToRootOnly: Boolean;
     function StoreOpacity: Boolean;
     procedure SetAutoSizeBitmaps(const Value: Boolean);
     procedure SetFixedColor(const Value: TAlphaColor);
@@ -188,6 +195,7 @@ type
     function StoreWidth: Boolean;
     function StoreHeight: Boolean;
     function StoreSize: Boolean;
+    procedure SetApplyFixedColorToRootOnly(const Value: Boolean);
   protected
     procedure Loaded; override;
     function CreateSource: TSourceCollection; override;
@@ -216,6 +224,7 @@ type
     property Size: Integer read GetSize write SetSize stored StoreSize default DEFAULT_SIZE;
     property AutoSizeBitmaps: Boolean read FAutoSizeBitmaps write SetAutoSizeBitmaps default True;
     property FixedColor: TAlphaColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
+    property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default false;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
     property Opacity: single read FOpacity write SetOpacity stored StoreOpacity;
   end;
@@ -360,9 +369,14 @@ begin
   Result := FOwnerMultiResBitmap.FOwnerSourceItem.GrayScale;
 end;
 
-function TSVGIconBitmapItem.GetSVGColor: TAlphaColor;
+function TSVGIconBitmapItem.GetFixedColor: TAlphaColor;
 begin
   Result := FOwnerMultiResBitmap.FOwnerSourceItem.FixedColor;
+end;
+
+function TSVGIconBitmapItem.GetApplyFixedColorToRootOnly: Boolean;
+begin
+  Result := FOwnerMultiResBitmap.FOwnerSourceItem.ApplyFixedColorToRootOnly;
 end;
 
 function TSVGIconBitmapItem.GetHeight: Integer;
@@ -591,6 +605,15 @@ begin
   end;
 end;
 
+procedure TSVGIconSourceItem.SetApplyFixedColorToRootOnly(const Value: Boolean);
+begin
+  if FApplyFixedColorToRootOnly <> Value then
+  begin
+    FApplyFixedColorToRootOnly := Value;
+    UpdateAllItems;
+  end;
+end;
+
 procedure TSVGIconSourceItem.SetFixedColor(const Value: TAlphaColor);
 begin
   if FFixedColor <> Value then
@@ -653,12 +676,14 @@ begin
   Result := (FOwnerImageList = nil) or (FOpacity <> FOwnerImageList.FOpacity);
 end;
 
-procedure TSVGIconSourceItem.UpdateIconAttributes(const AFixedColor: TAlphaColor;
+procedure TSVGIconSourceItem.UpdateIconAttributes(
+  const AFixedColor: TAlphaColor; const ApplyToRootOnly: Boolean;
   const AReplaceFixedColor: Boolean = False);
 begin
   //If AReplaceFontColor is false then the color of single icon is preserved
   if AReplaceFixedColor and (FFixedColor <> TAlphaColors.Null) then
     FFixedColor := AFixedColor;
+  FApplyFixedColorToRootOnly := ApplyToRootOnly;
 end;
 
 procedure TSVGIconSourceItem.UpdateAllItems;
@@ -859,7 +884,7 @@ begin
   for I := 0 to Source.Count -1 do
   begin
     LSVGIconItem := Source.Items[I] as TSVGIconSourceItem;
-    LSVGIconItem.UpdateIconAttributes(FixedColor);
+    LSVGIconItem.UpdateIconAttributes(FixedColor, ApplyFixedColorToRootOnly);
   end;
 end;
 
@@ -951,6 +976,15 @@ begin
   if FFixedColor <> Value then
   begin
     FFixedColor := Value;
+    UpdateSourceItems;
+  end;
+end;
+
+procedure TSVGIconImageList.SetApplyFixedColorToRootOnly(const Value: Boolean);
+begin
+  if FApplyFixedColorToRootOnly <> Value then
+  begin
+    FApplyFixedColorToRootOnly := Value;
     UpdateSourceItems;
   end;
 end;

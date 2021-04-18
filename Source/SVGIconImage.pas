@@ -64,6 +64,7 @@ type
     FImageChangeLink: TChangeLink;
     FFixedColor: TColor;
     FGrayScale: Boolean;
+    FApplyFixedColorToRootOnly: Boolean;
     procedure SetCenter(Value: Boolean);
     procedure SetProportional(Value: Boolean);
     procedure SetOpacity(Value: Byte);
@@ -76,7 +77,9 @@ type
     procedure ImageListChange(Sender: TObject);
     procedure SetFixedColor(const Value: TColor);
     procedure SetGrayScale(const Value: Boolean);
+    procedure SetApplyFixedColorToRootOnly(const Value: Boolean);
     function GetInheritedFixedColor: TColor;
+    function GetInheritedApplyToRootOnly: Boolean;
   private
     function GetSVGText: string;
     procedure SetSVGText(const AValue: string);
@@ -112,6 +115,7 @@ type
     property FileName: TFileName read FFileName write SetFileName;
     property SVGText: string read GetSVGText write SetSVGText stored UsingSVGText;
     property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
+    property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default false;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
     property Enabled;
     property Visible;
@@ -223,6 +227,22 @@ begin
   Empty := FSVG.IsEmpty;
 end;
 
+function TSVGIconImage.GetInheritedApplyToRootOnly: Boolean;
+begin
+  Result := False;
+  if not Assigned(FImageList) then
+    Exit;
+  if FImageList is TSVGIconImageListBase then
+  begin
+    if FImageIndex >= 0 then
+    begin
+      if FImageIndex < FImageList.Count then
+        Result := SVGIconItem(FImageIndex).ApplyFixedColorToRootOnly;
+    end;
+    Result := TSVGIconImageListBase(FImageList).ApplyFixedColorToRootOnly;
+  end;
+end;
+
 function TSVGIconImage.GetInheritedFixedColor: TColor;
 begin
   Result := SVG_INHERIT_COLOR;
@@ -306,9 +326,15 @@ begin
   begin
     LSVG.Opacity := FOpacity / 255;
     if FFixedColor <> SVG_INHERIT_COLOR then
-      LSVG.FixedColor := FFixedColor
+    begin
+      LSVG.FixedColor := FFixedColor;
+      LSVG.ApplyFixedColorToRootOnly := FApplyFixedColorToRootOnly;
+    end
     else
+    begin
       LSVG.FixedColor := GetInheritedFixedColor;
+      LSVG.ApplyFixedColorToRootOnly := GetInheritedApplyToRootOnly;
+    end;
     LSVG.GrayScale := FGrayScale;
     if FStretch or not Assigned(FImageList) then
     begin
@@ -470,6 +496,15 @@ begin
     FFixedColor := Value;
     if FFixedColor <> SVG_INHERIT_COLOR then
       FGrayScale := False;
+    Repaint;
+  end;
+end;
+
+procedure TSVGIconImage.SetApplyFixedColorToRootOnly(const Value: Boolean);
+begin
+  if FApplyFixedColorToRootOnly <> Value then
+  begin
+    FApplyFixedColorToRootOnly := Value;
     Repaint;
   end;
 end;

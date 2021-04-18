@@ -1,6 +1,7 @@
 object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
   Left = 0
   Top = 0
+  ActiveControl = OKButton
   Caption = 
     'FireMonkey SVG Icons ImageList Editor %s - Copyright Ethea S.r.l' +
     '.'
@@ -277,13 +278,13 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         object AutoSizeCheckBox: TCheckBox
           Position.X = 94.000000000000000000
           Position.Y = 25.000000000000000000
-          TabOrder = 12
+          TabOrder = 13
           Text = 'AutoSizeBitmaps'
           OnChange = AutoSizeCheckBoxClick
         end
         object DefaultOpacitySpinBox: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 9
+          TabOrder = 10
           Cursor = crIBeam
           DecimalDigits = 1
           Value = 100.000000000000000000
@@ -301,7 +302,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = '% Opacity (default)'
-          TabOrder = 2
+          TabOrder = 3
         end
         object SizeSpinBox: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
@@ -332,7 +333,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Width = 167.000000000000000000
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 11
+          TabOrder = 12
           OnChange = FixedColorComboBoxChange
         end
         object FixedColorLabel: TLabel
@@ -342,12 +343,12 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Fixed Color'
-          TabOrder = 10
+          TabOrder = 11
         end
         object GrayScaleCheckBox: TCheckBox
           Position.X = 94.000000000000000000
           Position.Y = 44.000000000000000000
-          TabOrder = 13
+          TabOrder = 14
           Text = 'GrayScale'
           OnChange = GrayScaleCheckBoxChange
         end
@@ -358,12 +359,12 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Width (in pixel)'
-          TabOrder = 3
+          TabOrder = 4
           TabStop = False
         end
         object WidthSpinBox: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 4
+          TabOrder = 5
           Cursor = crIBeam
           DecimalDigits = 0
           Max = 256.000000000000000000
@@ -381,12 +382,12 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Height (in pixel)'
-          TabOrder = 5
+          TabOrder = 6
           TabStop = False
         end
         object HeightSpinBox: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 6
+          TabOrder = 7
           Cursor = crIBeam
           DecimalDigits = 0
           Max = 256.000000000000000000
@@ -405,12 +406,12 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Zoom %'
-          TabOrder = 7
+          TabOrder = 8
           TabStop = False
         end
         object ZoomSpinBox: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 8
+          TabOrder = 9
           Cursor = crIBeam
           DecimalDigits = 0
           Min = 10.000000000000000000
@@ -421,6 +422,16 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
           OnChange = ZoomChange
+        end
+        object ApplyToRootOnlyCheckBox: TCheckBox
+          Position.X = 6.000000000000000000
+          Position.Y = 186.000000000000000000
+          Size.Width = 171.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 2
+          Text = 'Apply to Root only'
+          OnChange = ApplyToRootOnlyCheckBoxChange
         end
       end
       object IconsGroupBox: TGroupBox
@@ -476,7 +487,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Touch.InteractiveGestures = [LongTap, DoubleTap]
         TabOrder = 4
         Position.X = 11.000000000000000000
-        Position.Y = 77.000000000000000000
+        Position.Y = 72.000000000000000000
         Size.Width = 155.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
@@ -484,7 +495,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       end
       object IconNameLabel: TLabel
         Position.X = 11.000000000000000000
-        Position.Y = 61.000000000000000000
+        Position.Y = 56.000000000000000000
         Size.Width = 74.000000000000000000
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
@@ -493,7 +504,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       end
       object OpacityLabel: TLabel
         Position.X = 11.000000000000000000
-        Position.Y = 18.000000000000000000
+        Position.Y = 15.000000000000000000
         Size.Width = 97.000000000000000000
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
@@ -506,7 +517,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Cursor = crIBeam
         Value = 100.000000000000000000
         Position.X = 11.000000000000000000
-        Position.Y = 36.000000000000000000
+        Position.Y = 33.000000000000000000
         Size.Width = 77.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
@@ -528,7 +539,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       end
       object GrayScaleItemCheckBox: TCheckBox
         Position.X = 90.000000000000000000
-        Position.Y = 41.000000000000000000
+        Position.Y = 38.000000000000000000
         Size.Width = 78.000000000000000000
         Size.Height = 19.000000000000000000
         Size.PlatformDefault = False
@@ -538,7 +549,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       end
       object FixedColorItemLabel: TLabel
         Position.X = 10.000000000000000000
-        Position.Y = 99.000000000000000000
+        Position.Y = 94.000000000000000000
         Size.Width = 107.000000000000000000
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
@@ -547,7 +558,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       end
       object FixedColorItemComboBox: TComboBox
         Position.X = 11.000000000000000000
-        Position.Y = 116.000000000000000000
+        Position.Y = 111.000000000000000000
         Size.Width = 154.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False

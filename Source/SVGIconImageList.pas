@@ -207,21 +207,21 @@ begin
     if LItem.FixedColor <> SVG_INHERIT_COLOR then
       LSVG.FixedColor := LItem.FixedColor
     else
-      LSVG.FixedColor := FFixedColor;
-    LOpacity := FOpacity;
+      LSVG.FixedColor := FixedColor;
+    LOpacity := Opacity;
     if AEnabled then
     begin
-      if LItem.GrayScale or FGrayScale then
+      if LItem.GrayScale or GrayScale then
         LSVG.Grayscale := True
       else
         LSVG.Grayscale := False;
     end
     else
     begin
-      if FDisabledGrayScale then
+      if DisabledGrayScale then
         LSVG.Grayscale := True
       else
-        LOpacity := FDisabledOpacity;
+        LOpacity := DisabledOpacity;
     end;
     LSVG.Opacity := LOpacity / 255;
     LSVG.PaintTo(ACanvas.Handle, TRectF.Create(TPointF.Create(X, Y), AWidth, AHeight));
@@ -326,8 +326,8 @@ begin
     for C := 0 to FSVGItems.Count - 1 do
     begin
       LItem := FSVGItems[C];
-      LBitmap := LItem.GetBitmap(Width, Height, FFixedColor, FOpacity,
-        FGrayScale, FAntiAliasColor);
+      LBitmap := LItem.GetBitmap(Width, Height, FixedColor,
+        ApplyFixedColorToRootOnly, Opacity, GrayScale, AntiAliasColor);
       try
         ImageList_Add(Handle, LBitmap.Handle, 0);
       finally

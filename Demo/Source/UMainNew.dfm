@@ -145,13 +145,22 @@ object MainForm: TMainForm
         OnSelect = FixedColorComboBoxSelect
       end
       object GrayScaleCheckBox: TCheckBox
-        Left = 10
-        Top = 50
-        Width = 97
+        Left = 124
+        Top = 47
+        Width = 71
         Height = 17
         Caption = 'GrayScale'
-        TabOrder = 1
+        TabOrder = 2
         OnClick = GrayScaleCheckBoxClick
+      end
+      object ApplyToRootOnlyCheckBox: TCheckBox
+        Left = 10
+        Top = 47
+        Width = 108
+        Height = 17
+        Caption = 'Apply To Root Only'
+        TabOrder = 1
+        OnClick = ApplyToRootOnlyCheckBoxClick
       end
     end
   end
@@ -2057,6 +2066,18 @@ object MainForm: TMainForm
         CollectionName = 'workflow'
         Disabled = False
         Name = 'workflow'
+      end
+      item
+        CollectionIndex = 283
+        CollectionName = 'Pyton'
+        Disabled = False
+        Name = 'Pyton'
+      end
+      item
+        CollectionIndex = 284
+        CollectionName = 'monochrome'
+        Disabled = False
+        Name = 'monochrome'
       end>
     ImageCollection = ImageDataModule.SVGIconImageCollection
     Width = 32
