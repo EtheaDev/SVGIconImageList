@@ -91,6 +91,7 @@ type
     procedure CheckAutoSize;
   public
     constructor Create(AOwner: TComponent); override;
+    procedure UpdateSVGFactory;
     destructor Destroy; override;
     procedure Clear;
     function SVGIconItem(const AImageIndex: Integer): TSVGIconItem;
@@ -183,6 +184,16 @@ uses
   , Vcl.VirtualImageList
   {$ENDIF}
   , SVGIconImageCollection;
+
+procedure TSVGIconImage.UpdateSVGFactory;
+var
+  LOldSVGText: string;
+begin
+  LOldSVGText := fsvg.Source;
+  FSVG := GlobalSVGFactory.NewSvg;
+  FSVG.Source := LOldSVGText;
+  Invalidate;
+end;
 
 constructor TSVGIconImage.Create(AOwner: TComponent);
 begin

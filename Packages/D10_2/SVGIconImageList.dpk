@@ -31,8 +31,8 @@ package SVGIconImageList;
 {$IMPLICITBUILD OFF}
 
 requires
-  vcl,
-  SVGIconPackage;
+  SVGIconPackage,
+  vclimg;
 
 contains
   SVGIconImage in '..\..\Source\SVGIconImage.pas',
