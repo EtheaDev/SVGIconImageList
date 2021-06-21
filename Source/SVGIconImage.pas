@@ -142,8 +142,6 @@ type
   protected
     procedure DefineProperties(Filer: TFiler); override;
 
-    procedure Draw(ACanvas: TCanvas; const Rect: TRect); override;
-
     function GetEmpty: Boolean; override;
     function GetWidth: Integer; override;
     function GetHeight: Integer; override;
@@ -153,6 +151,8 @@ type
     procedure ReadData(Stream: TStream); override;
     procedure WriteData(Stream: TStream); override;
   public
+    procedure Draw(ACanvas: TCanvas; const Rect: TRect); override;
+
     constructor Create; override;
     procedure Clear;
 
