@@ -1,7 +1,7 @@
 {-----------------------------------------------------------------------------
- Unit Name: D2DSVGHandler
+ Unit Name: PasSVGFactory
  Author:    PyScripter
- Purpose:   High-level encapsuation of Direct2D Svg functionality
+ Purpose:   High-level encapsuation of Svg functionality for TSVG Library
  History:
 -----------------------------------------------------------------------------}
 unit PasSVGFactory;
@@ -160,7 +160,7 @@ procedure TPasSVG.SetSource(const ASource: string);
 begin
   fSvgDoc.LoadFromText(ASource);
 end;
-{ TPasSVGHandler }
+{ TPasSVGFactory }
 function TPasSVGFactory.NewSvg: ISVG;
 begin
   Result := TPasSVG.Create;

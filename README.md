@@ -1,4 +1,4 @@
-# SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
+﻿# SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Three engines to render SVG (GDI+, Direct2D or Cairo) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
@@ -44,10 +44,10 @@ As you can see, the three engines perform differently depending on the icons and
 Related links: https://www.embarcadero.com/ - https://learndelphi.org/
 
 **Sample image of VCL version**
-![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/Sample.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/Sample.jpg)
+![Sample.jpg](./Demo/Images/Sample.jpg)
 
 **Sample image of FMX (Windows) version**
-![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SampleFMX.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SampleFMX.jpg)
+![SampleFMX.jpg](./Demo/Images/SampleFMX.jpg)
 
 **Sample image of the VCL SVGText-property editor**
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg)

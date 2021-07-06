@@ -195,7 +195,7 @@ object frmBenchmark: TfrmBenchmark
     object chkDrawVisible: TCheckBox
       AlignWithMargins = True
       Left = 10
-      Top = 227
+      Top = 230
       Width = 130
       Height = 20
       Margins.Left = 10
@@ -207,7 +207,6 @@ object frmBenchmark: TfrmBenchmark
       Checked = True
       State = cbChecked
       TabOrder = 7
-      ExplicitTop = 230
     end
   end
   object SVGIconImageCollection: TSVGIconImageCollection
@@ -222,6 +221,7 @@ object frmBenchmark: TfrmBenchmark
   end
   object SVGIconVirtualImageList: TSVGIconVirtualImageList
     ImageCollection = SVGIconImageCollection
+    Scaled = True
     Left = 48
     Top = 88
   end

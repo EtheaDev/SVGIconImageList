@@ -132,6 +132,8 @@
 //if PreferNativeSvgSupport not active or not available:
 //use Delphi Engine TSVG by Martin Walter (included into SVG folder)
 {$DEFINE Delphi_SVGEngine}
+//or use Delphi Engine from Image32 library by Angus Johnson (included into Image32 folder)
+{.$DEFINE Image32_SVGEngine}
 //or use Engine Cairo wrapper (included by Lübbe Onken in Cairo folder)
 {.$DEFINE Cairo_SVGEngine}
 

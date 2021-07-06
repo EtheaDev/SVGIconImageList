@@ -76,15 +76,24 @@ Uses
 // librsvg dlls from Cairo/Dlls into the executable folder of your application.
 
 {$IF DEFINED(Cairo_SVGEngine) and DEFINED(Delphi_SVGEngine)}
-  {$MESSAGE FATAL 'You must define only one engine (Cairo_SVGEngine or Delphi_SVGEngine) into SVGIconImageList.inc)'}
+  {$MESSAGE FATAL 'You must define only one engine (Delphi_SVGEngine or Image32_SVGEngine or Cairo_SVGEngine) into SVGIconImageList.inc)'}
 {$ENDIF}
-{$IF NOT DEFINED(Cairo_SVGEngine) and NOT DEFINED(Delphi_SVGEngine)}
-  {$MESSAGE FATAL 'You must define at least Cairo_SVGEngine or Delphi_SVGEngine into SVGIconImageList.inc)'}
+{$IF DEFINED(Delphi_SVGEngine) and DEFINED(Image32_SVGEngine)}
+  {$MESSAGE FATAL 'You must define only one engine (Delphi_SVGEngine or Image32_SVGEngine or Cairo_SVGEngine) into SVGIconImageList.inc)'}
+{$ENDIF}
+{$IF DEFINED(Cairo_SVGEngine) and DEFINED(Image32_SVGEngine)}
+  {$MESSAGE FATAL 'You must define only one engine (Delphi_SVGEngine or Image32_SVGEngine or Cairo_SVGEngine) into SVGIconImageList.inc)'}
+{$ENDIF}
+{$IF NOT DEFINED(Cairo_SVGEngine) and NOT DEFINED(Delphi_SVGEngine) and NOT DEFINED(Image32_SVGEngine)}
+  {$MESSAGE FATAL 'You must define at least Delphi_SVGEngine or Image32_SVGEngine or Cairo_SVGEngine into SVGIconImageList.inc)'}
 {$ENDIF}
 
 {$IF DEFINED(Delphi_SVGEngine)}
   {$MESSAGE HINT 'Use Delphi (TSVG) SVG-Engine'}
   PasSVGFactory
+{$ELSEIF DEFINED(Image32_SVGEngine)}
+  {$MESSAGE HINT 'Use Image32 SVG-Engine'}
+  Image32SVGFactory
 {$ELSEIF DEFINED(Cairo_SVGEngine)}
   {$MESSAGE HINT 'Use Cairo SVG-Engine'}
   CairoSVGFactory
@@ -109,6 +118,8 @@ begin
     {$ENDIF}
     {$IF DEFINED(Delphi_SVGEngine)}
       FGlobalSVGFactory := GetPasSVGFactory;
+    {$ELSEIF DEFINED(Image32_SVGEngine)}
+      FGlobalSVGFactory := GetImage32SVGFactory;
     {$ELSEIF DEFINED(Cairo_SVGEngine)}
       FGlobalSVGFactory := GetCairoSVGFactory;
     {$ENDIF}

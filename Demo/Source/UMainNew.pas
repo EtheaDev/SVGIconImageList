@@ -407,6 +407,8 @@ begin
 end;
 
 initialization
+  {$IFDEF DEBUG}
   ReportMemoryLeaksOnShutdown := True;
+  {$ENDIF}
 
 end.

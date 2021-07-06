@@ -68,6 +68,7 @@ var
 implementation
 
 uses
+  Image32SVGFactory,
   CairoSVGFactory,
   D2DSVGFactory,
   PasSVGFactory,
@@ -213,6 +214,7 @@ begin
         RunBenchmark(0);
         RunBenchmark(1);
         RunBenchmark(2);
+        RunBenchmark(3);
 
         SVGIconImage.ImageIndex := 0;
       finally
@@ -228,6 +230,7 @@ begin
   grpFactory.Items.Add('Pascal');
   grpFactory.Items.Add('Direct 2D');
   grpFactory.Items.Add('Cairo');
+  grpFactory.Items.Add('Image32');
   SetFactory(0);
 end;
 
@@ -334,6 +337,8 @@ begin
       SetGlobalSvgFactory(GetD2DSVGFactory);
     2:
       SetGlobalSvgFactory(GetCairoSVGFactory);
+    3:
+      SetGlobalSvgFactory(GetImage32SVGFactory);
   end;
   grpFactory.ItemIndex := AIndex;
 end;
