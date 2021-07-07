@@ -85,6 +85,9 @@ type
     NewFormAction: TAction;
     tmrTrackbar: TTimer;
     ApplyToRootOnlyCheckBox: TCheckBox;
+    Panel2: TPanel;
+    IconOpacityLabel: TLabel;
+    OpacityTrackBar: TTrackBar;
     procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI, NewDPI: Integer);
     procedure ChangeIconActionExecute(Sender: TObject);
     procedure SelectThemeRadioGroupClick(Sender: TObject);
@@ -229,6 +232,7 @@ begin
       //so the changes are affected to all forms opened!
       (VirtualImageList.ImageCollection as TSVGIconImageCollection).FixedColor :=
         FixedColorComboBox.Selected;
+      SVGIconImage.FixedColor := FixedColorComboBox.Selected;
       UpdateGUI;
     end;
   finally
@@ -263,6 +267,7 @@ begin
   TreeView.Items[2].Expand(True);
 
   TrackBar.Position := VirtualImageList.Height;
+  OpacityTrackBar.Position := ImageDataModule.SVGIconImageCollection.Opacity;
   TrackBarChange(TrackBar);
 
 //  SelectThemeRadioGroupClick(SelectThemeRadioGroup);
@@ -276,6 +281,7 @@ begin
     //so the changes are affected to all forms opened!
     (VirtualImageList.ImageCollection as TSVGIconImageCollection).GrayScale :=
       GrayScaleCheckBox.Checked;
+    SVGIconImage.GrayScale := GrayScaleCheckBox.Checked;
     UpdateGUI;
   finally
     Screen.Cursor := crDefault;
@@ -334,14 +340,19 @@ end;
 procedure TMainForm.tmrTrackbarTimer(Sender: TObject);
 begin
   // Disable trackbar while updating. Otherwise a second event will be fired
-  TrackBar.Enabled := false;
+  tmrTrackbar.Enabled := false;
   try
-    tmrTrackbar.Enabled := false;
+    TrackBar.Enabled := false;
+    OpacityTrackBar.Enabled := false;
+    //Set opacity of Image collection and Image
+    ImageDataModule.SVGIconImageCollection.Opacity := OpacityTrackBar.Position;
+    SVGIconImage.Opacity := OpacityTrackBar.Position;
     //Resize all icons into ImageList
     VirtualImageList.SetSize(TrackBar.Position, TrackBar.Position);
     UpdateGUI(False);
   finally
     TrackBar.Enabled := true;
+    OpacityTrackBar.Enabled := true;
   end;
 end;
 
@@ -368,6 +379,8 @@ begin
     end;
     LSize := VirtualImageList.Height;
     IconSizeLabel.Caption := Format('Icons size: %d',[LSize]);
+    IconOpacityLabel.Caption := Format('Icons opacity: %d',[
+      ImageDataModule.SVGIconImageCollection.Opacity]);
     TopToolBar.ButtonHeight := LSize + 2;
     TopToolBar.ButtonWidth := LSize + 2;
     TopToolBar.Height := LSize + 6;
@@ -377,6 +390,7 @@ begin
     UpdateTreeView;
     GrayScaleCheckBox.Checked := ImageDataModule.SVGIconImageCollection.GrayScale;
     FixedColorComboBox.Selected := ImageDataModule.SVGIconImageCollection.FixedColor;
+    OpacityTrackBar.Position := ImageDataModule.SVGIconImageCollection.Opacity;
   finally
     FUpdating := False;
   end;

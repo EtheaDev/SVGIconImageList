@@ -66,11 +66,13 @@ type
     FApplyFixedColorToRootOnly: Boolean;
     FGrayScale: Boolean;
     FAntiAliasColor: TColor;
+    FOpacity: Byte;
     procedure SetSVGIconItems(const Value: TSVGIconItems);
     procedure SetFixedColor(const Value: TColor);
     procedure SetGrayScale(const Value: Boolean);
     procedure SetAntiAliasColor(const Value: TColor);
     procedure SetApplyFixedColorToRootOnly(const Value: Boolean);
+    procedure SetOpacity(const Value: Byte);
 
   protected
     {$IFDEF D10_3+}
@@ -125,6 +127,7 @@ type
     property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default False;
     property AntiAliasColor: TColor read FAntiAliasColor write SetAntiAliasColor default clBtnFace;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
+    property Opacity: Byte read FOpacity write SetOpacity default 255;
   end;
 
 implementation
@@ -164,6 +167,7 @@ begin
     FFixedColor := TSVGIconImageCollection(Source).FFixedColor;
     FApplyFixedColorToRootOnly := TSVGIconImageCollection(Source).FApplyFixedColorToRootOnly;
     FGrayScale := TSVGIconImageCollection(Source).FGrayScale;
+    FOpacity := TSVGIconImageCollection(Source).FOpacity;
     FSVGItems.Assign(TSVGIconImageCollection(Source).SVGIconItems)
   end
   else if Source is TSVGIconItems then
@@ -190,6 +194,7 @@ begin
   FApplyFixedColorToRootOnly := False;
   FAntiAliasColor := clBtnFace;
   FGrayScale := False;
+  FOpacity := 255;
 end;
 
 procedure TSVGIconImageCollection.DefineProperties(Filer: TFiler);
@@ -388,6 +393,19 @@ begin
   end;
 end;
 
+procedure TSVGIconImageCollection.SetOpacity(const Value: Byte);
+begin
+  if FOpacity <> Value then
+  begin
+    FSVGItems.BeginUpdate;
+    try
+      FOpacity := Value;
+    finally
+      FSVGItems.EndUpdate;
+    end;
+  end;
+end;
+
 procedure TSVGIconImageCollection.SetSVGIconItems(const Value: TSVGIconItems);
 begin
   FSVGItems.Assign(Value);
@@ -441,7 +459,7 @@ function TSVGIconImageCollection.GetBitmap(AIndex: Integer; AWidth, AHeight: Int
 begin
   if (AIndex >= 0) and (AIndex < FSVGItems.Count ) then
     Result := FSVGItems[AIndex].GetBitmap(AWidth, AHeight, FFixedColor,
-      FApplyFixedColorToRootOnly, 255, FGrayScale, FAntiAliasColor)
+      FApplyFixedColorToRootOnly, FOpacity, FGrayScale, FAntiAliasColor)
   else
     Result := nil;
 end;

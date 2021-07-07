@@ -41,13 +41,14 @@ type
   TImage32SVG = class(TInterfacedObject, ISVG)
   private
     fSvgReader: TSvgReader;
-    fSource: String;
-    fWidth: Single;
-    fHeight: Single;
-    fFixedColor: TColor;
-    fApplyFixedColorToRootOnly: Boolean;
-    fGrayScale: Boolean;
-    fImage: TImage32;
+    FSource: String;
+    FWidth: Single;
+    FHeight: Single;
+    FFixedColor: TColor;
+    FApplyFixedColorToRootOnly: Boolean;
+    FGrayScale: Boolean;
+    FOpacity: Single;
+    FImage32: TImage32;
     // property access methods
     function GetWidth: Single;
     function GetHeight: Single;
@@ -95,15 +96,16 @@ constructor TImage32SVG.Create;
 begin
   inherited;
   fSvgReader := TSvgReader.Create;
-  fImage := TImage32.Create;
-  fImage.Resampler := rBicubicResampler;
-  fFixedColor := TColors.SysDefault; // clDefault
+  FImage32 := TImage32.Create;
+  FImage32.Resampler := rBicubicResampler;
+  FFixedColor := TColors.SysDefault; // clDefault
+  FOpacity := 1.0;
 end;
 
 destructor TImage32SVG.Destroy;
 begin
   fSvgReader.Free;
-  fImage.Free;
+  FImage32.Free;
   inherited;
 end;
 
@@ -121,28 +123,27 @@ end;
 
 function TImage32SVG.GetApplyFixedColorToRootOnly: Boolean;
 begin
-  Result := fApplyFixedColorToRootOnly;
+  Result := FApplyFixedColorToRootOnly;
 end;
 
 function TImage32SVG.GetFixedColor: TColor;
 begin
-  Result := fFixedColor;
+  Result := FFixedColor;
 end;
 
 function TImage32SVG.GetGrayScale: Boolean;
 begin
-  Result := fGrayScale;
+  Result := FGrayScale;
 end;
 
 function TImage32SVG.GetHeight: Single;
 begin
-  Result := fHeight;
+  Result := FHeight;
 end;
 
 function TImage32SVG.GetOpacity: Single;
 begin
-  Result := 1;
-  //TODO: Opacity from fImage
+  Result := FOpacity;
 end;
 
 function TImage32SVG.GetSource: string;
@@ -152,13 +153,13 @@ end;
 
 function TImage32SVG.GetWidth: Single;
 begin
-  Result := fWidth;
+  Result := FWidth;
 end;
 
 function TImage32SVG.IsEmpty: Boolean;
 begin
-  if fImage = nil then Exit(True);
-  Result := fImage.IsEmpty;
+  if FImage32 = nil then Exit(True);
+  Result := FImage32.IsEmpty;
 end;
 
 procedure TImage32SVG.LoadFromSource;
@@ -176,14 +177,20 @@ begin
   // Restore Position
   Stream.Position := OldPos;
   // Now create the SVG
-  fImage.LoadFromStream(Stream);
+  FImage32.LoadFromStream(Stream);
 end;
 
 procedure TImage32SVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
 begin
-  fImage.SetSize(Round(R.Width), Round(R.Height));
-  FsvgReader.DrawImage(fImage, true);
-  fImage.CopyToDc(DC, 0, 0, True);
+  FImage32.SetSize(Round(R.Width), Round(R.Height));
+  FsvgReader.DrawImage(FImage32, true);
+  if FGrayScale then
+    FImage32.Grayscale
+  else if FFixedColor <> TColors.SysDefault then
+    FImage32.SetRGB(Color32(FFixedColor));
+  if FOpacity <> 1.0 then
+    FImage32.ReduceOpacity(Round(FOpacity * 255));
+  FImage32.CopyToDc(DC, 0, 0, True);
 end;
 
 procedure TImage32SVG.SaveToFile(const FileName: string);
@@ -210,13 +217,13 @@ procedure TImage32SVG.SetApplyFixedColorToRootOnly(Value: Boolean);
 var
   Color: TColor;
 begin
-  if fApplyFixedColorToRootOnly <> Value then
+  if FApplyFixedColorToRootOnly <> Value then
   begin
-    fApplyFixedColorToRootOnly := Value;
-    if fFixedColor <> TColors.SysDefault then
+    FApplyFixedColorToRootOnly := Value;
+    if FFixedColor <> TColors.SysDefault then
     begin
-       Color := fFixedColor;
-       fFixedColor := TColors.SysDefault;
+       Color := FFixedColor;
+       FFixedColor := TColors.SysDefault;
        LoadFromSource;
        SetFixedColor(Color);
     end;
@@ -225,30 +232,16 @@ end;
 
 procedure TImage32SVG.SetFixedColor(const Color: TColor);
 begin
-  if Color = fFixedColor then Exit;
-  if (fGrayScale and (Color <> TColors.SysDefault)) or
-    ((fFixedColor <> TColors.SysDefault) and (Color = TColors.SysDefault))
+  if Color = FFixedColor then Exit;
+  if (FGrayScale and (Color <> TColors.SysDefault)) or
+    ((FFixedColor <> TColors.SysDefault) and (Color = TColors.SysDefault))
   then
     LoadFromSource;
   if Color < 0  then
-    fFixedColor := GetSysColor(Color and $000000FF)
+    FFixedColor := GetSysColor(Color and $000000FF)
   else
-    fFixedColor := Color;
-  fGrayScale := False;
-  (* TODO apply fixedcolor to SVG
-  if (FFixedColor <> TColors.SysDefault) and Assigned(fImage) then
-  begin
-    fImage.GetRoot(Root);
-    with TColors(fFixedColor) do
-      NewColor :=  D2D1ColorF(r/255, g/255, b/255, 1);
-    Root.SetAttributeValue('fill', D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
-              @NewColor, SizeOf(NewColor));
-    if not fApplyFixedColorToRootOnly then
-      RecolorSubtree(Root, NewColor)
-    else
-      RecolorAttribute(Root, 'stroke', NewColor);
-  end;
-  *)
+    FFixedColor := Color;
+  FGrayScale := False;
 end;
 
 // Converts any color to grayscale
@@ -264,32 +257,18 @@ end;
 
 procedure TImage32SVG.SetGrayScale(const IsGrayScale: Boolean);
 begin
-  if IsGrayScale = fGrayScale then Exit;
-  if fGrayScale or (fFixedColor <> TColors.SysDefault) then
+  if IsGrayScale = FGrayScale then Exit;
+  if FGrayScale or (FFixedColor <> TColors.SysDefault) then
     LoadFromSource;
-  fGrayScale := IsGrayScale;
-  fFixedColor := TColors.SysDefault;
-  (* TODO: apply grayscale to SVG
-  if fGrayScale then
-  begin
-    fImage.GetRoot(Root);
-    GrayScaleSubtree(Root);
-  end;
-  *)
+  FGrayScale := IsGrayScale;
+  FFixedColor := TColors.SysDefault;
 end;
 
 procedure TImage32SVG.SetOpacity(const Opacity: Single);
 begin
-  if Assigned(fImage) then
-  begin
-    (* TODO: apply opacity to SVG
-    fImage.GetRoot(Root);
-    if Assigned(Root) then
-      Root.SetAttributeValue('opacity', D2D1_SVG_ATTRIBUTE_POD_TYPE_FLOAT,
-        @Opacity, SizeOf(Opacity));
-    *)
-  end;
+  FOpacity := Opacity;
 end;
+
 procedure TImage32SVG.SetSource(const ASource: string);
 begin
   if FSource <> ASource then
@@ -300,9 +279,18 @@ begin
 end;
 
 procedure TImage32SVG.SourceFromStream(Stream: TStream);
+var
+  LStream: TStringStream;
 begin
   fSvgReader.LoadFromStream(Stream);
-  fSource := fSvgReader.ToString;
+  LStream := TStringStream.Create('', TEncoding.UTF8);
+  try
+    Stream.Position := 0;
+    LStream.LoadFromStream(Stream);
+    FSource := LStream.DataString;
+  finally
+    LStream.Free;
+  end;
 end;
 
 { TImage32SVGFactory }

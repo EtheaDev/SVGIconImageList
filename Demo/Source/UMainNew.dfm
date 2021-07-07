@@ -43,7 +43,7 @@ object MainForm: TMainForm
       Left = 1
       Top = 1
       Width = 200
-      Height = 272
+      Height = 210
       Align = alClient
       Caption = 'Select Theme/Color'
       TabOrder = 0
@@ -51,7 +51,7 @@ object MainForm: TMainForm
     end
     object LoadGroupBox: TGroupBox
       Left = 1
-      Top = 273
+      Top = 211
       Width = 200
       Height = 59
       Align = alBottom
@@ -99,7 +99,7 @@ object MainForm: TMainForm
     end
     object ButtonsPanel: TPanel
       Left = 1
-      Top = 332
+      Top = 270
       Width = 200
       Height = 41
       Align = alBottom
@@ -161,6 +161,36 @@ object MainForm: TMainForm
         Caption = 'Apply To Root Only'
         TabOrder = 1
         OnClick = ApplyToRootOnlyCheckBoxClick
+      end
+    end
+    object Panel2: TPanel
+      Left = 1
+      Top = 311
+      Width = 200
+      Height = 62
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 5
+      object IconOpacityLabel: TLabel
+        Left = 8
+        Top = 3
+        Width = 68
+        Height = 13
+        Caption = 'Icons opacity:'
+      end
+      object OpacityTrackBar: TTrackBar
+        Left = 0
+        Top = 23
+        Width = 200
+        Height = 39
+        Align = alBottom
+        Max = 255
+        Min = 1
+        Frequency = 8
+        Position = 255
+        PositionToolTip = ptBottom
+        TabOrder = 0
+        OnChange = TrackBarChange
       end
     end
   end
@@ -326,10 +356,6 @@ object MainForm: TMainForm
       SmallImages = VirtualImageList
       TabOrder = 1
       OnSelectItem = ImageViewSelectItem
-      ExplicitLeft = 5
-      ExplicitTop = 242
-      ExplicitWidth = 423
-      ExplicitHeight = 272
     end
   end
   object ActionList: TActionList

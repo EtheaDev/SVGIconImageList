@@ -317,6 +317,7 @@ begin
         FSourceList.FixedColor := AImageCollection.FixedColor;
         FSourceList.ApplyFixedColorToRootOnly := AImageCollection.ApplyFixedColorToRootOnly;
         FSourceList.AntiAliasColor := AImageCollection.AntiAliasColor;
+        FSourceList.Opacity := AImageCollection.Opacity;
         ImageListGroupBox.Visible := False;
         FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
         FEditingList.Assign(FSourceList);
@@ -394,6 +395,7 @@ begin
   FImageCollection.FixedColor := FixedColorComboBox.Selected;
   FImageCollection.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
   FImageCollection.AntiAliasColor := AntialiasColorComboBox.Selected;
+  FImageCollection.Opacity := OpacitySpinEdit.Value;
 end;
 
 procedure TSVGIconImageListEditor.ApplyToRootOnlyCheckBoxClick(Sender: TObject);
