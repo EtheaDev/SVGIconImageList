@@ -210,6 +210,7 @@ type
 
   TFontInfo = record                  //a custom summary record
     fontFormat     : TFontFormat;
+    fontFamily     : TTtfFontFamily;
     faceName       : UnicodeString;
     style          : UnicodeString;
     copyright      : UnicodeString;
@@ -291,6 +292,33 @@ type
 {$IFDEF ZEROBASEDSTR}
   {$ZEROBASEDSTRINGS OFF}
 {$ENDIF}
+
+  TFontReader = class;
+
+  TFontLibrary = class
+  private
+    fMaxFonts: integer;
+{$IFDEF XPLAT_GENERICS}
+    fFontList: TList<TFontReader>;
+{$ELSE}
+    fFontList: TList;
+{$ENDIF}
+    procedure SetMaxFonts(value: integer);
+    function ValidateAdd(fr: TFontReader): Boolean;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Clear;
+{$IFDEF MSWINDOWS}
+    function Add(const fontName: string): TFontReader;
+{$ENDIF}
+    function AddFromStream(stream: TStream): TFontReader;
+    function AddFromResource(const resName: string; resType: PChar): TFontReader;
+    function AddFromFile(const filename: string): TFontReader;
+    function GetBestMatchedFont(const fontInfo: TFontInfo): TFontReader;
+    function Delete(fontReader: TFontReader): Boolean;
+    property MaxFonts: integer read fMaxFonts write SetMaxFonts;
+  end;
 
   TFontReader = class(TNotifySender)
   private
@@ -488,10 +516,15 @@ type
   function GetInstalledTtfFilenames: TArrayOfString;
   {$ENDIF}
 
+  function FontLibrary: TFontLibrary;
+
 implementation
 
 uses
   Image32_Vector;
+
+var
+  aFontLibrary: TFontLibrary;
 
 const
   lineFrac = 0.04;
@@ -833,6 +866,7 @@ begin
   FillChar(fTbl_post, SizeOf(fTbl_post), 0);
   fTbl_glyf.numContours := 0;
   fFontInfo.fontFormat  := ffInvalid;
+  fFontInfo.fontFamily  := ttfUnknown;
   fFontWeight           := 0;
   fStream.Clear;
   NotifyRecipients(nfChanging);
@@ -1014,6 +1048,7 @@ begin
   if (fTblIdxes[tblKern] >= 0) then GetTable_kern;
   if (fTblIdxes[tblPost] >= 0) then GetTable_post;
 
+  fFontInfo.fontFamily := GetFontFamily;
 end;
 //------------------------------------------------------------------------------
 
@@ -2836,6 +2871,226 @@ begin
     AppendPath(Result, tmpPaths);
   end;
 end;
+
 //------------------------------------------------------------------------------
+// TFontLibrary
+//------------------------------------------------------------------------------
+
+constructor TFontLibrary.Create;
+begin
+  fMaxFonts := 20;
+{$IFDEF XPLAT_GENERICS}
+    fFontList := TList<TFontReader>.Create;
+{$ELSE}
+    fFontList:= TList.Create;
+{$ENDIF}
+end;
+//------------------------------------------------------------------------------
+
+destructor TFontLibrary.Destroy;
+begin
+  Clear;
+  fFontList.Free;
+  inherited;
+end;
+//------------------------------------------------------------------------------
+
+procedure TFontLibrary.Clear;
+var
+  i: integer;
+begin
+  for i := 0 to fFontList.Count -1 do
+    TFontReader(fFontList[i]).Free;
+  fFontList.Clear;
+end;
+//------------------------------------------------------------------------------
+
+{$IFDEF MSWINDOWS}
+function TFontLibrary.Add(const fontName: string): TFontReader;
+begin
+  if fFontList.Count >= fMaxFonts then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  Result := TFontReader.Create;
+  try
+    if not Result.Load(fontName) or
+      not ValidateAdd(Result) then
+        FreeAndNil(Result);
+  except
+    FreeAndNil(Result);
+  end;
+end;
+//------------------------------------------------------------------------------
+{$ENDIF}
+
+function TFontLibrary.AddFromStream(stream: TStream): TFontReader;
+begin
+  if fFontList.Count >= fMaxFonts then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TFontReader.Create;
+  try
+    if not Result.LoadFromStream(stream) or
+      not ValidateAdd(Result) then
+        FreeAndNil(Result);
+  except
+    FreeAndNil(Result);
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function TFontLibrary.AddFromResource(const resName: string; resType: PChar): TFontReader;
+begin
+  if fFontList.Count >= fMaxFonts then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TFontReader.Create;
+  try
+    if not Result.LoadFromResource(resName, resType) or
+      not ValidateAdd(Result) then
+        FreeAndNil(Result);
+  except
+    FreeAndNil(Result);
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function TFontLibrary.AddFromFile(const filename: string): TFontReader;
+begin
+  if fFontList.Count >= fMaxFonts then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  Result := TFontReader.Create;
+  try
+    if not Result.LoadFromFile(filename) or
+      not ValidateAdd(Result) then
+        FreeAndNil(Result);
+  except
+    FreeAndNil(Result);
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function TFontLibrary.ValidateAdd(fr: TFontReader): Boolean;
+var
+  fr2: TFontReader;
+begin
+  Result := Assigned(fr);
+  if not Result then Exit;
+  //avoid adding duplicates
+  fr2 := GetBestMatchedFont(fr.fFontInfo);
+  if not Assigned(fr2) or
+    ((fr.fFontInfo.macStyles <> fr2.fFontInfo.macStyles) or
+    not SameText(fr.fFontInfo.faceName, fr2.fFontInfo.faceName)) then
+      fFontList.Add(fr)
+  else
+      Result := false;
+end;
+//------------------------------------------------------------------------------
+
+function TFontLibrary.Delete(fontReader: TFontReader): Boolean;
+var
+  i: integer;
+begin
+  for i := 0 to fFontList.Count -1 do
+    if TFontReader(fFontList[i]) = fontReader then
+    begin
+      fontReader.Free;
+      fFontList.Delete(i);
+      Result := true;
+      Exit;
+    end;
+  Result := false;
+end;
+//------------------------------------------------------------------------------
+
+function TFontLibrary.GetBestMatchedFont(const fontInfo: TFontInfo): TFontReader;
+
+  function StylesToInt(macstyles: TMacStyles): integer;
+  begin
+    if msBold in macStyles then
+      Result := 1 else Result := 0;
+    if msItalic in macStyles then inc(Result, 2);
+  end;
+
+  function FamilyToInt(fontFamily: TTtfFontFamily): integer;
+  begin
+    Result := Ord(fontFamily);
+  end;
+
+  function NameDiff(const name1, name2: string): integer;
+  begin
+    if SameText(name1, name2) then Result := 0 else Result := 1;
+  end;
+
+  function CompareFontInfos(const fi1, fi2: TFontInfo): integer;
+  var
+    styleDiff: integer;
+  begin
+    styleDiff := Abs(StylesToInt(fi1.macStyles) - StylesToInt(fi2.macStyles));
+    if styleDiff = 2 then Dec(styleDiff);
+    Result := styleDiff shl 8 +
+      Abs(FamilyToInt(fi1.fontFamily) - FamilyToInt(fi2.fontFamily)) shl 4 +
+      NameDiff(fi1.faceName, fi2.faceName);
+  end;
+
+var
+  i, bestIdx: integer;
+  bestDiff, currDiff: integer;
+begin
+  Result := nil;
+  if fFontList.Count = 0 then Exit;
+
+  bestIdx := 0;
+  bestDiff := CompareFontInfos(fontInfo,
+    TFontReader(fFontList[0]).fFontInfo);
+
+  for i := 1 to fFontList.Count -1 do
+  begin
+    currDiff := CompareFontInfos(fontInfo,
+      TFontReader(fFontList[i]).fFontInfo);
+    if (currDiff < bestDiff) then
+    begin
+      bestIdx := i;
+      bestDiff := currDiff;
+      if bestDiff = 0 then Break;
+    end;
+  end;
+  Result := TFontReader(fFontList[bestIdx]);
+end;
+//------------------------------------------------------------------------------
+
+procedure TFontLibrary.SetMaxFonts(value: integer);
+begin
+  if value < 0 then value := 0;
+  if value <= 0 then Clear
+  else while value > fFontList.Count do
+    Delete(TFontReader(fFontList[0]));
+  fMaxFonts := value;
+end;
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+
+function FontLibrary: TFontLibrary;
+begin
+  result := aFontLibrary;
+end;
+//------------------------------------------------------------------------------
+
+initialization
+  aFontLibrary := TFontLibrary.Create;
+finalization
+  aFontLibrary.Free;
 
 end.

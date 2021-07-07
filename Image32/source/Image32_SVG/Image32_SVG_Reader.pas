@@ -104,12 +104,7 @@ type
     fRadGradRenderer  : TSvgRadialGradientRenderer;
     fImgRenderer      : TImageRenderer;
     fRootElement      : TSvgElement;
-{$IFDEF XPLAT_GENERICS}
-    fFontList     : TList<TFontReader>;
-{$ELSE}
-    fFontList     : TList;
-{$ENDIF}
-    fFontCache    : TGlyphCache;
+    fFontCache        : TGlyphCache;
     function  LoadInternal: Boolean;
     function  GetIsEmpty: Boolean;
     procedure SetBlurQuality(quality: integer);
@@ -125,10 +120,6 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
-{$IFDEF MSWINDOWS}
-    function  AddFont(const fontName: string): Boolean;
-{$ENDIF}
-    function  AddFontFromResource(const resName: string; resType: PChar): Boolean;
     procedure DrawImage(img: TImage32; scaleToImage: Boolean);
     function  LoadFromStream(stream: TStream): Boolean;
     function  LoadFromFile(const filename: string): Boolean;
@@ -3178,18 +3169,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-//function TElement.GetSvgElement: TSvgElement;
-//var
-//  el: TElement;
-//begin
-//  el := fParent;
-//  while Assigned(el) and not (el is TSvgElement) do el := el.fParent;
-//  if Assigned(el) then
-//    Result := TSvgElement(el) else
-//    Result := nil;
-//end;
-//------------------------------------------------------------------------------
-
 function TElement.FindRefElement(refname: AnsiString): TElement;
 var
   i, len: integer;
@@ -4308,26 +4287,15 @@ begin
   fLinGradRenderer  := TLinearGradientRenderer.Create;
   fRadGradRenderer  := TSvgRadialGradientRenderer.Create;
   fImgRenderer      := TImageRenderer.Create;
-
-{$IFDEF XPLAT_GENERICS}
-    fFontList       := TList<TFontReader>.create;
-{$ELSE}
-    fFontList       := TList.create;
-{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
 destructor TSvgReader.Destroy;
-var
-  i: integer;
 begin
   Clear;
   fSvgParser.Free;
   fIdList.Free;
   fClassStyles.Free;
-  for i := 0 to fFontList.Count -1 do
-    TFontReader(fFontList[i]).Free;
-  fFontList.Free;
 
   fLinGradRenderer.Free;
   fRadGradRenderer.Free;
@@ -4348,39 +4316,6 @@ begin
   fImgRenderer.Image.Clear;
   currentColor := clBlack32;
   userSpaceBounds := NullRectD;
-end;
-//------------------------------------------------------------------------------
-
-{$IFDEF MSWINDOWS}
-function TSvgReader.AddFont(const fontName: string): Boolean;
-var
-  fr: TFontReader;
-begin
-  try
-    fr := TFontReader.Create(fontName);
-  except;
-    Result := false;
-    Exit;
-  end;
-  Result := true;
-  fFontList.Add(fr);
-end;
-//------------------------------------------------------------------------------
-{$ENDIF}
-
-function TSvgReader.AddFontFromResource(const resName: string;
-  resType: PChar): Boolean;
-var
-  fr: TFontReader;
-begin
-  try
-    fr := TFontReader.CreateFromResource(resName, resType);
-  except;
-    Result := false;
-    Exit;
-  end;
-  Result := true;
-  fFontList.Add(fr);
 end;
 //------------------------------------------------------------------------------
 
@@ -4494,75 +4429,21 @@ end;
 //------------------------------------------------------------------------------
 
 procedure TSvgReader.GetBestFontForFontCache(const svgFontInfo: TSVGFontInfo);
-
-  function GetStyleInt(fontReaderIdx: integer): integer;
-  begin
-    with TFontReader(fFontList[fontReaderIdx]) do
-    begin
-      if msBold in FontInfo.macStyles then
-        Result := 1 else
-        Result := 0;
-      if msItalic in FontInfo.macStyles then
-        inc(Result, 2);
-    end;
-  end;
-
-  function GetFamilyInt(fontReaderIdx: integer): integer;
-  begin
-    with TFontReader(fFontList[fontReaderIdx]) do
-      Result := Ord(FontFamily);
-  end;
-
-  function CompareStyleInts(int1, int2: integer): integer;
-  begin
-    Result := Abs(int1 - int2);
-    if Result = 2 then Dec(Result);
-  end;
-
-  function CompareFamilyInts(int1, int2: integer): integer;
-  begin
-    //ttfUnknown, ttfSerif, ttfSansSerif, ttfMonospace
-    if (int1 = 0) or (int2 = 0) or (int1 = int2) then
-      Result := 0 else
-      Result := 1;
-  end;
-
 var
-  i,j,k, bestIdx, styleDiff, familyDiff, thisStyle, thisFamily: integer;
   bestFontReader: TFontReader;
+  fi: TFontInfo;
 begin
-  if fFontList.Count = 0 then Exit;
+  fi.fontFamily := svgFontInfo.family;
+  fi.faceName := ''; //just match to a family here, not to a specific facename
+  fi.macStyles := [];
+  if svgFontInfo.italic = sfsItalic then
+    Include(fi.macStyles, msItalic);
+  if svgFontInfo.weight >= 600 then
+    Include(fi.macStyles, msBold);
 
-  //convert bold/italic into a comparision integer
-  with svgFontInfo do
-  begin
-    if weight >= 600 then
-      thisStyle := 1 else
-      thisStyle := 0;
-    if italic = sfsItalic then inc(thisStyle, 2);
-  end;
+  bestFontReader := FontLibrary.GetBestMatchedFont(fi);
+  if not Assigned(bestFontReader) then Exit;
 
-  if svgFontInfo.family = ttfUnknown then
-    thisFamily := Ord(ttfSansSerif) else    //default to sans-serif
-    thisFamily := Ord(svgFontInfo.family);
-
-  bestIdx := 0;
-  styleDiff := CompareStyleInts(thisStyle, GetStyleInt(0));
-  familyDiff := CompareFamilyInts(thisFamily, GetFamilyInt(0));
-  for i := 1 to fFontList.Count -1 do
-  begin
-    j := CompareStyleInts(thisStyle, GetStyleInt(i));
-    k := CompareFamilyInts(thisFamily, GetFamilyInt(i));
-    if (j < styleDiff) or ((j = styleDiff) and (k < familyDiff)) then
-    begin
-      bestIdx := i;
-      styleDiff := j;
-      familyDiff := k;
-      if (j = 0) and (k = 0) then Break;
-    end;
-  end;
-
-  bestFontReader := TFontReader(fFontList[bestIdx]);
   if Assigned(fFontCache) then
     fFontCache.FontReader := bestFontReader else
     fFontCache := TGlyphCache.Create(bestFontReader, defaultFontHeight);

@@ -41,16 +41,33 @@ implementation
 function TImageFormat_SVG.LoadFromStream(stream: TStream; img32: TImage32): Boolean;
 var
   r: TRect;
+  w,h, sx,sy: double;
 begin
   with TSvgReader.Create do
   try
     Result := LoadFromStream(stream);
     if not Result then Exit;
     r := RootElement.GetViewbox;
+
+    //if the current image's dimensions are larger than the
+    //SVG's viewbox, then scale the SVG image up to fit
     if not IsEmptyRect(r) then
-      img32.SetSize(RectWidth(r), RectHeight(r))
+    begin
+      w := RectWidth(r);
+      h := RectHeight(r);
+      sx := img32.Width / w;
+      sy := img32.Height / h;
+      if sy < sx then sx := sy;
+      if sx > 1 then
+      begin
+        w := w * sx;
+        h := h * sx;
+      end;
+      img32.SetSize(Round(w), Round(h));
+    end
     else if img32.IsEmpty then
       img32.SetSize(defaultSvgWidth, defaultSvgHeight);
+    //draw the SVG image to fit inside the canvas
     DrawImage(img32, True);
   finally
     Free;

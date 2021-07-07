@@ -408,6 +408,7 @@ type
   function IncPColor32(pc: Pointer; cnt: Integer): PColor32;
 
   procedure NormalizeAngle(var angle: double; tolerance: double = Pi/360);
+  function GrayScale(color: TColor32): TColor32;
 
   {$IFDEF MSWINDOWS}
 
@@ -924,6 +925,19 @@ begin
   if val <= 0 then result := 0
   else if val >= 255 then result := 255
   else result := Round(val);
+end;
+//------------------------------------------------------------------------------
+
+function GrayScale(color: TColor32): TColor32;
+var
+  c: TARGB absolute color;
+  r: TARGB absolute result;
+  g: Byte;
+begin
+  //https://www.w3.org/TR/AERT/#color-contrast
+  g := ClampByte(0.299 * c.R + 0.587 * c.G + 0.114 * c.B);
+  r.A := c.A;
+  r.R := g; r.G := g; r.B := g;
 end;
 //------------------------------------------------------------------------------
 

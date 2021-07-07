@@ -5,13 +5,18 @@
  History:
 -----------------------------------------------------------------------------}
 unit Image32SVGFactory;
+
 interface
+
 Uses
   Winapi.D2D1,
   SVGInterfaces;
+
 // Factory Methods
 function GetImage32SVGFactory: ISVGFactory;
+
 implementation
+
 Uses
   Winapi.Windows,
   Winapi.Messages,
@@ -25,7 +30,8 @@ Uses
   Image32_SVG_Core,
   Image32_SVG_Reader,
   Image32_SVG_Writer
-;
+  ;
+
 resourcestring
   D2D_ERROR_NOT_AVAILABLE    = 'Windows SVG support is not available';
   D2D_ERROR_PARSING_SVG_TEXT = 'Error parsing SVG Text: %s';
@@ -89,16 +95,6 @@ constructor TImage32SVG.Create;
 begin
   inherited;
   fSvgReader := TSvgReader.Create;
-  fSvgReader.AddFont('Arial');
-  fSvgReader.AddFont('Arial Bold');
-  fSvgReader.AddFont('Arial Italic');
-  fSvgReader.AddFont('Arial Bold Italic');
-  fSvgReader.AddFont('Times New Roman');
-  fSvgReader.AddFont('Times New Roman Bold');
-  fSvgReader.AddFont('Times New Roman Italic');
-  fSvgReader.AddFont('Times New Roman Bold Italic');
-  fSvgReader.AddFont('DejaVu Sans Mono');
-
   fImage := TImage32.Create;
   fImage.Resampler := rBicubicResampler;
   fFixedColor := TColors.SysDefault; // clDefault
@@ -187,7 +183,6 @@ procedure TImage32SVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
 begin
   fImage.SetSize(Round(R.Width), Round(R.Height));
   FsvgReader.DrawImage(fImage, true);
-  fImage.SaveToFile('C:\temp\temp.svg');
   fImage.CopyToDc(DC, 0, 0, True);
 end;
 
