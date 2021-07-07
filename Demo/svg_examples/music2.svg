@@ -1,0 +1,3318 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+  <svg
+     version="1.1"
+     viewBox="0 0 15970 9470"
+  	 xmlns:dc="http://purl.org/dc/elements/1.1/"
+	 xmlns:cc="http://creativecommons.org/ns#"
+	 xmlns:svg="http://www.w3.org/2000/svg"
+	 xmlns="http://www.w3.org/2000/svg"
+	 xmlns:xlink="http://www.w3.org/1999/xlink"
+     id="definition-scale">
+	 
+  <defs
+     id="defs4401">
+    <linearGradient
+       id="linearGradient8101">
+      <stop
+         id="stop8103"
+         offset="0"
+         style="stop-color:#edd100;stop-opacity:1;" />
+      <stop
+         id="stop8105"
+         offset="1"
+         style="stop-color:#edd100;stop-opacity:0;" />
+    </linearGradient>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E881">
+      <path
+         id="path4404"
+         d="M207 311l-85 -275c-4 -6 7 -11 13 -13l18 -2h11l-6 -21h-158l6 21h15c7 0 14 2 21 5c9 1 16 8 20 20l55 176l-71 -56l-10 10l109 135h62z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E883">
+      <path
+         id="path4407"
+         d="M161 326c52 0 94 -17 94 -68c0 -50 -40 -76 -82 -94c26 -21 39 -42 39 -64c0 -52 -56 -100 -118 -100h-12c-40 0 -82 23 -82 56c0 30 12 49 37 49c17 0 31 -16 34 -31c0 -5 -4 -12 -11 -21c-7 -5 -13 -10 -13 -21l11 -9l17 -4c21 0 40 12 56 37c13 21 19 45 19 70 c-9 30 -28 35 -66 35l6 23c34 0 60 4 77 13c20 11 30 35 30 70c0 28 -12 38 -39 40l-20 -3c-8 -3 -12 -9 -12 -16c2 -7 4 -11 5 -14l4 -11l3 -10l-3 -12c-5 -6 -11 -11 -20 -13c-18 -4 -36 10 -36 27c0 39 43 71 82 71z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E050">
+      <path
+         id="path4410"
+         d="M441 -245c-23 -4 -48 -6 -76 -6c-59 0 -102 7 -130 20c-88 42 -150 93 -187 154c-26 44 -43 103 -48 176c-4 60 11 123 44 189c29 57 65 106 110 148s96 85 153 127c-3 16 -8 46 -13 92c-4 43 -5 73 -5 89c0 117 16 172 69 257c34 54 64 82 89 82c21 0 43 -30 69 -92 s39 -115 41 -159c2 -120 -19 -173 -67 -256c-13 -20 -63 -90 -98 -118c-13 -9 -25 -19 -37 -29l31 -181c8 1 18 2 28 2c58 0 102 -12 133 -35c59 -43 92 -104 98 -184c11 -135 -80 -229 -180 -270c8 -57 17 -110 25 -162c5 -31 6 -58 6 -80c0 -30 -5 -53 -14 -70 c-35 -64 -88 -99 -158 -103c-42 -3 -83 6 -124 26c-50 24 -77 59 -80 105c-2 34 5 63 20 87c18 28 45 42 79 44c51 4 99 -40 103 -87c4 -56 -30 -94 -105 -115c17 -24 51 -36 102 -36c62 0 116 43 140 85c9 16 13 41 13 74c0 20 -1 42 -5 67c-8 53 -18 106 -26 159zM461 939 c-95 0 -135 -175 -135 -286c0 -24 2 -48 5 -71c50 39 92 82 127 128c43 57 63 106 60 148c-4 54 -23 82 -57 81zM406 119l54 -326c80 27 116 88 109 184c-7 99 -62 146 -163 142zM382 117c-74 -2 -132 -50 -128 -127c2 -46 43 -99 75 -115c-3 -2 -7 -5 -10 -10 c-70 33 -116 88 -123 172c-5 73 42 135 88 170c23 17 49 29 78 36l-29 170c-21 -13 -52 -37 -92 -73c-50 -44 -86 -84 -109 -119c-49 -75 -71 -140 -67 -195c5 -68 35 -127 93 -176s125 -73 203 -73c25 0 50 3 75 9c-19 111 -36 221 -54 331z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E260">
+      <path
+         id="path4413"
+         d="M20 110c32 16 54 27 93 27c26 0 35 -3 54 -13c13 -7 24 -20 27 -38l4 -25c0 -28 -16 -57 -45 -89c-23 -25 -39 -44 -65 -68l-88 -79v644h20v-359zM90 106c-32 0 -48 -10 -70 -29v-194c31 31 54 59 71 84c21 32 32 59 32 84c0 9 1 16 1 20c0 14 -3 21 -11 30l-8 3z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E0A4">
+      <path
+         id="path4416"
+         d="M0 -39c0 68 73 172 200 172c66 0 114 -37 114 -95c0 -84 -106 -171 -218 -171c-64 0 -96 30 -96 94z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E261">
+      <path
+         id="path4419"
+         d="M0 -188v539h18v-191l139 22v-533h-17v186zM18 -100l122 17v176l-122 -19v-174z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E4E5">
+      <path
+         id="path4422"
+         d="M107 292c-13 24 -30 49 -52 71c-1 1 0 2 0 3l-2 2c3 3 4 4 6 4c12 0 26 -7 40 -20s44 -40 89 -81c26 -24 28 -29 46 -47c4 -4 8 -9 10 -14c6 -8 8 -16 8 -27c0 -19 -12 -40 -36 -61c-28 -23 -49 -38 -61 -73c-4 -11 -7 -27 -10 -50c13 -43 34 -83 59 -121 c31 -47 59 -79 101 -129c-8 0 -26 7 -54 20l-62 29l-21 6l-23 1c-25 0 -45 -10 -60 -30l-4 -14l-1 -12c0 -33 20 -56 39 -78c8 -9 17 -18 26 -26c17 -15 27 -24 28 -30l-3 -3c-11 5 -19 10 -25 15c-9 3 -37 21 -45 26c-24 14 -45 32 -63 51c-19 21 -37 44 -37 71 c0 63 27 95 80 95c41 0 86 -18 136 -52c-19 26 -37 48 -55 66c-23 23 -48 44 -73 65c-28 23 -47 40 -58 53s-17 26 -18 39c75 64 113 125 113 183c0 27 -7 48 -18 68z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E4A8">
+      <path
+         id="path4425"
+         d="M153 224h-37c-10 -4 -18.667 -14 -26 -30c-3.33301 -7.33301 -8 -12 -14 -14c-4 1.33301 -10.667 10 -20 26c-4.66699 8.66699 -11.333 14.667 -20 18h-36l76 -224z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E262">
+      <path
+         id="path4428"
+         d="M136 186v169h17v-164l44 14v-91l-44 -14v-165l44 12v-91l-44 -13v-155h-17v150l-76 -22v-155h-17v149l-43 -13v90l43 14v167l-43 -14v92l43 13v169h17v-163zM60 73v-167l76 22v168z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E062">
+      <path
+         id="path4431"
+         d="M158 96c51 0 73 -14 88 -49l16 -39c0 -17 -2 -30 -7 -40c-3 -11 -10 -21 -19 -31c-17 -18 -49 -43 -84 -43c-55 0 -77 13 -112 44c-24 21 -35 55 -35 100c0 46 14 81 32 112c30 52 71 79 137 93l36 6l26 2c154 0 235 -68 274 -182c11 -32 18 -68 18 -107 c0 -103 -26 -182 -68 -250c-89 -145 -234 -230 -412 -288l-30 -5c-9 0 -14 3 -14 8c3 10 5 11 10 16c35 15 70 30 96 44l78 43c96 57 162 136 197 258c9 33 17 60 22 100c3 22 5 35 6 39c-7 69 -16 115 -23 140s-4 22 -16 40c-8 12 -19 23 -31 34c-24 21 -62 44 -118 44 c-48 0 -84 -8 -113 -28c-28 -19 -42 -44 -42 -73v-16c2 -5 3 -9 4 -11c24 22 52 39 84 39zM585 -118c0 32 23 58 57 58c18 0 33 -6 40 -18c9 -15 16 -18 16 -40c0 -9 -2 -16 -5 -21c-6 -19 -27 -37 -51 -37c-34 0 -57 26 -57 58zM642 177c31 0 56 -27 56 -58 c0 -30 -25 -58 -56 -58l-23 3c-19 7 -34 32 -34 55l3 23c9 20 28 35 54 35z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E520">
+      <path
+         id="path4434"
+         d="M23 124h-23c22 42.667 42.667 76.333 62 101s44.667 37.333 76 38c6 0 12 -4.333 18 -13c6.667 -6.667 10 -15.667 10 -27l24 14l25 13c12 4.667 24.333 7 37 7c24 0 43.333 -9.333 58 -28s22.333 -44.333 23 -77c0 -14 -1 -26.667 -3 -38s-5.333 -21 -10 -29 s-11 -17 -19 -27c-14 -18 -29.667 -32 -47 -42c-17.333 -10 -35.333 -15 -54 -15c-8.667 0 -19.667 3.33301 -33 10c-5.333 3.333 -10.333 6.667 -15 10s-9 8 -13 14l-56 -158l-3 -4c2.667 -6.667 6.667 -10.333 12 -11h32v-29h-173v29h21c4 0 8.667 1.667 14 5 c4 4 7 8.667 9 14l119 331v6l-3 10l-6 3c-8.667 0 -17 -4 -25 -12s-15.667 -18.333 -23 -31l-11 -17l-10 -20zM197 201c-12 -20.667 -21.667 -44.667 -29 -72c-6.667 -30 -10 -50.667 -10 -62c0 -24 7.333 -36 22 -36c12.667 0 23 2.333 31 7s15 11.333 21 20 c10 16.667 15.333 26 16 28c4.667 11.333 8 26 10 44s3.333 31 4 39c0 7.333 -0.667 13.333 -2 18s-3.333 9.334 -6 14c-5.333 9.333 -14.667 14 -28 14c-14 0 -23.667 -4.667 -29 -14z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E52F">
+      <path
+         id="path4437"
+         d="M555 376c0 -38.167 -18.975 -68.244 -50 -76c-18 0 -28 10.667 -30 32c0 28.991 17.859 51.367 37 62c3.333 2.667 5 4.667 5 6l-6 9c-4.667 3.333 -10.333 5 -17 5c-37.333 0 -66.667 -52 -88 -156h75v-38h-83c-14.582 -93.098 -58.591 -249.73 -92 -318 c-15.333 -31.333 -32 -58 -50 -80c-16 -21.333 -37 -35.666 -63 -43l-19 -2c-43.276 0 -66 40.393 -66 87c0 38.8545 18.371 52.9045 44 67c23.954 0 38 -25.1264 38 -49c0 -14.667 -10.667 -36.333 -32 -65c0 -4.667 3 -7 9 -7c34 0 61.333 46.333 82 139 c7.329 29.0043 13.475 59.1919 20 89c13.093 60.574 26.152 121.181 39 182h-161c-14.168 -94.452 -55.7115 -241.428 -94 -318c-32.667 -72 -69.333 -113 -110 -123l-18 -2c-21.3311 0 -37.664 8.667 -49 26c-5.333 6 -10.333 15.333 -15 28 c-1.561 12.481 -2.738 19.127 -4 33c2.548 21.661 2.789 32.872 13 46c6.667 8.667 17.667 15.667 33 21c22.9336 0 35.7952 -26.418 37 -49c0 -11.389 -2.0371 -17.074 -5 -23l-14 -23l-15 -19c0 -4.667 3.333 -7 10 -7c27.0567 0 43.5807 29.161 54 50l14 36l15 53 c14.2142 63.1191 27.7116 126.955 41 191l17 80h-57v38h70c19.8959 66.797 51.192 121.091 103 159c24.667 16.667 52.333 25 83 25c32.81 0 49 -31.967 49 -66c0 -37.577 -18.199 -70.755 -51 -76c-16.667 0 -26 10.667 -28 32c0 11.335 3.333 23.668 10 37 c6.667 11.335 15.667 19.668 27 25c3.333 2.667 5 4.667 5 6c-6.889 9.646 -10.635 14 -25 14c-22 0 -40 -15.667 -54 -47s-25 -67 -33 -107h164c22.448 83.061 87.109 182 186 182c35.726 0 46.923 -30.706 49 -66z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <symbol
+       overflow="inherit"
+       viewBox="0 0 1000 1000"
+       id="E885">
+      <path
+         id="path4440"
+         d="M84 0c-49 0 -84 18 -84 66l1 14c2 5 4 9 7 14c7 7 16 11 27 14c7 0 13 -3 19 -9l4 -9l2 -11l-4 -13c-3 -5 -3 -6 -8 -11l-7 -16c0 -8 3 -13 10 -16l13 -4h15c22 0 42 15 59 45c15 27 23 52 23 75l-3 13c-2 8 -13 17 -21 20l-15 4l-17 -1l-16 -3l-17 -10l-23 -18h-21 l62 182c9 -3 25 -6 35 -9l33 -3h10l23 3l49 9c-19 -27 -53 -58 -89 -58h-10l-22 2c-9 3 -17 7 -26 11l-36 -108l18 12l20 9l22 5l26 3c9 0 19 -1 30 -5c14 -5 14 -6 24 -17c14 -15 22 -33 22 -58c0 -32 -13 -62 -41 -87c-28 -24 -60 -35 -94 -35z"
+         transform="scale(1,-1)" />
+    </symbol>
+    <filter
+       height="1.5817133"
+       y="-0.29085664"
+       width="1.1956357"
+       x="-0.097817857"
+       id="filter6568"
+       style="color-interpolation-filters:sRGB">
+      <feGaussianBlur
+         id="feGaussianBlur6570"
+         stdDeviation="7.7141267" />
+    </filter>
+    <radialGradient
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1,0,0,0.53504977,-9.3582858,65.357402)"
+       r="59.364964"
+       fy="140.56859"
+       fx="566.96253"
+       cy="140.56859"
+       cx="566.96253"
+       id="radialGradient8107"
+       xlink:href="#linearGradient8101" />
+    <filter
+       id="filter8113"
+       style="color-interpolation-filters:sRGB">
+      <feBlend
+         id="feBlend8115"
+         in2="BackgroundImage"
+         mode="multiply" />
+    </filter>
+    <filter
+       id="filter8117"
+       style="color-interpolation-filters:sRGB">
+      <feBlend
+         id="feBlend8119"
+         in2="BackgroundImage"
+         mode="multiply" />
+    </filter>
+  </defs>
+	 
+    <g
+       id="g4445"
+       transform="translate(200, 200)"
+       class="page-margin">
+      <g
+         id="system-0000001358516639"
+         class="system">
+        <path
+           id="path4448"
+           stroke-width="30"
+           stroke="#000000"
+           d="M15 1100 L15 3658" />
+        <path
+           id="path4450"
+           stroke-width="20"
+           stroke-linejoin="round"
+           stroke-linecap="round"
+           stroke="#000000"
+           d="M-30,3638 C-390,3098 60,2559 -210,2379 C125,2559 -325,3098 -30,3638" />
+        <path
+           id="path4452"
+           stroke-width="20"
+           stroke-linejoin="round"
+           stroke-linecap="round"
+           stroke="#000000"
+           d="M-30,1120 C-325,1660 125,2199 -210,2379 C60,2199 -390,1660 -30,1120" />
+        <use
+           id="use4454"
+           width="720px"
+           height="720px"
+           y="560"
+           x="0"
+           xlink:href="#E881" />
+        <use
+           id="use4456"
+           width="720px"
+           height="720px"
+           y="560"
+           x="149"
+           xlink:href="#E883" />
+        <g
+           id="measure-L127"
+           class="measure m-13">
+          <g
+             id="staff-L127F3N1"
+             class="staff">
+            <path
+               id="path4460"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 1100 L8278 1100" />
+            <path
+               id="path4462"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 1280 L8278 1280" />
+            <path
+               id="path4464"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 1460 L8278 1460" />
+            <path
+               id="path4466"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 1640 L8278 1640" />
+            <path
+               id="path4468"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 1820 L8278 1820" />
+            <g
+               id="clef-0000000833747704"
+               class="clef">
+              <use
+                 id="use4471"
+                 width="720px"
+                 height="720px"
+                 y="1640"
+                 x="90"
+                 xlink:href="#E050" />
+            </g>
+            <g
+               id="ksig-0000001082232537"
+               class="keySig">
+              <use
+                 id="use4474"
+                 width="720px"
+                 height="720px"
+                 y="1460"
+                 x="771"
+                 xlink:href="#E260" />
+              <use
+                 id="use4476"
+                 width="720px"
+                 height="720px"
+                 y="1190"
+                 x="954"
+                 xlink:href="#E260" />
+              <use
+                 id="use4478"
+                 width="720px"
+                 height="720px"
+                 y="1550"
+                 x="1137"
+                 xlink:href="#E260" />
+              <use
+                 id="use4480"
+                 width="720px"
+                 height="720px"
+                 y="1280"
+                 x="1320"
+                 xlink:href="#E260" />
+            </g>
+            <g
+               id="layer-L127F3N1"
+               class="layer">
+              <g
+                 id="note-L128F3"
+                 class="note qon-48 qoff-49 pname-b acc-n oct-4 b40c-37 b12c-11 ">
+                <use
+                   id="use4484"
+                   width="720px"
+                   height="720px"
+                   y="1460"
+                   x="2068"
+                   xlink:href="#E0A4" />
+                <g
+                   id="stem-0000001702064505"
+                   class="stem">
+                  <path
+                     id="path4487"
+                     stroke-width="20"
+                     stroke="#000000"
+                     d="M2078 1482 L2078 2090" />
+                </g>
+                <g
+                   id="accid-L128F3"
+                   class="accid">
+                  <use
+                     id="use4490"
+                     width="720px"
+                     height="720px"
+                     y="1460"
+                     x="1895"
+                     xlink:href="#E261" />
+                </g>
+              </g>
+              <g
+                 id="rest-L131F3"
+                 class="rest">
+                <use
+                   id="use4493"
+                   width="720px"
+                   height="720px"
+                   y="1460"
+                   x="3860"
+                   xlink:href="#E4E5" />
+              </g>
+              <g
+                 id="chord-L134F3"
+                 class="chord">
+                <g
+                   id="stem-0000001361909691"
+                   class="stem">
+                  <path
+                     id="path4497"
+                     stroke-width="20"
+                     stroke="#000000"
+                     d="M5300 1032 L5300 2270" />
+                </g>
+                <g
+                   id="note-L134F3S1"
+                   class="note qon-50 qoff-51 pname-g acc-n oct-4 b40c-25 b12c-7 ">
+                  <use
+                     id="use4500"
+                     width="720px"
+                     height="720px"
+                     y="1640"
+                     x="5290"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L134F3S2"
+                   class="note qon-50 qoff-51 pname-b acc-n oct-4 b40c-37 b12c-11 ">
+                  <use
+                     id="use4503"
+                     width="720px"
+                     height="720px"
+                     y="1460"
+                     x="5290"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L134F3S3"
+                   class="note qon-50 qoff-51 pname-d acc-n oct-5 b40c-8 b12c-2 ">
+                  <use
+                     id="use4506"
+                     width="720px"
+                     height="720px"
+                     y="1280"
+                     x="5290"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L134F3S3"
+                     class="accid">
+                    <use
+                       id="use4509"
+                       width="720px"
+                       height="720px"
+                       y="1280"
+                       x="5117"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="note-L134F3S4"
+                   class="note qon-50 qoff-51 pname-g acc-n oct-5 b40c-25 b12c-7 ">
+                  <use
+                     id="use4512"
+                     width="720px"
+                     height="720px"
+                     y="1010"
+                     x="5290"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="artic-L134F3"
+                   class="artic">
+                  <g
+                     id="artic-part-0000000723313499"
+                     class="articPart">
+                    <use
+                       id="use4516"
+                       width="514px"
+                       height="514px"
+                       y="852"
+                       x="5364"
+                       xlink:href="#E4A8" />
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="chord-L138F3"
+                 class="chord">
+                <g
+                   id="stem-0000000864232300"
+                   class="stem">
+                  <path
+                     id="path4520"
+                     stroke-width="20"
+                     stroke="#000000"
+                     d="M6730 1122 L6730 2360" />
+                </g>
+                <g
+                   id="note-L138F3S1"
+                   class="note qon-51 qoff-52 pname-f acc-s oct-4 b40c-20 b12c-6 ">
+                  <use
+                     id="use4523"
+                     width="720px"
+                     height="720px"
+                     y="1730"
+                     x="6720"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L138F3S1"
+                     class="accid">
+                    <use
+                       id="use4526"
+                       width="720px"
+                       height="720px"
+                       y="1730"
+                       x="6313"
+                       xlink:href="#E262" />
+                  </g>
+                </g>
+                <g
+                   id="note-L138F3S2"
+                   class="note qon-51 qoff-52 pname-a acc-n oct-4 b40c-31 b12c-9 ">
+                  <use
+                     id="use4529"
+                     width="720px"
+                     height="720px"
+                     y="1550"
+                     x="6720"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L138F3S2"
+                     class="accid">
+                    <use
+                       id="use4532"
+                       width="720px"
+                       height="720px"
+                       y="1550"
+                       x="6160"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="note-L138F3S3"
+                   class="note qon-51 qoff-52 pname-c acc-n oct-5 b40c-2 b12c-0 ">
+                  <use
+                     id="use4535"
+                     width="720px"
+                     height="720px"
+                     y="1370"
+                     x="6720"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L138F3S4"
+                   class="note qon-51 qoff-52 pname-e acc-f oct-5 b40c-13 b12c-3 ">
+                  <use
+                     id="use4538"
+                     width="720px"
+                     height="720px"
+                     y="1190"
+                     x="6514"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L138F3S5"
+                   class="note qon-51 qoff-52 pname-f acc-s oct-5 b40c-20 b12c-6 ">
+                  <use
+                     id="use4541"
+                     width="720px"
+                     height="720px"
+                     y="1100"
+                     x="6720"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L138F3S5"
+                     class="accid">
+                    <use
+                       id="use4544"
+                       width="720px"
+                       height="720px"
+                       y="1100"
+                       x="6313"
+                       xlink:href="#E262" />
+                  </g>
+                </g>
+                <g
+                   id="artic-L138F3"
+                   class="artic">
+                  <g
+                     id="artic-part-0000001151619051"
+                     class="articPart">
+                    <use
+                       id="use4548"
+                       width="514px"
+                       height="514px"
+                       y="942"
+                       x="6794"
+                       xlink:href="#E4A8" />
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g
+             id="staff-L127F1N1"
+             class="staff">
+            <path
+               id="path4551"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 2938 L8278 2938" />
+            <path
+               id="path4553"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 3118 L8278 3118" />
+            <path
+               id="path4555"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 3298 L8278 3298" />
+            <path
+               id="path4557"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 3478 L8278 3478" />
+            <path
+               id="path4559"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 3658 L8278 3658" />
+            <g
+               id="clef-0000001060764402"
+               class="clef">
+              <use
+                 id="use4562"
+                 width="720px"
+                 height="720px"
+                 y="3118"
+                 x="90"
+                 xlink:href="#E062" />
+            </g>
+            <g
+               id="ksig-0000000288150691"
+               class="keySig">
+              <use
+                 id="use4565"
+                 width="720px"
+                 height="720px"
+                 y="3478"
+                 x="771"
+                 xlink:href="#E260" />
+              <use
+                 id="use4567"
+                 width="720px"
+                 height="720px"
+                 y="3208"
+                 x="954"
+                 xlink:href="#E260" />
+              <use
+                 id="use4569"
+                 width="720px"
+                 height="720px"
+                 y="3568"
+                 x="1137"
+                 xlink:href="#E260" />
+              <use
+                 id="use4571"
+                 width="720px"
+                 height="720px"
+                 y="3298"
+                 x="1320"
+                 xlink:href="#E260" />
+            </g>
+            <g
+               id="g4573"
+               class="ledgerLines above">
+              <path
+                 id="path4575"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M3337 2758 L3663 2758" />
+              <path
+                 id="path4577"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M4767 2758 L5093 2758" />
+              <path
+                 id="path4579"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M6197 2758 L6523 2758" />
+              <path
+                 id="path4581"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M7142 2758 L7468 2758" />
+              <path
+                 id="path4583"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M7627 2758 L7953 2758" />
+              <path
+                 id="path4585"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M7627 2578 L7953 2578" />
+            </g>
+            <g
+               id="layer-L127F1N1"
+               class="layer">
+              <g
+                 id="tuplet-L128F1-L130F1"
+                 class="tuplet">
+                <use
+                   id="use4589"
+                   width="720px"
+                   height="720px"
+                   y="3963"
+                   x="2805"
+                   xlink:href="#E883" />
+                <g
+                   id="beam-L128F1-L130F1"
+                   class="beam">
+                  <polygon
+                     id="polygon4592"
+                     points="2068,3658 3407,3527 3407,3437 2068,3568 " />
+                  <g
+                     id="note-L128F1"
+                     class="note qon-48 qoff-145_3 pname-g acc-n oct-3 b40c-25 b12c-7 ">
+                    <use
+                       id="use4595"
+                       width="720px"
+                       height="720px"
+                       y="3028"
+                       x="2068"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000402512199"
+                       class="stem">
+                      <path
+                         id="path4598"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M2078 3050 L2078 3638" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L129F1"
+                     class="note qon-145_3 qoff-146_3 pname-b acc-n oct-3 b40c-37 b12c-11 ">
+                    <use
+                       id="use4601"
+                       width="720px"
+                       height="720px"
+                       y="2848"
+                       x="2728"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000514187208"
+                       class="stem">
+                      <path
+                         id="path4604"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M2738 2870 L2738 3572" />
+                    </g>
+                    <g
+                       id="accid-L129F1"
+                       class="accid">
+                      <use
+                         id="use4607"
+                         width="720px"
+                         height="720px"
+                         y="2848"
+                         x="2555"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L130F1"
+                     class="note qon-146_3 qoff-49 pname-d acc-n oct-4 b40c-8 b12c-2 ">
+                    <use
+                       id="use4610"
+                       width="720px"
+                       height="720px"
+                       y="2668"
+                       x="3387"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000549360660"
+                       class="stem">
+                      <path
+                         id="path4613"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M3397 2690 L3397 3507" />
+                    </g>
+                    <g
+                       id="accid-L130F1"
+                       class="accid">
+                      <use
+                         id="use4616"
+                         width="720px"
+                         height="720px"
+                         y="2668"
+                         x="3214"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="tuplet-L131F1-L133F1"
+                 class="tuplet">
+                <use
+                   id="use4619"
+                   width="720px"
+                   height="720px"
+                   y="3981"
+                   x="4416"
+                   xlink:href="#E883" />
+                <g
+                   id="beam-L131F1-L133F1"
+                   class="beam">
+                  <polygon
+                     id="polygon4622"
+                     points="3860,3658 4837,3563 4837,3473 3860,3568 " />
+                  <g
+                     id="note-L131F1"
+                     class="note qon-49 qoff-148_3 pname-g acc-n oct-3 b40c-25 b12c-7 ">
+                    <use
+                       id="use4625"
+                       width="720px"
+                       height="720px"
+                       y="3028"
+                       x="3860"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001170080494"
+                       class="stem">
+                      <path
+                         id="path4628"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M3870 3050 L3870 3638" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L132F1"
+                     class="note qon-148_3 qoff-149_3 pname-b acc-n oct-3 b40c-37 b12c-11 ">
+                    <use
+                       id="use4631"
+                       width="720px"
+                       height="720px"
+                       y="2848"
+                       x="4332"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001005999463"
+                       class="stem">
+                      <path
+                         id="path4634"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M4342 2870 L4342 3591" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L133F1"
+                     class="note qon-149_3 qoff-50 pname-d acc-n oct-4 b40c-8 b12c-2 ">
+                    <use
+                       id="use4637"
+                       width="720px"
+                       height="720px"
+                       y="2668"
+                       x="4817"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000132207742"
+                       class="stem">
+                      <path
+                         id="path4640"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M4827 2690 L4827 3543" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="tuplet-L134F1-L136F1"
+                 class="tuplet">
+                <use
+                   id="use4643"
+                   width="720px"
+                   height="720px"
+                   y="3981"
+                   x="5846"
+                   xlink:href="#E883" />
+                <g
+                   id="beam-L134F1-L136F1"
+                   class="beam">
+                  <polygon
+                     id="polygon4646"
+                     points="5290,3658 6267,3563 6267,3473 5290,3568 " />
+                  <g
+                     id="note-L134F1"
+                     class="note qon-50 qoff-151_3 pname-g acc-n oct-3 b40c-25 b12c-7 ">
+                    <use
+                       id="use4649"
+                       width="720px"
+                       height="720px"
+                       y="3028"
+                       x="5290"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000722450412"
+                       class="stem">
+                      <path
+                         id="path4652"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M5300 3050 L5300 3638" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L135F1"
+                     class="note qon-151_3 qoff-152_3 pname-b acc-n oct-3 b40c-37 b12c-11 ">
+                    <use
+                       id="use4655"
+                       width="720px"
+                       height="720px"
+                       y="2848"
+                       x="5762"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000457071954"
+                       class="stem">
+                      <path
+                         id="path4658"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M5772 2870 L5772 3591" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L136F1"
+                     class="note qon-152_3 qoff-51 pname-d acc-n oct-4 b40c-8 b12c-2 ">
+                    <use
+                       id="use4661"
+                       width="720px"
+                       height="720px"
+                       y="2668"
+                       x="6247"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001381618501"
+                       class="stem">
+                      <path
+                         id="path4664"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M6257 2690 L6257 3543" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="tuplet-L138F1-L140F1"
+                 class="tuplet">
+                <g
+                   id="beam-L138F1-L140F1"
+                   class="beam">
+                  <polygon
+                     id="polygon4668"
+                     points="6720,3658 7697,3563 7697,3473 6720,3568 " />
+                  <g
+                     id="note-L138F1"
+                     class="note qon-51 qoff-154_3 pname-g acc-n oct-3 b40c-25 b12c-7 ">
+                    <use
+                       id="use4671"
+                       width="720px"
+                       height="720px"
+                       y="3028"
+                       x="6720"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001836475294"
+                       class="stem">
+                      <path
+                         id="path4674"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M6730 3050 L6730 3638" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L139F1"
+                     class="note qon-154_3 qoff-155_3 pname-c acc-n oct-4 b40c-2 b12c-0 ">
+                    <use
+                       id="use4677"
+                       width="720px"
+                       height="720px"
+                       y="2758"
+                       x="7192"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001916869073"
+                       class="stem">
+                      <path
+                         id="path4680"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M7202 2780 L7202 3591" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L140F1"
+                     class="note qon-155_3 qoff-52 pname-e acc-f oct-4 b40c-13 b12c-3 ">
+                    <use
+                       id="use4683"
+                       width="720px"
+                       height="720px"
+                       y="2578"
+                       x="7677"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001140713354"
+                       class="stem">
+                      <path
+                         id="path4686"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M7687 2600 L7687 3543" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g
+             id="dynam-0000000231573445"
+             class="dynam">
+            <use
+               id="use4689"
+               width="720px"
+               height="720px"
+               y="2514"
+               x="5283"
+               xlink:href="#E520" />
+          </g>
+          <g
+             id="bline-0000000139516524"
+             class="barLineAttr">
+            <path
+               id="path4692"
+               stroke-width="30"
+               stroke="#000000"
+               d="M8263 1100 L8263 3658" />
+          </g>
+        </g>
+        <g
+           id="measure-L141"
+           class="measure m-14">
+          <g
+             id="staff-L141F3N1"
+             class="staff">
+            <path
+               id="path4696"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8278 1100 L15571 1100" />
+            <path
+               id="path4698"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8278 1280 L15571 1280" />
+            <path
+               id="path4700"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8278 1460 L15571 1460" />
+            <path
+               id="path4702"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8278 1640 L15571 1640" />
+            <path
+               id="path4704"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8278 1820 L15571 1820" />
+            <g
+               id="g4706"
+               class="ledgerLines above">
+              <path
+                 id="path4708"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M12534 920 L12860 920" />
+              <path
+                 id="path4710"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M13964 920 L14290 920" />
+            </g>
+            <g
+               id="layer-L141F3N1"
+               class="layer">
+              <g
+                 id="chord-L142F3"
+                 class="chord">
+                <g
+                   id="stem-0000000358245300"
+                   class="stem">
+                  <path
+                     id="path4715"
+                     stroke-width="20"
+                     stroke="#000000"
+                     d="M9011 1032 L9011 2270" />
+                </g>
+                <g
+                   id="note-L142F3S1"
+                   class="note qon-52 qoff-53 pname-g acc-n oct-4 b40c-25 b12c-7 ">
+                  <use
+                     id="use4718"
+                     width="720px"
+                     height="720px"
+                     y="1640"
+                     x="9001"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L142F3S2"
+                   class="note qon-52 qoff-53 pname-b acc-n oct-4 b40c-37 b12c-11 ">
+                  <use
+                     id="use4721"
+                     width="720px"
+                     height="720px"
+                     y="1460"
+                     x="9001"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L142F3S2"
+                     class="accid">
+                    <use
+                       id="use4724"
+                       width="720px"
+                       height="720px"
+                       y="1460"
+                       x="8675"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="note-L142F3S3"
+                   class="note qon-52 qoff-53 pname-d acc-n oct-5 b40c-8 b12c-2 ">
+                  <use
+                     id="use4727"
+                     width="720px"
+                     height="720px"
+                     y="1280"
+                     x="9001"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L142F3S3"
+                     class="accid">
+                    <use
+                       id="use4730"
+                       width="720px"
+                       height="720px"
+                       y="1280"
+                       x="8828"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="note-L142F3S4"
+                   class="note qon-52 qoff-53 pname-g acc-n oct-5 b40c-25 b12c-7 ">
+                  <use
+                     id="use4733"
+                     width="720px"
+                     height="720px"
+                     y="1010"
+                     x="9001"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="artic-L142F3"
+                   class="artic">
+                  <g
+                     id="artic-part-0000000600715291"
+                     class="articPart">
+                    <use
+                       id="use4737"
+                       width="514px"
+                       height="514px"
+                       y="852"
+                       x="9075"
+                       xlink:href="#E4A8" />
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="rest-L145F3"
+                 class="rest">
+                <use
+                   id="use4740"
+                   width="720px"
+                   height="720px"
+                   y="1460"
+                   x="10792"
+                   xlink:href="#E4E5" />
+              </g>
+              <g
+                 id="chord-L148F3"
+                 class="chord">
+                <g
+                   id="stem-0000001396069273"
+                   class="stem">
+                  <path
+                     id="path4744"
+                     stroke-width="20"
+                     stroke="#000000"
+                     d="M12594 852 L12594 2090" />
+                </g>
+                <g
+                   id="note-L148F3S1"
+                   class="note qon-54 qoff-55 pname-b acc-n oct-4 b40c-37 b12c-11 ">
+                  <use
+                     id="use4747"
+                     width="720px"
+                     height="720px"
+                     y="1460"
+                     x="12584"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L148F3S2"
+                   class="note qon-54 qoff-55 pname-d acc-n oct-5 b40c-8 b12c-2 ">
+                  <use
+                     id="use4750"
+                     width="720px"
+                     height="720px"
+                     y="1280"
+                     x="12584"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L148F3S3"
+                   class="note qon-54 qoff-55 pname-g acc-n oct-5 b40c-25 b12c-7 ">
+                  <use
+                     id="use4753"
+                     width="720px"
+                     height="720px"
+                     y="1010"
+                     x="12584"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L148F3S4"
+                   class="note qon-54 qoff-55 pname-b acc-n oct-5 b40c-37 b12c-11 ">
+                  <use
+                     id="use4756"
+                     width="720px"
+                     height="720px"
+                     y="830"
+                     x="12584"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L148F3S4"
+                     class="accid">
+                    <use
+                       id="use4759"
+                       width="720px"
+                       height="720px"
+                       y="830"
+                       x="12411"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="artic-L148F3"
+                   class="artic">
+                  <g
+                     id="artic-part-0000001578068065"
+                     class="articPart">
+                    <use
+                       id="use4763"
+                       width="514px"
+                       height="514px"
+                       y="672"
+                       x="12658"
+                       xlink:href="#E4A8" />
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="chord-L151F3"
+                 class="chord">
+                <g
+                   id="stem-0000001318664562"
+                   class="stem">
+                  <path
+                     id="path4767"
+                     stroke-width="20"
+                     stroke="#000000"
+                     d="M14024 852 L14024 2090" />
+                </g>
+                <g
+                   id="note-L151F3S1"
+                   class="note qon-55 qoff-56 pname-b acc-n oct-4 b40c-37 b12c-11 ">
+                  <use
+                     id="use4770"
+                     width="720px"
+                     height="720px"
+                     y="1460"
+                     x="14014"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L151F3S2"
+                   class="note qon-55 qoff-56 pname-d acc-n oct-5 b40c-8 b12c-2 ">
+                  <use
+                     id="use4773"
+                     width="720px"
+                     height="720px"
+                     y="1280"
+                     x="14014"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L151F3S3"
+                   class="note qon-55 qoff-56 pname-g acc-n oct-5 b40c-25 b12c-7 ">
+                  <use
+                     id="use4776"
+                     width="720px"
+                     height="720px"
+                     y="1010"
+                     x="14014"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L151F3S4"
+                   class="note qon-55 qoff-56 pname-b acc-n oct-5 b40c-37 b12c-11 ">
+                  <use
+                     id="use4779"
+                     width="720px"
+                     height="720px"
+                     y="830"
+                     x="14014"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="artic-L151F3"
+                   class="artic">
+                  <g
+                     id="artic-part-0000001364733415"
+                     class="articPart">
+                    <use
+                       id="use4783"
+                       width="514px"
+                       height="514px"
+                       y="672"
+                       x="14088"
+                       xlink:href="#E4A8" />
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g
+             id="staff-L141F1N1"
+             class="staff">
+            <path
+               id="path4786"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8278 2938 L15571 2938" />
+            <path
+               id="path4788"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8278 3118 L15571 3118" />
+            <path
+               id="path4790"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8278 3298 L15571 3298" />
+            <path
+               id="path4792"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8278 3478 L15571 3478" />
+            <path
+               id="path4794"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8278 3658 L15571 3658" />
+            <g
+               id="g4796"
+               class="ledgerLines above">
+              <path
+                 id="path4798"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M9610 2758 L9936 2758" />
+            </g>
+            <g
+               id="layer-L141F1N1"
+               class="layer">
+              <g
+                 id="tuplet-L142F1-L144F1"
+                 class="tuplet">
+                <g
+                   id="beam-L142F1-L144F1"
+                   class="beam">
+                  <polygon
+                     id="polygon4803"
+                     points="9001,3658 10340,3527 10340,3437 9001,3568 " />
+                  <g
+                     id="note-L142F1"
+                     class="note qon-52 qoff-157_3 pname-g acc-n oct-3 b40c-25 b12c-7 ">
+                    <use
+                       id="use4806"
+                       width="720px"
+                       height="720px"
+                       y="3028"
+                       x="9001"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000848082699"
+                       class="stem">
+                      <path
+                         id="path4809"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M9011 3050 L9011 3638" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L143F1"
+                     class="note qon-157_3 qoff-158_3 pname-d acc-n oct-4 b40c-8 b12c-2 ">
+                    <use
+                       id="use4812"
+                       width="720px"
+                       height="720px"
+                       y="2668"
+                       x="9660"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000983442147"
+                       class="stem">
+                      <path
+                         id="path4815"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M9670 2690 L9670 3573" />
+                    </g>
+                    <g
+                       id="accid-L143F1"
+                       class="accid">
+                      <use
+                         id="use4818"
+                         width="720px"
+                         height="720px"
+                         y="2668"
+                         x="9487"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L144F1"
+                     class="note qon-158_3 qoff-53 pname-b acc-n oct-3 b40c-37 b12c-11 ">
+                    <use
+                       id="use4821"
+                       width="720px"
+                       height="720px"
+                       y="2848"
+                       x="10320"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001312812685"
+                       class="stem">
+                      <path
+                         id="path4824"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M10330 2870 L10330 3507" />
+                    </g>
+                    <g
+                       id="accid-L144F1"
+                       class="accid">
+                      <use
+                         id="use4827"
+                         width="720px"
+                         height="720px"
+                         y="2848"
+                         x="10147"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="tuplet-L145F1-L147F1"
+                 class="tuplet">
+                <g
+                   id="beam-L145F1-L147F1"
+                   class="beam">
+                  <polygon
+                     id="polygon4831"
+                     points="10792,3977 12131,4108 12131,4018 10792,3887 " />
+                  <g
+                     id="note-L145F1"
+                     class="note qon-53 qoff-160_3 pname-g acc-n oct-3 b40c-25 b12c-7 ">
+                    <use
+                       id="use4834"
+                       width="720px"
+                       height="720px"
+                       y="3028"
+                       x="10792"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000781476848"
+                       class="stem">
+                      <path
+                         id="path4837"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M10802 3050 L10802 3957" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L146F1"
+                     class="note qon-160_3 qoff-161_3 pname-d acc-n oct-3 b40c-8 b12c-2 ">
+                    <use
+                       id="use4840"
+                       width="720px"
+                       height="720px"
+                       y="3298"
+                       x="11452"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000062550604"
+                       class="stem">
+                      <path
+                         id="path4843"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M11462 3320 L11462 4023" />
+                    </g>
+                    <g
+                       id="accid-L146F1"
+                       class="accid">
+                      <use
+                         id="use4846"
+                         width="720px"
+                         height="720px"
+                         y="3298"
+                         x="11279"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L147F1"
+                     class="note qon-161_3 qoff-54 pname-b acc-n oct-2 b40c-37 b12c-11 ">
+                    <use
+                       id="use4849"
+                       width="720px"
+                       height="720px"
+                       y="3478"
+                       x="12111"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001670445506"
+                       class="stem">
+                      <path
+                         id="path4852"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M12121 3500 L12121 4088" />
+                    </g>
+                    <g
+                       id="accid-L147F1"
+                       class="accid">
+                      <use
+                         id="use4855"
+                         width="720px"
+                         height="720px"
+                         y="3478"
+                         x="11938"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="tuplet-L148F1-L150F1"
+                 class="tuplet">
+                <g
+                   id="beam-L148F1-L150F1"
+                   class="beam">
+                  <polygon
+                     id="polygon4859"
+                     points="12790,2764 13767,2668 13767,2758 12790,2854 " />
+                  <g
+                     id="note-L148F1"
+                     class="note qon-54 qoff-163_3 pname-g acc-n oct-2 b40c-25 b12c-7 ">
+                    <use
+                       id="use4862"
+                       width="720px"
+                       height="720px"
+                       y="3658"
+                       x="12584"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000234305781"
+                       class="stem">
+                      <path
+                         id="path4865"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M12800 3636 L12800 2784" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L149F1"
+                     class="note qon-163_3 qoff-164_3 pname-b acc-n oct-2 b40c-37 b12c-11 ">
+                    <use
+                       id="use4868"
+                       width="720px"
+                       height="720px"
+                       y="3478"
+                       x="13056"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001968955038"
+                       class="stem">
+                      <path
+                         id="path4871"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M13272 3456 L13272 2737" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L150F1"
+                     class="note qon-164_3 qoff-55 pname-d acc-n oct-3 b40c-8 b12c-2 ">
+                    <use
+                       id="use4874"
+                       width="720px"
+                       height="720px"
+                       y="3298"
+                       x="13541"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001186139412"
+                       class="stem">
+                      <path
+                         id="path4877"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M13757 3276 L13757 2688" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="tuplet-L151F1-L153F1"
+                 class="tuplet">
+                <g
+                   id="beam-L151F1-L153F1"
+                   class="beam">
+                  <polygon
+                     id="polygon4881"
+                     points="14220,2764 15197,2668 15197,2758 14220,2854 " />
+                  <g
+                     id="note-L151F1"
+                     class="note qon-55 qoff-166_3 pname-g acc-n oct-2 b40c-25 b12c-7 ">
+                    <use
+                       id="use4884"
+                       width="720px"
+                       height="720px"
+                       y="3658"
+                       x="14014"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001045201128"
+                       class="stem">
+                      <path
+                         id="path4887"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M14230 3636 L14230 2784" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L152F1"
+                     class="note qon-166_3 qoff-167_3 pname-b acc-n oct-2 b40c-37 b12c-11 ">
+                    <use
+                       id="use4890"
+                       width="720px"
+                       height="720px"
+                       y="3478"
+                       x="14486"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000351859860"
+                       class="stem">
+                      <path
+                         id="path4893"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M14702 3456 L14702 2737" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L153F1"
+                     class="note qon-167_3 qoff-56 pname-d acc-n oct-3 b40c-8 b12c-2 ">
+                    <use
+                       id="use4896"
+                       width="720px"
+                       height="720px"
+                       y="3298"
+                       x="14971"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000404701444"
+                       class="stem">
+                      <path
+                         id="path4899"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M15187 3276 L15187 2688" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g
+             id="dynam-0000000546494450"
+             class="dynam">
+            <use
+               id="use4902"
+               width="720px"
+               height="720px"
+               y="2463"
+               x="12497"
+               xlink:href="#E52F" />
+          </g>
+          <g
+             id="bline-0000001297717563"
+             class="barLineAttr">
+            <path
+               id="path4905"
+               stroke-width="30"
+               stroke="#000000"
+               d="M15556 1100 L15556 3658" />
+          </g>
+        </g>
+      </g>
+      <g
+         id="system-0000001819547541"
+         class="system">
+        <path
+           id="path4908"
+           stroke-width="30"
+           stroke="#000000"
+           d="M15 5998 L15 8376" />
+        <path
+           id="path4910"
+           stroke-width="20"
+           stroke-linejoin="round"
+           stroke-linecap="round"
+           stroke="#000000"
+           d="M-30,8356 C-390,7816 60,7367 -210,7187 C125,7367 -325,7816 -30,8356" />
+        <path
+           id="path4912"
+           stroke-width="20"
+           stroke-linejoin="round"
+           stroke-linecap="round"
+           stroke="#000000"
+           d="M-30,6018 C-325,6558 125,7007 -210,7187 C60,7007 -390,6558 -30,6018" />
+        <use
+           id="use4914"
+           width="720px"
+           height="720px"
+           y="5458"
+           x="0"
+           xlink:href="#E881" />
+        <use
+           id="use4916"
+           width="720px"
+           height="720px"
+           y="5458"
+           x="149"
+           xlink:href="#E885" />
+        <g
+           id="measure-L154"
+           class="measure m-15">
+          <g
+             id="staff-L154F3N1"
+             class="staff">
+            <path
+               id="path4920"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 5998 L8650 5998" />
+            <path
+               id="path4922"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 6178 L8650 6178" />
+            <path
+               id="path4924"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 6358 L8650 6358" />
+            <path
+               id="path4926"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 6538 L8650 6538" />
+            <path
+               id="path4928"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 6718 L8650 6718" />
+            <g
+               id="g4930"
+               class="clef">
+              <use
+                 id="use4932"
+                 width="720px"
+                 height="720px"
+                 y="6538"
+                 x="90"
+                 xlink:href="#E050" />
+            </g>
+            <g
+               id="g4934"
+               class="keySig">
+              <use
+                 id="use4936"
+                 width="720px"
+                 height="720px"
+                 y="6358"
+                 x="771"
+                 xlink:href="#E260" />
+              <use
+                 id="use4938"
+                 width="720px"
+                 height="720px"
+                 y="6088"
+                 x="954"
+                 xlink:href="#E260" />
+              <use
+                 id="use4940"
+                 width="720px"
+                 height="720px"
+                 y="6448"
+                 x="1137"
+                 xlink:href="#E260" />
+              <use
+                 id="use4942"
+                 width="720px"
+                 height="720px"
+                 y="6178"
+                 x="1320"
+                 xlink:href="#E260" />
+            </g>
+            <g
+               id="g4944"
+               class="ledgerLines above">
+              <path
+                 id="path4946"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M2182 5818 L2508 5818" />
+            </g>
+            <g
+               id="layer-L154F3N1"
+               class="layer">
+              <g
+                 id="chord-L155F3"
+                 class="chord">
+                <g
+                   id="stem-0000000509715608"
+                   class="stem">
+                  <path
+                     id="path4951"
+                     stroke-width="20"
+                     stroke="#000000"
+                     d="M2242 5750 L2242 6988" />
+                </g>
+                <g
+                   id="note-L155F3S1"
+                   class="note qon-56 qoff-57 pname-b acc-n oct-4 b40c-37 b12c-11 ">
+                  <use
+                     id="use4954"
+                     width="720px"
+                     height="720px"
+                     y="6358"
+                     x="2232"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L155F3S1"
+                     class="accid">
+                    <use
+                       id="use4957"
+                       width="720px"
+                       height="720px"
+                       y="6358"
+                       x="2059"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="note-L155F3S2"
+                   class="note qon-56 qoff-57 pname-d acc-n oct-5 b40c-8 b12c-2 ">
+                  <use
+                     id="use4960"
+                     width="720px"
+                     height="720px"
+                     y="6178"
+                     x="2232"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L155F3S2"
+                     class="accid">
+                    <use
+                       id="use4963"
+                       width="720px"
+                       height="720px"
+                       y="6178"
+                       x="1906"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="note-L155F3S3"
+                   class="note qon-56 qoff-57 pname-g acc-n oct-5 b40c-25 b12c-7 ">
+                  <use
+                     id="use4966"
+                     width="720px"
+                     height="720px"
+                     y="5908"
+                     x="2232"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L155F3S4"
+                   class="note qon-56 qoff-57 pname-b acc-n oct-5 b40c-37 b12c-11 ">
+                  <use
+                     id="use4969"
+                     width="720px"
+                     height="720px"
+                     y="5728"
+                     x="2232"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L155F3S4"
+                     class="accid">
+                    <use
+                       id="use4972"
+                       width="720px"
+                       height="720px"
+                       y="5728"
+                       x="2059"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="artic-L155F3"
+                   class="artic">
+                  <g
+                     id="artic-part-0000001967149529"
+                     class="articPart">
+                    <use
+                       id="use4976"
+                       width="514px"
+                       height="514px"
+                       y="5570"
+                       x="2306"
+                       xlink:href="#E4A8" />
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="rest-L158F3"
+                 class="rest">
+                <use
+                   id="use4979"
+                   width="720px"
+                   height="720px"
+                   y="6358"
+                   x="4109"
+                   xlink:href="#E4E5" />
+              </g>
+              <g
+                 id="chord-L161F3"
+                 class="chord">
+                <g
+                   id="stem-0000001386494399"
+                   class="stem">
+                  <path
+                     id="path4983"
+                     stroke-width="20"
+                     stroke="#000000"
+                     d="M5819 5930 L5819 7168" />
+                </g>
+                <g
+                   id="note-L161F3S1"
+                   class="note qon-58 qoff-59 pname-g acc-n oct-4 b40c-25 b12c-7 ">
+                  <use
+                     id="use4986"
+                     width="720px"
+                     height="720px"
+                     y="6538"
+                     x="5809"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L161F3S2"
+                   class="note qon-58 qoff-59 pname-b acc-n oct-4 b40c-37 b12c-11 ">
+                  <use
+                     id="use4989"
+                     width="720px"
+                     height="720px"
+                     y="6358"
+                     x="5809"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L161F3S3"
+                   class="note qon-58 qoff-59 pname-d acc-n oct-5 b40c-8 b12c-2 ">
+                  <use
+                     id="use4992"
+                     width="720px"
+                     height="720px"
+                     y="6178"
+                     x="5809"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L161F3S4"
+                   class="note qon-58 qoff-59 pname-g acc-n oct-5 b40c-25 b12c-7 ">
+                  <use
+                     id="use4995"
+                     width="720px"
+                     height="720px"
+                     y="5908"
+                     x="5809"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="artic-L161F3"
+                   class="artic">
+                  <g
+                     id="artic-part-0000001479662325"
+                     class="articPart">
+                    <use
+                       id="use4999"
+                       width="514px"
+                       height="514px"
+                       y="5750"
+                       x="5883"
+                       xlink:href="#E4A8" />
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="chord-L164F3"
+                 class="chord">
+                <g
+                   id="stem-0000000813973226"
+                   class="stem">
+                  <path
+                     id="path5003"
+                     stroke-width="20"
+                     stroke="#000000"
+                     d="M7176 6020 L7176 7258" />
+                </g>
+                <g
+                   id="note-L164F3S1"
+                   class="note qon-59 qoff-60 pname-f acc-s oct-4 b40c-20 b12c-6 ">
+                  <use
+                     id="use5006"
+                     width="720px"
+                     height="720px"
+                     y="6628"
+                     x="7166"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L164F3S1"
+                     class="accid">
+                    <use
+                       id="use5009"
+                       width="720px"
+                       height="720px"
+                       y="6628"
+                       x="6759"
+                       xlink:href="#E262" />
+                  </g>
+                </g>
+                <g
+                   id="note-L164F3S2"
+                   class="note qon-59 qoff-60 pname-a acc-n oct-4 b40c-31 b12c-9 ">
+                  <use
+                     id="use5012"
+                     width="720px"
+                     height="720px"
+                     y="6448"
+                     x="7166"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L164F3S2"
+                     class="accid">
+                    <use
+                       id="use5015"
+                       width="720px"
+                       height="720px"
+                       y="6448"
+                       x="6606"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="note-L164F3S3"
+                   class="note qon-59 qoff-60 pname-c acc-n oct-5 b40c-2 b12c-0 ">
+                  <use
+                     id="use5018"
+                     width="720px"
+                     height="720px"
+                     y="6268"
+                     x="7166"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L164F3S4"
+                   class="note qon-59 qoff-60 pname-e acc-f oct-5 b40c-13 b12c-3 ">
+                  <use
+                     id="use5021"
+                     width="720px"
+                     height="720px"
+                     y="6088"
+                     x="6960"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L164F3S5"
+                   class="note qon-59 qoff-60 pname-f acc-s oct-5 b40c-20 b12c-6 ">
+                  <use
+                     id="use5024"
+                     width="720px"
+                     height="720px"
+                     y="5998"
+                     x="7166"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L164F3S5"
+                     class="accid">
+                    <use
+                       id="use5027"
+                       width="720px"
+                       height="720px"
+                       y="5998"
+                       x="6759"
+                       xlink:href="#E262" />
+                  </g>
+                </g>
+                <g
+                   id="artic-L164F3"
+                   class="artic">
+                  <g
+                     id="artic-part-0000001501596442"
+                     class="articPart">
+                    <use
+                       id="use5031"
+                       width="514px"
+                       height="514px"
+                       y="5840"
+                       x="7240"
+                       xlink:href="#E4A8" />
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g
+             id="staff-L154F1N1"
+             class="staff">
+            <path
+               id="path5034"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 7656 L8650 7656" />
+            <path
+               id="path5036"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 7836 L8650 7836" />
+            <path
+               id="path5038"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 8016 L8650 8016" />
+            <path
+               id="path5040"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 8196 L8650 8196" />
+            <path
+               id="path5042"
+               stroke-width="20"
+               stroke="#000000"
+               d="M0 8376 L8650 8376" />
+            <g
+               id="g5044"
+               class="clef">
+              <use
+                 id="use5046"
+                 width="720px"
+                 height="720px"
+                 y="7836"
+                 x="90"
+                 xlink:href="#E062" />
+            </g>
+            <g
+               id="g5048"
+               class="keySig">
+              <use
+                 id="use5050"
+                 width="720px"
+                 height="720px"
+                 y="8196"
+                 x="771"
+                 xlink:href="#E260" />
+              <use
+                 id="use5052"
+                 width="720px"
+                 height="720px"
+                 y="7926"
+                 x="954"
+                 xlink:href="#E260" />
+              <use
+                 id="use5054"
+                 width="720px"
+                 height="720px"
+                 y="8286"
+                 x="1137"
+                 xlink:href="#E260" />
+              <use
+                 id="use5056"
+                 width="720px"
+                 height="720px"
+                 y="8016"
+                 x="1320"
+                 xlink:href="#E260" />
+            </g>
+            <g
+               id="g5058"
+               class="ledgerLines above">
+              <path
+                 id="path5060"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M5311 7476 L5637 7476" />
+              <path
+                 id="path5062"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M6668 7476 L6994 7476" />
+              <path
+                 id="path5064"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M7564 7476 L7890 7476" />
+              <path
+                 id="path5066"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M8024 7476 L8350 7476" />
+              <path
+                 id="path5068"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M8024 7296 L8350 7296" />
+            </g>
+            <g
+               id="layer-L154F1N1"
+               class="layer">
+              <g
+                 id="tuplet-L155F1-L157F1"
+                 class="tuplet">
+                <g
+                   id="beam-L155F1-L157F1"
+                   class="beam">
+                  <polygon
+                     id="polygon5073"
+                     points="2438,7512 3709,7386 3709,7476 2438,7602 " />
+                  <g
+                     id="note-L155F1"
+                     class="note qon-56 qoff-169_3 pname-g acc-n oct-2 b40c-25 b12c-7 ">
+                    <use
+                       id="use5076"
+                       width="720px"
+                       height="720px"
+                       y="8376"
+                       x="2232"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001413167977"
+                       class="stem">
+                      <path
+                         id="path5079"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M2448 8354 L2448 7532" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L156F1"
+                     class="note qon-169_3 qoff-170_3 pname-b acc-n oct-2 b40c-37 b12c-11 ">
+                    <use
+                       id="use5082"
+                       width="720px"
+                       height="720px"
+                       y="8196"
+                       x="2858"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000925380087"
+                       class="stem">
+                      <path
+                         id="path5085"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M3074 8174 L3074 7469" />
+                    </g>
+                    <g
+                       id="accid-L156F1"
+                       class="accid">
+                      <use
+                         id="use5088"
+                         width="720px"
+                         height="720px"
+                         y="8196"
+                         x="2685"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L157F1"
+                     class="note qon-170_3 qoff-57 pname-d acc-n oct-3 b40c-8 b12c-2 ">
+                    <use
+                       id="use5091"
+                       width="720px"
+                       height="720px"
+                       y="8016"
+                       x="3483"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001622161133"
+                       class="stem">
+                      <path
+                         id="path5094"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M3699 7994 L3699 7406" />
+                    </g>
+                    <g
+                       id="accid-L157F1"
+                       class="accid">
+                      <use
+                         id="use5097"
+                         width="720px"
+                         height="720px"
+                         y="8016"
+                         x="3310"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="tuplet-L158F1-L160F1"
+                 class="tuplet">
+                <g
+                   id="beam-L158F1-L160F1"
+                   class="beam">
+                  <polygon
+                     id="polygon5101"
+                     points="4109,8376 5381,8251 5381,8161 4109,8286 " />
+                  <g
+                     id="note-L158F1"
+                     class="note qon-57 qoff-172_3 pname-g acc-n oct-3 b40c-25 b12c-7 ">
+                    <use
+                       id="use5104"
+                       width="720px"
+                       height="720px"
+                       y="7746"
+                       x="4109"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000333809407"
+                       class="stem">
+                      <path
+                         id="path5107"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M4119 7768 L4119 8356" />
+                    </g>
+                    <g
+                       id="accid-L158F1"
+                       class="accid">
+                      <use
+                         id="use5110"
+                         width="720px"
+                         height="720px"
+                         y="7746"
+                         x="3936"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L159F1"
+                     class="note qon-172_3 qoff-173_3 pname-b acc-n oct-3 b40c-37 b12c-11 ">
+                    <use
+                       id="use5113"
+                       width="720px"
+                       height="720px"
+                       y="7566"
+                       x="4735"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000844719907"
+                       class="stem">
+                      <path
+                         id="path5116"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M4745 7588 L4745 8294" />
+                    </g>
+                    <g
+                       id="accid-L159F1"
+                       class="accid">
+                      <use
+                         id="use5119"
+                         width="720px"
+                         height="720px"
+                         y="7566"
+                         x="4562"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L160F1"
+                     class="note qon-173_3 qoff-58 pname-d acc-n oct-4 b40c-8 b12c-2 ">
+                    <use
+                       id="use5122"
+                       width="720px"
+                       height="720px"
+                       y="7386"
+                       x="5361"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001232994821"
+                       class="stem">
+                      <path
+                         id="path5125"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M5371 7408 L5371 8231" />
+                    </g>
+                    <g
+                       id="accid-L160F1"
+                       class="accid">
+                      <use
+                         id="use5128"
+                         width="720px"
+                         height="720px"
+                         y="7386"
+                         x="5188"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="tuplet-L161F1-L163F1"
+                 class="tuplet">
+                <g
+                   id="beam-L161F1-L163F1"
+                   class="beam">
+                  <polygon
+                     id="polygon5132"
+                     points="5809,8376 6738,8286 6738,8196 5809,8286 " />
+                  <g
+                     id="note-L161F1"
+                     class="note qon-58 qoff-175_3 pname-g acc-n oct-3 b40c-25 b12c-7 ">
+                    <use
+                       id="use5135"
+                       width="720px"
+                       height="720px"
+                       y="7746"
+                       x="5809"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001508726872"
+                       class="stem">
+                      <path
+                         id="path5138"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M5819 7768 L5819 8356" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L162F1"
+                     class="note qon-175_3 qoff-176_3 pname-b acc-n oct-3 b40c-37 b12c-11 ">
+                    <use
+                       id="use5141"
+                       width="720px"
+                       height="720px"
+                       y="7566"
+                       x="6257"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000214280810"
+                       class="stem">
+                      <path
+                         id="path5144"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M6267 7588 L6267 8312" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L163F1"
+                     class="note qon-176_3 qoff-59 pname-d acc-n oct-4 b40c-8 b12c-2 ">
+                    <use
+                       id="use5147"
+                       width="720px"
+                       height="720px"
+                       y="7386"
+                       x="6718"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000213835105"
+                       class="stem">
+                      <path
+                         id="path5150"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M6728 7408 L6728 8266" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="tuplet-L164F1-L166F1"
+                 class="tuplet">
+                <g
+                   id="beam-L164F1-L166F1"
+                   class="beam">
+                  <polygon
+                     id="polygon5154"
+                     points="7166,8376 8094,8286 8094,8196 7166,8286 " />
+                  <g
+                     id="note-L164F1"
+                     class="note qon-59 qoff-178_3 pname-g acc-n oct-3 b40c-25 b12c-7 ">
+                    <use
+                       id="use5157"
+                       width="720px"
+                       height="720px"
+                       y="7746"
+                       x="7166"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000758023281"
+                       class="stem">
+                      <path
+                         id="path5160"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M7176 7768 L7176 8356" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L165F1"
+                     class="note qon-178_3 qoff-179_3 pname-c acc-n oct-4 b40c-2 b12c-0 ">
+                    <use
+                       id="use5163"
+                       width="720px"
+                       height="720px"
+                       y="7476"
+                       x="7614"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001882508988"
+                       class="stem">
+                      <path
+                         id="path5166"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M7624 7498 L7624 8312" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L166F1"
+                     class="note qon-179_3 qoff-60 pname-e acc-f oct-4 b40c-13 b12c-3 ">
+                    <use
+                       id="use5169"
+                       width="720px"
+                       height="720px"
+                       y="7296"
+                       x="8074"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000954140138"
+                       class="stem">
+                      <path
+                         id="path5172"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M8084 7318 L8084 8266" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g
+             id="dynam-0000000706428990"
+             class="dynam">
+            <use
+               id="use5175"
+               width="720px"
+               height="720px"
+               y="7412"
+               x="5802"
+               xlink:href="#E520" />
+          </g>
+          <g
+             id="bline-0000000456517416"
+             class="barLineAttr">
+            <path
+               id="path5178"
+               stroke-width="30"
+               stroke="#000000"
+               d="M8635 5998 L8635 8376" />
+          </g>
+        </g>
+        <g
+           id="measure-L167"
+           class="measure m-16">
+          <g
+             id="staff-L167F3N1"
+             class="staff">
+            <path
+               id="path5182"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8650 5998 L15571 5998" />
+            <path
+               id="path5184"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8650 6178 L15571 6178" />
+            <path
+               id="path5186"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8650 6358 L15571 6358" />
+            <path
+               id="path5188"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8650 6538 L15571 6538" />
+            <path
+               id="path5190"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8650 6718 L15571 6718" />
+            <g
+               id="g5192"
+               class="ledgerLines above">
+              <path
+                 id="path5194"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M12679 5818 L13005 5818" />
+              <path
+                 id="path5196"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M14036 5818 L14362 5818" />
+              <path
+                 id="path5198"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M12679 5638 L13005 5638" />
+              <path
+                 id="path5200"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M14036 5638 L14362 5638" />
+            </g>
+            <g
+               id="layer-L167F3N1"
+               class="layer">
+              <g
+                 id="chord-L168F3"
+                 class="chord">
+                <g
+                   id="stem-0000000155808966"
+                   class="stem">
+                  <path
+                     id="path5205"
+                     stroke-width="20"
+                     stroke="#000000"
+                     d="M9340 5930 L9340 7168" />
+                </g>
+                <g
+                   id="note-L168F3S1"
+                   class="note qon-60 qoff-61 pname-g acc-n oct-4 b40c-25 b12c-7 ">
+                  <use
+                     id="use5208"
+                     width="720px"
+                     height="720px"
+                     y="6538"
+                     x="9330"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L168F3S2"
+                   class="note qon-60 qoff-61 pname-b acc-n oct-4 b40c-37 b12c-11 ">
+                  <use
+                     id="use5211"
+                     width="720px"
+                     height="720px"
+                     y="6358"
+                     x="9330"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L168F3S2"
+                     class="accid">
+                    <use
+                       id="use5214"
+                       width="720px"
+                       height="720px"
+                       y="6358"
+                       x="9004"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="note-L168F3S3"
+                   class="note qon-60 qoff-61 pname-d acc-n oct-5 b40c-8 b12c-2 ">
+                  <use
+                     id="use5217"
+                     width="720px"
+                     height="720px"
+                     y="6178"
+                     x="9330"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L168F3S3"
+                     class="accid">
+                    <use
+                       id="use5220"
+                       width="720px"
+                       height="720px"
+                       y="6178"
+                       x="9157"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="note-L168F3S4"
+                   class="note qon-60 qoff-61 pname-g acc-n oct-5 b40c-25 b12c-7 ">
+                  <use
+                     id="use5223"
+                     width="720px"
+                     height="720px"
+                     y="5908"
+                     x="9330"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="artic-L168F3"
+                   class="artic">
+                  <g
+                     id="artic-part-0000001411840669"
+                     class="articPart">
+                    <use
+                       id="use5227"
+                       width="514px"
+                       height="514px"
+                       y="5750"
+                       x="9404"
+                       xlink:href="#E4A8" />
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="rest-L171F3"
+                 class="rest">
+                <use
+                   id="use5230"
+                   width="720px"
+                   height="720px"
+                   y="6358"
+                   x="11029"
+                   xlink:href="#E4E5" />
+              </g>
+              <g
+                 id="chord-L174F3"
+                 class="chord">
+                <g
+                   id="stem-0000000284573680"
+                   class="stem">
+                  <path
+                     id="path5234"
+                     stroke-width="20"
+                     stroke="#000000"
+                     d="M12739 5570 L12739 6808" />
+                </g>
+                <g
+                   id="note-L174F3S1"
+                   class="note qon-62 qoff-63 pname-d acc-n oct-5 b40c-8 b12c-2 ">
+                  <use
+                     id="use5237"
+                     width="720px"
+                     height="720px"
+                     y="6178"
+                     x="12729"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L174F3S2"
+                   class="note qon-62 qoff-63 pname-g acc-n oct-5 b40c-25 b12c-7 ">
+                  <use
+                     id="use5240"
+                     width="720px"
+                     height="720px"
+                     y="5908"
+                     x="12729"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L174F3S3"
+                   class="note qon-62 qoff-63 pname-b acc-n oct-5 b40c-37 b12c-11 ">
+                  <use
+                     id="use5243"
+                     width="720px"
+                     height="720px"
+                     y="5728"
+                     x="12729"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L174F3S3"
+                     class="accid">
+                    <use
+                       id="use5246"
+                       width="720px"
+                       height="720px"
+                       y="5728"
+                       x="12403"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="note-L174F3S4"
+                   class="note qon-62 qoff-63 pname-d acc-n oct-6 b40c-8 b12c-2 ">
+                  <use
+                     id="use5249"
+                     width="720px"
+                     height="720px"
+                     y="5548"
+                     x="12729"
+                     xlink:href="#E0A4" />
+                  <g
+                     id="accid-L174F3S4"
+                     class="accid">
+                    <use
+                       id="use5252"
+                       width="720px"
+                       height="720px"
+                       y="5548"
+                       x="12556"
+                       xlink:href="#E261" />
+                  </g>
+                </g>
+                <g
+                   id="artic-L174F3"
+                   class="artic">
+                  <g
+                     id="artic-part-0000001720339990"
+                     class="articPart">
+                    <use
+                       id="use5256"
+                       width="514px"
+                       height="514px"
+                       y="5390"
+                       x="12803"
+                       xlink:href="#E4A8" />
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="chord-L177F3"
+                 class="chord">
+                <g
+                   id="stem-0000000361633523"
+                   class="stem">
+                  <path
+                     id="path5260"
+                     stroke-width="20"
+                     stroke="#000000"
+                     d="M14096 5570 L14096 6808" />
+                </g>
+                <g
+                   id="note-L177F3S1"
+                   class="note qon-63 qoff-64 pname-d acc-n oct-5 b40c-8 b12c-2 ">
+                  <use
+                     id="use5263"
+                     width="720px"
+                     height="720px"
+                     y="6178"
+                     x="14086"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L177F3S2"
+                   class="note qon-63 qoff-64 pname-g acc-n oct-5 b40c-25 b12c-7 ">
+                  <use
+                     id="use5266"
+                     width="720px"
+                     height="720px"
+                     y="5908"
+                     x="14086"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L177F3S3"
+                   class="note qon-63 qoff-64 pname-b acc-n oct-5 b40c-37 b12c-11 ">
+                  <use
+                     id="use5269"
+                     width="720px"
+                     height="720px"
+                     y="5728"
+                     x="14086"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="note-L177F3S4"
+                   class="note qon-63 qoff-64 pname-d acc-n oct-6 b40c-8 b12c-2 ">
+                  <use
+                     id="use5272"
+                     width="720px"
+                     height="720px"
+                     y="5548"
+                     x="14086"
+                     xlink:href="#E0A4" />
+                </g>
+                <g
+                   id="artic-L177F3"
+                   class="artic">
+                  <g
+                     id="artic-part-0000000466186967"
+                     class="articPart">
+                    <use
+                       id="use5276"
+                       width="514px"
+                       height="514px"
+                       y="5390"
+                       x="14160"
+                       xlink:href="#E4A8" />
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g
+             id="staff-L167F1N1"
+             class="staff">
+            <path
+               id="path5279"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8650 7656 L15571 7656" />
+            <path
+               id="path5281"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8650 7836 L15571 7836" />
+            <path
+               id="path5283"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8650 8016 L15571 8016" />
+            <path
+               id="path5285"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8650 8196 L15571 8196" />
+            <path
+               id="path5287"
+               stroke-width="20"
+               stroke="#000000"
+               d="M8650 8376 L15571 8376" />
+            <g
+               id="g5289"
+               class="ledgerLines above">
+              <path
+                 id="path5291"
+                 stroke-width="35"
+                 stroke="#000000"
+                 d="M9906 7476 L10232 7476" />
+            </g>
+            <g
+               id="layer-L167F1N1"
+               class="layer">
+              <g
+                 id="tuplet-L168F1-L170F1"
+                 class="tuplet">
+                <g
+                   id="beam-L168F1-L170F1"
+                   class="beam">
+                  <polygon
+                     id="polygon5296"
+                     points="9330,8376 10601,8251 10601,8161 9330,8286 " />
+                  <g
+                     id="note-L168F1"
+                     class="note qon-60 qoff-181_3 pname-g acc-n oct-3 b40c-25 b12c-7 ">
+                    <use
+                       id="use5299"
+                       width="720px"
+                       height="720px"
+                       y="7746"
+                       x="9330"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000002063961213"
+                       class="stem">
+                      <path
+                         id="path5302"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M9340 7768 L9340 8356" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L169F1"
+                     class="note qon-181_3 qoff-182_3 pname-d acc-n oct-4 b40c-8 b12c-2 ">
+                    <use
+                       id="use5305"
+                       width="720px"
+                       height="720px"
+                       y="7386"
+                       x="9956"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001140870347"
+                       class="stem">
+                      <path
+                         id="path5308"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M9966 7408 L9966 8294" />
+                    </g>
+                    <g
+                       id="accid-L169F1"
+                       class="accid">
+                      <use
+                         id="use5311"
+                         width="720px"
+                         height="720px"
+                         y="7386"
+                         x="9783"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L170F1"
+                     class="note qon-182_3 qoff-61 pname-b acc-n oct-3 b40c-37 b12c-11 ">
+                    <use
+                       id="use5314"
+                       width="720px"
+                       height="720px"
+                       y="7566"
+                       x="10581"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000948608696"
+                       class="stem">
+                      <path
+                         id="path5317"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M10591 7588 L10591 8231" />
+                    </g>
+                    <g
+                       id="accid-L170F1"
+                       class="accid">
+                      <use
+                         id="use5320"
+                         width="720px"
+                         height="720px"
+                         y="7566"
+                         x="10408"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="tuplet-L171F1-L173F1"
+                 class="tuplet">
+                <g
+                   id="beam-L171F1-L173F1"
+                   class="beam">
+                  <polygon
+                     id="polygon5324"
+                     points="11029,8701 12301,8826 12301,8736 11029,8611 " />
+                  <g
+                     id="note-L171F1"
+                     class="note qon-61 qoff-184_3 pname-g acc-n oct-3 b40c-25 b12c-7 ">
+                    <use
+                       id="use5327"
+                       width="720px"
+                       height="720px"
+                       y="7746"
+                       x="11029"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001948028672"
+                       class="stem">
+                      <path
+                         id="path5330"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M11039 7768 L11039 8681" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L172F1"
+                     class="note qon-184_3 qoff-185_3 pname-d acc-n oct-3 b40c-8 b12c-2 ">
+                    <use
+                       id="use5333"
+                       width="720px"
+                       height="720px"
+                       y="8016"
+                       x="11655"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001294626951"
+                       class="stem">
+                      <path
+                         id="path5336"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M11665 8038 L11665 8744" />
+                    </g>
+                    <g
+                       id="accid-L172F1"
+                       class="accid">
+                      <use
+                         id="use5339"
+                         width="720px"
+                         height="720px"
+                         y="8016"
+                         x="11482"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L173F1"
+                     class="note qon-185_3 qoff-62 pname-b acc-n oct-2 b40c-37 b12c-11 ">
+                    <use
+                       id="use5342"
+                       width="720px"
+                       height="720px"
+                       y="8196"
+                       x="12281"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000000656642910"
+                       class="stem">
+                      <path
+                         id="path5345"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M12291 8218 L12291 8806" />
+                    </g>
+                    <g
+                       id="accid-L173F1"
+                       class="accid">
+                      <use
+                         id="use5348"
+                         width="720px"
+                         height="720px"
+                         y="8196"
+                         x="12108"
+                         xlink:href="#E261" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="tuplet-L174F1-L176F1"
+                 class="tuplet">
+                <g
+                   id="beam-L174F1-L176F1"
+                   class="beam">
+                  <polygon
+                     id="polygon5352"
+                     points="12935,7477 13864,7386 13864,7476 12935,7567 " />
+                  <g
+                     id="note-L174F1"
+                     class="note qon-62 qoff-187_3 pname-g acc-n oct-2 b40c-25 b12c-7 ">
+                    <use
+                       id="use5355"
+                       width="720px"
+                       height="720px"
+                       y="8376"
+                       x="12729"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001086575161"
+                       class="stem">
+                      <path
+                         id="path5358"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M12945 8354 L12945 7497" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L175F1"
+                     class="note qon-187_3 qoff-188_3 pname-b acc-n oct-2 b40c-37 b12c-11 ">
+                    <use
+                       id="use5361"
+                       width="720px"
+                       height="720px"
+                       y="8196"
+                       x="13177"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001520127413"
+                       class="stem">
+                      <path
+                         id="path5364"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M13393 8174 L13393 7453" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L176F1"
+                     class="note qon-188_3 qoff-63 pname-d acc-n oct-3 b40c-8 b12c-2 ">
+                    <use
+                       id="use5367"
+                       width="720px"
+                       height="720px"
+                       y="8016"
+                       x="13638"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001021680669"
+                       class="stem">
+                      <path
+                         id="path5370"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M13854 7994 L13854 7406" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <g
+                 id="tuplet-L177F1-L179F1"
+                 class="tuplet">
+                <g
+                   id="beam-L177F1-L179F1"
+                   class="beam">
+                  <polygon
+                     id="polygon5374"
+                     points="14292,7477 15221,7386 15221,7476 14292,7567 " />
+                  <g
+                     id="note-L177F1"
+                     class="note qon-63 qoff-190_3 pname-g acc-n oct-2 b40c-25 b12c-7 ">
+                    <use
+                       id="use5377"
+                       width="720px"
+                       height="720px"
+                       y="8376"
+                       x="14086"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001717293852"
+                       class="stem">
+                      <path
+                         id="path5380"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M14302 8354 L14302 7497" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L178F1"
+                     class="note qon-190_3 qoff-191_3 pname-b acc-n oct-2 b40c-37 b12c-11 ">
+                    <use
+                       id="use5383"
+                       width="720px"
+                       height="720px"
+                       y="8196"
+                       x="14534"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001726347633"
+                       class="stem">
+                      <path
+                         id="path5386"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M14750 8174 L14750 7453" />
+                    </g>
+                  </g>
+                  <g
+                     id="note-L179F1"
+                     class="note qon-191_3 qoff-64 pname-d acc-n oct-3 b40c-8 b12c-2 ">
+                    <use
+                       id="use5389"
+                       width="720px"
+                       height="720px"
+                       y="8016"
+                       x="14995"
+                       xlink:href="#E0A4" />
+                    <g
+                       id="stem-0000001071547333"
+                       class="stem">
+                      <path
+                         id="path5392"
+                         stroke-width="20"
+                         stroke="#000000"
+                         d="M15211 7994 L15211 7406" />
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+          <g
+             id="dynam-0000001565526940"
+             class="dynam">
+            <use
+               id="use5395"
+               width="720px"
+               height="720px"
+               y="7181"
+               x="12642"
+               xlink:href="#E52F" />
+          </g>
+          <g
+             id="bline-0000000955769884"
+             class="barLineAttr">
+            <path
+               id="path5398"
+               stroke-width="30"
+               stroke="#000000"
+               d="M15556 5998 L15556 8376" />
+          </g>
+        </g>
+      </g>
+    </g>
+  </svg>

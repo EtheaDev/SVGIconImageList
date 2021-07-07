@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg id="sine"
+   version="1.1"
+   baseProfile="full"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:ev="http://www.w3.org/2001/xml-events"
+   width="600"
+   height="240">
+
+  <title>Sine_one_period.svg - a nice plot of the sine function</title>
+  <desc>
+     Sine(sin)-function
+     from Wikimedia Commons
+     plot-range: 0 to 2pi
+     plotted with three different cubic bezier-curves
+     the bezier-controll-points are calculated to give a very accurate result.
+     symbols in "Computer Modern" (TeX) font embedded
+     created with a plain text editor using GNU/Linux
+
+     about: http://commons.wikimedia.org/wiki/Image:Sine_one_period.svg
+     source: http://commons.wikimedia.org/
+     rights: GNU Free Documentation license,
+             Creative Commons Attribution ShareAlike license
+  </desc>
+
+  <defs>
+    <!-- pstricks-style arrow, zoom 1.5 -->
+    <marker id="Arrow" refX="2.52" refY="2.25" markerUnits="strokeWidth"
+       markerWidth="6" markerHeight="4.5" orient="auto">
+      <path d="M 2.52 2.25 L 0 4.5 L 6 2.25 L 0 0 z" />
+    </marker>
+
+    <!-- now the used chars in "Computer Modern" font. They are implemented
+         as plain paths and not as glyphs just because it didn't work -->
+
+    <!-- c: horiz-adv-x="444.4"-->
+    <path id="c"
+       d="M 34 0 m 325 386 c -41 -3 -47 -33 -47 -46 c 0 -26 18 -46 46 -46
+          c 26 0 46 17 46 47 c 0 68 -76 107 -153 107
+          c -125 0 -217 -108 -217 -232 c 0 -128 99 -227 215 -227
+          c 134 0 166 120 166 130 c 0 10 -10 10 -13 10 c -9 0 -11 -4 -13 -10
+          c -29 -93 -94 -105 -131 -105 c -53 0 -141 43 -141 204
+          c 0 163 82 205 135 205 c 9 0 72 -1 107 -37 z"/>
+    <!-- o: horiz-adv-x="500"-->
+    <path id="o"
+       d="M 28 0 m 443 214 c 0 128 -100 234 -221 234
+          c -125 0 -222 -109 -222 -234 c 0 -129 104 -225 221 -225
+          c 121 0 222 98 222 225 z M 471 214 m -221 -200 c -43 0 -87 21 -114 67
+          c -25 44 -25 105 -25 141 c 0 39 0 93 24 137 c 27 46 74 67 114 67
+          c 44 0 87 -22 113 -65 c 26 -43 26 -101 26 -139 c 0 -36 0 -90 -22 -134
+          c -22 -45 -66 -74 -116 -74 z"/>
+    <!-- s: horiz-adv-x="394.4"-->
+    <path id="s"
+       d="M 33 0 m 175 194 c 22 -4 104 -20 104 -92 c 0 -51 -35 -91 -113 -91
+          c -84 0 -120 57 -139 142 c -3 13 -4 17 -14 17 c -13 0 -13 -7 -13 -25
+          v -132 c 0 -17 0 -24 11 -24 c 5 0 6 1 25 20 c 2 2 2 4 20 23
+          c 44 -42 89 -43 110 -43 c 115 0 161 67 161 139 c 0 53 -30 83 -42 95
+          c -33 32 -72 40 -114 48 c -56 11 -123 24 -123 82 c 0 35 26 76 112 76
+          c 110 0 115 -90 117 -121 c 1 -9 10 -9 12 -9 c 13 0 13 5 13 24 v 101
+          c 0 17 0 24 -11 24 c -5 0 -7 0 -20 -12 c -3 -4 -13 -13 -17 -16
+          c -38 28 -79 28 -94 28 c -122 0 -160 -67 -160 -123
+          c 0 -35 16 -63 43 -85 c 32 -26 60 -32 132 -46 z"/>
+    <!-- i: horiz-adv-x="277.8"-->
+    <path id="i"
+       d="M 33 0 m 144 442 l -140 -11 v -31 c 65 0 74 -6 74 -55 v -269
+          c 0 -45 -11 -45 -78 -45 v -31 c 32 1 86 3 110 3 c 35 0 70 -2 104 -3
+          v 31 c -66 0 -70 5 -70 44 z M 177 75 m 4 541 c 0 32 -25 53 -53 53
+          c -31 0 -53 -27 -53 -53 c 0 -27 22 -53 53 -53 c 28 0 53 21 53 53 z"/>
+    <!-- n: horiz-adv-x="555.6"-->
+    <path id="n"
+       d="M 32 0 m 78 344 v -268 c 0 -45 -11 -45 -78 -45 v -31
+          c 35 1 86 3 113 3 c 26 0 78 -2 112 -3 v 31 c -67 0 -78 0 -78 45 v 184
+          c 0 104 71 160 135 160 c 63 0 74 -54 74 -111 v -233
+          c 0 -45 -11 -45 -78 -45 v -31 c 35 1 86 3 113 3 c 26 0 78 -2 112 -3
+          v 31 c -52 0 -77 0 -78 30 v 191 c 0 86 0 117 -31 153
+          c -14 17 -47 37 -105 37 c -73 0 -120 -43 -148 -105 v 105 l -141 -11
+          v -31 c 70 0 78 -7 78 -56 z"/>
+    <!-- (: horiz-adv-x="388.9"-->
+    <path id="parleft"
+       d="M 99 0 m 232 -240 c 0 3 0 5 -17 22 c -125 126 -157 315 -157 468
+          c 0 174 38 348 161 473 c 13 12 13 14 13 17 c 0 7 -4 10 -10 10
+          c -10 0 -100 -68 -159 -195 c -51 -110 -63 -221 -63 -305
+          c 0 -78 11 -199 66 -312 c 60 -123 146 -188 156 -188 c 6 0 10 3 10 10
+          z"/>
+    <!-- ): horiz-adv-x="388.9"-->
+    <path id="parright"
+       d="M 57 0 m 232 250 c 0 78 -11 199 -66 312 c -60 123 -146 188 -156 188
+          c -6 0 -10 -4 -10 -10 c 0 -3 0 -5 19 -23 c 98 -99 155 -258 155 -467
+          c 0 -171 -37 -347 -161 -473 c -13 -12 -13 -14 -13 -17
+          c 0 -6 4 -10 10 -10 c 10 0 100 68 159 195 c 51 110 63 221 63 305 z"/>
+    <!-- x: horiz-adv-x="527.8"-->
+    <path id="x"
+       d="M 29 0 m 305 302 c 6 26 29 118 99 118 c 5 0 29 0 50 -13
+          c -28 -5 -48 -30 -48 -54 c 0 -16 11 -35 38 -35 c 22 0 54 18 54 58
+          c 0 52 -59 66 -93 66 c -58 0 -93 -53 -105 -76 c -25 66 -79 76 -108 76
+          c -104 0 -161 -129 -161 -154 c 0 -10 10 -10 12 -10 c 8 0 11 2 13 11
+          c 34 106 100 131 134 131 c 19 0 54 -9 54 -67 c 0 -31 -17 -98 -54 -238
+          c -16 -62 -51 -104 -95 -104 c -6 0 -29 0 -50 13 c 25 5 47 26 47 54
+          c 0 27 -22 35 -37 35 c -30 0 -55 -26 -55 -58 c 0 -46 50 -66 94 -66
+          c 66 0 102 70 105 76 c 12 -37 48 -76 108 -76 c 103 0 160 129 160 154
+          c 0 10 -9 10 -12 10 c -9 0 -11 -4 -13 -11
+          c -33 -107 -101 -131 -133 -131 c -39 0 -55 32 -55 66
+          c 0 22 6 44 17 88 z"/>
+    <!-- y: horiz-adv-x="527.8"-->
+    <path id="y"
+       d="M 29 0 m 457 381 c 4 14 4 16 4 23 c 0 18 -14 27 -29 27
+          c -10 0 -26 -6 -35 -21 c -2 -5 -10 -36 -14 -54
+          c -7 -26 -14 -53 -20 -80 l -45 -180 c -4 -15 -47 -85 -113 -85
+          c -51 0 -62 44 -62 81 c 0 46 17 108 51 196 c 16 41 20 52 20 72
+          c 0 45 -32 82 -82 82 c -95 0 -132 -145 -132 -154
+          c 0 -10 10 -10 12 -10 c 10 0 11 2 16 18 c 27 94 67 124 101 124
+          c 8 0 25 0 25 -32 c 0 -25 -10 -51 -17 -70
+          c -40 -106 -58 -163 -58 -210 c 0 -89 63 -119 122 -119
+          c 39 0 73 17 101 45 c -13 -52 -25 -101 -65 -154
+          c -26 -34 -64 -63 -110 -63 c -14 0 -59 3 -76 42 c 16 0 29 0 43 12
+          c 10 9 20 22 20 41 c 0 31 -27 35 -37 35 c -23 0 -56 -16 -56 -65
+          c 0 -50 44 -87 106 -87 c 103 0 206 91 234 204 z"/>
+    <!-- pi: horiz-adv-x="570"-->
+    <path id="pi"
+       d="M 27 0 m 238 373 h 113 c -33 -148 -42 -191 -42 -258
+          c 0 -15 0 -42 8 -76 c 10 -44 21 -50 36 -50 c 20 0 41 18 41 38
+          c 0 6 0 8 -6 22 c -29 72 -29 137 -29 165 c 0 53 7 107 18 159 h 114
+          c 13 0 49 0 49 34 c 0 24 -21 24 -40 24 h -335 c -22 0 -60 0 -104 -47
+          c -35 -39 -61 -85 -61 -90 c 0 -1 0 -10 12 -10 c 8 0 10 4 16 12
+          c 49 77 107 77 127 77 h 57 c -32 -121 -86 -242 -128 -333
+          c -8 -15 -8 -17 -8 -24 c 0 -19 16 -27 29 -27 c 30 0 38 28 50 65
+          c 14 46 14 48 27 98 z"/>
+    <!-- minus: horiz-adv-x="700"-->
+    <path id="minus"
+       d="M 83 0 m 578 230 c 14 0 33 0 33 20 c 0 20 -19 20 -33 20 h -467.2
+          c -14 0 -33 0 -33 -20 c 0 -20 19 -20 33 -20 z"/>
+    <!-- 0: horiz-adv-x="500"-->
+    <path id="zero"
+       d="M 39 0 m 421 320 c 0 80 -5 160 -40 234 c -46 96 -128 112 -170 112
+          c -60 0 -133 -26 -174 -119 c -32 -69 -37 -147 -37 -227
+          c 0 -75 4 -165 45 -241 c 43 -81 116 -101 165 -101
+          c 54 0 130 21 174 116 c 32 69 37 147 37 226 z M 460 320 m -211 -320
+          c -39 0 -98 25 -116 121 c -11 60 -11 152 -11 211 c 0 64 0 130 8 184
+          c 19 119 94 128 119 128 c 33 0 99 -18 118 -117
+          c 10 -56 10 -132 10 -195 c 0 -75 0 -143 -11 -207
+          c -15 -95 -72 -125 -117 -125 z"/>
+    <!-- 1: horiz-adv-x="500"-->
+    <path id="one"
+       d="M 89 0 m 205 640 c 0 24 0 26 -23 26 c -62 -64 -150 -64 -182 -64 v -31
+          c 20 0 79 0 131 26 v -518 c 0 -36 -3 -48 -93 -48 h -32 v -31
+          c 35 3 122 3 162 3 c 40 0 127 0 162 -3 v 31 h -32
+          c -90 0 -93 11 -93 48 z"/>
+    <!-- 2: horiz-adv-x="500"-->
+    <path id="two"
+       d="M 50 0 m 399 174 h -25 c -5 -30 -12 -74 -22 -89 c -7 -8 -73 -8 -95 -8
+          h -180 l 106 103 c 156 138 216 192 216 292 c 0 114 -90 194 -212 194
+          c -113 0 -187 -92 -187 -181 c 0 -56 50 -56 53 -56 c 17 0 52 12 52 53
+          c 0 26 -18 52 -53 52 c -8 0 -10 0 -13 -1 c 23 65 77 102 135 102
+          c 91 0 134 -81 134 -163 c 0 -80 -50 -159 -105 -221 l -192 -214
+          c -11 -11 -11 -13 -11 -37 h 371 z"/>
+    <!-- 3: horiz-adv-x="500"-->
+    <path id="three"
+       d="M 42 0 m 248 352 c 82 27 140 97 140 176 c 0 82 -88 138 -184 138
+          c -101 0 -177 -60 -177 -136 c 0 -33 22 -52 51 -52 c 31 0 51 22 51 51
+          c 0 50 -47 50 -62 50 c 31 49 97 62 133 62 c 41 0 96 -22 96 -112
+          c 0 -12 -2 -70 -28 -114 c -30 -48 -64 -51 -89 -52
+          c -8 -1 -32 -3 -39 -3 c -8 -1 -15 -2 -15 -12 c 0 -11 7 -11 24 -11
+          h 44 c 82 0 119 -68 119 -166 c 0 -136 -69 -165 -113 -165
+          c -43 0 -118 17 -153 76 c 35 -5 66 17 66 55 c 0 36 -27 56 -56 56
+          c -24 0 -56 -14 -56 -58 c 0 -91 93 -157 202 -157
+          c 122 0 213 91 213 193 c 0 82 -63 160 -167 181 z"/>
+    <!-- 4: horiz-adv-x="500"-->
+    <path id="four"
+       d="M 28 0 m 0 165 h 266 v -87 c 0 -36 -2 -47 -76 -47 h -21 v -31
+          c 41 3 93 3 135 3 c 42 0 95 0 136 -3 v 31 h -21 c -74 0 -76 11 -76 47
+          v 87 h 100 v 31 h -100 v 455 c 0 20 0 26 -16 26 c -9 0 -12 0 -20 -12
+          l -307 -469 z M 28 196 m 272 0 h -244 l 244 373 z"/>
+    <!-- 5: horiz-adv-x="500"-->
+    <path id="five"
+       d="M 50 0 m 399 201 c 0 119 -82 219 -190 219 c -48 0 -91 -16 -127 -51
+          v 195 c 20 -6 53 -13 85 -13 c 123 0 193 91 193 104 c 0 6 -3 11 -10 11
+          c -1 0 -3 0 -8 -3 c -20 -9 -69 -29 -136 -29 c -40 0 -86 7 -133 28
+          c -8 3 -10 3 -12 3 c -10 0 -10 -8 -10 -24 v -296 c 0 -18 0 -26 14 -26
+          c 7 0 9 3 13 9 c 11 16 48 70 129 70 c 52 0 77 -46 85 -64
+          c 16 -37 18 -76 18 -126 c 0 -35 0 -95 -24 -137
+          c -24 -39 -61 -65 -107 -65 c -73 0 -130 53 -147 112 c 3 -1 6 -2 17 -2
+          c 33 0 50 25 50 49 c 0 24 -17 49 -50 49 c -14 0 -49 -7 -49 -53
+          c 0 -86 69 -183 181 -183 c 116 0 218 96 218 223 z"/>
+    <!-- 7: horiz-adv-x="500"-->
+    <path id="seven"
+       d="M 56 0 m 420 609 c 9 12 9 14 9 35 h -243 c -122 0 -124 13 -128 32
+          h -25 l -33 -206 h 25 c 3 16 12 79 25 91 c 7 6 85 6 98 6 h 207
+          c -11 -16 -90 -125 -112 -158 c -90 -135 -123 -274 -123 -376
+          c 0 -10 0 -55 46 -55 c 46 0 46 45 46 55 v 51 c 0 55 3 110 11 164
+          c 4 23 18 109 62 171 z"/>
+  </defs>
+
+
+
+  <rect id="background" x="0" y="0" width="600" height="240" fill="white"/>
+
+  <g transform="translate(40.5, 127.5)">
+    <!-- grid -->
+    <g id="grid"
+       style="stroke:black; opacity:0.4; stroke-width:0.5; stroke-linecap:butt">
+      <path id="gridx"
+         d="M 0,-80 H 502.654835
+            M 0,-40 H 502.654835
+            M 0, 40 H 502.654835
+            M 0, 80 H 502.654835"/>
+      <path id="gridy"
+         d="M  62.831853,-100.5 V 100.5
+            M 125.663706,-100.5 V 100.5
+            M 188.495559,-100.5 V 100.5
+            M 251.327412,-100.5 V 100.5
+            M 314.159265,-100.5 V 100.5
+            M 376.991118,-100.5 V 100.5
+            M 439.822972,-100.5 V 100.5
+            M 502.654825,-100.5 V 100.5"/>
+    </g>
+
+    <!-- ticks -->
+    <g id="ticks"
+       style="stroke:black; stroke-width:1; stroke-linecap:square">
+      <path id="ticksx"
+         d="M  62.831853,-5 V 5
+            M 125.663706,-5 V 5
+            M 188.495559,-5 V 5
+            M 251.327412,-5 V 5
+            M 314.159265,-5 V 5
+            M 376.991118,-5 V 5
+            M 439.822972,-5 V 5
+            M 502.654825,-5 V 5"/>
+      <path id="ticksy"
+         d="M -5,-80 H 5
+            M -5,-40 H 5
+            M -5,  0 H 5
+            M -5, 40 H 5
+            M -5, 80 H 5"/>
+    </g>
+
+    <!-- axes -->
+    <line id="x-axis" x1="0." x2="536.5" y1="0" y2="0" stroke="black"
+       stroke-width="2" stroke-linecap="butt" marker-end="url(#Arrow)" />
+    <line id="y-axis" x1="0" x2="0" y1="108.5" y2="-108.5" stroke="black"
+       stroke-width="2" stroke-linecap="butt" marker-end="url(#Arrow)" />
+
+    <!-- labels -->
+    <g id="xl" transform="translate(544,17) scale(0.02,-0.02)">
+      <use xlink:href="#x" x="-285.75" y="0" />
+    </g>
+    <g id="yl" transform="translate(-11,-115) scale(0.02,-0.02)">
+      <use xlink:href="#y" x="-285.75" y="0" />
+    </g>
+    <g id="cosx" transform="translate(382,-61) scale(0.02,-0.02)">
+      <use xlink:href="#c" x="2" y="0" />
+      <use xlink:href="#o" x="444.4" y="0" />
+      <use xlink:href="#s" x="944.4" y="0" />
+      <use xlink:href="#parleft" x="1338.8" y="0" />
+      <use xlink:href="#x" x="1727.7" y="0" />
+      <use xlink:href="#parright" x="2255.5" y="0" />
+    </g>
+    <g id="sinx" transform="translate(196,-61) scale(0.02,-0.02)">
+      <use xlink:href="#s" x="0" y="0" />
+      <use xlink:href="#i" x="394.4" y="0" />
+      <use xlink:href="#n" x="672.2" y="0" />
+      <use xlink:href="#parleft" x="1227.8" y="0" />
+      <use xlink:href="#x" x="1616.7" y="0" />
+      <use xlink:href="#parright" x="2144.5" y="0" />
+    </g>
+    <g id="xlabels" transform="translate(0,25)">
+      <g id="x14pi" transform="translate(62.831853,0) scale(0.02,-0.02)">
+        <path d="M -500,280 h 400" stroke="black"
+           stroke-width="40" stroke-linecap="square" />
+        <use xlink:href="#one" x="-673.3" y="0"
+           transform="translate(0,400) scale(0.693147,0.693147)" />
+        <use xlink:href="#four" x="-673.3" y="0"
+           transform="translate(0,-300) scale(0.693147,0.693147)" />
+        <use xlink:href="#pi" x="0" y="0" />
+      </g>
+      <g id="x12pi" transform="translate(125.663706,0) scale(0.02,-0.02)">
+        <path d="M -500,280 h 400" stroke="black"
+           stroke-width="40" stroke-linecap="square" />
+        <use xlink:href="#one" x="-673.3" y="0"
+           transform="translate(0,400) scale(0.693147,0.693147)" />
+        <use xlink:href="#two" x="-673.3" y="0"
+           transform="translate(0,-300) scale(0.693147,0.693147)" />
+        <use xlink:href="#pi" x="0" y="0" />
+      </g>
+      <g id="x34pi" transform="translate(188.495559,0) scale(0.02,-0.02)">
+        <path d="M -500,280 h 400" stroke="black"
+           stroke-width="40" stroke-linecap="square" />
+        <use xlink:href="#three" x="-673.3" y="0"
+           transform="translate(0,400) scale(0.693147,0.693147)" />
+        <use xlink:href="#four" x="-673.3" y="0"
+           transform="translate(0,-300) scale(0.693147,0.693147)" />
+        <use xlink:href="#pi" x="0" y="0" />
+      </g>
+      <g id="xpi" transform="translate(251.327412,0) scale(0.02,-0.02)">
+        <use xlink:href="#pi" x="-285" y="0" />
+      </g>
+      <g id="x54pi" transform="translate(314.159265,0) scale(0.02,-0.02)">
+        <path d="M -500,280 h 400" stroke="black"
+           stroke-width="40" stroke-linecap="square" />
+        <use xlink:href="#five" x="-673.3" y="0"
+           transform="translate(0,400) scale(0.693147,0.693147)" />
+        <use xlink:href="#four" x="-673.3" y="0"
+           transform="translate(0,-300) scale(0.693147,0.693147)" />
+        <use xlink:href="#pi" x="0" y="0" />
+      </g>
+      <g id="x32pi" transform="translate(376.991118,0) scale(0.02,-0.02)">
+        <path d="M -500,280 h 400" stroke="black"
+           stroke-width="40" stroke-linecap="square" />
+        <use xlink:href="#three" x="-673.3" y="0"
+           transform="translate(0,400) scale(0.693147,0.693147)" />
+        <use xlink:href="#two" x="-673.3" y="0"
+           transform="translate(0,-300) scale(0.693147,0.693147)" />
+        <use xlink:href="#pi" x="0" y="0" />
+      </g>
+      <g id="x74pi" transform="translate(439.822972,0) scale(0.02,-0.02)">
+        <path d="M -500,280 h 400" stroke="black"
+           stroke-width="40" stroke-linecap="square" />
+        <use xlink:href="#seven" x="-673.3" y="0"
+           transform="translate(0,400) scale(0.693147,0.693147)" />
+        <use xlink:href="#four" x="-673.3" y="0"
+           transform="translate(0,-300) scale(0.693147,0.693147)" />
+        <use xlink:href="#pi" x="0" y="0" />
+      </g>
+      <g id="x2pi" transform="translate(502.654835,0) scale(0.02,-0.02)">
+        <use xlink:href="#two" x="-500" y="0" />
+        <use xlink:href="#pi" x="0" y="0" />
+      </g>
+    </g>
+    <g id="ylabels" transform="translate(-8,7)">
+      <g id="y1" transform="translate(0,-80) scale(0.02,-0.02)">
+        <use xlink:href="#one" x="-500" y="0" />
+      </g>
+      <g id="y05" transform="translate(0,-40) scale(0.02,-0.02)">
+        <path d="M -500,280 h 400" stroke="black"
+           stroke-width="40" stroke-linecap="square" />
+        <use xlink:href="#one" x="-673.3" y="0"
+           transform="translate(0,400) scale(0.693147,0.693147)" />
+        <use xlink:href="#two" x="-673.3" y="0"
+           transform="translate(0,-300) scale(0.693147,0.693147)" />
+      </g>
+      <g id="y0" transform="translate(0,0) scale(0.02,-0.02)">
+        <use xlink:href="#zero" x="-500" y="0" />
+      </g>
+      <g id="ym05" transform="translate(0,40) scale(0.02,-0.02)">
+        <use xlink:href="#minus" x="-1350" y="0" />
+        <path d="M -500,280 h 400" stroke="black"
+           stroke-width="40" stroke-linecap="square" />
+        <use xlink:href="#one" x="-673.3" y="0"
+           transform="translate(0,400) scale(0.693147,0.693147)" />
+        <use xlink:href="#two" x="-673.3" y="0"
+           transform="translate(0,-300) scale(0.693147,0.693147)" />
+      </g>
+      <g id="ym1" transform="translate(0,80) scale(0.02,-0.02)">
+        <use xlink:href="#minus" x="-1250" y="0" />
+        <use xlink:href="#one" x="-500" y="0" />
+      </g>
+    </g>
+
+    <!-- the controll points lie on the tangents of the function.
+         they are furthermore positioned in a way to minimize the average
+         quadratic distance between the bezier-curve and the function. -->
+    
+    <!-- cosine curve -->
+    <g transform="scale(80, -80)">
+      <path id="cosine-curve" fill="none" stroke="blue"
+         stroke-width="0.04px" stroke-linecap="butt"
+         stroke-dasharray="0.15, 0.025"
+         d="M 0.000000,1.000000
+            C 0.153948,1.000000 0.304599,0.964447 0.455667,0.897968
+            C 0.627821,0.822209 0.795342,0.708567 0.961693,0.572132
+            C 1.167257,0.403536 1.368942,0.201855 1.570796,0.000000
+            C 1.772652,-0.201855 1.974337,-0.403538 2.179901,-0.572134
+            C 2.346252,-0.708568 2.513773,-0.822210 2.685927,-0.897968
+            C 2.836994,-0.964447 2.987645,-1.000000 3.141593,-1.000000
+            C 3.295518,-1.000000 3.446147,-0.964458 3.597192,-0.897997
+            C 3.769389,-0.822231 3.936950,-0.708559 4.103340,-0.572087
+            C 4.308886,-0.403501 4.510552,-0.201837 4.712389,0.000000
+            C 4.914243,0.201854 5.115927,0.403535 5.321491,0.572131
+            C 5.487842,0.708566 5.655364,0.822209 5.827519,0.897968
+            C 5.978587,0.964447 6.129237,1.000000 6.283185,1.000000" />
+    </g>
+    
+    <!-- sine curve -->
+    <g transform="scale(80, -80)">
+      <path id="sine-curve" fill="none" stroke="red"
+         stroke-width="0.04px" stroke-linecap="butt"
+         d="M 0.000000,0.000000
+            C 0.201843,0.201843 0.403515,0.403513 0.609067,0.572102
+            C 0.775441,0.708560 0.942986,0.822220 1.115166,0.897984
+            C 1.266222,0.964453 1.416861,1.000000 1.570796,1.000000
+            C 1.724745,1.000000 1.875396,0.964447 2.026464,0.897968
+            C 2.198618,0.822209 2.366139,0.708567 2.532489,0.572133
+            C 2.738053,0.403537 2.939738,0.201855 3.141593,0.000000
+            C 3.343447,-0.201855 3.545131,-0.403536 3.750695,-0.572132
+            C 3.917046,-0.708566 4.084568,-0.822209 4.256722,-0.897968
+            C 4.407790,-0.964447 4.558441,-1.000000 4.712389,-1.000000
+            C 4.866337,-1.000000 5.016988,-0.964447 5.168055,-0.897968
+            C 5.340209,-0.822210 5.507730,-0.708567 5.674080,-0.572134
+            C 5.879645,-0.403537 6.081330,-0.201855 6.283185,0.000000" />
+    </g>
+  </g>
+</svg>
+
