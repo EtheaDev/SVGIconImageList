@@ -29,7 +29,8 @@ Uses
   Image32,
   Image32_SVG_Core,
   Image32_SVG_Reader,
-  Image32_SVG_Writer
+  Image32_SVG_Writer,
+  Image32_Ttf
   ;
 
 resourcestring
@@ -100,6 +101,7 @@ begin
   FImage32.Resampler := rBicubicResampler;
   FFixedColor := TColors.SysDefault; // clDefault
   FOpacity := 1.0;
+  FontLibrary.Add('Arial');
 end;
 
 destructor TImage32SVG.Destroy;

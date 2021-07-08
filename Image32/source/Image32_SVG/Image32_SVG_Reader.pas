@@ -2,8 +2,8 @@ unit Image32_SVG_Reader;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.25                                                            *
-* Date      :  6 July 2021                                                     *
+* Version   :  2.26                                                            *
+* Date      :  8 July 2021                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -2083,7 +2083,7 @@ end;
 
 procedure TShapeElement.GetPaths(const drawInfo: TDrawInfo);
 begin
-  //drawPathsO := nil; drawPathsC := nil; drawPathsF := nil;
+  drawPathsO := nil; drawPathsC := nil; drawPathsF := nil;
 end;
 //------------------------------------------------------------------------------
 
@@ -2248,7 +2248,7 @@ var
   isClosed: Boolean;
   path: TPathD;
 begin
-  if Assigned(drawPathsC) or Assigned(drawPathsO) then Exit;
+  if Assigned(drawPathsC) or Assigned(drawPathsO) then inherited;
   scalePending := ExtractAvgScaleFromMatrix(drawInfo.matrix);
   for i := 0 to High(fSvgPaths) do
   begin
@@ -2403,7 +2403,7 @@ var
   path  : TPathD;
   r: double;
 begin
-  if Assigned(drawPathsC) then Exit;
+  if Assigned(drawPathsC) then inherited;
   if not radius.IsValid then Exit;
   r := radius.GetValueXY(drawInfo.bounds, GetRelFracLimit);
   pt := centerPt.GetPoint(drawInfo.bounds, GetRelFracLimit);
@@ -2447,7 +2447,7 @@ var
   rad       : TPointD;
   centPt    : TPointD;
 begin
-  if Assigned(drawPathsC) then Exit;
+  if Assigned(drawPathsC) then inherited;
   rad := radius.GetPoint(drawInfo.bounds, GetRelFracLimit);
   centPt := centerPt.GetPoint(drawInfo.bounds, GetRelFracLimit);
   with centPt do
