@@ -1,0 +1,7 @@
+<svg viewBox="0 0 32 16"  xmlns="http://www.w3.org/2000/svg">
+<def>
+  <circle id="circ" cx="8" cy="8" r="5" fill="none"/>
+</def>
+  <use href="#circ"   stroke="green" stroke-width="0.25"/>
+  <use href="#circ" transform="translate(16)"   stroke="green" stroke-width="1.0"/>
+</svg>
