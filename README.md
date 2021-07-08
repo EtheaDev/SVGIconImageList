@@ -1,8 +1,8 @@
 ﻿# SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## Three engines to render SVG (GDI+, Direct2D or Cairo) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
+## Four engines to render SVG (Delphi TSVG, Delphi Image32, Direct2D wrapper or Cairo wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 2.2.6 (VCL+FMX)
+### Actual official version 2.3.0 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -21,21 +21,31 @@ We advise that TSVGIconVirtualImageList should be used only for versions of Delp
 
 From D10.3 version, the **TSVGIconImageCollection** inherits from TCustomImageCollection, so you can also use it with the TVirtualImage component and place SVG icons into the new TControlList component (available from Delphi 10.4.2), as explained [here...](https://github.com/EtheaDev/SVGIconImageList/wiki/TControlList-with-SVGIconImageCollection)
 
-### New in version 2.2: three SVG engines available!
+### New in version 2.3: four SVG engines available!
 
-There are three implementation: the "Delphi one" based on Martin's work which is using GDI+, the native Windows one which is using Direct2D or the new "Cairo" wrapper, as explained [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories-(Direct-2D-or-GDI-))
+There are four implementation: 
+
+- Delphi TSVG: the first native Delphi code, based on Martin's work which is using GDI+, 
+
+- Delphi Image32: the new implementatio, using Image32 library by Angus Johnson
+
+- A wrapper to the native Windows Direct2D implementation 
+
+- A wrapper to the "Cairo" library (written in C)
+
+You can read more details [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories-(Direct-2D-or-GDI-))
 
 ## Performance comparison
 
 This table shows the performance of the three rendering engines tested with SVGExplorer, using a significant amount of icons from different sets, rendered at 32x32 pixels.
 
-Count | Icon set        |    TSVG |     D2D |   Cairo | TSVG |  D2D | Cairo |
-  --: | :--             |     --: |     --: |     --: |  --: |  --: |   --: |
- 997  | Font-Awesome    |  1219ms |  1093ms |  2250ms | 111% | 100% |  205% |
- 655  | Papirus         |   812ms |  1078ms |  3594ms | 100% | 132% |  442% |
-5366  | Material-Design |  5953ms |  8922ms |  9156ms | 100% | 149% |  153% |
+Count | Icon set        |    TSVG | Image32 |    D2D |   Cairo | 
+  --: | :--             |     --: |     --: |    --: |     --: | 
+ 997  | Font-Awesome    |   453ms |   453ms |  672ms |   516ms | 
+ 654  | Papirus         |   547ms |   781ms |  547ms |   891ms | 
+5366  | Material-Design |  5031ms |  5094ms | 6531ms |  5828ms | 
 
-As you can see, the three engines perform differently depending on the icons and their complexity, but the native TSVG implementation is the best implementation, thank's to many performances changes to pascal code!
+As you can see, the four engines perform differently depending on the icons and their complexity, but the two native Delphi implementation are the best.
 
 ### Available from Delphi XE6 to Delphi 10.4 (32bit and 64bit platforms)
 
@@ -214,6 +224,8 @@ These components use the followin libraries:
   These files are included in the cairo folder of this project.
 - Cairo librsvg dlls by [DJMaster](http://www.djmaster.com/)
   These files are included in the cairo/dlls folder of this project.
+- Image32 library by [Angus Johnson](http://www.angusj.com/delphi/image32/Docs/_Body.htm)
+  These files are included in the Image32/Source and Image32/source/Image32_SVG folders
 
 Many thanks to **Vincent Parrett** and **Kiriakos Vlahos** for their great contibution.
 
