@@ -101,7 +101,6 @@ begin
   FImage32.Resampler := rBicubicResampler;
   FFixedColor := TColors.SysDefault; // clDefault
   FOpacity := 1.0;
-  FontLibrary.Add('Arial');
 end;
 
 destructor TImage32SVG.Destroy;
