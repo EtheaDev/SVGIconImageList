@@ -31,7 +31,9 @@ package SVGIconImageList;
 {$IMPLICITBUILD OFF}
 
 requires
+  vcl,
   SVGIconPackage,
+  SVGImage32Package,
   vclimg;
 
 contains
@@ -45,6 +47,7 @@ contains
   D2DSVGFactory in '..\..\Source\D2DSVGFactory.pas',
   Winapi.D2DMissing in '..\..\Source\Winapi.D2DMissing.pas',
   PasSVGFactory in '..\..\Source\PasSVGFactory.pas',
+  Image32SVGFactory in '..\..\Source\Image32SVGFactory.pas',
   SVGInterfaces in '..\..\Source\SVGInterfaces.pas';
 
 end.

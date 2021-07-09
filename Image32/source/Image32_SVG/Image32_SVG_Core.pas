@@ -265,6 +265,7 @@ type
   function HtmlDecode(const html: ansiString): ansistring;
 
   function GetXmlEncoding(memory: Pointer; len: integer): TSvgEncoding;
+  function ClampRange(val, min, max: double): double;
 
 {$IF COMPILERVERSION < 17}
 type
@@ -305,6 +306,15 @@ var
 
 //------------------------------------------------------------------------------
 // Miscellaneous functions ...
+//------------------------------------------------------------------------------
+
+function ClampRange(val, min, max: double): double;
+  {$IFDEF INLINE} inline; {$ENDIF}
+begin
+  if val <= min then Result := min
+  else if val >= max then Result := max
+  else Result := val;
+end;
 //------------------------------------------------------------------------------
 
 {$IF COMPILERVERSION < 17}

@@ -3,7 +3,7 @@ unit Image32_SVG_Reader;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  2.26                                                            *
-* Date      :  8 July 2021                                                     *
+* Date      :  9 July 2021                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -30,9 +30,11 @@ type
   TDrawInfo = record
     currentColor  : TColor32;
     fillColor     : TColor32;
+    fillOpacity   : double;
     fillRule      : TFillRule;
     fillEl        : AnsiString;
     strokeColor   : TColor32;
+    strokeOpacity : double;
     strokeWidth   : TValue;
     strokeCap     : TEndStyle;
     strokeJoin    : TJoinStyle;
@@ -59,17 +61,17 @@ type
   TElementClass = class of TElement;
   TElement = class
   private
-    fParent         : TElement;
-    fParserEl       : TSvgTreeEl;
-    fReader         : TSvgReader;
+    fParent   : TElement;
+    fParserEl : TSvgTreeEl;
+    fReader   : TSvgReader;
 {$IFDEF XPLAT_GENERICS}
-    fChilds         : TList<TElement>;
+    fChilds   : TList<TElement>;
 {$ELSE}
-    fChilds         : TList;
+    fChilds   : TList;
 {$ENDIF}
+    fDrawInfo : TDrawInfo;      //currently both static and dynamic vars
     function  FindRefElement(refname: AnsiString): TElement;
   protected
-    fDrawInfo : TDrawInfo;      //currently both static and dynamic vars
     elRectWH  : TValueRecWH;    //multifunction variable
     function  IsFirstChild: Boolean;
     procedure LoadAttributes;
@@ -82,6 +84,9 @@ type
   public
     constructor Create(parent: TElement; svgEl: TSvgTreeEl); virtual;
     destructor  Destroy; override;
+    procedure SetFillColor(color: TColor32);
+    procedure SetStrokeColor(color: TColor32);
+    property DrawData: TDrawInfo read fDrawInfo;
   end;
 
   TSvgElement = class(TElement)
@@ -514,17 +519,20 @@ const
 
   //https://www.w3.org/TR/css-fonts-3/#font-family-prop
   emptyDrawInfo: TDrawInfo =
-    (currentColor: clInvalid; fillColor: clInvalid; fillRule: frNonZero;
-    fillEl: ''; strokeColor: clInvalid;
+    (currentColor: clInvalid;
+    fillColor: clInvalid; fillOpacity: InvalidD;
+    fillRule: frNonZero; fillEl: '';
+    strokeColor: clInvalid; strokeOpacity: InvalidD;
     strokeWidth: (rawVal: InvalidD; unitType: utNumber);
     strokeCap: esButt; strokeJoin: jsMiter; strokeMitLim: 0.0;
-    dashArray:nil; dashOffset:0; fontInfo: (family: ttfUnknown; size: 0;
-    spacing: 0.0; textLength: 0; italic: sfsUndefined; weight: -1;
-    align: staUndefined; decoration: fdUndefined;
-    baseShift: (rawVal: InvalidD; unitType: utNumber));
-    markerStart: ''; markerMiddle: ''; markerEnd: ''; filterEl: ''; maskEl: '';
-    clipPathEl: ''; opacity: MaxInt; matrix: ((1, 0, 0),(0, 1, 0),(0, 0, 1));
-    visible: true; InUse: false; bounds: (Left:0; Top:0; Right:0; Bottom:0));
+    dashArray:nil; dashOffset:0;
+    fontInfo: (family: ttfUnknown; size: 0; spacing: 0.0;
+    textLength: 0; italic: sfsUndefined; weight: -1; align: staUndefined;
+    decoration: fdUndefined; baseShift: (rawVal: InvalidD; unitType: utNumber));
+    markerStart: ''; markerMiddle: ''; markerEnd: '';
+    filterEl: ''; maskEl: ''; clipPathEl: ''; opacity: MaxInt;
+    matrix: ((1, 0, 0),(0, 1, 0),(0, 0, 1)); visible: true;
+    InUse: false; bounds: (Left:0; Top:0; Right:0; Bottom:0));
 
 var
   //defaultFontHeight: this size will be used to retrieve all glyph contours
@@ -591,18 +599,18 @@ begin
       drawInfo.fillColor := thisElement.fReader.currentColor
     else if (fillColor <> clInvalid) then
       drawInfo.fillColor := fillColor;
+    if fillOpacity <> InvalidD then
+      drawInfo.fillOpacity := fillOpacity;
     if (fillEl <> '') then
       drawInfo.fillEl := fillEl;
     if (clipPathEl <> '') then
       drawInfo.clipPathEl := clipPathEl;
-    if (strokeColor <> clInvalid) then
-    begin
-      if (strokeColor = clCurrent) then
-        drawInfo.strokeColor := thisElement.fReader.currentColor else
-        drawInfo.strokeColor := strokeColor;
-      if not drawInfo.strokeWidth.IsValid then
-        drawInfo.strokeWidth.SetValue(1);
-    end;
+    if (strokeColor = clCurrent) then
+      drawInfo.strokeColor := thisElement.fReader.currentColor
+    else if strokeColor <> clInvalid then
+      drawInfo.strokeColor := strokeColor;
+    if strokeOpacity <> InvalidD then
+      drawInfo.strokeOpacity := strokeOpacity;
     if strokeWidth.IsValid then
       drawInfo.strokeWidth := strokeWidth;
     if strokeMitLim > 0 then
@@ -650,22 +658,32 @@ end;
 
 function IsFilled(const drawInfo: TDrawInfo): Boolean;
 begin
-  Result :=
-    (drawInfo.fillColor = clInvalid) or (drawInfo.fillColor = clCurrent) or
-    (drawInfo.fillEl <> '') or (TARGB(drawInfo.fillColor).A > 0);
+  with drawInfo do
+    Result := (fillOpacity <> 0) and
+      ((fillColor <> clNone32) or (fillEl <> ''));
 end;
 //------------------------------------------------------------------------------
 
 function IsStroked(const drawInfo: TDrawInfo): Boolean;
 begin
   with drawInfo do
-    if (strokeColor = clInvalid) or
-      (strokeColor = clCurrent) or
-      (strokeEl <> '') then
-        Result := (strokeWidth.rawVal > 0)
+    if (strokeOpacity = 0) then
+      Result := false
+    else if (strokeEl <> '') then
+      Result := ((strokeWidth.rawVal = InvalidD) or (strokeWidth.rawVal > 0))
+    else if (strokeColor = clNone32) or
+        ((strokeColor = clInvalid) and (strokeWidth.rawVal = InvalidD)) then
+      Result := false
     else
-        Result := (TARGB(strokeColor).A > 0) and
-          ((strokeWidth.rawVal = InvalidD) or (strokeWidth.rawVal > 0));
+      Result := ((strokeWidth.rawVal = InvalidD) or (strokeWidth.rawVal > 0));
+end;
+//------------------------------------------------------------------------------
+
+function MergeColorAndOpacity(color: TColor32; opacity: double): TColor32;
+begin
+  if (opacity < 0) or (opacity >= 1.0) then Result := color
+  else if opacity = 0 then Result := clNone32
+  else Result := (color and $FFFFFF) + Round(opacity * 255) shl 24;
 end;
 //------------------------------------------------------------------------------
 
@@ -1918,10 +1936,9 @@ begin
     filterEl := FindRefElement(drawInfo.filterEl);
   if (drawInfo.maskEl <> '') then
     maskEl := FindRefElement(drawInfo.maskEl);
-  if (drawInfo.fillEl <> '') then
-    with TARGB(drawInfo.fillColor) do
-      if (A > 0) and (A < 255) then DrawInfo.opacity := A;
-
+  if (drawInfo.fillEl <> '') and
+    (drawInfo.fillOpacity > 0) and (drawInfo.fillOpacity < 1) then
+      DrawInfo.opacity := Round(drawInfo.fillOpacity * 255);
   usingTempImage := Assigned(clipPathEl) or
     Assigned(filterEl) or Assigned(maskEl) or (DrawInfo.opacity < 255);
 
@@ -2129,7 +2146,9 @@ begin
   else if drawInfo.fillColor = clInvalid then
     DrawPolygon(img, fillPaths, drawInfo.fillRule, clBlack32)
   else
-    DrawPolygon(img, fillPaths, drawInfo.fillRule, drawInfo.fillColor);
+    with drawInfo do
+      DrawPolygon(img, fillPaths, fillRule,
+        MergeColorAndOpacity(fillColor, fillOpacity));
 end;
 //------------------------------------------------------------------------------
 
@@ -2139,6 +2158,7 @@ var
   dashOffset, scaledStrokeWidth, roundingScale: double;
   dashArray: TArrayOfInteger;
   scale: Double;
+  strokeClr: TColor32;
   strokePaths: TPathsD;
   refEl: TElement;
   endStyle: TEndStyle;
@@ -2160,22 +2180,29 @@ begin
   scale := ExtractAvgScaleFromMatrix(drawInfo.matrix);
   bounds := fReader.userSpaceBounds;
   with drawInfo.strokeWidth do
-    if HasFontUnits then
+  begin
+    if not IsValid then
+      scaledStrokeWidth := scale
+    else if HasFontUnits then
       scaledStrokeWidth :=
         GetValue(drawInfo.fontInfo.size, GetRelFracLimit) * scale
     else
       scaledStrokeWidth := GetValueXY(bounds, 0) * scale;
+  end;
   roundingScale := scale;
 
   if Length(drawInfo.dashArray) > 0 then
     dashArray := MakeDashArray(drawInfo.dashArray, scale) else
     dashArray := nil;
 
+  with drawInfo do
+    strokeClr := MergeColorAndOpacity(strokeColor, strokeOpacity);
+
   if Assigned(dashArray) then
   begin
     dashOffset := drawInfo.dashOffset * scale;
-    DrawDashedLine(img, strokePaths, dashArray, @dashOffset,
-      scaledStrokeWidth, drawInfo.strokeColor, endStyle)
+    DrawDashedLine(img, strokePaths, dashArray,
+      @dashOffset, scaledStrokeWidth, strokeClr, endStyle);
   end
   else if (drawInfo.strokeEl <> '') then
   begin
@@ -2206,10 +2233,10 @@ begin
   end
   else if (joinStyle = jsMiter) then
     DrawLine(img, strokePaths, scaledStrokeWidth,
-      drawInfo.strokeColor, endStyle, joinStyle, drawInfo.strokeMitLim)
+      strokeClr, endStyle, joinStyle, drawInfo.strokeMitLim)
   else
     DrawLine(img, strokePaths,scaledStrokeWidth,
-      drawInfo.strokeColor, endStyle, joinStyle, roundingScale);
+      strokeClr, endStyle, joinStyle, roundingScale);
 end;
 
 
@@ -3128,11 +3155,10 @@ begin
 {$ENDIF}
   fParserEl          := svgEl;
   self.fParent    := parent;
-  if not Assigned(parent) then Exit;
-
-  fReader         := parent.fReader;
   fDrawInfo       := emptyDrawInfo;
   elRectWH.Init;
+  if Assigned(parent) then
+    fReader := parent.fReader;
 end;
 //------------------------------------------------------------------------------
 
@@ -3144,6 +3170,24 @@ begin
     TElement(fChilds[i]).Free;
   fChilds.Free;
   inherited;
+end;
+//------------------------------------------------------------------------------
+
+procedure TElement.SetFillColor(color: TColor32);
+var
+  c: TARGB absolute color;
+begin
+  fDrawInfo.fillOpacity := c.A / 255;
+  fDrawInfo.fillColor := color;
+end;
+//------------------------------------------------------------------------------
+
+procedure TElement.SetStrokeColor(color: TColor32);
+var
+  c: TARGB absolute color;
+begin
+  fDrawInfo.strokeOpacity := c.A / 255;
+  fDrawInfo.strokeColor := color;
 end;
 //------------------------------------------------------------------------------
 
@@ -3322,6 +3366,8 @@ end;
 //------------------------------------------------------------------------------
 
 procedure FillOpacity_Attrib(aOwnerEl: TElement; const value: AnsiString);
+var
+  val: double;
 begin
   case aOwnerEl.fParserEl.Hash of
     hfeDropShadow:
@@ -3329,7 +3375,10 @@ begin
     hfeFlood:
       AnsiStringToOpacity(value, TFeFloodElement(aOwnerEl).floodColor);
     else
-      AnsiStringToOpacity(value, aOwnerEl.fDrawInfo.fillColor);
+    begin
+      AnsiStringToFloat(value, val);
+      aOwnerEl.fDrawInfo.fillOpacity := ClampRange(val, 0,1);
+    end;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -3663,8 +3712,11 @@ end;
 //------------------------------------------------------------------------------
 
 procedure StrokeOpacity_Attrib(aOwnerEl: TElement; const value: AnsiString);
+var
+  val: double;
 begin
-  AnsiStringToOpacity(value, aOwnerEl.fDrawInfo.strokeColor);
+  AnsiStringToFloat(value, val);
+  aOwnerEl.fDrawInfo.strokeOpacity := ClampRange(val, 0,1);
 end;
 //------------------------------------------------------------------------------
 
@@ -3691,7 +3743,6 @@ begin
   with aOwnerEl do
     case fParserEl.Hash of
       hFlowRegion, hFlowRoot: fDrawInfo.fillColor := clNone32;
-      //else fStyleAttribIdx := High(fAttribs);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -4328,7 +4379,7 @@ begin
 
   with fRootElement do
   begin
-    di := emptyDrawInfo;
+    di := fDrawInfo;
     MatrixTranslate(di.matrix, -viewboxWH.Left, -viewboxWH.Top);
 
     w := elRectWH.width.GetValue(RectWidth(img.Bounds), 0);

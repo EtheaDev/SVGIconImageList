@@ -1,0 +1,55 @@
+package SVGImage32Package;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Delphi Image32 Library for Ethea SVGIcon Components'}
+{$LIBSUFFIX '_D10_4'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl;
+
+contains
+  Image32 in '..\..\Image32\source\Image32.pas',
+  Image32_BMP in '..\..\Image32\source\Image32_BMP.pas',
+  Image32_CQ in '..\..\Image32\source\Image32_CQ.pas',
+  Image32_Draw in '..\..\Image32\source\Image32_Draw.pas',
+  Image32_Extra in '..\..\Image32\source\Image32_Extra.pas',
+  Image32_Layers in '..\..\Image32\source\Image32_Layers.pas',
+  Image32_Resamplers in '..\..\Image32\source\Image32_Resamplers.pas',
+  Image32_SmoothPath in '..\..\Image32\source\Image32_SmoothPath.pas',
+  Image32_SVG in '..\..\Image32\source\Image32_SVG.pas',
+  Image32_Transform in '..\..\Image32\source\Image32_Transform.pas',
+  Image32_Ttf in '..\..\Image32\source\Image32_Ttf.pas',
+  Image32_Vector in '..\..\Image32\source\Image32_Vector.pas',
+  Image32Panels in '..\..\Image32\source\Image32Panels.pas',
+  Image32_SVG_Core in '..\..\Image32\source\Image32_SVG\Image32_SVG_Core.pas',
+  Image32_SVG_Reader in '..\..\Image32\source\Image32_SVG\Image32_SVG_Reader.pas',
+  Image32_SVG_Writer in '..\..\Image32\source\Image32_SVG\Image32_SVG_Writer.pas';
+
+end.

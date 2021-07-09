@@ -151,7 +151,7 @@ object frmBenchmark: TfrmBenchmark
         Left = 10
         Top = 8
         Width = 32
-        Height = 17
+        Height = 15
         Margins.Left = 10
         Margins.Top = 8
         Margins.Right = 5
@@ -159,7 +159,6 @@ object frmBenchmark: TfrmBenchmark
         Align = alLeft
         Caption = '&Loops'
         FocusControl = speLoops
-        ExplicitHeight = 15
       end
       object speLoops: TSpinEdit
         AlignWithMargins = True

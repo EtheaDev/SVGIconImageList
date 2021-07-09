@@ -63,7 +63,7 @@
         <DCC_Description>Ethea SVGIconImageList VCL components</DCC_Description>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DllSuffix>_D10_4</DllSuffix>
-        <DCC_UnitSearchPath>..\..\svg;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\svg;..\..\Image32\Source;..\..\Image32\Source\Image32_SVG;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
@@ -108,6 +108,7 @@
         </DelphiCompile>
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="SVGIconPackage.dcp"/>
+        <DCCReference Include="SVGImage32Package.dcp"/>
         <DCCReference Include="vclwinx.dcp"/>
         <DCCReference Include="..\..\Source\SVGIconImage.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageList.pas"/>
@@ -119,6 +120,7 @@
         <DCCReference Include="..\..\Source\D2DSVGFactory.pas"/>
         <DCCReference Include="..\..\Source\Winapi.D2DMissing.pas"/>
         <DCCReference Include="..\..\Source\PasSVGFactory.pas"/>
+        <DCCReference Include="..\..\Source\Image32SVGFactory.pas"/>
         <DCCReference Include="..\..\Source\SVGInterfaces.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
@@ -140,7 +142,8 @@
                 <Source>
                     <Source Name="MainSource">SVGIconImageList.dpk</Source>
                 </Source>
-                <Excluded_Packages/>
+                <Excluded_Packages>
+                </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>

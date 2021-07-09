@@ -249,7 +249,6 @@ type
     procedure Flush;
     procedure Finish;
   end;
-
   TCairoDevice = class(TInterfacedObject, ICairoDevice)
   private
     FDevice: PCairoDevice;
