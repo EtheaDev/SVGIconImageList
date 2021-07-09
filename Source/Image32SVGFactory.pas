@@ -159,8 +159,7 @@ end;
 
 function TImage32SVG.IsEmpty: Boolean;
 begin
-  if FImage32 = nil then Exit(True);
-  Result := FImage32.IsEmpty;
+  Result := fSvgReader.IsEmpty;
 end;
 
 procedure TImage32SVG.LoadFromSource;
@@ -182,16 +181,38 @@ begin
 end;
 
 procedure TImage32SVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
+var
+  LSvgRect: TRectF;
+  LSourceRect, LDestRect: TRect;
 begin
+  //Define Image32 output size
   FImage32.SetSize(Round(R.Width), Round(R.Height));
-  FsvgReader.DrawImage(FImage32, true);
+
+  //Draw SVG image to Image32
+  FsvgReader.DrawImage(FImage32, True);
+
+  //GrayScale and FixedColor applyed to Image32
   if FGrayScale then
     FImage32.Grayscale
   else if FFixedColor <> TColors.SysDefault then
     FImage32.SetRGB(Color32(FFixedColor));
+
+  //Opacity applyed to Image32
   if FOpacity <> 1.0 then
     FImage32.ReduceOpacity(Round(FOpacity * 255));
-  FImage32.CopyToDc(DC, 0, 0, True);
+
+  //Centering Image to the output Rect if KeepAspectRatio is requested
+  if KeepAspectRatio then
+  begin
+    LSvgRect := TRect.Create(0, 0, FImage32.Width, FImage32.Height);
+    LSvgRect := RectCenter(LSvgRect, R);
+  end
+  else
+    LSvgRect := R;
+
+  LSourceRect := TRect.Create(0, 0, FImage32.Width, FImage32.Height);
+  LDestRect := TRect.Create(Round(LSvgRect.Left), Round(LSvgRect.Top), Round(LSvgRect.Right), Round(LSvgRect.Bottom));
+  FImage32.CopyToDc(LSourceRect, LDestRect, DC, True);
 end;
 
 procedure TImage32SVG.SaveToFile(const FileName: string);

@@ -599,7 +599,6 @@ end;
 procedure TSVGGraphic.SetWidth(Value: Integer);
 begin
   inherited;
-
 end;
 
 procedure TSVGGraphic.SetFileName(const Value: TFileName);
@@ -613,7 +612,6 @@ end;
 procedure TSVGGraphic.SetHeight(Value: Integer);
 begin
   inherited;
-
 end;
 
 procedure TSVGGraphic.ReadData(Stream: TStream);

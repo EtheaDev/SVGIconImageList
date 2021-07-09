@@ -121,8 +121,8 @@ begin
   SvgRect:= R;
   if (fSvgDoc.Width > 0) and (fSvgDoc.Height > 0) and KeepAspectRatio then
   begin
-      SvgRect := TRectF.Create(0, 0, fSvgDoc.Width, fSvgDoc.Height);
-      SvgRect := SvgRect.FitInto(R);
+    SvgRect := TRectF.Create(0, 0, fSvgDoc.Width, fSvgDoc.Height);
+    SvgRect := SvgRect.FitInto(R);
   end;
   fSvgDoc.PaintTo(DC, ToGPRectF(SvgRect), nil, 0);
 end;
