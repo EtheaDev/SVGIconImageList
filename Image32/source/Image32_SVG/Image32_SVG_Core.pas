@@ -2,8 +2,8 @@ unit Image32_SVG_Core;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.25                                                            *
-* Date      :  6 July 2021                                                     *
+* Version   :  2.26                                                            *
+* Date      :  9 July 2021                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -207,7 +207,7 @@ type
   //TSvgPath structures
   //////////////////////////////////////////////////////////////////////
 
-  TSvgPathSegType = (dsMove, dsLine, dsHorz, dsVert, dsArc,
+  TSvgPathSegType = (dsUnknown, dsMove, dsLine, dsHorz, dsVert, dsArc,
     dsQBez, dsCBez, dsQSpline, dsCSpline, dsClose);
 
   PSvgPathSeg = ^TSvgPathSeg;
@@ -219,7 +219,6 @@ type
   PSvgPath = ^TSvgPath;
   TSvgPath = {$IFDEF RECORD_METHODS} record {$ELSE} object {$ENDIF}
     firstPt   : TPointD;
-    isClosed  : Boolean;
     segs      : array of TSvgPathSeg;
     function GetBounds: TRectD;
     //scalePending: if an SVG will be scaled later, then this parameter
@@ -227,6 +226,7 @@ type
     function GetFlattenedPath(scalePending: double = 1.0): TPathD;
     //GetSimplePath - ignores curves and is only used with markers
     function GetSimplePath: TPathD;
+    function IsClosed: Boolean;
   end;
   TSvgPaths = array of TSvgPath;
 
@@ -1860,6 +1860,18 @@ var
     end;
   end;
 
+  function LastSegWasCubic(segIdx: integer): Boolean;
+  begin
+    Result := (segIdx > 0) and
+      (segs[segIdx -1].segType in [dsCBez, dsCSpline]);
+  end;
+
+  function LastSegWasQuad(segIdx: integer): Boolean;
+  begin
+    Result := (segIdx > 0) and
+      (segs[segIdx -1].segType in [dsQBez, dsQSpline]);
+  end;
+
 begin
   if scalePending <= 0 then scalePending := 1.0;
 
@@ -1921,7 +1933,7 @@ begin
           if High(vals) > 0 then
             for j := 0 to High(vals) div 2 do
             begin
-              if IsValid(lastQCtrlPt) then
+              if LastSegWasQuad(i) then
                 pt2 := ReflectPoint(lastQCtrlPt, currPt) else
                 pt2 := currPt;
               pt3.X := vals[j*2];
@@ -1948,7 +1960,7 @@ begin
           if High(vals) > 2 then
             for j := 0 to High(vals) div 4 do
             begin
-              if IsValid(lastCCtrlPt) then
+              if LastSegWasCubic(i) then
                 pt2 := ReflectPoint(lastCCtrlPt, currPt) else
                 pt2 := currPt;
               pt3.X := vals[j*4];
@@ -1962,6 +1974,15 @@ begin
       end;
     end;
   SetLength(Result, pathLen);
+end;
+//------------------------------------------------------------------------------
+
+function TSvgPath.IsClosed: Boolean;
+var
+  len: integer;
+begin
+  len := Length(segs);
+  Result := (len > 0) and (segs[len-1].segType = dsClose);
 end;
 //------------------------------------------------------------------------------
 
@@ -2070,6 +2091,18 @@ var
     end;
   end;
 
+  function LastSegWasCubic(segIdx: integer): Boolean;
+  begin
+    Result := (segIdx > 0) and
+      (segs[segIdx -1].segType in [dsCBez, dsCSpline]);
+  end;
+
+  function LastSegWasQuad(segIdx: integer): Boolean;
+  begin
+    Result := (segIdx > 0) and
+      (segs[segIdx -1].segType in [dsQBez, dsQSpline]);
+  end;
+
 begin
   path2 := nil;
   pathLen := 0; pathCap := 0;
@@ -2129,7 +2162,7 @@ begin
           if High(vals) > 0 then
             for j := 0 to High(vals) div 2 do
             begin
-              if IsValid(lastQCtrlPt) then
+              if LastSegWasQuad(i) then
                 pt2 := ReflectPoint(lastQCtrlPt, currPt) else
                 pt2 := currPt;
               pt3.X := vals[j*2];
@@ -2156,7 +2189,7 @@ begin
           if High(vals) > 2 then
             for j := 0 to High(vals) div 4 do
             begin
-              if IsValid(lastCCtrlPt) then
+              if LastSegWasCubic(i) then
                 pt2 := ReflectPoint(lastCCtrlPt, currPt) else
                 pt2 := currPt;
               pt3.X := vals[j*4];
@@ -2565,7 +2598,7 @@ function GetSegType(var c, endC: PAnsiChar;
 var
   ch: AnsiChar;
 begin
-  Result := dsMove;
+  Result := dsUnknown;
   if not SkipBlanks(c, endC) then Exit;
   ch := upcase(c^);
   if not CharInSet(ch,
@@ -2609,7 +2642,6 @@ var
     SetLength(Result, cnt +1);
     currDpath := @Result[cnt];
     currDpath.firstPt := lastPt;
-    currDpath.isClosed := False;
     currDpath.segs := nil;
     currSeg := nil;
   end;
@@ -2682,20 +2714,13 @@ begin
   while true do
   begin
     currSegType := GetSegType(c, endC, isRelative);
+    if currSegType = dsUnknown then break;
 
     lastPt := currPt;
-
     if (currSegType = dsMove) then
     begin
-
-      if not Assigned(currSeg) and not PointsEqual(currPt, NullPointD) then
-        AddSegPoint(currPt);
-
       if Assigned(currSeg) then
-      begin
         SetLength(currSeg.vals, currSegCnt); //trim buffer
-        currDpath.isClosed := false;
-      end;
       currDpath := nil;
       currSeg := nil;
 
@@ -2709,16 +2734,9 @@ begin
     end
     else if (currSegType = dsClose) then
     begin
-      if not Assigned(currSeg) and not PointsEqual(currPt, NullPointD) then
-        AddSegPoint(currPt);
-
-      if Assigned(currSeg) then
-      begin
-        SetLength(currSeg.vals, currSegCnt); //trim buffer
-        currDpath.isClosed := true;
-        currDpath := nil;
-        currSeg := nil;
-      end;
+      if Assigned(currDpath) then
+        currPt := currDpath.firstPt;
+      StartNewSeg;
       Continue;
     end;
 

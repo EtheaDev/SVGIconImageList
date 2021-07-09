@@ -2,8 +2,8 @@ unit Image32_SVG_Writer;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.24                                                            *
-* Date      :  26 June 2021                                                    *
+* Version   :  2.26                                                            *
+* Date      :  9 July 2021                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -525,7 +525,6 @@ begin
     Result := @fSvgPaths[len];
     Result.firstPt := NullPointD;
     Result.segs := nil;
-    Result.isClosed := false;
     Result.firstPt := Self.fLastPt;
   end else
     Result := @fSvgPaths[len -1];
@@ -762,7 +761,7 @@ begin
   currPath := GetCurrentPath;
   if Length(currPath.segs) > 0 then
   begin
-    currPath.isClosed := true;
+    GetNewOrAppendSeg(currPath, dsClose);
     GetNewPath;
   end;
 end;
