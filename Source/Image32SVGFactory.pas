@@ -206,7 +206,7 @@ begin
   //Centering Image to the output Rect if KeepAspectRatio is requested
   if KeepAspectRatio then
   begin
-    LSvgRect := TRect.Create(0, 0, FImage32.Width, FImage32.Height);
+    LSvgRect := TRectF.Create(0, 0, FImage32.Width, FImage32.Height);
     LSvgRect := RectCenter(LSvgRect, R);
   end
   else
