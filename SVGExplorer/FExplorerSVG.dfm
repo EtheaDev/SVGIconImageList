@@ -275,6 +275,7 @@ object fmExplorerSVG: TfmExplorerSVG
   object SVGIconImageList: TSVGIconImageList
     Size = 48
     SVGIconItems = <>
+    Scaled = True
     Left = 264
     Top = 157
   end

@@ -190,7 +190,7 @@ var
 begin
   LPath := ParamStr(1);
   if LPath = '' then
-    LPath := ExtractFilePath(ParamStr(0));
+    LPath := ExtractFilePath(ParamStr(0))+'..\..\Demo\svg_examples';
   DirSelection.Directory := LPath;
 end;
 
