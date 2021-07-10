@@ -158,6 +158,7 @@ begin
       //so the changes are affected to all forms opened!
       (VirtualImageList.ImageCollection as TSVGIconImageCollection).ApplyFixedColorToRootOnly :=
         ApplyToRootOnlyCheckBox.Checked;
+      SVGIconImage.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
       UpdateGUI;
     end;
   finally

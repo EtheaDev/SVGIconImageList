@@ -164,6 +164,8 @@ end;
 
 procedure TImage32SVG.LoadFromSource;
 begin
+  if FApplyFixedColorToRootOnly then
+    fSvgReader.RootElement.SetFillColor(Color32(FFixedColor));
   fSvgReader.LoadFromString(FSource);
 end;
 
@@ -194,7 +196,7 @@ begin
   //GrayScale and FixedColor applyed to Image32
   if FGrayScale then
     FImage32.Grayscale
-  else if FFixedColor <> TColors.SysDefault then
+  else if (FFixedColor <> TColors.SysDefault) then
     FImage32.SetRGB(Color32(FFixedColor));
 
   //Opacity applyed to Image32
@@ -326,5 +328,9 @@ function GetImage32SVGFactory: ISVGFactory;
 begin
   Result := TImage32SVGFactory.Create;
 end;
+
+initialization
+  FontLibrary.Add('Arial');
+  FontLibrary.Add('Times New Roman');
 
 end.

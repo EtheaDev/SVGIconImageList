@@ -62,6 +62,8 @@ resourcestring
   FILES_SAVED = '%d File(s) saved into "%s" folder';
 type
   TOpenPictureDialogSvg = class(TOpenPictureDialog)
+  protected
+    procedure DoSelectionChange; override;
   public
     function Execute(ParentWnd: HWND): Boolean; override;
   end;
@@ -1076,6 +1078,12 @@ function TOpenPictureDialogSvg.Execute(ParentWnd: HWND): Boolean;
 begin
   Template := 'DLGTEMPLATE';
   Result := DoExecute(@GetOpenFileName, ParentWnd);
+end;
+
+procedure TOpenPictureDialogSvg.DoSelectionChange;
+begin
+  ImageCtrl.Picture := nil;
+  inherited;
 end;
 
 initialization
