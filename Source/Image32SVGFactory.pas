@@ -164,8 +164,6 @@ end;
 
 procedure TImage32SVG.LoadFromSource;
 begin
-  if FApplyFixedColorToRootOnly then
-    fSvgReader.RootElement.SetFillColor(Color32(FFixedColor));
   fSvgReader.LoadFromString(FSource);
 end;
 
@@ -197,7 +195,16 @@ begin
   if FGrayScale then
     FImage32.Grayscale
   else if (FFixedColor <> TColors.SysDefault) then
-    FImage32.SetRGB(Color32(FFixedColor));
+  begin
+    if FApplyFixedColorToRootOnly then
+    begin
+      fSvgReader.RootElement.SetFillColor(Color32(FFixedColor));
+      if fSvgReader.RootElement.HasStroke then
+        fSvgReader.RootElement.SetStrokeColor(Color32(FFixedColor));
+    end
+    else
+      FImage32.SetRGB(Color32(FFixedColor));
+  end;
 
   //Opacity applyed to Image32
   if FOpacity <> 1.0 then

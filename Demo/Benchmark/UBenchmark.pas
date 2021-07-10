@@ -171,7 +171,7 @@ var
 begin
   if OpenDialog.Execute then
     begin
-      FSvgSource := TFile.ReadAllText(OpenDialog.FileName);
+      FSvgSource := TFile.ReadAllText(OpenDialog.FileName, TEncoding.UTF8);
 
       PrepareBenchmark('Factory    |  Load  |  Draw  | Total');
 

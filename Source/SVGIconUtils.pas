@@ -44,6 +44,7 @@ uses
   , SVGIconImageList
   , Windows
   , Graphics
+  , Vcl.Imaging.pngimage
   , ComCtrls;
 
 function UpdateSVGIconListView(const AListView: TListView;
@@ -57,6 +58,7 @@ procedure SVGExportToPng(const AWidth, AHeight: Integer;
 {$IFDEF IgnoreAntiAliasedColor}
 procedure MakeTransparent(DC: THandle);
 {$ENDIF}
+function PNG4TransparentBitMap(aBitmap: TBitmap): TPNGImage;
 
 implementation
 
@@ -64,7 +66,6 @@ uses
   System.SysUtils
   , System.Types
   , Vcl.Themes
-  , Vcl.Imaging.pngimage
   , SVGIconImageCOllection
   {$IFDEF IgnoreAntiAliasedColor}
   , Winapi.GDIPAPI

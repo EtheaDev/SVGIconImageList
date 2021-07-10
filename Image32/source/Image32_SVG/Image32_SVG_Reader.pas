@@ -71,6 +71,7 @@ type
 {$ENDIF}
     fDrawInfo : TDrawInfo;      //currently both static and dynamic vars
     function  FindRefElement(refname: AnsiString): TElement;
+    function GetHasStroke: boolean;
   protected
     elRectWH  : TValueRecWH;    //multifunction variable
     function  IsFirstChild: Boolean;
@@ -87,6 +88,7 @@ type
     procedure SetFillColor(color: TColor32);
     procedure SetStrokeColor(color: TColor32);
     property DrawData: TDrawInfo read fDrawInfo;
+    property HasStroke: boolean read GetHasStroke;
   end;
 
   TSvgElement = class(TElement)
@@ -4276,6 +4278,11 @@ begin
   else Result := tsNo;
 end;
 //------------------------------------------------------------------------------
+
+function TElement.GetHasStroke: boolean;
+begin
+  Result := IsStroked(fDrawInfo);
+end;
 
 function TElement.GetRelFracLimit: double;
 begin

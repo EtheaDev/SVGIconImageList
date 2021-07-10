@@ -4816,8 +4816,9 @@ object ImageDataModule: TImageDataModule
       item
         IconName = 'monochrome'
         SVGText = 
-          '<svg viewBox="0 0 24 24">'#13#10'    <path d="M14,19H18V5H14M6,19H10V5' +
-          'H6V19Z" />'#13#10'</svg>'
+          '<svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0' +
+          ' 24 24">'#13#10'    <path stroke="red" stroke-width="2" d="M14,19H18V5' +
+          'H14M6,19H10V5H6V19Z" />'#13#10'</svg>'
       end>
     Left = 87
     Top = 30
