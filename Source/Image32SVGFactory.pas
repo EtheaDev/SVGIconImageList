@@ -199,8 +199,16 @@ begin
     if FApplyFixedColorToRootOnly then
     begin
       fSvgReader.RootElement.SetFillColor(Color32(FFixedColor));
-      if fSvgReader.RootElement.HasStroke then
-        fSvgReader.RootElement.SetStrokeColor(Color32(FFixedColor));
+      with fSvgReader.RootElement.DrawData do
+        if (strokeColor <> clInvalid) and (strokeColor <> clNone32) then
+          fSvgReader.RootElement.SetStrokeColor(Color32(FFixedColor));
+    end;
+    if FApplyFixedColorToRootOnly then
+    begin
+      fSvgReader.RootElement.SetFillColor(Color32(FFixedColor));
+      with fSvgReader.RootElement.DrawData do
+        if (strokeColor <> clInvalid) and (strokeColor <> clNone32) then
+          fSvgReader.RootElement.SetStrokeColor(Color32(FFixedColor));
     end
     else
       FImage32.SetRGB(Color32(FFixedColor));

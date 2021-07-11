@@ -3,7 +3,7 @@ unit Image32_SVG_Reader;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  2.26                                                            *
-* Date      :  9 July 2021                                                     *
+* Date      :  11 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -52,7 +52,7 @@ type
     opacity       : integer;
     matrix        : TMatrixD;
     visible       : Boolean;
-    InUse         : Boolean; //avoids <USE> recursion
+    useEl         : TElement; //to check for and prevent <USE> recursion
     bounds        : TRectD;
   end;
 
@@ -71,7 +71,6 @@ type
 {$ENDIF}
     fDrawInfo : TDrawInfo;      //currently both static and dynamic vars
     function  FindRefElement(refname: AnsiString): TElement;
-    function GetHasStroke: boolean;
   protected
     elRectWH  : TValueRecWH;    //multifunction variable
     function  IsFirstChild: Boolean;
@@ -88,7 +87,6 @@ type
     procedure SetFillColor(color: TColor32);
     procedure SetStrokeColor(color: TColor32);
     property DrawData: TDrawInfo read fDrawInfo;
-    property HasStroke: boolean read GetHasStroke;
   end;
 
   TSvgElement = class(TElement)
@@ -179,6 +177,9 @@ type
   end;
 
   TUseElement = class(TShapeElement)
+  private
+    callerUse: TElement;
+    function ValidateNonRecursion(el: TElement): Boolean;
   protected
     refEl: AnsiString;
     procedure GetPaths(const drawInfo: TDrawInfo); override;
@@ -534,7 +535,7 @@ const
     markerStart: ''; markerMiddle: ''; markerEnd: '';
     filterEl: ''; maskEl: ''; clipPathEl: ''; opacity: MaxInt;
     matrix: ((1, 0, 0),(0, 1, 0),(0, 0, 1)); visible: true;
-    InUse: false; bounds: (Left:0; Top:0; Right:0; Bottom:0));
+    useEl: nil; bounds: (Left:0; Top:0; Right:0; Bottom:0));
 
 var
   //defaultFontHeight: this size will be used to retrieve all glyph contours
@@ -786,7 +787,8 @@ var
 begin
   if fChilds.Count = 0 then Exit;
 
-  UpdateDrawInfo(drawInfo, self);
+  if not Assigned(drawInfo.useEl) then
+    UpdateDrawInfo(drawInfo, self);
 
   maskEl := FindRefElement(drawInfo.maskEl);
   clipEl := FindRefElement(drawInfo.clipPathEl);
@@ -887,6 +889,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function TUseElement.ValidateNonRecursion(el: TElement): Boolean;
+begin
+  Result := false;
+  while assigned(el) do
+  begin
+    if (el = Self) then Exit;
+    if not (el is TUseElement) then break; //shouldn't happen
+    el := TUseElement(el).callerUse;
+  end;
+  Result := true;
+end;
+//------------------------------------------------------------------------------
+
 procedure TUseElement.Draw(img: TImage32; drawInfo: TDrawInfo);
 var
   el: TElement;
@@ -894,8 +909,15 @@ var
   scale, scale2: TSizeD;
   mat: TMatrixD;
 begin
+
+  //make sure there's not recursion, either directly or indirectly
+  if not ValidateNonRecursion(drawInfo.useEl) then Exit;
+
+  callerUse := drawInfo.useEl;
+  drawInfo.useEl := self;
+
   el := FindRefElement(refEl);
-  if not Assigned(el) or drawInfo.InUse then Exit;
+  if not Assigned(el) then Exit;
 
   UpdateDrawInfo(drawInfo, el);
   UpdateDrawInfo(drawInfo, self); //nb: <use> attribs override el's.
@@ -904,9 +926,12 @@ begin
   if elRectWH.left.IsValid then dx := elRectWH.left.rawVal else dx := 0;
   if elRectWH.top.IsValid  then dy := elRectWH.top.rawVal  else dy := 0;
 
-  mat := IdentityMatrix;
-  MatrixTranslate(mat, dx, dy);
-  drawInfo.matrix := MatrixMultiply(drawInfo.matrix, mat);
+  if (dx <> 0) or (dy <> 0) then
+  begin
+    mat := IdentityMatrix;
+    MatrixTranslate(mat, dx, dy);
+    drawInfo.matrix := MatrixMultiply(drawInfo.matrix, mat);
+  end;
 
   if el is TSymbolElement then
   begin
@@ -960,10 +985,7 @@ begin
     end;
   end
   else if el is TShapeElement then
-  begin
-    drawInfo.InUse := true;              //flag <use> precedence
     el.Draw(img, drawInfo);
-  end;
 end;
 
 //------------------------------------------------------------------------------
@@ -1969,7 +1991,7 @@ begin
       end;
     end else
     begin
-      clipRec := GetBoundsD(drawPathsF);
+      clipRec := drawInfo.bounds;
       if stroked and drawInfo.strokeWidth.IsValid then
       begin
         with drawInfo.strokeWidth do
@@ -4278,11 +4300,6 @@ begin
   else Result := tsNo;
 end;
 //------------------------------------------------------------------------------
-
-function TElement.GetHasStroke: boolean;
-begin
-  Result := IsStroked(fDrawInfo);
-end;
 
 function TElement.GetRelFracLimit: double;
 begin
