@@ -1,6 +1,6 @@
 ﻿# SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## Four engines to render SVG (Delphi TSVG, Delphi Image32, Direct2D wrapper or Cairo wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
+## Four engines to render SVG (Delphi Image32, Delphi TSVG, Direct2D wrapper or Cairo wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
 ### Actual official version 2.3.0 (VCL+FMX)
 
@@ -25,15 +25,15 @@ From D10.3 version, the **TSVGIconImageCollection** inherits from TCustomImageCo
 
 There are four implementation: 
 
-- Delphi TSVG: the first native Delphi code, based on Martin's work which is using GDI+, 
+- Delphi Image32 (default): the new implementatio, using Image32 library by Angus Johnson
 
-- Delphi Image32: the new implementatio, using Image32 library by Angus Johnson
+- Delphi TSVG: the first native Delphi code, based on Martin's work which is using GDI+
 
 - A wrapper to the native Windows Direct2D implementation 
 
 - A wrapper to the "Cairo" library (written in C)
 
-You can read more details [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories-(Direct-2D-or-GDI-))
+You can read more details [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories)
 
 ## Performance comparison
 
