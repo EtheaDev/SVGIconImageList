@@ -15,7 +15,7 @@ uses
   Vcl.ImgList,
   SVGInterfaces,
   SVGIconImageCollection, SVGIconImage, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  SVGIconImageListBase, SVGIconVirtualImageList;
+  SVGIconImageListBase, SVGIconVirtualImageList, Vcl.BaseImageCollection;
 
 type
   TfrmBenchmark = class(TForm)
@@ -118,7 +118,7 @@ begin
     begin
       LBitmap := TBitmap.Create;
       try
-        LBitmap.Width := SvgIconImage.Height;
+        LBitmap.Height := SvgIconImage.Height;
         LBitmap.Width := SvgIconImage.Width;
 
         DrawOnCanvas(LBitmap.Canvas);
