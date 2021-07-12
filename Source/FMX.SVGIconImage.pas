@@ -1,6 +1,7 @@
 {******************************************************************************}
 {                                                                              }
-{       SVG Image in TPicture: useful to show a Scalable Vector Graphic        }
+{       SVGIconImageList: An extended ImageList for Delphi/FMX                 }
+{       to simplify use of SVG Icons (resize, opacity and more...)             }
 {                                                                              }
 {       Copyright (c) 2019-2021 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
@@ -8,12 +9,6 @@
 {                                                                              }
 {       https://github.com/EtheaDev/SVGIconImageList                           }
 {                                                                              }
-{******************************************************************************}
-{       Original version (c) 2005, 2008 Martin Walter with license:            }
-{       Use of this file is permitted for commercial and non-commercial        }
-{       use, as long as the author is credited.                                }
-{       home page: http://www.mwcs.de                                          }
-{       email    : martin.walter@mwcs.de                                       }
 {******************************************************************************}
 {                                                                              }
 {  Licensed under the Apache License, Version 2.0 (the "License");             }
@@ -48,7 +43,7 @@ uses
   , FMX.Types
   , FMX.Graphics
   , FMX.Objects
-  , SVG
+  , FMX.Image32SVG
   ;
 
 const
@@ -65,13 +60,12 @@ type
     FOpacity: Single;
     FOwnerCollection: TSVGIconFixedMultiResBitmap;
     FIconName: string;
-    FSVG: TSVG;
+    FSVG: TFmxImage32SVG;
     function StoreOpacity: Boolean;
     procedure SetBitmap(const AValue: TBitmapOfItem);
     function GetBitmap: TBitmapOfItem;
     procedure SetIconSize(const AWidth, AHeight: Single;
       const AZoom: Integer);
-    procedure DrawSVGIcon;
     procedure SetOpacity(const AValue: Single);
     procedure SetIconName(const AValue: string);
     function GetSVGText: string;
@@ -80,10 +74,11 @@ type
     function BitmapStored: Boolean; override;
     function GetDisplayName: string; override;
   public
+    procedure DrawSVGIcon;
     constructor Create(Collection: TCollection); override;
     procedure Assign(Source: TPersistent); override;
     destructor Destroy; override;
-    property SVG: TSVG read FSVG;
+    property SVG: TFmxImage32SVG read FSVG;
   published
     property Bitmap: TBitmapOfItem read GetBitmap write SetBitmap stored False;
     property Opacity: Single read FOpacity write SetOpacity stored StoreOpacity;
@@ -131,8 +126,7 @@ uses
   , System.SysUtils
   , System.Character
   , FMX.Forms
-  , FMX.Consts
-  , GDIPOBJ2;
+  , FMX.Consts;
 
 { TSVGIconFixedMultiResBitmap }
 
@@ -199,7 +193,7 @@ begin
     FOwnerCollection := Collection as TSVGIconFixedMultiResBitmap;
   FZoom := ZOOM_DEFAULT;
   FOpacity := 1;
-  FSVG := TSVG.Create;
+  FSVG := TFmxImage32SVG.Create;
 end;
 
 destructor TSVGIconFixedBitmapItem.Destroy;
@@ -213,22 +207,16 @@ var
   LBitmap: TBitmap;
   LBitmapWidth, LBitmapHeight: Integer;
 begin
-  if (FWidth <= 0) or (FHeight <= 0) or (FZoom <= 0) or (FZoom >= 100) then
+  if (FWidth <= 0) or (FHeight <= 0) or (FZoom <= 0) or (FZoom > 100) then
     Exit;
   LBitmap := inherited Bitmap;
   LBitmapWidth := Round(FWidth * Scale);
   LBitmapHeight := Round(FHeight * Scale);
   LBitmap.Width  := LBitmapWidth;
   LBitmap.Height := LBitmapHeight;
-  LBitmap.Canvas.BeginScene;
-  try
-    LBitmap.Clear(talphacolors.Null);
-    PaintToBitmap(LBitmap, FSVG, FZoom);
-  finally
-    LBitmap.Canvas.EndScene;
+  PaintToBitmap(LBitmap, FSVG, FZoom);
   if Assigned(FOwnerCollection) then
     FOwnerCollection.OnDrawImage(Self);
-  end;
 end;
 
 function TSVGIconFixedBitmapItem.GetBitmap: TBitmapOfItem;

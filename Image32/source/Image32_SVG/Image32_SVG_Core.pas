@@ -266,6 +266,7 @@ type
 
   function GetXmlEncoding(memory: Pointer; len: integer): TSvgEncoding;
   function ClampRange(val, min, max: double): double;
+  procedure AssignSVGColorList(const ATargetList: TStrings);
 
 {$IF COMPILERVERSION < 17}
 type
@@ -306,6 +307,12 @@ var
 
 //------------------------------------------------------------------------------
 // Miscellaneous functions ...
+//------------------------------------------------------------------------------
+procedure AssignSVGColorList(const ATargetList: TStrings);
+  {$IFDEF INLINE} inline; {$ENDIF}
+begin
+  ATargetList.Assign(ColorConstList);
+end;
 //------------------------------------------------------------------------------
 
 function ClampRange(val, min, max: double): double;

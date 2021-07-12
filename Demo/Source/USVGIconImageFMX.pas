@@ -31,7 +31,6 @@ implementation
 
 uses
   System.Math
-  , SVG
   , System.IOUtils
   , FMX.Consts;
 
@@ -49,8 +48,8 @@ begin
   LFileName := FSVGList[FIndex];
   LItem := SVGIconImage.MultiResBitmap[0] as TSVGIconFixedBitmapItem;
   LItem.SVG.LoadFromFile(LFileName);
+//  LItem.SVG.FixedColor := TAlphaColorRec.Red;
   LItem.DrawSVGIcon;
-  SVGIconImage.Repaint;
 end;
 
 procedure TSVGIconImageForm.FormCreate(Sender: TObject);
@@ -58,7 +57,7 @@ var
   LPath, LFileName: string;
   I: Integer;
 begin
-  LPath := GetCurrentDir+PathDelim+'..\flat-color-icons\svg\';
+  LPath := GetCurrentDir+PathDelim+'..\svg_examples\flat-color-icons\svg\';
   TDirectory.SetCurrentDirectory(LPath);
   FSVGList := TDirectory.GetFiles(LPath, '*.svg');
   FIndex := 0;

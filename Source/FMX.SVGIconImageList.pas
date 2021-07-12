@@ -1,6 +1,6 @@
 {******************************************************************************}
 {                                                                              }
-{       SVGIconImageList: An extended ImageList for Delphi/VCL                 }
+{       SVGIconImageList: An extended ImageList for Delphi/FMX                 }
 {       to simplify use of SVG Icons (resize, opacity and more...)             }
 {                                                                              }
 {       Copyright (c) 2019-2021 (Ethea S.r.l.)                                 }
@@ -9,12 +9,6 @@
 {                                                                              }
 {       https://github.com/EtheaDev/SVGIconImageList                           }
 {                                                                              }
-{******************************************************************************}
-{       Original version (c) 2005, 2008 Martin Walter with license:            }
-{       Use of this file is permitted for commercial and non-commercial        }
-{       use, as long as the author is credited.                                }
-{       home page: http://www.mwcs.de                                          }
-{       email    : martin.walter@mwcs.de                                       }
 {******************************************************************************}
 {                                                                              }
 {  Licensed under the Apache License, Version 2.0 (the "License");             }
@@ -49,15 +43,16 @@ uses
   , FMX.Types
   , FMX.Graphics
   , FMX.Objects
-  , SVG
-  , SVGTypes
-  , SVGColor
+  , FMX.Image32SVG
+  , Image32
   ;
 
 const
-  SVGIconImageListVersion = '2.2.6';
+  SVGIconImageListVersion = '2.3.0';
   DEFAULT_SIZE = 32;
   ZOOM_DEFAULT = 100;
+  SVG_INHERIT_COLOR = TAlphaColors.Null;
+  SVG_NONE_COLOR = TAlphaColors.Null;
 
 resourcestring
   ERROR_LOADING_FILES = 'SVG error loading files:';
@@ -75,7 +70,7 @@ type
     function GetBitmap: TBitmapOfItem;
     procedure SetSize(const AValue: Integer);
     procedure DrawSVGIcon;
-    function GetSVG: TSVG;
+    function GetSVG: TFmxImage32SVG;
     function GetGrayScale: Boolean;
     function GetFixedColor: TAlphaColor;
     function GetOpacity: single;
@@ -95,7 +90,7 @@ type
     function GetDisplayName: string; override;
   public
     constructor Create(Collection: TCollection); override;
-    property SVG: TSVG read GetSVG;
+    property SVG: TFmxImage32SVG read GetSVG;
   published
     property Bitmap: TBitmapOfItem read GetBitmap write SetBitmap stored False;
     property Scale;
@@ -125,7 +120,7 @@ type
   TSVGIconSourceItem = class(TCustomSourceItem)
   private
     FOwnerImageList: TSVGIconImageList;
-    FSVG: TSVG;
+    FSVG: TFmxImage32SVG;
     FOpacity: single;
     FFixedColor: TAlphaColor;
     FApplyFixedColorToRootOnly: Boolean;
@@ -136,7 +131,7 @@ type
     procedure SetGrayScale(const Value: Boolean);
     function GetFixedColor: TAlphaColor;
     function GetGrayScale: Boolean;
-    procedure SetSVG(const Value: TSVG);
+    procedure SetSVG(const Value: TFmxImage32SVG);
     procedure SetSVGText(const Value: string);
     procedure SetOpacity(const AValue: single);
     procedure AutoSizeBitmap(const AWidth, AHeight, AZoom: Integer);
@@ -156,7 +151,7 @@ type
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    property SVG: TSVG read FSVG write SetSVG;
+    property SVG: TFmxImage32SVG read FSVG write SetSVG;
   published
     property MultiResBitmap;
     property IconName: string read GetIconName write SetIconName;
@@ -229,7 +224,7 @@ type
     property Opacity: single read FOpacity write SetOpacity stored StoreOpacity;
   end;
 
-procedure PaintToBitmap(const ABitmap: TBitmap; const ASVG: TSVG;
+procedure PaintToBitmap(const ABitmap: TBitmap; const ASVG: TFmxImage32SVG;
   const AZoom: Integer);
 
 implementation
@@ -240,82 +235,25 @@ uses
   , System.SysUtils
   , FMX.Forms
   , FMX.Consts
-  , Winapi.GDIPOBJ
-  , Winapi.GDIPAPI
   ;
 
 
-procedure PaintToBitmap(const ABitmap: TBitmap; const ASVG: TSVG;
+procedure PaintToBitmap(const ABitmap: TBitmap; const ASVG: TFmxImage32SVG;
   const AZoom: Integer);
 var
-  GPGraphics: TGPGraphics;
-  GPBitmap: TGPBitmap;
-  GPRectF: TGPRectF;
-  RectArray: TRectarray;
-  GPRect: TGPRect;
-  GPBitmapData: Winapi.GDIPAPI.TBitmapData;
-  BitmapData: FMX.Graphics.TBitmapData;
-  Bitmap: TBitmap;
-  Source: PByte;
-  Dest: PByte;
-  Y: Integer;
   LRect: TRectF;
   LWidth, LHeight: Integer;
 begin
   LWidth := ABitmap.Canvas.Width;
   LHeight := ABitmap.Canvas.Height;
-  GPBitmap := TGPBitmap.Create(LWidth, LHeight);
-  GPGraphics := TGPGraphics.Create(GPBitmap);
-  try
-    GPGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
-    GPGraphics.SetPixelOffsetMode(PixelOffsetModeHalf);
-    GPRectF.Width := LWidth / 100 * AZoom;
-    GPRectF.Height := LHeight / 100 * AZoom;
-    GPRectF.X := (LWidth - GPRectF.Width) / 2;
-    GPRectF.Y := (LHeight - GPRectF.Height) / 2;
-    LRect := TRect.Create(0, 0, LWidth, LHeight);
-    RectArray := TRectArray.Create(LRect);
-    ASVG.PaintTo(GPGraphics, GPRectF, @RectArray, 1);
-
-    GPRect.X := 0;
-    GPRect.Y := 0;
-    GPRect.Width := GPBitmap.GetWidth;
-    GPRect.Height := GPBitmap.GetHeight;
-
-    GPBitmap.LockBits(GPRect, ImageLockModeRead, PixelFormat32bppPARGB, GPBitmapData);
-
-    Bitmap := TBitmap.Create(GPRect.Width, GPRect.Height);
-    try
-      Bitmap.Map(TMapAccess.Write, BitmapData);
-
-      Source := GPBitmapData.Scan0;
-      Dest := BitmapData.Data;
-      for Y := 0 to GPBitmapData.Height - 1 do
-      begin
-        Move(Source^, Dest^, GPBitmapData.Stride);
-        Source := Source + GPBitmapData.Stride;
-        Dest := Dest + BitmapData.Pitch;
-      end;
-
-      Bitmap.Unmap(BitmapData);
-
-      ABitmap.Canvas.BeginScene;
-      Try
-        ABitmap.Clear(TAlphaColors.Null);
-        ABitmap.Canvas.DrawBitmap(Bitmap, TRectF.Create(0, 0, ABitmap.Width, ABitmap.Height),
-          TRectF.Create(0, 0, ABitmap.Width, ABitmap.Height), 100);
-      Finally
-        ABitmap.Canvas.EndScene;
-      End;
-    finally
-      Bitmap.Free;
-    end;
-
-    GPBitmap.UnlockBits(GPBitmapData);
-  finally
-    GPGraphics.Free;
-    GPBitmap.Free;
-  end;
+  LRect := TRect.Create(0, 0, LWidth, LHeight);
+  ABitmap.Canvas.BeginScene;
+  Try
+    ABitmap.Clear(TAlphaColors.Null);
+    ASVG.PaintToBitmap(ABitmap, True);
+  Finally
+    ABitmap.Canvas.EndScene;
+  End;
 end;
 
 { TSVGIconBitmapItem }
@@ -345,7 +283,7 @@ begin
   LBitmapHeight := Round(FHeight * Scale);
   LBitmap.Width  := LBitmapWidth;
   LBitmap.Height := LBitmapHeight;
-  SVG.SVGOpacity := Opacity;
+  SVG.Opacity := Opacity;
   SVG.FixedColor := FixedColor;
   SVG.Grayscale := GrayScale;
   PaintToBitmap(LBitmap, SVG, FZoom);
@@ -396,7 +334,7 @@ begin
     Result := DEFAULT_SIZE;
 end;
 
-function TSVGIconBitmapItem.GetSVG: TSVG;
+function TSVGIconBitmapItem.GetSVG: TFmxImage32SVG;
 begin
   Result := FOwnerMultiResBitmap.FOwnerSourceItem.SVG;
 end;
@@ -533,7 +471,7 @@ end;
 constructor TSVGIconSourceItem.Create(Collection: TCollection);
 begin
   inherited Create(Collection);
-  FSVG := TSVG.Create;
+  FSVG := TFmxImage32SVG.Create;
   FOpacity := -1;
   FixedColor := SVG_INHERIT_COLOR;
   FGrayScale := False;
@@ -656,7 +594,7 @@ begin
   UpdateAllItems;
 end;
 
-procedure TSVGIconSourceItem.SetSVG(const Value: TSVG);
+procedure TSVGIconSourceItem.SetSVG(const Value: TFmxImage32SVG);
 begin
   if not SameText(FSVG.Source, Value.Source) then
   begin
@@ -753,13 +691,13 @@ function TSVGIconImageList.LoadFromFiles(const AFileNames: TStrings;
   const AAppend: Boolean = True): Integer;
 var
   LIndex: Integer;
-  LSVG: TSVG;
+  LSVG: TFmxImage32SVG;
   LIconName, LFileName: string;
   LItem: TSVGIconSourceItem;
   LErrors: string;
 begin
   Result := 0;
-  LSVG := TSVG.Create;
+  LSVG := TFmxImage32SVG.Create;
   try
     if not AAppend then
       ClearIcons;

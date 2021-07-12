@@ -15,7 +15,7 @@ uses
   Vcl.ImgList,
   SVGInterfaces,
   SVGIconImageCollection, SVGIconImage, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  SVGIconImageListBase, SVGIconVirtualImageList, Vcl.BaseImageCollection;
+  SVGIconImageListBase, SVGIconVirtualImageList;
 
 type
   TfrmBenchmark = class(TForm)

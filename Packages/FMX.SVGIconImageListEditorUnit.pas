@@ -139,8 +139,7 @@ uses
   , Winapi.Windows
   , Winapi.shellApi
   , System.Math
-  , SVG
-  , SVGColor;
+  , Image32_SVG_Core;
 
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);

@@ -16,7 +16,6 @@ object SVGIconImageForm: TSVGIconImageForm
     MultiResBitmap.Width = 16
     MultiResBitmap = <
       item
-        Size = 182
         IconName = 'low-priority'
         SVGText = 
           '<svg version="1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0' +
@@ -33,7 +32,6 @@ object SVGIconImageForm: TSVGIconImageForm
     Size.Height = 182.000000000000000000
     Size.PlatformDefault = False
     OnResize = SVGIconImageResize
-    BitmapSize = 201
   end
   object Panel1: TPanel
     Align = Bottom
