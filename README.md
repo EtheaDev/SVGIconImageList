@@ -33,7 +33,7 @@ There are four implementation:
 
 - A wrapper to the "Cairo" library (written in C)
 
-You can read more details [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories-(Direct-2D-or-GDI-))
+You can read more details [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories)
 
 ## Performance comparison
 
