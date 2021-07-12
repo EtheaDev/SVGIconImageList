@@ -37,15 +37,17 @@ You can read more details [here.](https://github.com/EtheaDev/SVGIconImageList/w
 
 ## Performance comparison
 
-This table shows the performance of the three rendering engines tested with SVGExplorer, using a significant amount of icons from different sets, rendered at 32x32 pixels.
+This table shows the performance of the four rendering engines tested with SVGExplorer, using a significant amount of icons from different sets, rendered at 32x32 pixels.
 
 Count | Icon set        |    TSVG | Image32 |    D2D |   Cairo | 
   --: | :--             |     --: |     --: |    --: |     --: | 
  997  | Font-Awesome    |   453ms |   453ms |  672ms |   516ms | 
- 654  | Papirus         |   547ms |   781ms |  547ms |   891ms | 
+ 654  | Papirus         |   547ms |   781ms<sup>(1)</sup> |  547ms |   891ms<sup>(1)</sup> | 
 5366  | Material-Design |  5031ms |  5094ms | 6531ms |  5828ms | 
 
-As you can see, the four engines perform differently depending on the icons and their complexity, but the two native Delphi implementation are the best. Notice that Image32 and Cairo are the only engines capable of rendering blur effect (that is always slow to calculate): this is the reason of "slow" performance to rendere Papirus icons that contains blur effect.
+As you can see, the four engines perform differently depending on the icons and their complexity, but the two native Delphi implementation are the best.
+
+<sup>(1)</sup>Notice that Image32 and Cairo are the only engines capable of rendering blur effect (that is always slow to calculate): this is the reason of "slow" performance to render Papirus icons that contains blur effect.
 
 ### Available from Delphi XE6 to Delphi 10.4 (32bit and 64bit platforms)
 
