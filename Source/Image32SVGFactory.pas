@@ -26,12 +26,12 @@ Uses
   System.UITypes,
   System.SysUtils,
   System.Classes,
-  Image32,
-  Image32_SVG_Core,
-  Image32_SVG_Reader,
-  Image32_SVG_Writer,
-  Image32_Ttf
-  ;
+  Image32,             //Warning: from version 2.3 the default rendering engine is Image32
+  Image32_SVG_Core,    //because is the best engine available with SVGIconImageList.
+  Image32_SVG_Reader,  //If you don't want to use it change SVGIconImageList.inc
+  Image32_SVG_Writer,  //Otherwise you must add two search path:
+  Image32_Ttf          //- SVGIconImageList\Images32\Source
+  ;                    //- SVGIconImageList\Images32\Source\Image32_SVG
 
 resourcestring
   D2D_ERROR_NOT_AVAILABLE    = 'Windows SVG support is not available';
