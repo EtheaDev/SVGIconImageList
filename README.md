@@ -45,7 +45,7 @@ Count | Icon set        |    TSVG | Image32 |    D2D |   Cairo |
  654  | Papirus         |   547ms |   781ms |  547ms |   891ms | 
 5366  | Material-Design |  5031ms |  5094ms | 6531ms |  5828ms | 
 
-As you can see, the four engines perform differently depending on the icons and their complexity, but the two native Delphi implementation are the best.
+As you can see, the four engines perform differently depending on the icons and their complexity, but the two native Delphi implementation are the best. Notice that Image32 and Cairo are the only engines capable of rendering blur effect (that is always slow to calculate): this is the reason of "slow" performance to rendere Papirus icons that contains blur effect.
 
 ### Available from Delphi XE6 to Delphi 10.4 (32bit and 64bit platforms)
 
