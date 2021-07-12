@@ -151,7 +151,7 @@ object frmBenchmark: TfrmBenchmark
         Left = 10
         Top = 8
         Width = 32
-        Height = 15
+        Height = 17
         Margins.Left = 10
         Margins.Top = 8
         Margins.Right = 5
@@ -159,6 +159,7 @@ object frmBenchmark: TfrmBenchmark
         Align = alLeft
         Caption = '&Loops'
         FocusControl = speLoops
+        ExplicitHeight = 15
       end
       object speLoops: TSpinEdit
         AlignWithMargins = True
@@ -194,7 +195,7 @@ object frmBenchmark: TfrmBenchmark
     object chkDrawVisible: TCheckBox
       AlignWithMargins = True
       Left = 10
-      Top = 230
+      Top = 226
       Width = 130
       Height = 20
       Margins.Left = 10
