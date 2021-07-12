@@ -202,13 +202,6 @@ begin
       with fSvgReader.RootElement.DrawData do
         if (strokeColor <> clInvalid) and (strokeColor <> clNone32) then
           fSvgReader.RootElement.SetStrokeColor(Color32(FFixedColor));
-    end;
-    if FApplyFixedColorToRootOnly then
-    begin
-      fSvgReader.RootElement.SetFillColor(Color32(FFixedColor));
-      with fSvgReader.RootElement.DrawData do
-        if (strokeColor <> clInvalid) and (strokeColor <> clNone32) then
-          fSvgReader.RootElement.SetStrokeColor(Color32(FFixedColor));
     end
     else
       FImage32.SetRGB(Color32(FFixedColor));
@@ -281,17 +274,6 @@ begin
   else
     FFixedColor := Color;
   FGrayScale := False;
-end;
-
-// Converts any color to grayscale
-function GrayScaleColor(Color : TD2D1ColorF) : TD2D1ColorF;
-var
-  LGray : Single;
-begin
-  // get the luminance according to https://www.w3.org/TR/AERT/#color-contrast
-  LGray  := 0.299 * Color.R + 0.587 * Color.G + 0.114 * Color.B;
-  // set the result to the new grayscale color including the alpha info
-  Result := D2D1ColorF(LGray, LGray, LGray, Color.A);
 end;
 
 procedure TImage32SVG.SetGrayScale(const IsGrayScale: Boolean);
