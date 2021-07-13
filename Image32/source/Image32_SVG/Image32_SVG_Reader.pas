@@ -4500,7 +4500,8 @@ function TSvgReader.LoadFromString(const str: string): Boolean;
 begin
   Clear;
   Result := fSvgParser.LoadFromString(str);
-  if Result then LoadInternal;
+  if Result then
+    Result := LoadInternal;
 end;
 //------------------------------------------------------------------------------
 

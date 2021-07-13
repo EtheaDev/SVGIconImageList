@@ -164,7 +164,11 @@ end;
 
 procedure TImage32SVG.LoadFromSource;
 begin
-  fSvgReader.LoadFromString(FSource);
+  if FSource <> '' then
+  begin
+    if not fSvgReader.LoadFromString(FSource) then
+      raise Exception.Create('Error parsing SVG');
+  end;
 end;
 
 procedure TImage32SVG.LoadFromStream(Stream: TStream);
@@ -327,7 +331,7 @@ begin
 end;
 
 initialization
-  FontLibrary.Add('Arial');
-  FontLibrary.Add('Times New Roman');
+  FontManager.Load('Arial');
+  FontManager.Load('Times New Roman');
 
 end.

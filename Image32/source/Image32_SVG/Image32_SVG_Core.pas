@@ -309,7 +309,6 @@ var
 // Miscellaneous functions ...
 //------------------------------------------------------------------------------
 procedure AssignSVGColorList(const ATargetList: TStrings);
-  {$IFDEF INLINE} inline; {$ENDIF}
 begin
   ATargetList.Assign(ColorConstList);
 end;
