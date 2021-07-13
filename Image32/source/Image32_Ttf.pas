@@ -2,8 +2,8 @@ unit Image32_Ttf;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.24                                                            *
-* Date      :  26 June 2021                                                    *
+* Version   :  2.26                                                            *
+* Date      :  13 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -295,7 +295,7 @@ type
 
   TFontReader = class;
 
-  TFontLibrary = class
+  TFontManager = class
   private
     fMaxFonts: integer;
 {$IFDEF XPLAT_GENERICS}
@@ -310,12 +310,12 @@ type
     destructor Destroy; override;
     procedure Clear;
 {$IFDEF MSWINDOWS}
-    function Add(const fontName: string): TFontReader;
+    function Load(const fontName: string): TFontReader;
 {$ENDIF}
-    function AddFromStream(stream: TStream): TFontReader;
-    function AddFromResource(const resName: string; resType: PChar): TFontReader;
-    function AddFromFile(const filename: string): TFontReader;
-    function GetBestMatchedFont(const fontInfo: TFontInfo): TFontReader;
+    function LoadFromStream(stream: TStream): TFontReader;
+    function LoadFromResource(const resName: string; resType: PChar): TFontReader;
+    function LoadFromFile(const filename: string): TFontReader;
+    function GetBestMatchFont(const fontInfo: TFontInfo): TFontReader;
     function Delete(fontReader: TFontReader): Boolean;
     property MaxFonts: integer read fMaxFonts write SetMaxFonts;
   end;
@@ -516,7 +516,7 @@ type
   function GetInstalledTtfFilenames: TArrayOfString;
   {$ENDIF}
 
-  function FontLibrary: TFontLibrary;
+  function FontManager: TFontManager;
 
 implementation
 
@@ -524,7 +524,7 @@ uses
   Image32_Vector;
 
 var
-  aFontLibrary: TFontLibrary;
+  aFontManager: TFontManager;
 
 const
   lineFrac = 0.04;
@@ -640,7 +640,13 @@ var
 begin
   if fUpdateCount > 0 then Exit;
   for i := High(fRecipientList) downto 0 do
-    fRecipientList[i].SenderIsNotifying(notifyFlag);
+    try
+      //when TNotifySender is freed in a finalization section
+      //it's possible for recipients to have been destroyed
+      //without their destructors being called.
+      fRecipientList[i].SenderIsNotifying(notifyFlag);
+    except
+    end;
 end;
 
 //------------------------------------------------------------------------------
@@ -1992,7 +1998,7 @@ end;
 
 destructor TGlyphCache.Destroy;
 begin
-  if assigned(fFontReader) then fFontReader.UnRegister(self);
+  SetFontReader(nil);
   Clear;
   fGlyphInfoList.Free;
   inherited;
@@ -2002,7 +2008,7 @@ end;
 procedure TGlyphCache.SenderIsNotifying(notifyFlag: TNotifyFlag);
 begin
   if notifyFlag = nfDestroying then
-    fFontReader := nil;
+    SetFontReader(nil);
   UpdateScale;
   Clear;
 end;
@@ -2873,10 +2879,10 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-// TFontLibrary
+// TFontManager
 //------------------------------------------------------------------------------
 
-constructor TFontLibrary.Create;
+constructor TFontManager.Create;
 begin
   fMaxFonts := 20;
 {$IFDEF XPLAT_GENERICS}
@@ -2887,7 +2893,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-destructor TFontLibrary.Destroy;
+destructor TFontManager.Destroy;
 begin
   Clear;
   fFontList.Free;
@@ -2895,7 +2901,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TFontLibrary.Clear;
+procedure TFontManager.Clear;
 var
   i: integer;
 begin
@@ -2906,7 +2912,7 @@ end;
 //------------------------------------------------------------------------------
 
 {$IFDEF MSWINDOWS}
-function TFontLibrary.Add(const fontName: string): TFontReader;
+function TFontManager.Load(const fontName: string): TFontReader;
 begin
   if fFontList.Count >= fMaxFonts then
   begin
@@ -2925,7 +2931,7 @@ end;
 //------------------------------------------------------------------------------
 {$ENDIF}
 
-function TFontLibrary.AddFromStream(stream: TStream): TFontReader;
+function TFontManager.LoadFromStream(stream: TStream): TFontReader;
 begin
   if fFontList.Count >= fMaxFonts then
   begin
@@ -2944,7 +2950,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TFontLibrary.AddFromResource(const resName: string; resType: PChar): TFontReader;
+function TFontManager.LoadFromResource(const resName: string; resType: PChar): TFontReader;
 begin
   if fFontList.Count >= fMaxFonts then
   begin
@@ -2963,7 +2969,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TFontLibrary.AddFromFile(const filename: string): TFontReader;
+function TFontManager.LoadFromFile(const filename: string): TFontReader;
 begin
   if fFontList.Count >= fMaxFonts then
   begin
@@ -2982,14 +2988,14 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TFontLibrary.ValidateAdd(fr: TFontReader): Boolean;
+function TFontManager.ValidateAdd(fr: TFontReader): Boolean;
 var
   fr2: TFontReader;
 begin
   Result := Assigned(fr);
   if not Result then Exit;
   //avoid adding duplicates
-  fr2 := GetBestMatchedFont(fr.fFontInfo);
+  fr2 := GetBestMatchFont(fr.fFontInfo);
   if not Assigned(fr2) or
     ((fr.fFontInfo.macStyles <> fr2.fFontInfo.macStyles) or
     not SameText(fr.fFontInfo.faceName, fr2.fFontInfo.faceName)) then
@@ -2999,7 +3005,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TFontLibrary.Delete(fontReader: TFontReader): Boolean;
+function TFontManager.Delete(fontReader: TFontReader): Boolean;
 var
   i: integer;
 begin
@@ -3015,7 +3021,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TFontLibrary.GetBestMatchedFont(const fontInfo: TFontInfo): TFontReader;
+function TFontManager.GetBestMatchFont(const fontInfo: TFontInfo): TFontReader;
 
   function StylesToInt(macstyles: TMacStyles): integer;
   begin
@@ -3071,7 +3077,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TFontLibrary.SetMaxFonts(value: integer);
+procedure TFontManager.SetMaxFonts(value: integer);
 begin
   if value < 0 then value := 0;
   if value <= 0 then Clear
@@ -3082,15 +3088,15 @@ end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-function FontLibrary: TFontLibrary;
+function FontManager: TFontManager;
 begin
-  result := aFontLibrary;
+  result := aFontManager;
 end;
 //------------------------------------------------------------------------------
 
 initialization
-  aFontLibrary := TFontLibrary.Create;
+  aFontManager := TFontManager.Create;
 finalization
-  aFontLibrary.Free;
+  aFontManager.Free;
 
 end.

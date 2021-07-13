@@ -3,7 +3,7 @@ unit Image32_SVG_Reader;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  2.26                                                            *
-* Date      :  11 July 2021                                                    *
+* Date      :  13 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -2595,6 +2595,7 @@ begin
     end else
     begin
       elClass := HashToElementClass(svgEl.hash);
+      if elClass = TElement then Continue;
       el := elClass.Create(self, svgEl);
       Self.fChilds.Add(el);
       el.LoadAttributes;
@@ -4431,12 +4432,14 @@ begin
       //assume default preserveAspectRatio - ie xMidYMid.
       sx := (sx + sy) * 0.5; sy := sx;
       MatrixScale(di.matrix, sx, sy);
-      viewboxWH.Width := viewboxWH.Width * sx;
-      viewboxWH.Height := viewboxWH.Height * sy;
+      w := viewboxWH.Width * sx;
+      h := viewboxWH.Height * sy;
     end else
     begin
       fDrawInfo.bounds := viewboxWH.RectD;
       userSpaceBounds  := viewboxWH.RectD;
+      w := viewboxWH.Width;
+      h := viewboxWH.Height;
     end;
     di.bounds := fDrawInfo.bounds;
 
@@ -4444,15 +4447,13 @@ begin
     //the svg element's height/width and viewbox settings
     if scaleToImage and not img.IsEmpty then
     begin
-      rawScale := img.width / (viewboxWH.Width);
-      sy := img.height / (viewboxWH.Height);
+      rawScale := img.width / w;
+      sy := img.height / h;
       if sy < rawScale then rawScale := sy;
       MatrixScale(di.matrix, rawScale);
-      img.SetSize(
-        Round(viewboxWH.Width * rawScale),
-        Round(viewboxWH.Height * rawScale));
+      img.SetSize(Round(w * rawScale), Round(h * rawScale));
     end else
-      img.SetSize(Round(viewboxWH.Width), Round(viewboxWH.Height));
+      img.SetSize(Round(w), Round(h));
   end;
 
   if fBkgndColor <> clNone32 then
@@ -4516,7 +4517,7 @@ begin
   if svgFontInfo.weight >= 600 then
     Include(fi.macStyles, msBold);
 
-  bestFontReader := FontLibrary.GetBestMatchedFont(fi);
+  bestFontReader := FontManager.GetBestMatchFont(fi);
   if not Assigned(bestFontReader) then Exit;
 
   if Assigned(fFontCache) then

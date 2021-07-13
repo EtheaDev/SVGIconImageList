@@ -38,7 +38,6 @@ uses
 
 procedure TSVGIconImageForm.ButtonClick(Sender: TObject);
 var
-  I: Integer;
   LFileName: string;
   LItem: TSVGIconFixedBitmapItem;
 begin
@@ -54,8 +53,7 @@ end;
 
 procedure TSVGIconImageForm.FormCreate(Sender: TObject);
 var
-  LPath, LFileName: string;
-  I: Integer;
+  LPath: string;
 begin
   LPath := GetCurrentDir+PathDelim+'..\svg_examples\flat-color-icons\svg\';
   TDirectory.SetCurrentDirectory(LPath);
