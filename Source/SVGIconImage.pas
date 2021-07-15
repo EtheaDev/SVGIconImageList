@@ -49,14 +49,13 @@ uses
   , SVGInterfaces;
 
 type
-  TSVGIconImage = class(TCustomControl)
+  TSVGIconImage = class(TGraphicControl)
   strict private
     FSVG: ISVG;
     FCenter: Boolean;
     FProportional: Boolean;
     FStretch: Boolean;
     FAutoSize: Boolean;
-    FScale: Double;
     FOpacity: Byte;
     FFileName: TFileName;
     FImageList: TCustomImageList;
@@ -71,7 +70,6 @@ type
     procedure SetFileName(const Value: TFileName);
     procedure SetImageIndex(const Value: System.UITypes.TImageIndex);
     procedure SetStretch(const Value: Boolean);
-    procedure SetScale(const Value: Double);
     procedure SetImageList(const Value: TCustomImageList);
     procedure SetAutoSizeImage(const Value: Boolean);
     procedure ImageListChange(Sender: TObject);
@@ -80,12 +78,16 @@ type
     procedure SetApplyFixedColorToRootOnly(const Value: Boolean);
     function GetInheritedFixedColor: TColor;
     function GetInheritedApplyToRootOnly: Boolean;
+    procedure ReadDummyBool(Reader: TReader);
+    procedure ReadDummyFloat(Reader: TReader);
+    procedure WriteDummy(Writer: TWriter);
   private
     function GetSVGText: string;
     procedure SetSVGText(const AValue: string);
-    function StoreScale: Boolean;
     function UsingSVGText: Boolean;
   protected
+    procedure DefineProperties(Filer: TFiler); override;
+
     procedure Paint; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure CheckAutoSize;
@@ -104,13 +106,7 @@ type
   published
     property AutoSize: Boolean read FAutoSize write SetAutoSizeImage;
     property Center: Boolean read FCenter write SetCenter default True;
-    property ParentDoubleBuffered;
-    property DoubleBuffered;
-    property ParentBackground default True;
-    property Proportional: Boolean read FProportional write SetProportional default False;
-    property Stretch: Boolean read FStretch write SetStretch default True;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
-    property Scale: Double read FScale write SetScale stored StoreScale;
     property ImageList: TCustomImageList read FImageList write SetImageList;
     property ImageIndex: System.UITypes.TImageIndex read FImageIndex write SetImageIndex default -1;
     property FileName: TFileName read FFileName write SetFileName;
@@ -118,17 +114,36 @@ type
     property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
     property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default false;
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
-    property Enabled;
-    property Visible;
-    property Constraints;
-    property Anchors;
     property Align;
-
+    property Anchors;
+    property Constraints;
+    property DragCursor;
+    property DragKind;
+    property DragMode;
+    property Enabled;
+    property ParentShowHint;
+    property PopupMenu;
+    property Proportional: Boolean read FProportional write SetProportional default True;
+    property ShowHint;
+    property Stretch: Boolean read FStretch write SetStretch default True;
+    property Touch;
+    property Visible;
     property OnClick;
+    property OnContextPopup;
     property OnDblClick;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDock;
+    property OnEndDrag;
+    property OnGesture;
+    property OnMouseActivate;
     property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
     property OnMouseMove;
     property OnMouseUp;
+    property OnStartDock;
+    property OnStartDrag;
   end;
 
   TSVGGraphic = class(TGraphic)
@@ -199,17 +214,40 @@ constructor TSVGIconImage.Create(AOwner: TComponent);
 begin
   inherited;
   FSVG := GlobalSVGFactory.NewSvg;
-  FProportional := False;
+  FProportional := True;
   FCenter := True;
   FStretch := True;
   FOpacity := 255;
-  FScale := 1;
   FImageIndex := -1;
   FFixedColor := SVG_INHERIT_COLOR;
   FGrayScale := False;
-  ParentBackground := True;
+  //ParentBackground := True;
   FImageChangeLink := TChangeLink.Create;
   FImageChangeLink.OnChange := ImageListChange;
+end;
+
+procedure TSVGIconImage.ReadDummyBool(Reader: TReader);
+begin
+  Reader.ReadBoolean;
+end;
+
+procedure TSVGIconImage.ReadDummyFloat(Reader: TReader);
+begin
+  Reader.ReadFloat;
+end;
+
+procedure TSVGIconImage.WriteDummy(Writer: TWriter);
+begin
+  ; //do nothing
+end;
+
+procedure TSVGIconImage.DefineProperties(Filer: TFiler);
+begin
+  //For prevent error loading dfm with old properties removed from this component
+  Filer.DefineProperty('Scale', ReadDummyFloat, WriteDummy, False);
+  Filer.DefineProperty('DoubleBuffered', ReadDummyBool, WriteDummy, False);
+  Filer.DefineProperty('ParentDoubleBuffered', ReadDummyBool, WriteDummy, False);
+  Filer.DefineProperty('ParentBackground', ReadDummyBool, WriteDummy, False);
 end;
 
 destructor TSVGIconImage.Destroy;
@@ -453,35 +491,19 @@ begin
   Repaint;
 end;
 
-procedure TSVGIconImage.SetScale(const Value: Double);
-begin
-  if Value = FScale then
-    Exit;
-  FScale := Value;
-  FAutoSize := False;
-  Repaint;
-end;
-
 procedure TSVGIconImage.SetStretch(const Value: Boolean);
 begin
-  if Value = FStretch then
-    Exit;
-
-  FStretch := Value;
-  if FStretch then
-    FAutoSize := False;
-  Repaint;
+  if Value <> FStretch then
+  begin
+    FStretch := Value;
+    Repaint;
+  end;
 end;
 
 procedure TSVGIconImage.SetSVGText(const AValue: string);
 begin
   FSVG.Source := AValue;
   Repaint;
-end;
-
-function TSVGIconImage.StoreScale: Boolean;
-begin
-  Result := FScale <> 1;
 end;
 
 procedure TSVGIconImage.SetOpacity(Value: Byte);

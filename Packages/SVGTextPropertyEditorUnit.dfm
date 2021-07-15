@@ -145,7 +145,6 @@ object SVGTextPropertyEditorForm: TSVGTextPropertyEditorForm
       Color = clWindow
       ParentBackground = False
       TabOrder = 1
-      ExplicitHeight = 195
       object SVGIconImage: TSVGIconImage
         Left = 1
         Top = 1
@@ -153,16 +152,8 @@ object SVGTextPropertyEditorForm: TSVGTextPropertyEditorForm
         Height = 169
         AutoSize = False
         Center = False
-        Proportional = True
-        Stretch = True
-        Opacity = 255
-        Scale = 1.000000000000000000
         ImageIndex = 0
         Align = alClient
-        ExplicitLeft = 6
-        ExplicitTop = 28
-        ExplicitWidth = 175
-        ExplicitHeight = 189
       end
     end
     object BottomPanel: TPanel
@@ -173,7 +164,6 @@ object SVGTextPropertyEditorForm: TSVGTextPropertyEditorForm
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitTop = 2
       object ProportionalCheckBox: TCheckBox
         Left = 8
         Top = 4
