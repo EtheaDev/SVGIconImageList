@@ -44,13 +44,12 @@ type
   TMainForm = class(TForm)
     SVGIconImageList1: TSVGIconImageList;
     CategoryButtons1: TCategoryButtons;
-    Panel1: TPanel;
-    SVGIconImage: TSVGIconImage;
     ToolBar1: TToolBar;
     ToolButton1: TToolButton;
     ToolButton2: TToolButton;
     ToolButton3: TToolButton;
     ToolButton4: TToolButton;
+    SVGIconImage: TSVGIconImage;
     procedure FormCreate(Sender: TObject);
     procedure SVGIconImageClick(Sender: TObject);
   private

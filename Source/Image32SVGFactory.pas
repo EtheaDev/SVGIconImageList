@@ -30,8 +30,8 @@ Uses
   Image32_SVG_Core,    //because is the best engine available with SVGIconImageList.
   Image32_SVG_Reader,  //If you don't want to use it change SVGIconImageList.inc
   Image32_SVG_Writer,  //Otherwise you must add two search path:
-  Image32_Ttf          //- SVGIconImageList\Images32\Source
-  ;                    //- SVGIconImageList\Images32\Source\Image32_SVG
+  Image32_Ttf          //- SVGIconImageList\Image32\Source
+  ;                    //- SVGIconImageList\Image32\Source\Image32_SVG
 
 resourcestring
   D2D_ERROR_NOT_AVAILABLE    = 'Windows SVG support is not available';
@@ -181,21 +181,28 @@ begin
   // Restore Position
   Stream.Position := OldPos;
   // Now create the SVG
-  FImage32.LoadFromStream(Stream);
+  fSvgReader.LoadFromStream(Stream);
 end;
 
 procedure TImage32SVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
 var
-  LSvgRect: TRectF;
-  LSourceRect, LDestRect: TRect;
+  LMaxSize: Integer;
+  dx,dy: double;
+  LSourceRect: TRect;
+  LDestRect: TRect;
 begin
   //Define Image32 output size
-  FImage32.SetSize(Round(R.Width), Round(R.Height));
+  if not KeepAspectRatio then
+    FImage32.SetSize(Round(R.Width+R.Height), Round(R.Width+R.Height))
+  else
+    FImage32.SetSize(Round(R.Width), Round(R.Height));
 
-  //Draw SVG image to Image32
+  //Draw SVG image to Image32 (scaled to R and with preserved aspect ratio)
   FsvgReader.DrawImage(FImage32, True);
+  dx := (R.Width - FImage32.Width) *0.5;
+  dy := (R.Height - FImage32.Height) *0.5;
 
-  //GrayScale and FixedColor applyed to Image32
+  //apply GrayScale and FixedColor to Image32
   if FGrayScale then
     FImage32.Grayscale
   else if (FFixedColor <> TColors.SysDefault) then
@@ -215,18 +222,14 @@ begin
   if FOpacity <> 1.0 then
     FImage32.ReduceOpacity(Round(FOpacity * 255));
 
-  //Centering Image to the output Rect if KeepAspectRatio is requested
-  if KeepAspectRatio then
+  if not KeepAspectRatio then
   begin
-    LSvgRect := TRectF.Create(0, 0, FImage32.Width, FImage32.Height);
-    LSvgRect := RectCenter(LSvgRect, R);
+    LSourceRect := TRect.Create(0, 0, FImage32.Width, FImage32.Height);
+    LDestRect := TRect.Create(Round(R.Left), Round(R.Top), Round(R.Right), Round(R.Bottom));
+    FImage32.CopyToDc(LSourceRect, LDestRect, DC, True);
   end
   else
-    LSvgRect := R;
-
-  LSourceRect := TRect.Create(0, 0, FImage32.Width, FImage32.Height);
-  LDestRect := TRect.Create(Round(LSvgRect.Left), Round(LSvgRect.Top), Round(LSvgRect.Right), Round(LSvgRect.Bottom));
-  FImage32.CopyToDc(LSourceRect, LDestRect, DC, True);
+    FImage32.CopyToDc(DC, Round(R.Left + dx), Round(R.Top + dy), True);
 end;
 
 procedure TImage32SVG.SaveToFile(const FileName: string);

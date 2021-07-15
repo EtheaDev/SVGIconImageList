@@ -249,9 +249,6 @@ begin
   OnAfterMonitorDpiChanged := FormAfterMonitorDpiChanged;
   {$ENDIF}
 
-  //Increase performance during drawing of SVG Image
-  SvgIconImage.DoubleBuffered := True;
-
   //Build available VCL Styles
   SelectThemeRadioGroup.Items.Clear;
   for I := 0 to High(TStyleManager.StyleNames) do

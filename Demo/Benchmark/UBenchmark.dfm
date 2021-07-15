@@ -2,8 +2,8 @@ object frmBenchmark: TfrmBenchmark
   Left = 0
   Top = 0
   Caption = 'Benchmark'
-  ClientHeight = 545
-  ClientWidth = 784
+  ClientHeight = 573
+  ClientWidth = 819
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,7 +16,7 @@ object frmBenchmark: TfrmBenchmark
   TextHeight = 15
   object splHorizontal: TSplitter
     Left = 0
-    Top = 421
+    Top = 449
     Width = 784
     Height = 4
     Cursor = crVSplit
@@ -26,10 +26,19 @@ object frmBenchmark: TfrmBenchmark
     MinSize = 100
     ExplicitTop = 422
   end
+  object SVGIconImage: TSVGIconImage
+    Left = 0
+    Top = 0
+    Width = 669
+    Height = 449
+    AutoSize = False
+    ImageList = SVGIconVirtualImageList
+    Align = alClient
+  end
   object memOutput: TMemo
     Left = 0
-    Top = 425
-    Width = 784
+    Top = 453
+    Width = 819
     Height = 120
     Align = alBottom
     Font.Charset = DEFAULT_CHARSET
@@ -41,17 +50,8 @@ object frmBenchmark: TfrmBenchmark
     ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 0
-  end
-  object SVGIconImage: TSVGIconImage
-    Left = 0
-    Top = 0
-    Width = 634
-    Height = 421
-    AutoSize = False
-    ParentDoubleBuffered = False
-    DoubleBuffered = True
-    ImageList = SVGIconVirtualImageList
-    Align = alClient
+    ExplicitTop = 425
+    ExplicitWidth = 784
   end
   object pnlButtons: TPanel
     Left = 634
@@ -60,7 +60,7 @@ object frmBenchmark: TfrmBenchmark
     Height = 421
     Align = alRight
     BevelOuter = bvNone
-    TabOrder = 2
+    TabOrder = 1
     object btnClear: TButton
       AlignWithMargins = True
       Left = 10
@@ -68,9 +68,9 @@ object frmBenchmark: TfrmBenchmark
       Width = 130
       Height = 30
       Margins.Left = 10
-      Margins.Top = 5
+      Margins.Top = 2
       Margins.Right = 10
-      Margins.Bottom = 5
+      Margins.Bottom = 2
       Align = alBottom
       Caption = '&Clear Output'
       TabOrder = 0
@@ -98,9 +98,9 @@ object frmBenchmark: TfrmBenchmark
       Width = 130
       Height = 30
       Margins.Left = 10
-      Margins.Top = 5
+      Margins.Top = 2
       Margins.Right = 10
-      Margins.Bottom = 5
+      Margins.Bottom = 2
       Align = alBottom
       Caption = '&Benchmark'
       TabOrder = 2
@@ -108,14 +108,14 @@ object frmBenchmark: TfrmBenchmark
     end
     object chkGrayScale: TCheckBox
       AlignWithMargins = True
-      Left = 10
-      Top = 256
+      Left = 13
+      Top = 300
       Width = 130
       Height = 20
       Margins.Left = 10
-      Margins.Top = 5
+      Margins.Top = 2
       Margins.Right = 10
-      Margins.Bottom = 5
+      Margins.Bottom = 2
       Align = alBottom
       Caption = '&Grayscale'
       Checked = True
@@ -129,9 +129,9 @@ object frmBenchmark: TfrmBenchmark
       Width = 130
       Height = 20
       Margins.Left = 10
-      Margins.Top = 5
+      Margins.Top = 2
       Margins.Right = 10
-      Margins.Bottom = 5
+      Margins.Bottom = 2
       Align = alBottom
       Caption = '&Fixed Color'
       Checked = True
@@ -151,15 +151,14 @@ object frmBenchmark: TfrmBenchmark
         Left = 10
         Top = 8
         Width = 32
-        Height = 17
+        Height = 15
         Margins.Left = 10
-        Margins.Top = 8
+        Margins.Top = 10
         Margins.Right = 5
-        Margins.Bottom = 5
+        Margins.Bottom = 2
         Align = alLeft
         Caption = '&Loops'
         FocusControl = speLoops
-        ExplicitHeight = 15
       end
       object speLoops: TSpinEdit
         AlignWithMargins = True
@@ -168,9 +167,9 @@ object frmBenchmark: TfrmBenchmark
         Width = 88
         Height = 24
         Margins.Left = 5
-        Margins.Top = 5
+        Margins.Top = 2
         Margins.Right = 10
-        Margins.Bottom = 5
+        Margins.Bottom = 2
         MaxValue = 999
         MinValue = 1
         TabOrder = 0
@@ -195,18 +194,35 @@ object frmBenchmark: TfrmBenchmark
     object chkDrawVisible: TCheckBox
       AlignWithMargins = True
       Left = 10
-      Top = 226
+      Top = 228
       Width = 130
-      Height = 20
+      Height = 19
       Margins.Left = 10
-      Margins.Top = 5
+      Margins.Top = 2
       Margins.Right = 10
-      Margins.Bottom = 5
+      Margins.Bottom = 2
       Align = alBottom
       Caption = '&Draw visible'
       Checked = True
       State = cbChecked
       TabOrder = 7
+    end
+    object KeepAspectCheckBox: TCheckBox
+      AlignWithMargins = True
+      Left = 10
+      Top = 228
+      Width = 130
+      Height = 19
+      Margins.Left = 10
+      Margins.Top = 2
+      Margins.Right = 10
+      Margins.Bottom = 2
+      Align = alTop
+      Caption = '&Keep aspect ratio'
+      Checked = True
+      State = cbChecked
+      TabOrder = 8
+      OnClick = KeepAspectCheckBoxClick
     end
   end
   object SVGIconImageCollection: TSVGIconImageCollection

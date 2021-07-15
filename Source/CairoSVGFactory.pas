@@ -194,6 +194,7 @@ var
   LContext: ICairoContext;
   LSvgRect: TRectF;
   Ratio   : Single;
+  dx,dy: double;
 begin
   if not Assigned(FSvgObject) then
     Exit;
@@ -208,7 +209,9 @@ begin
     begin
       if KeepAspectRatio then
         begin
-          LSvgRect := TRectF.Create(0, 0, FWidth, FHeight);
+          dx := (R.Width - FWidth) *0.5;
+          dy := (R.Height - FHeight) *0.5;
+          LSvgRect := TRectF.Create(dy, dx, FWidth, FHeight);
           LSvgRect := LSvgRect.FitInto(R, Ratio);
           LContext.Scale(1 / Ratio, 1 / Ratio);
         end

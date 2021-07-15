@@ -36,11 +36,13 @@ type
     grpFactory: TRadioGroup;
     chkDrawVisible: TCheckBox;
     SVGIconVirtualImageList: TSVGIconVirtualImageList;
+    KeepAspectCheckBox: TCheckBox;
     procedure btnClearClick(Sender: TObject);
     procedure btnLoadClick(Sender: TObject);
     procedure btnRunBenchmarkClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure grpFactoryClick(Sender: TObject);
+    procedure KeepAspectCheckBoxClick(Sender: TObject);
   private
     FSvgSource  : string;
     FStartTick  : Int64;
@@ -104,7 +106,7 @@ procedure TfrmBenchmark.BenchmarkDraw;
         LSize := LSize + LStep;
         LRect := TRect.Create(0, 0, Round(LSize), Round(LSize));
 
-        SvgIconImageCollection.Draw(ACanvas, LRect, 0, true);
+        SvgIconImageCollection.Draw(ACanvas, LRect, 0, KeepAspectCheckBox.Checked);
       end;
   end;
 
@@ -249,6 +251,11 @@ begin
       SetFactory(grpFactory.ItemIndex);
       ReloadImage;
     end;
+end;
+
+procedure TfrmBenchmark.KeepAspectCheckBoxClick(Sender: TObject);
+begin
+  SVGIconImage.Proportional := KeepAspectCheckBox.Checked;
 end;
 
 procedure TfrmBenchmark.LogTicks(var AMessage: string; ATick: Int64);

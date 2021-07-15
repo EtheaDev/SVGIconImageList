@@ -17,9 +17,21 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
+  object SVGIconImage: TSVGIconImage
+    Left = 224
+    Top = 55
+    Width = 201
+    Height = 187
+    Hint = 'Click to show SVGText property editor'
+    AutoSize = False
+    Center = False
+    ImageList = SVGIconImageList1
+    ImageIndex = 0
+    OnClick = SVGIconImageClick
+  end
   object CategoryButtons1: TCategoryButtons
-    Left = 120
-    Top = 119
+    Left = 32
+    Top = 55
     Width = 169
     Height = 187
     ButtonFlow = cbfVertical
@@ -46,28 +58,6 @@ object MainForm: TMainForm
     SelectedButtonColor = 15132390
     TabOrder = 0
   end
-  object Panel1: TPanel
-    Left = 8
-    Top = 124
-    Width = 102
-    Height = 102
-    Caption = 'Panel1'
-    TabOrder = 1
-    object SVGIconImage: TSVGIconImage
-      Left = 1
-      Top = 1
-      Width = 100
-      Height = 100
-      Hint = 'Click to show SVGText property editor'
-      AutoSize = False
-      Center = False
-      Proportional = True
-      ImageList = SVGIconImageList1
-      ImageIndex = 0
-      Align = alClient
-      OnClick = SVGIconImageClick
-    end
-  end
   object ToolBar1: TToolBar
     Left = 0
     Top = 0
@@ -78,7 +68,7 @@ object MainForm: TMainForm
     ButtonWidth = 32
     Caption = 'ToolBar1'
     Images = SVGIconImageList1
-    TabOrder = 2
+    TabOrder = 1
     object ToolButton1: TToolButton
       Left = 0
       Top = 0

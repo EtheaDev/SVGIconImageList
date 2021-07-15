@@ -887,7 +887,6 @@ begin
   FOpenDialog.Filter := 'Scalable Vector Graphics (*.svg)|*.svg';
   FOpenDialog.Options := [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing];
   ImageView.LargeImages := FEditingList;
-  IconImage.DoubleBuffered := True;
   IconImage.ImageList := FEditingList;
   FTotIconsLabel := ImageListGroup.Caption;
   FChanged := False;
