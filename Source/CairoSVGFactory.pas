@@ -194,7 +194,6 @@ var
   LContext: ICairoContext;
   LSvgRect: TRectF;
   Ratio   : Single;
-  dx,dy: double;
 begin
   if not Assigned(FSvgObject) then
     Exit;
@@ -206,18 +205,17 @@ begin
 
   LSvgRect := R;
   if (FWidth > 0) and (FHeight > 0) then
+  begin
+    if KeepAspectRatio then
     begin
-      if KeepAspectRatio then
-        begin
-          dx := (R.Width - FWidth) *0.5;
-          dy := (R.Height - FHeight) *0.5;
-          LSvgRect := TRectF.Create(dy, dx, FWidth, FHeight);
-          LSvgRect := LSvgRect.FitInto(R, Ratio);
-          LContext.Scale(1 / Ratio, 1 / Ratio);
-        end
-      else
-        LContext.Scale(R.Width / FWidth, R.Height / fHeight);
-    end;
+      LSvgRect := TRectF.Create(0, 0, FWidth, FHeight);
+      LSvgRect := LSvgRect.FitInto(R, Ratio);
+      LContext.Scale(1 / Ratio, 1 / Ratio);
+      LSurface.SetDeviceOffset(LSvgRect.Left, LSvgRect.Top);
+    end
+    else
+      LContext.Scale(R.Width / FWidth, R.Height / fHeight);
+  end;
 
   LContext.RenderSVG(FSvgObject);
 end;
