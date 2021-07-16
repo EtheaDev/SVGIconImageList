@@ -542,8 +542,8 @@ begin
   FTotIconsLabel := IconsGroupBox.Text;
   IconImage.Images := FEditingList;
   BottomSplitter.Position.X := 1;
-  AssignSVGColorList(FixedColorComboBox.Items);
-  AssignSVGColorList(FixedColorItemComboBox.Items);
+  FixedColorComboBox.Items.Assign(ColorConstList);
+  FixedColorItemComboBox.Items.Assign(ColorConstList);
 end;
 
 procedure TSVGIconImageListEditorFMX.FormDestroy(Sender: TObject);

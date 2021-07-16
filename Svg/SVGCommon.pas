@@ -44,6 +44,7 @@ function FromGPRectF(R: TGPRectF): TRectF; inline;
 function HasValue(F: TFloat): Boolean; overload; inline;
 function HasValue(I: Integer): Boolean; overload; inline;
 function FittedRect(const Bounds: TGPRectF; const Width, Height: Single): TGPRectF;
+function FitIntoRectF(const ASourceArea: TRectF; const ADesignatedArea: TRectF; out Ratio: Single): TRectF;
 
 implementation
 
@@ -242,6 +243,29 @@ begin
     Result := TRectF.Create(X, Y, X + Width, Y + Height);
 end;
 
+function FitIntoRectF(const ASourceArea: TRectF; const ADesignatedArea: TRectF;
+  out Ratio: Single): TRectF;
+begin
+  if (ADesignatedArea.Width <= 0) or (ADesignatedArea.Height <= 0) then
+  begin
+    Ratio := 1;
+    Exit(ASourceArea);
+  end;
+
+  if (ASourceArea.Width / ADesignatedArea.Width) > (ASourceArea.Height / ADesignatedArea.Height) then
+    Ratio := ASourceArea.Width / ADesignatedArea.Width
+  else
+    Ratio := ASourceArea.Height / ADesignatedArea.Height;
+
+  if Ratio = 0 then
+    Exit(ASourceArea)
+  else
+  begin
+    Result := TRectF.Create(0, 0, ASourceArea.Width / Ratio, ASourceArea.Height / Ratio);
+    RectCenter(Result, ADesignatedArea);
+  end;
+end;
+
 function HasValue(F: TFloat): Boolean;
 begin
   Result := F <> UndefinedFloat;
@@ -252,11 +276,18 @@ begin
   Result := I <> UndefinedInt;
 end;
 
-
 function FittedRect(const Bounds: TGPRectF; const Width, Height: Single): TGPRectF;
+var
+  LSource: TRectF;
+  LRatio: Single;
 begin
-  Result := ToGPRectF(TRectF.Create(0, 0, Width, Height).FitInto(FromGPRectF(Bounds)));
+  LSource := TRectF.Create(0, 0, Width, Height);
+  Result := ToGPRectF(FitIntoRectF(LSource, FromGPRectF(Bounds), LRatio));
 end;
 
+function IsLatin1(C: UCS4Char): Boolean; Inline;
+begin
+  Result := C <= $FF;
+end;
 
 end.

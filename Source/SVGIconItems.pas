@@ -40,7 +40,7 @@ uses
   System.Types,
   System.UITypes,
   System.Classes,
-  System.Messaging,
+  {$IFDEF DXE4+}System.Messaging,{$ELSE}SVGMessaging,{$ENDIF}
   Winapi.Windows,
   Vcl.Graphics,
   SVGInterfaces;
@@ -48,7 +48,7 @@ uses
 type
   TSVGIconItems = class;
 
-  TSVGItemsUpdateMessage = class(System.Messaging.TMessage)
+  TSVGItemsUpdateMessage = class({$IFDEF DXE4+}System.Messaging.{$ELSE}SVGMessaging.{$ENDIF}TMessage)
   end;
 
   TSVGIconItem = class(TCollectionItem)
@@ -419,7 +419,7 @@ end;
 procedure TSVGIconItems.Update(Item: TCollectionItem);
 begin
   inherited;
-  System.Messaging.TMessageManager.DefaultManager.SendMessage(Self,
+  {$IFDEF DXE4+}System.Messaging{$ELSE}SVGMessaging{$ENDIF}.TMessageManager.DefaultManager.SendMessage(Self,
     TSVGItemsUpdateMessage.Create);
 
   {$IFDEF D10_3+}

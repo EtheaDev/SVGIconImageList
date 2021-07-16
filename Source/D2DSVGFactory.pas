@@ -35,7 +35,8 @@ Uses
   System.UIConsts,
   System.SysUtils,
   System.Classes,
-  System.RegularExpressions;
+  System.RegularExpressions,
+  SVGCommon;
 
   resourcestring
   D2D_ERROR_NOT_AVAILABLE    = 'Windows SVG support is not available';
@@ -271,7 +272,7 @@ begin
     if KeepAspectRatio then
     begin
       SvgRect := TRectF.Create(0, 0, fWidth, fHeight);
-      SvgRect := SvgRect.FitInto(R, Ratio);
+      SvgRect := FitIntoRectF(SvgRect, R, Ratio);
       Matrix := TD2DMatrix3X2F.Scale(1/Ratio, 1/Ratio, Point(0, 0));
     end
     else

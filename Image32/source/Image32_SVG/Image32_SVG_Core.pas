@@ -266,7 +266,6 @@ type
 
   function GetXmlEncoding(memory: Pointer; len: integer): TSvgEncoding;
   function ClampRange(val, min, max: double): double;
-  procedure AssignSVGColorList(const ATargetList: TStrings);
 
 {$IF COMPILERVERSION < 17}
 type
@@ -287,6 +286,7 @@ const
 
 var
   LowerCaseTable : array[#0..#255] of AnsiChar;
+  ColorConstList : TStringList;
 
 implementation
 
@@ -302,16 +302,8 @@ const
   //include hashed html entity constants
   {$I html_entity_hash_consts.inc}
 
-var
-  ColorConstList : TStringList;
-
 //------------------------------------------------------------------------------
 // Miscellaneous functions ...
-//------------------------------------------------------------------------------
-procedure AssignSVGColorList(const ATargetList: TStrings);
-begin
-  ATargetList.Assign(ColorConstList);
-end;
 //------------------------------------------------------------------------------
 
 function ClampRange(val, min, max: double): double;

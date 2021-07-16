@@ -507,7 +507,7 @@ begin
       IconImage.GrayScale := SVGIconImageList.GrayScale or SelectedIcon.GrayScale;
       NameEdit.Text := LIconItem.Name;
       CategoryEdit.Text := LIconItem.Category;
-      IconIndexEdit.Text := LIconItem.Index.ToString;
+      IconIndexEdit.Text := IntToStr(LIconItem.Index);
       SVGText.Lines.Text := LIconItem.SVGText;
       FixedColorItemComboBox.Selected := LIconItem.FixedColor;
       ApplyToRootOnlyItemCheckBox.Checked := LIconItem.ApplyFixedColorToRootOnly;
@@ -985,7 +985,11 @@ procedure TSVGIconImageListEditor.ExportPngButtonClick(Sender: TObject);
 var
   LOutputPath: string;
 begin
+  {$IFDEF DXE4+}
   LOutputPath := IncludeTrailingPathDelimiter(TPath.GetPicturesPath);
+  {$ELSE}
+  LOutputPath := '';
+  {$ENDIF}
   ExportToPNG(Self.ClientRect,
     LOutputPath+SelectedIcon.IconName, SelectedIcon.SVGText,
     True, SVGIconImageList.Size);

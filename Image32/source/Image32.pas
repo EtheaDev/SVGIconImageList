@@ -2,8 +2,8 @@ unit Image32;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.24                                                            *
-* Date      :  26 June 2021                                                    *
+* Version   :  2.27                                                            *
+* Date      :  15 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -75,6 +75,7 @@ type
   //file storage formats (eg BMP, PNG, GIF & JPG).<br>
   //Derived classes register with TImage32 using TImage32.RegisterImageFormatClass.
   TImageFormat = class
+    class function IsValidImageStream(stream: TStream): Boolean; virtual; abstract;
     procedure SaveToStream(stream: TStream; img32: TImage32); virtual; abstract;
     function SaveToFile(const filename: string; img32: TImage32): Boolean; virtual;
     function LoadFromStream(stream: TStream; img32: TImage32): Boolean; virtual; abstract;
@@ -223,27 +224,14 @@ type
 
     //ScaleAlpha: Scales the alpha byte of every pixel by the specified amount.
     procedure ScaleAlpha(scale: double);
-    //RegisterImageFormatClass: Registers a TImageFormatClass with TImage32 and
-    //associates it with a specific 3 character file extension (eg BMP).
     class procedure RegisterImageFormatClass(ext: string;
       bm32ExClass: TImageFormatClass; clipPriority: TClipboardPriority);
     class function GetImageFormatClass(const ext: string): TImageFormatClass;
-    //GetExtFromImageStream: Returns the stream's format as a three character
-    //string (eg BMP, PNG, JPG).
-    class function GetExtFromImageStream(stream: TStream): string;
-    //IsRegisteredFormat: Returns true if 'ext' (a three character string) is
-    //registered with TImage32 as a storage format.<br> See also
-    //TImage32.RegisterImageFormatClass.
     class function IsRegisteredFormat(const ext: string): Boolean;
-    //SaveToFile: Will fail if filename's extension hasn't been registered
-    //as a supported storage format.<br>See TImage32.RegisterImageFormatClass.
     function SaveToFile(filename: string): Boolean;
     function SaveToStream(stream: TStream; const FmtExt: string): Boolean;
-    //LoadFromFile: Requires a TImageFormat registered with TImage32 that's
-    //associated with filename's extension.<br>
-    //See TImage32.RegisterImageFormatClass.
     function LoadFromFile(const filename: string): Boolean;
-    function LoadFromStream(stream: TStream; const FmtExt: string = ''): Boolean;
+    function LoadFromStream(stream: TStream): Boolean;
     function LoadFromResource(const resName: string; resType: PChar): Boolean;
 
     //properties ...
@@ -1395,40 +1383,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-class function TImage32.GetExtFromImageStream(stream: TStream): string;
-var
-  i, pos, len: Integer;
-  flag: Cardinal;
-  buffer: array [0..79] of Byte;
-const
-  SizeOfBitmapInfoHeader = 40;
-  SizeOfBitmapV4Header = 108;
-  SizeOfBitmapV5Header = 124;
-begin
-  result := '';
-  pos := stream.position;
-  len := stream.size - pos;
-  if len <= 4 then Exit;
-  stream.read(flag, SizeOf(flag));
-  if ((flag and $FFFF) = $4D42) then Result := 'BMP'
-  else if (flag = SizeOfBitmapInfoHeader) then Result := 'BMP' //resource_2
-  else if (flag = SizeOfBitmapV4Header) then Result := 'BMP'   //resource_2
-  else if (flag = SizeOfBitmapV5Header) then Result := 'BMP'   //resource_2
-  else if flag = $38464947 then result := 'GIF'
-  else if flag and $FFFF = $D8FF then result := 'JPG'
-  else if flag = $474E5089 then result := 'PNG'
-  else if (flag = $002A4949) or (flag = $2A004949) then result := 'TIF'
-  else
-  begin
-    len := min(len, 80);
-    stream.read(buffer[0], len);
-    for i := 0 to len -1 do if (buffer[i] < 9) then Exit;
-    Result := 'TXT'; //possibly MIME encoded
-  end;
-  stream.position := pos;
-end;
-//------------------------------------------------------------------------------
-
 procedure TImage32.Assign(src: TImage32);
 begin
   if assigned(src) then
@@ -2047,23 +2001,23 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TImage32.LoadFromStream(stream: TStream; const FmtExt: string): Boolean;
+function TImage32.LoadFromStream(stream: TStream): Boolean;
 var
-  image32FileFmtClass: TImageFormatClass;
-  fmt: string;
+  i: integer;
 begin
-  if FmtExt = '' then
-    fmt := TImage32.GetExtFromImageStream(stream) else
-    fmt := FmtExt;
-  image32FileFmtClass := GetImageFormatClass(fmt);
-  result := assigned(image32FileFmtClass);
-  if not result then Exit;
-  with image32FileFmtClass.Create do
-  try
-    result := LoadFromStream(stream, self);
-  finally
-    free;
-  end;
+  Result := false;
+  for i := 0 to imageFormatClassList.count -1 do
+    with PImgFmtRec(imageFormatClassList[i])^ do
+      if Obj.IsValidImageStream(stream) then
+      begin
+        with obj.Create do
+        try
+          result := LoadFromStream(stream, self);
+        finally
+          free;
+        end;
+        break;
+      end;
 end;
 //------------------------------------------------------------------------------
 
@@ -2245,7 +2199,7 @@ begin
   resStream := CreateResourceStream(resName, resType);
   try
     Result := assigned(resStream) and
-      LoadFromStream(resStream, '');
+      LoadFromStream(resStream);
   finally
     resStream.Free;
   end;

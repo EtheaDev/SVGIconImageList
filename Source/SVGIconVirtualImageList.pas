@@ -40,7 +40,7 @@ uses
   WinApi.Windows,
   Winapi.CommCtrl,
   System.Classes,
-  System.Messaging,
+  {$IFDEF DXE4+}System.Messaging,{$ELSE}SVGMessaging,{$ENDIF}
   Vcl.Controls,
   Vcl.Graphics,
 {$IFDEF D10_3+}

@@ -2,8 +2,8 @@ unit Image32_BMP;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.1                                                             *
-* Date      :  12 March 2021                                                   *
+* Version   :  2.27                                                            *
+* Date      :  15 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  BMP file format extension for TImage32                          *
@@ -29,6 +29,7 @@ type
     fUseClipboardFormat: Boolean;
     fIncludeFileHeaderInSaveStream: Boolean;
   public
+    class function IsValidImageStream(stream: TStream): Boolean; override;
     function LoadFromStream(stream: TStream; img32: TImage32): Boolean; override;
     function SaveToFile(const filename: string; img32: TImage32): Boolean; override;
     procedure SaveToStream(stream: TStream; img32: TImage32); override;
@@ -398,6 +399,27 @@ begin
     pc.A := 255;
     inc(pc);
   end;
+end;
+//------------------------------------------------------------------------------
+
+class function TImageFormat_BMP.IsValidImageStream(stream: TStream): Boolean;
+var
+  savedPos: integer;
+  flag: Cardinal;
+const
+  SizeOfBitmapInfoHeader = 40;
+  SizeOfBitmapV4Header = 108;
+  SizeOfBitmapV5Header = 124;
+begin
+  Result := false;
+  savedPos := stream.position;
+  if stream.size - savedPos <= 4 then Exit;
+  stream.read(flag, SizeOf(flag));
+  stream.Position := savedPos;
+  Result := ((flag and $FFFF) = $4D42) or
+    (flag = SizeOfBitmapInfoHeader) or
+    (flag = SizeOfBitmapV4Header) or
+    (flag = SizeOfBitmapV5Header);
 end;
 //------------------------------------------------------------------------------
 

@@ -94,7 +94,6 @@ type
     viewboxWH : TRectWH;
   public
     constructor Create(parent: TElement; svgEl: TSvgTreeEl); override;
-    function GetViewbox: TRect;
   end;
 
   TSvgReader = class
@@ -110,6 +109,7 @@ type
     fImgRenderer      : TImageRenderer;
     fRootElement      : TSvgElement;
     fFontCache        : TGlyphCache;
+    fUsePropScale     : Boolean;
     function  LoadInternal: Boolean;
     function  GetIsEmpty: Boolean;
     procedure SetBlurQuality(quality: integer);
@@ -125,6 +125,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
+    function  GetViewbox(containerWidth, containerHeight: integer): TRectWH;
     procedure DrawImage(img: TImage32; scaleToImage: Boolean);
     function  LoadFromStream(stream: TStream): Boolean;
     function  LoadFromFile(const filename: string): Boolean;
@@ -132,6 +133,9 @@ type
     property  BackgroundColor : TColor32 read fBkgndColor write fBkgndColor;
     property  BlurQuality     : integer read fBlurQuality write SetBlurQuality;
     property  IsEmpty         : Boolean read GetIsEmpty;
+    //UseProportialScaling: IMHO this property should always be true ;)
+    property  UseProportialScaling: Boolean
+      read fUsePropScale write fUsePropScale;
     property  RootElement     : TSvgElement read fRootElement;
   end;
 
@@ -3138,34 +3142,6 @@ constructor TSvgElement.Create(parent: TElement; svgEl: TSvgTreeEl);
 begin
   inherited Create(parent, svgEl);
 end;
-//------------------------------------------------------------------------------
-
-function TSvgElement.GetViewbox: TRect;
-var
-  w,h, sx,sy: double;
-begin
-  Result := NullRect;
-  Result.Left := Round(elRectWH.left.GetValue(0, 0));
-  Result.Top := Round(elRectWH.top.GetValue(0, 0));
-
-  w := elRectWH.width.GetValue(0, 0);
-  h := elRectWH.height.GetValue(0, 0);
-
-  if viewboxWH.IsEmpty then
-  begin
-    Result := Rect(0,0, Round(w), Round(h));
-  end
-  else if (w > 0) and (h > 0) then
-  begin
-    sx := w/viewboxWH.Width;
-    sy := h/viewboxWH.Height;
-    //preserveAspectRatio
-    sx := (sx + sy) * 0.5; sy := sx;
-    Result.Right := Result.Left + Round(viewboxWH.Width * sx);
-    Result.Bottom := Result.Top + Round(viewboxWH.Height * sy);
-  end;
-
-end;
 
 //------------------------------------------------------------------------------
 // TElement
@@ -4352,17 +4328,19 @@ end;
 constructor TSvgReader.Create;
 begin
   fSvgParser        := TSvgParser.Create;
+  fClassStyles        := TClassStylesList.Create;
+  fLinGradRenderer  := TLinearGradientRenderer.Create;
+  fRadGradRenderer  := TSvgRadialGradientRenderer.Create;
+  fImgRenderer      := TImageRenderer.Create;
+
   fIdList             := TStringList.Create;
   fIdList.Duplicates  := dupIgnore;
   fIdList.CaseSensitive := false;
   fIdList.Sorted      := True;
+
   fBlurQuality        := 1; //0: draft (faster); 1: good; 2: excellent (slow)
   currentColor        := clBlack32;
-  fClassStyles        := TClassStylesList.Create;
-
-  fLinGradRenderer  := TLinearGradientRenderer.Create;
-  fRadGradRenderer  := TSvgRadialGradientRenderer.Create;
-  fImgRenderer      := TImageRenderer.Create;
+  fUsePropScale       := true;
 end;
 //------------------------------------------------------------------------------
 
@@ -4395,65 +4373,81 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function TSvgReader.GetViewbox(containerWidth, containerHeight: integer): TRectWH;
+begin
+  if not Assigned(RootElement) then
+  begin
+    Result := RectWH(0,0,0,0);
+    Exit;
+  end;
+
+  with RootElement do
+  begin
+    Result.Left := 0;
+    Result.Top := 0;
+    Result.Width := elRectWH.width.GetValue(containerWidth, 0);
+    Result.Height := elRectWH.height.GetValue(containerHeight, 0);
+
+    if viewboxWH.IsEmpty then
+    begin
+      if Result.IsEmpty  then
+        Result := RectWH(0, 0,containerWidth, containerHeight);
+      viewboxWH := Result;
+    end else if Result.IsEmpty then
+      Result := viewboxWH;
+  end;
+end;
+//------------------------------------------------------------------------------
+
 procedure TSvgReader.DrawImage(img: TImage32; scaleToImage: Boolean);
 var
-  rawScale, sx, sy, w,h: double;
+  scale, scale2: double;
+  vbox: TRectWH;
   di: TDrawInfo;
 begin
   if not Assigned(fRootElement) then Exit;
+  vbox := GetViewbox(img.Width, img.Height);
+  if vbox.IsEmpty then Exit;
 
   with fRootElement do
   begin
     di := fDrawInfo;
-    MatrixTranslate(di.matrix, -viewboxWH.Left, -viewboxWH.Top);
+    MatrixTranslate(di.matrix, -vbox.Left, -vbox.Top);
 
-    w := elRectWH.width.GetValue(RectWidth(img.Bounds), 0);
-    h := elRectWH.height.GetValue(RectHeight(img.Bounds), 0);
+    //the width and height attributes generally indicate the size of the
+    //rendered image unless they are percentage values. Nevertheless, these
+    //values can be still overridden by the scaleToImage parameter above
 
-    if viewboxWH.IsEmpty then
-    begin
-      viewboxWH := RectWH(0, 0, w, h);
-      if viewboxWH.IsEmpty then
-        viewboxWH := RectWH(0, 0, img.Width, img.Height);
-      fDrawInfo.bounds := viewboxWH.RectD;
-      userSpaceBounds  := viewboxWH.RectD;
-    end
-    else if (w > 0) or (h > 0) then
-    begin
-      fDrawInfo.bounds := viewboxWH.RectD;
-      userSpaceBounds  := viewboxWH.RectD;
-
-      if (w > 0) then
-        sx := w/viewboxWH.Width else
-        sx := h/viewboxWH.Height;
-      if (h > 0) then
-        sy := h/viewboxWH.Height else
-        sy := sx;
-      //assume default preserveAspectRatio - ie xMidYMid.
-      sx := (sx + sy) * 0.5; sy := sx;
-      MatrixScale(di.matrix, sx, sy);
-      w := viewboxWH.Width * sx;
-      h := viewboxWH.Height * sy;
-    end else
-    begin
-      fDrawInfo.bounds := viewboxWH.RectD;
-      userSpaceBounds  := viewboxWH.RectD;
-      w := viewboxWH.Width;
-      h := viewboxWH.Height;
-    end;
+    if vbox.IsEmpty then
+      fDrawInfo.bounds := RectD(img.Bounds) else
+      fDrawInfo.bounds := vbox.RectD;
+    userSpaceBounds  := fDrawInfo.bounds;
     di.bounds := fDrawInfo.bounds;
 
-    //the rootElement's matrix may have been modified by
-    //the svg element's height/width and viewbox settings
     if scaleToImage and not img.IsEmpty then
     begin
-      rawScale := img.width / w;
-      sy := img.height / h;
-      if sy < rawScale then rawScale := sy;
-      MatrixScale(di.matrix, rawScale);
-      img.SetSize(Round(w * rawScale), Round(h * rawScale));
+      //nb: the calculated vbox.width and vbox.height are ignored here since
+      //we're scaling the SVG image to the display image. However we still
+      //need to call GetViewbox (above) to make sure that viewboxWH is filled.
+
+      scale := img.width / viewboxWH.Width;
+      scale2 := img.height / viewboxWH.Height;
+      if fUsePropScale then
+      begin
+        if scale2 < scale then scale := scale2
+        else scale2 := scale;
+      end;
+      MatrixScale(di.matrix, scale, scale2);
+      img.SetSize(
+        Round(viewboxWH.Width * scale),
+        Round(viewboxWH.Height * scale2));
     end else
-      img.SetSize(Round(w), Round(h));
+    begin
+      img.SetSize(Round(vbox.Width), Round(vbox.Height));
+      scale := vbox.Width / viewboxWH.Width;
+      scale2 := vbox.Height / viewboxWH.Height;
+      MatrixScale(di.matrix, scale, scale2);
+    end;
   end;
 
   if fBkgndColor <> clNone32 then
@@ -4483,25 +4477,21 @@ end;
 function TSvgReader.LoadFromFile(const filename: string): Boolean;
 begin
   Clear;
-  Result := fSvgParser.LoadFromFile(filename);
-  if Result then LoadInternal;
+  Result := fSvgParser.LoadFromFile(filename) and LoadInternal;
 end;
 //------------------------------------------------------------------------------
 
 function TSvgReader.LoadFromStream(stream: TStream): Boolean;
 begin
   Clear;
-  Result := fSvgParser.LoadFromStream(stream);
-  if Result then LoadInternal;
+  Result := fSvgParser.LoadFromStream(stream) and LoadInternal;
 end;
 //------------------------------------------------------------------------------
 
 function TSvgReader.LoadFromString(const str: string): Boolean;
 begin
   Clear;
-  Result := fSvgParser.LoadFromString(str);
-  if Result then
-    Result := LoadInternal;
+  Result := fSvgParser.LoadFromString(str) and LoadInternal;
 end;
 //------------------------------------------------------------------------------
 

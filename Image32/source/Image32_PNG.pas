@@ -2,8 +2,8 @@ unit Image32_PNG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.1                                                             *
-* Date      :  12 March 2021                                                   *
+* Version   :  2.27                                                            *
+* Date      :  15 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  PNG file format extension for TImage32                          *
@@ -23,6 +23,7 @@ type
 
   TImageFormat_PNG = class(TImageFormat)
   public
+    class function IsValidImageStream(stream: TStream): Boolean; override;
     function LoadFromStream(stream: TStream; img32: TImage32): Boolean; override;
     procedure SaveToStream(stream: TStream; img32: TImage32); override;
     class function CanCopyToClipboard: Boolean; override;
@@ -46,6 +47,21 @@ resourcestring
 //------------------------------------------------------------------------------
 // Loading (reading) PNG images from file ...
 //------------------------------------------------------------------------------
+
+class function TImageFormat_PNG.IsValidImageStream(stream: TStream): Boolean;
+var
+  savedPos: integer;
+  flag: Cardinal;
+begin
+  Result := false;
+  savedPos := stream.position;
+  if stream.size - savedPos <= 4 then Exit;
+  stream.read(flag, SizeOf(flag));
+  stream.Position := savedPos;
+  result := flag = $474E5089;
+end;
+//------------------------------------------------------------------------------
+
 
 {$IFDEF FPC}
 function TImageFormat_PNG.LoadFromStream(stream: TStream; img32: TImage32): Boolean;

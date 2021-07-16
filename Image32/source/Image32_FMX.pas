@@ -2,8 +2,8 @@ unit Image32_FMX;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.0                                                             *
-* Date      :  6 March 2021                                                    *
+* Version   :  2.27                                                            *
+* Date      :  15 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  Image file format support for TImage32 and FMX                  *
@@ -25,6 +25,7 @@ type
     fExt: string;
     fPixelFormat: FMX.Types.TPixelFormat;
   public
+    class function IsValidImageStream(stream: TStream): Boolean; override;
     function LoadFromStream(stream: TStream; img32: TImage32): Boolean; override;
     function SaveToFile(const filename: string; img32: TImage32): Boolean; override;
     procedure SaveToStream(stream: TStream; img32: TImage32); override;
@@ -52,6 +53,33 @@ implementation
 
 //------------------------------------------------------------------------------
 // Loading (reading) images from file ...
+//------------------------------------------------------------------------------
+
+class function TImageFormat_FMX.IsValidImageStream(stream: TStream): Boolean;
+var
+  savedPos: integer;
+  flag: Cardinal;
+const
+  SizeOfBitmapInfoHeader = 40;
+  SizeOfBitmapV4Header = 108;
+  SizeOfBitmapV5Header = 124;
+begin
+  Result := false;
+  savedPos := stream.position;
+  if stream.size - savedPos <= 4 then Exit;
+  stream.read(flag, SizeOf(flag));
+  stream.Position := savedPos;
+  case flag of
+    SizeOfBitmapInfoHeader,
+    SizeOfBitmapV4Header,
+    SizeOfBitmapV5Header: result := true;   //BMP
+    $474E5089: result := true;              //PNG
+    $38464947: result := true;              //GIF
+    else if ((flag and $FFFF) = $4D42) or   //BMP
+      ((flag and $FFFFFF) = $FFD8FF) then
+        result := true;                     //JPG
+  end;
+end;
 //------------------------------------------------------------------------------
 
 function TImageFormat_FMX.LoadFromStream(stream: TStream; img32: TImage32): Boolean;

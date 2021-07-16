@@ -136,12 +136,13 @@ end;
 procedure TPasSVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
 var
   SvgRect : TRectF;
+  LRatio: Single;
 begin
   SvgRect:= R;
   if (fSvgDoc.Width > 0) and (fSvgDoc.Height > 0) and KeepAspectRatio then
   begin
     SvgRect := TRectF.Create(0, 0, fSvgDoc.Width, fSvgDoc.Height);
-    SvgRect := SvgRect.FitInto(R);
+    SvgRect := FitIntoRectF(SvgRect, R, LRatio);
   end;
   fSvgDoc.PaintTo(DC, ToGPRectF(SvgRect), nil, 0);
 end;

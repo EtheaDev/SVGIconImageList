@@ -38,7 +38,7 @@ interface
 
 uses
   System.Classes,
-  System.Messaging,
+  {$IFDEF DXE4+}System.Messaging,{$ELSE}SVGMessaging,{$ENDIF}
   WinApi.Windows,
   Vcl.Controls,
   Vcl.Graphics,
@@ -123,7 +123,7 @@ type
   {$IFDEF HiDPISupport}
     procedure DPIChangedMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
   {$ENDIF}
-    procedure SVGItemsUpdateMessageHandler(const Sender: TObject; const Msg: System.Messaging.TMessage);
+    procedure SVGItemsUpdateMessageHandler(const Sender: TObject; const Msg: {$IFDEF DXE4+}System.Messaging{$ELSE}SVGMessaging{$ENDIF}.TMessage);
 
     procedure AssignTo(Dest: TPersistent); override;
     procedure DoAssign(const Source: TPersistent); virtual;
@@ -624,7 +624,7 @@ end;
 {$ENDIF}
 
 procedure TSVGIconImageListBase.SVGItemsUpdateMessageHandler(const Sender: TObject;
-  const Msg: System.Messaging.TMessage);
+  const Msg: {$IFDEF DXE4+}System.Messaging{$ELSE}SVGMessaging{$ENDIF}.TMessage);
 var
   items : TSVGIconItems;
 begin

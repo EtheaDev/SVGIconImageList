@@ -2,8 +2,8 @@ unit Image32_JPG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.0                                                             *
-* Date      :  6 March 2021                                                    *
+* Version   :  2.27                                                            *
+* Date      :  15 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  JPG/JPEG file format extension for TImage32                     *
@@ -21,6 +21,7 @@ type
 
   TImageFormat_JPG = class(TImageFormat)
   public
+    class function IsValidImageStream(stream: TStream): Boolean; override;
     function LoadFromStream(stream: TStream; img32: TImage32): Boolean; override;
     procedure SaveToStream(stream: TStream; img32: TImage32); override;
     class function CopyToClipboard(img32: TImage32): Boolean; override;
@@ -42,6 +43,20 @@ implementation
 
 type
   TJpegImageHack = class(TJpegImage);
+
+class function TImageFormat_JPG.IsValidImageStream(stream: TStream): Boolean;
+var
+  savedPos: integer;
+  flag: Cardinal;
+begin
+  Result := false;
+  savedPos := stream.position;
+  if stream.size - savedPos <= 4 then Exit;
+  stream.read(flag, SizeOf(flag));
+  stream.Position := savedPos;
+  result := flag and $FFFFFF = $FFD8FF;
+end;
+//------------------------------------------------------------------------------
 
 function TImageFormat_JPG.LoadFromStream(stream: TStream; img32: TImage32): Boolean;
 var

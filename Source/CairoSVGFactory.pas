@@ -209,7 +209,7 @@ begin
     if KeepAspectRatio then
     begin
       LSvgRect := TRectF.Create(0, 0, FWidth, FHeight);
-      LSvgRect := LSvgRect.FitInto(R, Ratio);
+      LSvgRect := FitIntoRectF(LSvgRect, R, Ratio);
       LContext.Scale(1 / Ratio, 1 / Ratio);
       LSurface.SetDeviceOffset(LSvgRect.Left, LSvgRect.Top);
     end

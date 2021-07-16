@@ -223,7 +223,7 @@ function TExportToPNGDialog.GetOutFileName(const ASize: Integer): TFileName;
 begin
   Result := FormatEdit.Text;
   Result := StringReplace(Result, '%FileName%', FIconName, [rfReplaceAll, rfIgnoreCase]);
-  Result := StringReplace(Result, '%Size%', ASize.ToString, [rfReplaceAll, rfIgnoreCase]);
+  Result := StringReplace(Result, '%Size%', IntToStr(ASize), [rfReplaceAll, rfIgnoreCase]);
   Result := ChangeFileExt(Result,'.png');
 end;
 

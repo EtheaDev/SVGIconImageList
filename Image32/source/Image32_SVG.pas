@@ -2,8 +2,8 @@ unit Image32_SVG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.1                                                             *
-* Date      :  12 March 2021                                                   *
+* Version   :  2.27                                                            *
+* Date      :  15 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  SVG file format extension for TImage32                          *
@@ -15,11 +15,12 @@ interface
 {$I Image32.inc}
 
 uses
-  SysUtils, Classes, Windows, Image32, Image32_SVG_Reader;
+  SysUtils, Classes, Math, Image32, Image32_Vector, Image32_SVG_Reader;
 
 type
   TImageFormat_SVG = class(TImageFormat)
   public
+    class function IsValidImageStream(stream: TStream): Boolean; override;
     function LoadFromStream(stream: TStream; img32: TImage32): Boolean; override;
     procedure SaveToStream(stream: TStream; img32: TImage32); override;
     class function CanCopyToClipboard: Boolean; override;
@@ -40,21 +41,21 @@ implementation
 
 function TImageFormat_SVG.LoadFromStream(stream: TStream; img32: TImage32): Boolean;
 var
-  r: TRect;
+  r: TRectWH;
   w,h, sx,sy: double;
 begin
   with TSvgReader.Create do
   try
     Result := LoadFromStream(stream);
     if not Result then Exit;
-    r := RootElement.GetViewbox;
+    r := GetViewbox(img32.Width, img32.Height);
 
     //if the current image's dimensions are larger than the
     //SVG's viewbox, then scale the SVG image up to fit
-    if not IsEmptyRect(r) then
+    if not r.IsEmpty then
     begin
-      w := RectWidth(r);
-      h := RectHeight(r);
+      w := r.Width;
+      h := r.Height;
       sx := img32.Width / w;
       sy := img32.Height / h;
       if sy < sx then sx := sy;
@@ -78,8 +79,34 @@ end;
 // Saving (writing) SVG images to file (not currently implemented) ...
 //------------------------------------------------------------------------------
 
+class function TImageFormat_SVG.IsValidImageStream(stream: TStream): Boolean;
+var
+  i, savedPos, len: integer;
+  buff: array [1..256] of AnsiChar;
+begin
+  Result := false;
+  savedPos := stream.Position;
+  len := Min(256, stream.Size - savedPos);
+  stream.Read(buff[1], len);
+  stream.Position := savedPos;
+  for i := 1 to len -4 do
+  begin
+    if buff[i] < #9 then Exit
+    else if (buff[i] = '<') and
+      (buff[i +1] = 's') and
+      (buff[i +2] = 'v') and
+      (buff[i +3] = 'g') then
+    begin
+      Result := true;
+      break;
+    end;
+  end;
+end;
+//------------------------------------------------------------------------------
+
 procedure TImageFormat_SVG.SaveToStream(stream: TStream; img32: TImage32);
 begin
+  //not enabled
 end;
 //------------------------------------------------------------------------------
 

@@ -134,7 +134,7 @@ implementation
 
 uses
   System.SysUtils
-  , System.Messaging;
+  , {$IFDEF DXE4+}System.Messaging{$ELSE}SVGMessaging{$ENDIF};
 
 { TSVGIconImageCollection }
 

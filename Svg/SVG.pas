@@ -3125,7 +3125,11 @@ begin
   while StartIndex <= SLength do
   begin
     // Trim initial whitespace
+    {$IF CompilerVersion > 25}
     if S[StartIndex].IsWhiteSpace then
+    {$ELSE+}
+    if IsWhiteSpace(S[StartIndex]) then
+    {$ENDIF}
     begin
       Inc(StartIndex);
       Continue;

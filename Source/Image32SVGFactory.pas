@@ -186,17 +186,12 @@ end;
 
 procedure TImage32SVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
 var
-  LMaxSize: Integer;
   dx,dy: double;
-  LSourceRect: TRect;
-  LDestRect: TRect;
 begin
-  //Define Image32 output size
-  if not KeepAspectRatio then
-    FImage32.SetSize(Round(R.Width+R.Height), Round(R.Width+R.Height))
-  else
-    FImage32.SetSize(Round(R.Width), Round(R.Height));
+  FsvgReader.UseProportialScaling := KeepAspectRatio;
 
+  //Define Image32 output size
+  FImage32.SetSize(Round(R.Width), Round(R.Height));
   //Draw SVG image to Image32 (scaled to R and with preserved aspect ratio)
   FsvgReader.DrawImage(FImage32, True);
   dx := (R.Width - FImage32.Width) *0.5;
@@ -222,14 +217,7 @@ begin
   if FOpacity <> 1.0 then
     FImage32.ReduceOpacity(Round(FOpacity * 255));
 
-  if not KeepAspectRatio then
-  begin
-    LSourceRect := TRect.Create(0, 0, FImage32.Width, FImage32.Height);
-    LDestRect := TRect.Create(Round(R.Left), Round(R.Top), Round(R.Right), Round(R.Bottom));
-    FImage32.CopyToDc(LSourceRect, LDestRect, DC, True);
-  end
-  else
-    FImage32.CopyToDc(DC, Round(R.Left + dx), Round(R.Top + dy), True);
+  FImage32.CopyToDc(DC, Round(R.Left + dx), Round(R.Top + dy), True);
 end;
 
 procedure TImage32SVG.SaveToFile(const FileName: string);

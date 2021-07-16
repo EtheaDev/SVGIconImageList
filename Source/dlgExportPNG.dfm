@@ -182,9 +182,6 @@ object ExportToPNGDialog: TExportToPNGDialog
     Width = 200
     Height = 200
     AutoSize = False
-    ParentDoubleBuffered = False
-    DoubleBuffered = True
-    Proportional = True
   end
   object FormatEdit: TEdit
     Left = 247
