@@ -243,9 +243,6 @@ begin
   OnAfterMonitorDpiChanged := FormAfterMonitorDpiChanged;
   {$ENDIF}
 
-  //Increase performance during drawing of SVG Image
-  SvgIconImage.DoubleBuffered := True;
-
   {$IFDEF D10_3+}
   ////Test use of native VirtualImageList
   VirtualImageList := TVirtualImageList.Create(Self);

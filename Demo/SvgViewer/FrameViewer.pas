@@ -9,6 +9,7 @@ uses
 
 type
   TFrameView = class(TFrame)
+    ClientPanel: TPanel;
     SVGPaintBox: TPaintBox;
     TitlePanel: TPanel;
     procedure SVGPaintBoxPaint(Sender: TObject);
