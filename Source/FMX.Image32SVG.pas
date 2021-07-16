@@ -111,14 +111,13 @@ implementation
 
 function AlphaColor32(AlphaColor: TAlphaColor): TColor32;
 var
-  R: TAlphaColorRec;
-  res: TARGB absolute Result;
+  res: TARGB;
 begin
-  R.Color := AlphaColor;
-  res.A := R.A;
-  res.R := R.R;
-  res.G := R.G;
-  res.B := R.B;
+  res.A := TAlphaColorRec(AlphaColor).A;
+  res.R := TAlphaColorRec(AlphaColor).R;
+  res.G := TAlphaColorRec(AlphaColor).G;
+  res.B := TAlphaColorRec(AlphaColor).B;
+  Result := res.Color;
 end;
 
 procedure CopyImage32ToFmxBitmap(AImage32: TImage32; ABitmap: TBitmap);
@@ -388,7 +387,9 @@ begin
 end;
 
 initialization
+{$IFDEF MSWINDOWS}
   FontManager.Load('Arial');
   FontManager.Load('Times New Roman');
+{$ENDIF}
 
 end.

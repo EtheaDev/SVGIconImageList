@@ -10,7 +10,7 @@ uses
   FMX.ListBox, FMX.Colors, FMX.Layouts,
   FMX.ListView.Types, FMX.ListView.Appearances, FMX.ListView.Adapters.Base,
   FMX.ListView, FMX.Edit, FMX.EditBox, FMX.SpinBox,
-  FMX.SVGIconImageList, FMX.SVGIconImage;
+  FMX.SVGIconImageList, FMX.SVGIconImage, FMX.Ani;
 
 type
   TSVGIconImageListForm = class(TForm)
@@ -19,7 +19,6 @@ type
     RandomButton: TButton;
     IconsLabel: TLabel;
     CurrentLabel: TLabel;
-    AutoSizeCheckBox: TCheckBox;
     PrevButton: TButton;
     ShowEditorButton: TButton;
     ImageView: TListBox;
@@ -32,17 +31,25 @@ type
     Glyph: TGlyph;
     SVGIconImageList: TSVGIconImageList;
     OpenDialog: TOpenDialog;
-    GrayScaleCheckBox: TCheckBox;
     ZoomSpinBox: TSpinBox;
     ZoomLabel: TLabel;
+    FixedColorCheckBox: TCheckBox;
+    ColorAnimation1: TColorAnimation;
+    ComboColorBox: TComboColorBox;
+    Panel2: TPanel;
+    AutosizeSwitch: TSwitch;
+    GrayscaleSwitch: TSwitch;
+    StyleBook1: TStyleBook;
     procedure FormCreate(Sender: TObject);
     procedure NextButtonClick(Sender: TObject);
     procedure RandomButtonClick(Sender: TObject);
-    procedure AutoSizeCheckBoxChange(Sender: TObject);
     procedure PrevButtonClick(Sender: TObject);
     procedure ShowEditorButtonClick(Sender: TObject);
     procedure ZoomSpinBoxChange(Sender: TObject);
-    procedure GrayScaleCheckBoxChange(Sender: TObject);
+    procedure FixedColorCheckBoxChange(Sender: TObject);
+    procedure AutosizeSwitchClick(Sender: TObject);
+    procedure ComboColorBoxChange(Sender: TObject);
+    procedure GrayscaleSwitchClick(Sender: TObject);
   private
     procedure UpdateGUI;
   public
@@ -112,9 +119,23 @@ begin
   CurrentLabel.Text := Format('Current: %d', [Glyph.ImageIndex]);
 end;
 
-procedure TSVGIconImageListForm.AutoSizeCheckBoxChange(Sender: TObject);
+procedure TSVGIconImageListForm.AutosizeSwitchClick(Sender: TObject);
 begin
-  SVGIconImageList.AutoSizeBitmaps := AutoSizeCheckBox.IsChecked;
+  SVGIconImageList.AutoSizeBitmaps := AutosizeSwitch.IsChecked;
+end;
+
+procedure TSVGIconImageListForm.ComboColorBoxChange(Sender: TObject);
+begin
+  FixedColorCheckBox.IsChecked := True;
+  SVGIconImageList.FixedColor := ComboColorBox.Color;
+end;
+
+procedure TSVGIconImageListForm.FixedColorCheckBoxChange(Sender: TObject);
+begin
+  if FixedColorCheckBox.IsChecked then
+    SVGIconImageList.FixedColor := ComboColorBox.Color
+  else
+    SVGIconImageList.FixedColor := SVG_NONE_COLOR;
 end;
 
 procedure TSVGIconImageListForm.FormCreate(Sender: TObject);
@@ -123,9 +144,9 @@ begin
   UpdateGUI;
 end;
 
-procedure TSVGIconImageListForm.GrayScaleCheckBoxChange(Sender: TObject);
+procedure TSVGIconImageListForm.GrayscaleSwitchClick(Sender: TObject);
 begin
-  SVGIconImageList.GrayScale := GrayScaleCheckBox.IsChecked;
+  SVGIconImageList.GrayScale := GrayscaleSwitch.IsChecked;
 end;
 
 initialization

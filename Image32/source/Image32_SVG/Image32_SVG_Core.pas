@@ -1741,7 +1741,7 @@ end;
 
 function TSvgParser.LoadFromStream(stream: TStream): Boolean;
 var
-  i, len: integer;
+  i, len: LongInt;
   encoding: TSvgEncoding;
   s: WideString;
   utf8: AnsiString;
