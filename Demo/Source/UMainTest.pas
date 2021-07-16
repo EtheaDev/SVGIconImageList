@@ -50,8 +50,10 @@ type
     ToolButton3: TToolButton;
     ToolButton4: TToolButton;
     SVGIconImage: TSVGIconImage;
+    PaintBox1: TPaintBox;
     procedure FormCreate(Sender: TObject);
     procedure SVGIconImageClick(Sender: TObject);
+    procedure PaintBox1Paint(Sender: TObject);
   private
     {$IFDEF HiDPISupport}
     procedure FormAfterMonitorDpiChanged(Sender: TObject; OldDPI, NewDPI: Integer);
@@ -86,6 +88,12 @@ end;
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   ;
+end;
+
+procedure TMainForm.PaintBox1Paint(Sender: TObject);
+begin
+  SVGIconImage.svg.PaintTo(PaintBox1.Canvas.Handle,
+    PaintBox1.ClientRect, False);
 end;
 
 procedure TMainForm.SVGIconImageClick(Sender: TObject);

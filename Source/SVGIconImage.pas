@@ -85,6 +85,7 @@ type
     function GetSVGText: string;
     procedure SetSVGText(const AValue: string);
     function UsingSVGText: Boolean;
+    function GetSVG: ISVG;
   protected
     procedure DefineProperties(Filer: TFiler); override;
 
@@ -102,7 +103,7 @@ type
     procedure LoadFromStream(Stream: TStream);
     procedure SaveToFile(const FileName: string);
     procedure Assign(Source: TPersistent); override;
-    property SVG: ISVG read FSVG;
+    property SVG: ISVG read GetSVG;
   published
     property AutoSize: Boolean read FAutoSize write SetAutoSizeImage;
     property Center: Boolean read FCenter write SetCenter default True;
@@ -310,12 +311,17 @@ begin
   end;
 end;
 
-function TSVGIconImage.GetSVGText: string;
+function TSVGIconImage.GetSVG: ISVG;
 begin
   if not UsingSVGText then
-    Result := SVGIconItem(FImageIndex).SVGText
+    Result := SVGIconItem(FImageIndex).SVG
   else
-    Result := FSVG.Source;
+    Result := FSVG;
+end;
+
+function TSVGIconImage.GetSVGText: string;
+begin
+  Result := SVG.Source;
 end;
 
 procedure TSVGIconImage.ImageListChange(Sender: TObject);

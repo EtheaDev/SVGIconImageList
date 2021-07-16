@@ -4,8 +4,8 @@ object MainForm: TMainForm
   Caption = 
     'SVG Icon ImageList Demo - Copyright (c) Ethea S.r.l. - Apache 2.' +
     '0 Open Source License'
-  ClientHeight = 371
-  ClientWidth = 502
+  ClientHeight = 340
+  ClientWidth = 739
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,6 +15,9 @@ object MainForm: TMainForm
   OldCreateOrder = False
   ShowHint = True
   OnCreate = FormCreate
+  DesignSize = (
+    739
+    340)
   PixelsPerInch = 96
   TextHeight = 13
   object SVGIconImage: TSVGIconImage
@@ -28,6 +31,16 @@ object MainForm: TMainForm
     ImageList = SVGIconImageList1
     ImageIndex = 0
     OnClick = SVGIconImageClick
+  end
+  object PaintBox1: TPaintBox
+    Left = 447
+    Top = 37
+    Width = 279
+    Height = 293
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    OnPaint = PaintBox1Paint
+    ExplicitWidth = 274
+    ExplicitHeight = 290
   end
   object CategoryButtons1: TCategoryButtons
     Left = 32
@@ -61,7 +74,7 @@ object MainForm: TMainForm
   object ToolBar1: TToolBar
     Left = 0
     Top = 0
-    Width = 502
+    Width = 739
     Height = 31
     AutoSize = True
     ButtonHeight = 31
@@ -69,6 +82,7 @@ object MainForm: TMainForm
     Caption = 'ToolBar1'
     Images = SVGIconImageList1
     TabOrder = 1
+    ExplicitWidth = 502
     object ToolButton1: TToolButton
       Left = 0
       Top = 0
