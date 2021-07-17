@@ -75,7 +75,7 @@ You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtension
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 ### RELEASE NOTES
-16 Jul 2021: version 2.3.0 (VCL+FMX)
+17 Jul 2021: version 2.3.0 (VCL+FMX)
 - Added new engine: Image32 library by Angus Johnson (VCL+FMX)
 - Image32 is now the default native Delphi engine
 - Added support for Android and iOS platforms (by Image32 engine)
