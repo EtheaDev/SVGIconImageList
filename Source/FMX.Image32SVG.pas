@@ -109,7 +109,7 @@ procedure CopyImage32ToFmxBitmap(AImage32: TImage32; ABitmap: TBitmap);
 
 implementation
 
-function AlphaColor32(AlphaColor: TAlphaColor): TColor32;
+function AlphaToColor32(AlphaColor: TAlphaColor): TColor32;
 var
   res: TARGB;
 begin
@@ -118,6 +118,9 @@ begin
   res.G := TAlphaColorRec(AlphaColor).G;
   res.B := TAlphaColorRec(AlphaColor).B;
   Result := res.Color;
+{$IFDEF ANDROID}
+  Result := SwapRedBlue(Result);
+{$ENDIF}
 end;
 
 procedure CopyImage32ToFmxBitmap(AImage32: TImage32; ABitmap: TBitmap);
@@ -328,7 +331,7 @@ procedure TFmxImage32SVG.SetFixedColor(const AAlphaColor: TAlphaColor);
 var
   LColor: TColor32;
 begin
-  LColor := AlphaColor32(AAlphaColor);
+  LColor := AlphaToColor32(AAlphaColor);
   if LColor = FFixedColor then Exit;
   if (FGrayScale and (LColor <> clNone32)) or
     ((FFixedColor <> clNone32) and (LColor = clNone32))

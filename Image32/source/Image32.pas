@@ -20,9 +20,8 @@ interface
 
 uses
   {$IFDEF MSWINDOWS} Windows,{$ENDIF} Types, SysUtils, Classes,
-  {$IFDEF XPLAT_GENERICS} Generics.Collections,
-  Generics.Defaults, Character,
-  {$ENDIF} {$IFDEF UITYPES} UITypes,{$ENDIF} Math;
+  {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults, Character,{$ENDIF}
+  {$IFDEF UITYPES} UITypes,{$ENDIF} Math;
 
 type
   TRect = Types.TRect;
@@ -513,17 +512,16 @@ type
   end;
   PImgFmtRec = ^TImgFmtRec;
 
-  TResamplerRec = record
+  TResamplerObj = class
     id: integer;
     name: string;
     func: TResamplerFunction;
   end;
-  PResamplerRec = ^TResamplerRec;
 
 var
 {$IFDEF XPLAT_GENERICS}
   ImageFormatClassList: TList<PImgFmtRec>; //list of supported file extensions
-  ResamplerList: TList<PResamplerRec>;     //list of resampler functions
+  ResamplerList: TList<TResamplerObj>;     //list of resampler functions
 {$ELSE}
   ImageFormatClassList: TList;
   ResamplerList: TList;
@@ -3161,7 +3159,7 @@ end;
 procedure CreateResamplerList;
 begin
 {$IFDEF XPLAT_GENERICS}
-  ResamplerList := TList<PResamplerRec>.Create;
+  ResamplerList := TList<TResamplerObj>.Create;
 {$ELSE}
   ResamplerList := TList.Create;
 {$ENDIF}
@@ -3176,9 +3174,9 @@ begin
   if not Assigned(ResamplerList) then Exit;
 
   for i := ResamplerList.Count -1 downto 0 do
-    if PResamplerRec(ResamplerList[i]).id = id then
+    if TResamplerObj(ResamplerList[i]).id = id then
   begin
-    Result := PResamplerRec(ResamplerList[i]).func;
+    Result := TResamplerObj(ResamplerList[i]).func;
     Break;
   end;
 end;
@@ -3186,28 +3184,31 @@ end;
 
 function RegisterResampler(func: TResamplerFunction; const name: string): integer;
 var
-  resampRec: PResamplerRec;
+  resampleObj: TResamplerObj;
 begin
   if not Assigned(ResamplerList) then
     CreateResamplerList;
 
-  new(resampRec);
-  Result := ResamplerList.Add(resampRec) +1;
-  resampRec.id := Result;
-  resampRec.name := name;
-  resampRec.func := func;
+  resampleObj := TResamplerObj.Create;
+  Result := ResamplerList.Add(resampleObj) +1;
+  resampleObj.id := Result;
+  resampleObj.name := name;
+  resampleObj.func := func;
 end;
 //------------------------------------------------------------------------------
 
 procedure GetResamplerList(stringList: TStringList);
 var
   i: integer;
+  resampleObj: TResamplerObj;
 begin
   stringList.Clear;
   stringList.Capacity := ResamplerList.Count;
   for i := 0 to ResamplerList.Count -1 do
-    with PResamplerRec(ResamplerList[i])^ do
-      stringList.AddObject(name, Pointer(id));
+  begin
+    resampleObj := ResamplerList[i];
+    stringList.AddObject(resampleObj.name, resampleObj);
+  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -3217,7 +3218,7 @@ var
 begin
   if not Assigned(ResamplerList) then Exit;
   for i := ResamplerList.Count -1 downto 0 do
-    Dispose(PResamplerRec(ResamplerList[i]));
+    TResamplerObj(ResamplerList[i]).Free;
   ResamplerList.Free;
 end;
 //------------------------------------------------------------------------------

@@ -2,8 +2,8 @@ unit Image32_SVG_Core;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.26                                                            *
-* Date      :  11 July 2021                                                    *
+* Version   :  2.27                                                            *
+* Date      :  17 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -16,12 +16,16 @@ unit Image32_SVG_Core;
 
 interface
 
-{$I Image32.inc}
+{$I ..\Image32.inc}
 
 uses
   SysUtils, Classes, Types, Math,
   {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults,{$ENDIF}
   Image32, Image32_Vector, Image32_Ttf, Image32_Transform;
+
+{$IFDEF ZEROBASEDSTR}
+  {$ZEROBASEDSTRINGS OFF}
+{$ENDIF}
 
 type
   TTriState = (tsUnknown, tsYes, tsNo);
@@ -80,10 +84,15 @@ type
   // TAnsi - alternative to AnsiString with less overhead.
   //////////////////////////////////////////////////////////////////////
 
+  {$IFNDEF UNICODE}
+  UTF8Char = Char;
+  PUTF8Char = PChar;
+  {$ENDIF}
+
   TAnsi = {$IFDEF RECORD_METHODS} record {$ELSE} object {$ENDIF}
-    text: PAnsiChar;
+    text: PUTF8Char;
     len : integer;
-    function AsAnsiString: AnsiString;
+    function AsUTF8String: UTF8String;
   end;
   TArrayOfTAnsi = array of TAnsi;
 
@@ -109,7 +118,7 @@ type
 
   PAnsStringiRec = ^TAnsiStringRec;   //used internally by TClassStylesList
   TAnsiStringRec = record
-    ansi  : AnsiString;
+    ansi  : UTF8String;
   end;
 
   TClassStylesList = class
@@ -118,8 +127,8 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    function  AddAppendStyle(const classname: string; const ansi: AnsiString): integer;
-    function  GetStyle(const classname: AnsiString): AnsiString;
+    function  AddAppendStyle(const classname: string; const ansi: UTF8String): integer;
+    function  GetStyle(const classname: UTF8String): UTF8String;
     procedure Clear;
   end;
 
@@ -130,8 +139,8 @@ type
   PSvgAttrib = ^TSvgAttrib;   //element attribute
   TSvgAttrib = record
     hash      : Cardinal;     //hashed name
-    name      : AnsiString;
-    value     : AnsiString;
+    name      : UTF8String;
+    value     : UTF8String;
   end;
 
   TSvgParser = class;
@@ -149,19 +158,19 @@ type
     constructor Create(owner: TSvgParser); virtual;
     destructor  Destroy; override;
     procedure   Clear; virtual;
-    function    ParseHeader(var c: PAnsiChar; endC: PAnsiChar): Boolean; virtual;
-    function    ParseAttribName(var c: PAnsiChar; endC: PAnsiChar; attrib: PSvgAttrib): Boolean;
-    function    ParseAttribValue(var c: PAnsiChar; endC: PAnsiChar; attrib: PSvgAttrib): Boolean;
-    function    ParseAttributes(var c: PAnsiChar; endC: PAnsiChar): Boolean; virtual;
-    procedure   ParseStyleAttribute(const style: AnsiString);
+    function    ParseHeader(var c: PUTF8Char; endC: PUTF8Char): Boolean; virtual;
+    function    ParseAttribName(var c: PUTF8Char; endC: PUTF8Char; attrib: PSvgAttrib): Boolean;
+    function    ParseAttribValue(var c: PUTF8Char; endC: PUTF8Char; attrib: PSvgAttrib): Boolean;
+    function    ParseAttributes(var c: PUTF8Char; endC: PUTF8Char): Boolean; virtual;
+    procedure   ParseStyleAttribute(const style: UTF8String);
   end;
 
   TDocTypeEl = class(TXmlEl)
   private
-    procedure   SkipWord(var c, endC: PAnsiChar);
-    function    ParseEntities(var c, endC: PAnsiChar): Boolean;
+    procedure   SkipWord(var c, endC: PUTF8Char);
+    function    ParseEntities(var c, endC: PUTF8Char): Boolean;
   public
-    function    ParseAttributes(var c: PAnsiChar; endC: PAnsiChar): Boolean; override;
+    function    ParseAttributes(var c: PUTF8Char; endC: PUTF8Char): Boolean; override;
   end;
 
   TSvgTreeEl = class(TXmlEl)
@@ -176,8 +185,8 @@ type
     constructor Create(owner: TSvgParser); override;
     destructor  Destroy; override;
     procedure   Clear; override;
-    function    ParseHeader(var c: PAnsiChar; endC: PAnsiChar): Boolean; override;
-    function    ParseContent(var c: PAnsiChar; endC: PAnsiChar): Boolean; virtual;
+    function    ParseHeader(var c: PUTF8Char; endC: PUTF8Char): Boolean; override;
+    function    ParseContent(var c: PUTF8Char; endC: PUTF8Char): Boolean; virtual;
   end;
 
   TSvgParser = class
@@ -235,43 +244,42 @@ type
   //////////////////////////////////////////////////////////////////////
 
   //general parsing functions //////////////////////////////////////////
-  function ParseNextWord(var c: PAnsiChar; endC: PAnsiChar;
-    out word: AnsiString): Boolean;
-  function ParseNextWordEx(var c: PAnsiChar; endC: PAnsiChar;
-    out word: AnsiString): Boolean;
-  function ParseNextNum(var c: PAnsiChar; endC: PAnsiChar;
+  function ParseNextWord(var c: PUTF8Char; endC: PUTF8Char;
+    out word: UTF8String): Boolean;
+  function ParseNextWordEx(var c: PUTF8Char; endC: PUTF8Char;
+    out word: UTF8String): Boolean;
+  function ParseNextNum(var c: PUTF8Char; endC: PUTF8Char;
     skipComma: Boolean; out val: double): Boolean;
-  function ParseNextNumEx(var c: PAnsiChar; endC: PAnsiChar; skipComma: Boolean;
+  function ParseNextNumEx(var c: PUTF8Char; endC: PUTF8Char; skipComma: Boolean;
     out val: double; out unitType: TUnitType): Boolean;
-  function GetHash(const name: AnsiString): cardinal;
-  function GetHashCaseSensitive(name: PAnsiChar; nameLen: integer): cardinal;
-  function ExtractRef(const href: AnsiString): AnsiString;
-  function IsNumPending(var c: PAnsiChar;
-    endC: PAnsiChar; ignoreComma: Boolean): Boolean;
-  function AnsiStringToColor32(const value: AnsiString; var color: TColor32): Boolean;
+  function GetHash(const name: UTF8String): cardinal;
+  function GetHashCaseSensitive(name: PUTF8Char; nameLen: integer): cardinal;
+  function ExtractRef(const href: UTF8String): UTF8String;
+  function IsNumPending(var c: PUTF8Char;
+    endC: PUTF8Char; ignoreComma: Boolean): Boolean;
+  function UTF8StringToColor32(const value: UTF8String; var color: TColor32): Boolean;
   function MakeDashArray(const dblArray: TArrayOfDouble; scale: double): TArrayOfInteger;
-  function Match(c: PAnsiChar; const compare: AnsiString): Boolean; overload;
-  function PAnsiCharToTAnsi(var c: PAnsiChar; endC: PAnsiChar; out value: TAnsi): Boolean;
-  procedure PAnsiCharToAnsiString(var c: PAnsiChar; endC: PAnsiChar; out value: AnsiString);
+  function Match(c: PUTF8Char; const compare: UTF8String): Boolean; overload;
+  function PUTF8CharToTAnsi(var c: PUTF8Char; endC: PUTF8Char; out value: TAnsi): Boolean;
+  procedure PUTF8CharToUTF8String(var c: PUTF8Char; endC: PUTF8Char; out value: UTF8String);
 
   //special parsing functions //////////////////////////////////////////
-  function ParseSvgPath(const value: AnsiString): TSvgPaths;
+  function ParseSvgPath(const value: UTF8String): TSvgPaths;
   procedure ParseStyleElementContent(const value: TAnsi; stylesList: TClassStylesList);
-  function ParseTransform(const transform: AnsiString): TMatrixD;
+  function ParseTransform(const transform: UTF8String): TMatrixD;
 
-  procedure GetSvgFontInfo(const value: AnsiString; var fontInfo: TSVGFontInfo);
+  procedure GetSvgFontInfo(const value: UTF8String; var fontInfo: TSVGFontInfo);
   function GetSvgArcInfo(const p1, p2: TPointD; radii: TPointD; phi_rads: double;
     fA, fS: boolean; out startAngle, endAngle: double; out rec: TRectD): Boolean;
-  function HtmlDecode(const html: ansiString): ansistring;
+  function HtmlDecode(const html: UTF8String): UTF8String;
 
   function GetXmlEncoding(memory: Pointer; len: integer): TSvgEncoding;
   function ClampRange(val, min, max: double): double;
 
-{$IF COMPILERVERSION < 17}
 type
-  TSetOfChar = set of Char;
-function CharInSet(chr: Char; chrs: TSetOfChar): Boolean;
-{$IFEND}
+  TSetOfUTF8Char = set of UTF8Char;
+
+function CharInSet(chr: UTF8Char; chrs: TSetOfUTF8Char): Boolean;
 
 const
   clInvalid   = $00010001;
@@ -285,7 +293,7 @@ const
   {$I Image32_SVG_Hash_Consts.inc}
 
 var
-  LowerCaseTable : array[#0..#255] of AnsiChar;
+  LowerCaseTable : array[#0..#255] of UTF8Char;
   ColorConstList : TStringList;
 
 implementation
@@ -294,6 +302,10 @@ type
   TColorConst = record
     ColorName : string;
     ColorValue: Cardinal;
+  end;
+
+  TColorObj = class
+    cc: TColorConst;
   end;
 
 const
@@ -315,21 +327,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-{$IF COMPILERVERSION < 17}
-function CharInSet(chr: Char; chrs: TSetOfChar): Boolean;
+function CharInSet(chr: UTF8Char; chrs: TSetOfUTF8Char): Boolean;
 begin
   Result := chr in chrs;
 end;
-{$IFEND}
 //------------------------------------------------------------------------------
 
 function GetXmlEncoding(memory: Pointer; len: integer): TSvgEncoding;
 var
-  p: PAnsiChar;
+  p: PUTF8Char;
 begin
   Result := eUnknown;
   if (len < 4) or not Assigned(memory) then Exit;
-  p := PAnsiChar(memory);
+  p := PUTF8Char(memory);
   case p^ of
     #$EF: if ((p +1)^ = #$BB) and ((p +2)^ = #$BF) then Result := eUtf8;
     #$FF: if ((p +1)^ = #$FE) then Result := eUnicodeLE;
@@ -338,14 +348,14 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function SkipBlanks(var c: PAnsiChar; endC: PAnsiChar): Boolean;
+function SkipBlanks(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 begin
   while (c < endC) and (c^ <= space) do inc(c);
   Result := (c < endC);
 end;
 //------------------------------------------------------------------------------
 
-function SkipBlanksAndComma(var current: PAnsiChar; currentEnd: PAnsiChar): Boolean;
+function SkipBlanksAndComma(var current: PUTF8Char; currentEnd: PUTF8Char): Boolean;
 begin
   Result := SkipBlanks(current, currentEnd);
   if not Result or (current^ <> ',') then Exit;
@@ -354,7 +364,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function SkipStyleBlanks(var c: PAnsiChar; endC: PAnsiChar): Boolean;
+function SkipStyleBlanks(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 var
   inComment: Boolean;
 begin
@@ -381,13 +391,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function IsAlpha(c: AnsiChar): Boolean; {$IFDEF INLINE} inline; {$ENDIF}
+function IsAlpha(c: UTF8Char): Boolean; {$IFDEF INLINE} inline; {$ENDIF}
 begin
   Result := CharInSet(c, ['A'..'Z','a'..'z']);
 end;
 //------------------------------------------------------------------------------
 
-function GetSingleDigit(var c, endC: PAnsiChar;
+function GetSingleDigit(var c, endC: PUTF8Char;
   out digit: integer): Boolean;
 begin
   Result := SkipBlanksAndComma(c, endC) and (c^ >= '0') and (c^ <= '9');
@@ -397,9 +407,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function ParseStyleNameLen(var c: PAnsiChar; endC: PAnsiChar): integer;
+function ParseStyleNameLen(var c: PUTF8Char; endC: PUTF8Char): integer;
 var
-  c2: PAnsiChar;
+  c2: PUTF8Char;
 const
   validNonFirstChars =  ['0'..'9','A'..'Z','a'..'z','-'];
 begin
@@ -417,9 +427,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function ParseNextWord(var c: PAnsiChar; endC: PAnsiChar; out word: AnsiString): Boolean;
+function ParseNextWord(var c: PUTF8Char; endC: PUTF8Char; out word: UTF8String): Boolean;
 var
-  c2: PAnsiChar;
+  c2: PUTF8Char;
 begin
   Result := SkipBlanksAndComma(c, endC);
   if not Result then Exit;
@@ -427,15 +437,15 @@ begin
   while (c < endC) and
     (LowerCaseTable[c^] >= 'a') and (LowerCaseTable[c^] <= 'z') do
       inc(c);
-  PAnsiCharToAnsiString(c2, c, word);
+  PUTF8CharToUTF8String(c2, c, word);
 end;
 //------------------------------------------------------------------------------
 
-function ParseNextWordEx(var c: PAnsiChar; endC: PAnsiChar;
-  out word: AnsiString): Boolean;
+function ParseNextWordEx(var c: PUTF8Char; endC: PUTF8Char;
+  out word: UTF8String): Boolean;
 var
   isQuoted: Boolean;
-  c2: PAnsiChar;
+  c2: PUTF8Char;
 begin
   Result := SkipBlanksAndComma(c, endC);
   if not Result then Exit;
@@ -445,7 +455,7 @@ begin
     inc(c);
     c2 := c;
     while (c < endC) and (c^ <> quote) do inc(c);
-    PAnsiCharToAnsiString(c2, c,word);
+    PUTF8CharToUTF8String(c2, c,word);
     inc(c);
   end else
   begin
@@ -455,14 +465,14 @@ begin
     inc(c);
     while (c < endC) and
       CharInSet(LowerCaseTable[c^], ['A'..'Z', 'a'..'z', '-', '_']) do inc(c);
-    PAnsiCharToAnsiString(c2, c,word);
+    PUTF8CharToUTF8String(c2, c,word);
   end;
 end;
 //------------------------------------------------------------------------------
 
-function ParseNameLength(var c: PAnsiChar; endC: PAnsiChar): integer; overload;
+function ParseNameLength(var c: PUTF8Char; endC: PUTF8Char): integer; overload;
 var
-  c2: PAnsiChar;
+  c2: PUTF8Char;
 const
   validNonFirstChars =  ['0'..'9','A'..'Z','a'..'z','_',':','-'];
 begin
@@ -474,13 +484,13 @@ end;
 //------------------------------------------------------------------------------
 
 {$OVERFLOWCHECKS OFF}
-function GetHash(const name: AnsiString): cardinal;
+function GetHash(const name: UTF8String): cardinal;
 var
   i: integer;
-  c: PAnsiChar;
+  c: PUTF8Char;
 begin
   //https://en.wikipedia.org/wiki/Jenkins_hash_function
-  c := PAnsiChar(name);
+  c := PUTF8Char(name);
   Result := 0;
   if c = nil then Exit;
   for i := 1 to Length(name) do
@@ -496,7 +506,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function GetHashCaseSensitive(name: PAnsiChar; nameLen: integer): cardinal;
+function GetHashCaseSensitive(name: PUTF8Char; nameLen: integer): cardinal;
 var
   i: integer;
 begin
@@ -515,23 +525,23 @@ end;
 {$OVERFLOWCHECKS ON}
 //------------------------------------------------------------------------------
 
-function ParseNextWordHashed(var c: PAnsiChar; endC: PAnsiChar): cardinal;
+function ParseNextWordHashed(var c: PUTF8Char; endC: PUTF8Char): cardinal;
 var
   name: TAnsi;
 begin
   name.text := c;
   name.len := ParseNameLength(c, endC);
   if name.len = 0 then Result := 0
-  else Result := GetHash(name.AsAnsiString);
+  else Result := GetHash(name.AsUTF8String);
 end;
 //------------------------------------------------------------------------------
 
-function ParseNextNumEx(var c: PAnsiChar; endC: PAnsiChar; skipComma: Boolean;
+function ParseNextNumEx(var c: PUTF8Char; endC: PUTF8Char; skipComma: Boolean;
   out val: double; out unitType: TUnitType): Boolean;
 var
   decPos,exp: integer;
   isNeg, expIsNeg: Boolean;
-  start: PAnsiChar;
+  start: PUTF8Char;
 begin
   Result := false;
   unitType := utNumber;
@@ -659,7 +669,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function ParseNextNum(var c: PAnsiChar; endC: PAnsiChar;
+function ParseNextNum(var c: PUTF8Char; endC: PUTF8Char;
   skipComma: Boolean; out val: double): Boolean;
 var
   tmp: TValue;
@@ -670,11 +680,11 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function ExtractRef(const href: AnsiString): AnsiString; {$IFDEF INLINE} inline; {$ENDIF}
+function ExtractRef(const href: UTF8String): UTF8String; {$IFDEF INLINE} inline; {$ENDIF}
 var
-  c, c2, endC: PAnsiChar;
+  c, c2, endC: PUTF8Char;
 begin
-  c := PAnsiChar(href);
+  c := PUTF8Char(href);
   endC := c + Length(href);
   if Match(c, 'url(') then
   begin
@@ -684,11 +694,11 @@ begin
   if c^ = '#' then inc(c);
   c2 := c;
   while (c < endC) and (c^ <> ')') do inc(c);
-  PAnsiCharToAnsiString(c2, c, Result);
+  PUTF8CharToUTF8String(c2, c, Result);
 end;
 //------------------------------------------------------------------------------
 
-function ParseNextChar(var c: PAnsiChar; endC: PAnsiChar): AnsiChar;
+function ParseNextChar(var c: PUTF8Char; endC: PUTF8Char): UTF8Char;
 begin
   Result := #0;
   if not SkipBlanks(c, endC) then Exit;
@@ -697,7 +707,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function ParseQuoteChar(var c: PAnsiChar; endC: PAnsiChar): AnsiChar;
+function ParseQuoteChar(var c: PUTF8Char; endC: PUTF8Char): UTF8Char;
 begin
   if SkipBlanks(c, endC) and (c^ in [quote, dquote]) then
   begin
@@ -710,7 +720,7 @@ end;
 
 function AnsiTrim(var name: TAnsi): Boolean;
 var
-  endC: PAnsiChar;
+  endC: PUTF8Char;
 begin
   while (name.len > 0) and (name.text^ <= space) do
   begin
@@ -726,7 +736,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function PAnsiCharToTAnsi(var c: PAnsiChar;  endC: PAnsiChar;
+function PUTF8CharToTAnsi(var c: PUTF8Char;  endC: PUTF8Char;
   out value: TAnsi): Boolean;
 begin
   SkipBlanks(c, endC);
@@ -736,7 +746,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure PAnsiCharToAnsiString(var c: PAnsiChar; endC: PAnsiChar; out value: AnsiString);
+procedure PUTF8CharToUTF8String(var c: PUTF8Char; endC: PUTF8Char; out value: UTF8String);
 var
   len: integer;
 begin
@@ -744,13 +754,13 @@ begin
   SetLength(value, len);
   if len > 0 then
   begin
-    Move(c^, value[1], len * SizeOf(AnsiChar));
+    Move(c^, value[1], len * SizeOf(UTF8Char));
     c := endC;
   end;
 end;
 //------------------------------------------------------------------------------
 
-function Match(c: PAnsiChar; const compare: AnsiString): Boolean;
+function Match(c: PUTF8Char; const compare: UTF8String): Boolean;
 var
   i: integer;
 begin
@@ -764,10 +774,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function Match(c: PAnsiChar; const compare: TAnsi): Boolean; overload;
+function Match(c: PUTF8Char; const compare: TAnsi): Boolean; overload;
 var
   i: integer;
-  c1, c2: PAnsiChar;
+  c1, c2: PUTF8Char;
 begin
   Result := false;
   c1 := c; c2 := compare.text;
@@ -781,15 +791,15 @@ end;
 //------------------------------------------------------------------------------
 
 function IsKnownEntity(owner: TSvgParser;
-  var c: PAnsiChar; endC: PAnsiChar; out entity: PSvgAttrib): boolean;
+  var c: PUTF8Char; endC: PUTF8Char; out entity: PSvgAttrib): boolean;
 var
-  c2, c3: PAnsiChar;
-  entityName: AnsiString;
+  c2, c3: PUTF8Char;
+  entityName: UTF8String;
 begin
   inc(c); //skip ampersand.
   c2 := c; c3 := c;
   ParseNameLength(c3, endC);
-  PAnsiCharToAnsiString(c2, c3, entityName);
+  PUTF8CharToUTF8String(c2, c3, entityName);
   entity := owner.FindEntity(GetHash(entityName));
   Result := (c3^ = ';') and Assigned(entity);
   //nb: increments 'c' only if the entity is found.
@@ -797,11 +807,11 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function ParseQuotedString(var c: PAnsiChar; endC: PAnsiChar;
-  out ansi: AnsiString): Boolean;
+function ParseQuotedString(var c: PUTF8Char; endC: PUTF8Char;
+  out ansi: UTF8String): Boolean;
 var
-  quote: AnsiChar;
-  c2: PAnsiChar;
+  quote: UTF8Char;
+  c2: PUTF8Char;
 begin
   quote := c^;
   inc(c);
@@ -809,15 +819,15 @@ begin
   while (c < endC) and (c^ <> quote) do inc(c);
   Result := (c < endC);
   if not Result then Exit;
-  PAnsiCharToAnsiString(c2, c, ansi);
+  PUTF8CharToUTF8String(c2, c, ansi);
   inc(c);
 end;
 //------------------------------------------------------------------------------
 
-function IsNumPending(var c: PAnsiChar;
-  endC: PAnsiChar; ignoreComma: Boolean): Boolean;
+function IsNumPending(var c: PUTF8Char;
+  endC: PUTF8Char; ignoreComma: Boolean): Boolean;
 var
-  c2: PAnsiChar;
+  c2: PUTF8Char;
 begin
   Result := false;
 
@@ -837,16 +847,16 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function ParseTransform(const transform: AnsiString): TMatrixD;
+function ParseTransform(const transform: UTF8String): TMatrixD;
 var
   i: integer;
-  c, endC: PAnsiChar;
-  c2: AnsiChar;
-  word: AnsiString;
+  c, endC: PUTF8Char;
+  c2: UTF8Char;
+  word: UTF8String;
   values: array[0..5] of double;
   mat: TMatrixD;
 begin
-  c := PAnsiChar(transform);
+  c := PUTF8Char(transform);
   endC := c + Length(transform);
   Result := IdentityMatrix; //in case of invalid or referenced value
 
@@ -913,12 +923,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure GetSvgFontInfo(const value: AnsiString; var fontInfo: TSVGFontInfo);
+procedure GetSvgFontInfo(const value: UTF8String; var fontInfo: TSVGFontInfo);
 var
-  c, endC: PAnsiChar;
+  c, endC: PUTF8Char;
   hash: Cardinal;
 begin
-  c := PAnsiChar(value);
+  c := PUTF8Char(value);
   endC := c + Length(value);
   while (c < endC) and SkipBlanks(c, endC) do
   begin
@@ -951,14 +961,14 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function HtmlDecode(const html: ansiString): ansistring;
+function HtmlDecode(const html: UTF8String): UTF8String;
 var
   val, len: integer;
-  c,ce,endC: PAnsiChar;
+  c,ce,endC: PUTF8Char;
 begin
   len := Length(html);
   SetLength(Result, len*3);
-  c := PAnsiChar(html);
+  c := PUTF8Char(html);
   endC := c + len;
   ce := c;
   len := 1;
@@ -1017,32 +1027,32 @@ begin
     end;
 
     //convert unicode value to utf8 chars
-    //this saves the overhead of multiple ansistring<-->string conversions.
+    //this saves the overhead of multiple UTF8String<-->string conversions.
     case val of
       0 .. $7F:
         begin
-          result[len] := AnsiChar(val);
+          result[len] := UTF8Char(val);
           inc(len);
         end;
       $80 .. $7FF:
         begin
-          Result[len] := AnsiChar($C0 or (val shr 6));
-          Result[len+1] := AnsiChar($80 or (val and $3f));
+          Result[len] := UTF8Char($C0 or (val shr 6));
+          Result[len+1] := UTF8Char($80 or (val and $3f));
           inc(len, 2);
         end;
       $800 .. $7FFF:
         begin
-          Result[len] := AnsiChar($E0 or (val shr 12));
-          Result[len+1] := AnsiChar($80 or ((val shr 6) and $3f));
-          Result[len+2] := AnsiChar($80 or (val and $3f));
+          Result[len] := UTF8Char($E0 or (val shr 12));
+          Result[len+1] := UTF8Char($80 or ((val shr 6) and $3f));
+          Result[len+2] := UTF8Char($80 or (val and $3f));
           inc(len, 3);
         end;
       $10000 .. $10FFFF:
         begin
-          Result[len] := AnsiChar($F0 or (val shr 18));
-          Result[len+1] := AnsiChar($80 or ((val shr 12) and $3f));
-          Result[len+2] := AnsiChar($80 or ((val shr 6) and $3f));
-          Result[len+3] := AnsiChar($80 or (val and $3f));
+          Result[len] := UTF8Char($F0 or (val shr 18));
+          Result[len+1] := UTF8Char($80 or ((val shr 12) and $3f));
+          Result[len+2] := UTF8Char($80 or ((val shr 6) and $3f));
+          Result[len+3] := UTF8Char($80 or (val and $3f));
           inc(len, 4);
         end;
       else
@@ -1065,7 +1075,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function HexByteToInt(h: AnsiChar): Cardinal; {$IFDEF INLINE} inline; {$ENDIF}
+function HexByteToInt(h: UTF8Char): Cardinal; {$IFDEF INLINE} inline; {$ENDIF}
 begin
   case h of
     '0'..'9': Result := Ord(h) - Ord('0');
@@ -1082,7 +1092,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function AnsiStringToColor32(const value: AnsiString; var color: TColor32): Boolean;
+function UTF8StringToColor32(const value: UTF8String; var color: TColor32): Boolean;
 var
   i, len  : integer;
   j       : Cardinal;
@@ -1090,12 +1100,12 @@ var
   alpha   : Byte;
   vals    : array[0..3] of double;
   mus     :  array[0..3] of TUnitType;
-  c, endC : PAnsiChar;
+  c, endC : PUTF8Char;
 begin
   Result := false;
   len := Length(value);
   if len < 3 then Exit;
-  c := PAnsiChar(value);
+  c := PUTF8Char(value);
 
   if (color = clInvalid) or (color = clCurrent) or (color = clNone32) then
     alpha := 255 else
@@ -1156,12 +1166,15 @@ begin
   begin
     i := ColorConstList.IndexOf(string(value));
     if i < 0 then Exit;
-    color := Cardinal(ColorConstList.Objects[i]);
+    color := TColorObj(ColorConstList.Objects[i]).cc.ColorValue;
   end;
 
   //and in case the opacity has been set before the color
   if (alpha < 255) then
     color := (color and $FFFFFF) or alpha shl 24;
+{$IFDEF ANDROID}
+  color := SwapRedBlue(color);
+{$ENDIF}
   Result := true;
 end;
 //------------------------------------------------------------------------------
@@ -1189,7 +1202,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function PeekNextChar(var c: PAnsiChar; endC: PAnsiChar): AnsiChar;
+function PeekNextChar(var c: PUTF8Char; endC: PUTF8Char): UTF8Char;
 begin
   if not SkipBlanks(c, endC) then
     Result := #0 else
@@ -1218,7 +1231,7 @@ var
   i: integer;
   aclassName: TAnsi;
   aStyle: TAnsi;
-  c, endC: PAnsiChar;
+  c, endC: PUTF8Char;
 begin
   //https://oreillymedia.github.io/Using_SVG/guide/style.html
 
@@ -1240,7 +1253,7 @@ begin
     aclassName.text := c;
     aclassName.len := ParseNameLength(c, endC);
 
-    AddName(Lowercase(String(aclassName.AsAnsiString)));
+    AddName(Lowercase(String(aclassName.AsUTF8String)));
     if PeekNextChar(c, endC) = ',' then
     begin
       inc(c);
@@ -1259,7 +1272,7 @@ begin
 
     //finally, for each class name add (or append) this style
     for i := 0 to High(names) do
-      stylesList.AddAppendStyle(names[i], aStyle.AsAnsiString);
+      stylesList.AddAppendStyle(names[i], aStyle.AsUTF8String);
     names := nil;
     len := 0; cap := 0;
     inc(c);
@@ -1300,16 +1313,16 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TXmlEl.ParseHeader(var c: PAnsiChar; endC: PAnsiChar): Boolean;
+function TXmlEl.ParseHeader(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 var
-  className, style: AnsiString;
+  className, style: UTF8String;
 begin
   SkipBlanks(c, endC);
   name.text := c;
   name.len := ParseNameLength(c, endC);
 
   //load the class's style (ie undotted style) if found.
-  className := name.AsAnsiString;
+  className := name.AsUTF8String;
   style := owner.classStyles.GetStyle(classname);
   if style <> '' then ParseStyleAttribute(style);
 
@@ -1317,26 +1330,26 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TXmlEl.ParseAttribName(var c: PAnsiChar;
-  endC: PAnsiChar; attrib: PSvgAttrib): Boolean;
+function TXmlEl.ParseAttribName(var c: PUTF8Char;
+  endC: PUTF8Char; attrib: PSvgAttrib): Boolean;
 var
-  c2: PAnsiChar;
-  //attribName: AnsiString;
+  c2: PUTF8Char;
+  //attribName: UTF8String;
 begin
   Result := SkipBlanks(c, endC);
   if not Result then Exit;
   c2 := c;
   ParseNameLength(c, endC);
-  PAnsiCharToAnsiString(c2, c, attrib.Name);
+  PUTF8CharToUTF8String(c2, c, attrib.Name);
   attrib.hash := GetHash(attrib.Name);
 end;
 //------------------------------------------------------------------------------
 
-function TXmlEl.ParseAttribValue(var c: PAnsiChar;
-  endC: PAnsiChar; attrib: PSvgAttrib): Boolean;
+function TXmlEl.ParseAttribValue(var c: PUTF8Char;
+  endC: PUTF8Char; attrib: PSvgAttrib): Boolean;
 var
-  quoteChar : AnsiChar;
-  c2, c3: PAnsiChar;
+  quoteChar : UTF8Char;
+  c2, c3: PUTF8Char;
 begin
   Result := ParseNextChar(c, endC) = '=';
   if not Result then Exit;
@@ -1349,15 +1362,15 @@ begin
   c3 := c;
   while (c3 > c2) and ((c3 -1)^ <= space) do 
     dec(c3);
-  PAnsiCharToAnsiString(c2, c3, attrib.value);
+  PUTF8CharToUTF8String(c2, c3, attrib.value);
   inc(c); //skip end quote
 end;
 //------------------------------------------------------------------------------
 
-function TXmlEl.ParseAttributes(var c: PAnsiChar; endC: PAnsiChar): Boolean;
+function TXmlEl.ParseAttributes(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 var
   attrib, styleAttrib, classAttrib, idAttrib: PSvgAttrib;
-  ansi: AnsiString;
+  ansi: UTF8String;
 begin
   Result := false;
   styleAttrib := nil;  classAttrib := nil;  idAttrib := nil;
@@ -1422,10 +1435,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TXmlEl.ParseStyleAttribute(const style: AnsiString);
+procedure TXmlEl.ParseStyleAttribute(const style: UTF8String);
 var
   styleName, styleVal: TAnsi;
-  c, endC: PAnsiChar;
+  c, endC: PUTF8Char;
   attrib: PSvgAttrib;
 begin
   //there are 4 ways to load styles (in ascending precedence) -
@@ -1434,7 +1447,7 @@ begin
   //3. an inline style (called via a style attribute)
   //4. an id specific class style
 
-  c := PAnsiChar(style);
+  c := PUTF8Char(style);
   endC := c + Length(style);
   while SkipStyleBlanks(c, endC) do
   begin
@@ -1453,8 +1466,8 @@ begin
     inc(c);
 
     new(attrib);
-    attrib.name := styleName.AsAnsiString;
-    attrib.value := styleVal.AsAnsiString;
+    attrib.name := styleName.AsUTF8String;
+    attrib.value := styleVal.AsUTF8String;
     attrib.hash := GetHash(attrib.name);
     attribs.Add(attrib);
   end;
@@ -1464,14 +1477,14 @@ end;
 // TDocTypeEl
 //------------------------------------------------------------------------------
 
-procedure TDocTypeEl.SkipWord(var c, endC: PAnsiChar);
+procedure TDocTypeEl.SkipWord(var c, endC: PUTF8Char);
 begin
   while (c < endC) and (c^ > space) do inc(c);
   inc(c);
 end;
 //------------------------------------------------------------------------------
 
-function TDocTypeEl.ParseEntities(var c, endC: PAnsiChar): Boolean;
+function TDocTypeEl.ParseEntities(var c, endC: PUTF8Char): Boolean;
 var
   attrib: PSvgAttrib;
 begin
@@ -1503,9 +1516,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TDocTypeEl.ParseAttributes(var c: PAnsiChar; endC: PAnsiChar): Boolean;
+function TDocTypeEl.ParseAttributes(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 var
-  dummy : AnsiString;
+  dummy : UTF8String;
 begin
   while SkipBlanks(c, endC) do
   begin
@@ -1555,19 +1568,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TSvgTreeEl.ParseHeader(var c: PAnsiChar; endC: PAnsiChar): Boolean;
+function TSvgTreeEl.ParseHeader(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 begin
   Result := inherited ParseHeader(c, endC);
   if Result then
-    hash := GetHash(name.AsAnsiString);
+    hash := GetHash(name.AsUTF8String);
 end;
 //------------------------------------------------------------------------------
 
-function TSvgTreeEl.ParseContent(var c: PAnsiChar; endC: PAnsiChar): Boolean;
+function TSvgTreeEl.ParseContent(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 var
   child: TSvgTreeEl;
   entity: PSvgAttrib;
-  tmpC, tmpEndC: PAnsiChar;
+  tmpC, tmpEndC: PUTF8Char;
 begin
   Result := false;
   while SkipBlanks(c, endC) do
@@ -1626,7 +1639,7 @@ begin
     end
     else if (c^ = '&') and IsKnownEntity(owner, c, endC, entity) then
     begin
-      tmpC := PAnsiChar(entity.value);
+      tmpC := PUTF8Char(entity.value);
       tmpEndC := tmpC + Length(entity.value);
       ParseContent(tmpC, tmpEndC);
     end
@@ -1743,8 +1756,8 @@ function TSvgParser.LoadFromStream(stream: TStream): Boolean;
 var
   i, len: LongInt;
   encoding: TSvgEncoding;
-  s: WideString;
-  utf8: AnsiString;
+  s: UnicodeString;
+  utf8: UTF8String;
 begin
   try
     svgStream.LoadFromStream(stream);
@@ -1792,7 +1805,7 @@ end;
 
 procedure TSvgParser.ParseStream;
 var
-  c, endC: PAnsiChar;
+  c, endC: PUTF8Char;
 begin
   c := svgStream.Memory;
   endC := c + svgStream.Size;
@@ -2435,7 +2448,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TClassStylesList.AddAppendStyle(const classname: string; const ansi: AnsiString): integer;
+function TClassStylesList.AddAppendStyle(const classname: string; const ansi: UTF8String): integer;
 var
   i: integer;
   sr: PAnsStringiRec;
@@ -2457,7 +2470,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TClassStylesList.GetStyle(const classname: AnsiString): AnsiString;
+function TClassStylesList.GetStyle(const classname: UTF8String): UTF8String;
 var
   i: integer;
 begin
@@ -2481,7 +2494,7 @@ end;
 // TAnsi
 //------------------------------------------------------------------------------
 
-function TAnsi.AsAnsiString: AnsiString;
+function TAnsi.AsUTF8String: UTF8String;
 begin
   SetLength(Result, len);
   if len > 0 then
@@ -2601,10 +2614,10 @@ end;
 // DParse and support functions
 //------------------------------------------------------------------------------
 
-function GetSegType(var c, endC: PAnsiChar;
+function GetSegType(var c, endC: PUTF8Char;
   out isRelative: Boolean): TSvgPathSegType;
 var
-  ch: AnsiChar;
+  ch: UTF8Char;
 begin
   Result := dsUnknown;
   if not SkipBlanks(c, endC) then Exit;
@@ -2628,7 +2641,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function ParseSvgPath(const value: AnsiString): TSvgPaths;
+function ParseSvgPath(const value: UTF8String): TSvgPaths;
 var
   currSeg     : PSvgPathSeg;
   currDpath   : PSvgPath;
@@ -2691,7 +2704,7 @@ var
     AddSegValue(pt.X); AddSegValue(pt.Y);
   end;
 
-  function Parse2Num(var c, endC: PAnsiChar;
+  function Parse2Num(var c, endC: PUTF8Char;
     var pt: TPointD; isRelative: Boolean): Boolean;
   begin
     Result := ParseNextNum(c, endC, true, pt.X) and
@@ -2704,7 +2717,7 @@ var
 var
   i: integer;
   d: double;
-  c, endC: PAnsiChar;
+  c, endC: PUTF8Char;
   currPt: TPointD;
   isRelative: Boolean;
 begin
@@ -2714,7 +2727,7 @@ begin
   currDpath   := nil;
   currSegType := dsMove;
 
-  c := PAnsiChar(value);
+  c := PUTF8Char(value);
   endC := c + Length(value);
   isRelative := false;
   currPt := NullPointD;
@@ -2851,26 +2864,41 @@ end;
 
 procedure MakeLowerCaseTable;
 var
-  i: AnsiChar;
+  i: UTF8Char;
 begin
   for i:= #0 to #$40 do LowerCaseTable[i]:= i;
-  for i:= #$41 to #$5A do LowerCaseTable[i]:= AnsiChar(Ord(i) + $20);
+  for i:= #$41 to #$5A do LowerCaseTable[i]:= UTF8Char(Ord(i) + $20);
   for i:= #$5B to #$FF do LowerCaseTable[i]:= i;
 end;
 //------------------------------------------------------------------------------
 
 procedure MakeColorConstList;
 var
-  i: integer;
+  i   : integer;
+  co  : TColorObj;
   {$I html_color_consts.inc}
 begin
   ColorConstList := TStringList.Create;
   ColorConstList.CaseSensitive := false;
+  //ColorConstList.OwnsObjects := true; //not all versions of Delphi
   ColorConstList.Capacity := Length(ColorConsts);
   for i := 0 to High(ColorConsts) do
-    with ColorConsts[i] do
-      ColorConstList.AddObject(ColorName, Pointer(ColorValue));
+  begin
+    co := TColorObj.Create;
+    co.cc := ColorConsts[i];
+    ColorConstList.AddObject(co.cc.ColorName, co);
+  end;
   ColorConstList.Sorted := true;
+end;
+//------------------------------------------------------------------------------
+
+procedure CleanupColorConstList;
+var
+  i   : integer;
+begin
+  for i := 0 to ColorConstList.Count -1 do
+    TColorObj(ColorConstList.Objects[i]).Free;
+  ColorConstList.Free;
 end;
 
 //------------------------------------------------------------------------------
@@ -2881,5 +2909,5 @@ initialization
   MakeColorConstList;
 
 finalization
-  ColorConstList.Free;
+  CleanupColorConstList;
 end.

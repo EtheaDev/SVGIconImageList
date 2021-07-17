@@ -2,8 +2,8 @@ unit Image32_SVG_Writer;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.26                                                            *
-* Date      :  9 July 2021                                                     *
+* Version   :  2.27                                                            *
+* Date      :  17 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -26,6 +26,10 @@ uses
   {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults,{$ENDIF}
   Image32, Image32_SVG_Core, Image32_Vector, Image32_Draw,
   Image32_Transform, Image32_Ttf;
+
+{$IFDEF ZEROBASEDSTR}
+  {$ZEROBASEDSTRINGS OFF}
+{$ENDIF}
 
 type
   TSvgElWriterClass = class of TBaseElWriter;
@@ -268,7 +272,7 @@ end;
 
 procedure AppendPathSegType(var s: string; segType: TSvgPathSegType);
 var
-  ch: AnsiChar;
+  ch: UTF8Char;
 begin
   case segType of
     dsMove    : ch := 'M';

@@ -2,8 +2,8 @@ unit Image32_SVG_Reader;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.26                                                            *
-* Date      :  13 July 2021                                                    *
+* Version   :  2.27                                                            *
+* Date      :  17 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -24,6 +24,10 @@ uses
   Image32, Image32_SVG_Core, Image32_Vector, Image32_Draw,
   Image32_Transform, Image32_Ttf;
 
+{$IFDEF ZEROBASEDSTR}
+  {$ZEROBASEDSTRINGS OFF}
+{$ENDIF}
+
 type
   TElement          = class;
 
@@ -32,23 +36,23 @@ type
     fillColor     : TColor32;
     fillOpacity   : double;
     fillRule      : TFillRule;
-    fillEl        : AnsiString;
+    fillEl        : UTF8String;
     strokeColor   : TColor32;
     strokeOpacity : double;
     strokeWidth   : TValue;
     strokeCap     : TEndStyle;
     strokeJoin    : TJoinStyle;
     strokeMitLim  : double;
-    strokeEl      : AnsiString;
+    strokeEl      : UTF8String;
     dashArray     : TArrayOfDouble;
     dashOffset    : double;
     fontInfo      : TSVGFontInfo;
-    markerStart   : AnsiString;
-    markerMiddle  : AnsiString;
-    markerEnd     : AnsiString;
-    filterEl      : AnsiString;
-    maskEl        : AnsiString;
-    clipPathEl    : AnsiString;
+    markerStart   : UTF8String;
+    markerMiddle  : UTF8String;
+    markerEnd     : UTF8String;
+    filterEl      : UTF8String;
+    maskEl        : UTF8String;
+    clipPathEl    : UTF8String;
     opacity       : integer;
     matrix        : TMatrixD;
     visible       : Boolean;
@@ -70,7 +74,7 @@ type
     fChilds   : TList;
 {$ENDIF}
     fDrawInfo : TDrawInfo;      //currently both static and dynamic vars
-    function  FindRefElement(refname: AnsiString): TElement;
+    function  FindRefElement(refname: UTF8String): TElement;
   protected
     elRectWH  : TValueRecWH;    //multifunction variable
     function  IsFirstChild: Boolean;
@@ -185,7 +189,7 @@ type
     callerUse: TElement;
     function ValidateNonRecursion(el: TElement): Boolean;
   protected
-    refEl: AnsiString;
+    refEl: UTF8String;
     procedure GetPaths(const drawInfo: TDrawInfo); override;
     procedure Draw(img: TImage32; drawInfo: TDrawInfo); override;
   end;
@@ -213,7 +217,7 @@ type
       out path: TPathD; out isClosed: Boolean);
   protected
     function  GetBounds: TRectD; override;
-    procedure ParseDAttrib(const value: AnsiString);
+    procedure ParseDAttrib(const value: UTF8String);
     procedure GetPaths(const drawInfo: TDrawInfo); override;
     function  GetUncurvedPath(const drawInfo: TDrawInfo): TPathsD; override;
   end;
@@ -222,7 +226,7 @@ type
   protected
     path      : TPathD;
     function  GetBounds: TRectD; override;
-    procedure ParsePoints(const value: AnsiString);
+    procedure ParsePoints(const value: UTF8String);
     procedure GetPaths(const drawInfo: TDrawInfo); override;
     function  GetUncurvedPath(const drawInfo: TDrawInfo): TPathsD; override;
   end;
@@ -291,7 +295,7 @@ type
 
   TSubtextElement = class(TShapeElement)
   protected
-    text      : AnsiString;
+    text      : UTF8String;
     procedure GetPaths(const drawInfo: TDrawInfo); override;
   public
     constructor Create(parent: TElement; svgEl: TSvgTreeEl); override;
@@ -301,7 +305,7 @@ type
 
   TTextPathElement = class(TSubtextElement)
   protected
-    pathEl: AnsiString;
+    pathEl: UTF8String;
     procedure GetPaths(const drawInfo: TDrawInfo); override;
   end;
 
@@ -329,7 +333,7 @@ type
 
   TFillElement = class(TElement)
   protected
-    refEl : AnsiString;
+    refEl : UTF8String;
     units : Cardinal;
     function  GetRelFracLimit: double; override;
   end;
@@ -393,14 +397,14 @@ type
     fFilterBounds : TRect;
     fObjectBounds : TRect;
     fImages       : array of TImage32;
-    fNames        : array of AnsiString;
+    fNames        : array of UTF8String;
   protected
     procedure Clear;
     function GetRelFracLimit: double; override;
     function GetAdjustedBounds(const bounds: TRectD): TRectD;
-    function FindNamedImage(const name: AnsiString): TImage32;
-    function AddNamedImage(const name: AnsiString): TImage32;
-    function GetNamedImage(const name: AnsiString): TImage32;
+    function FindNamedImage(const name: UTF8String): TImage32;
+    function AddNamedImage(const name: UTF8String): TImage32;
+    function GetNamedImage(const name: UTF8String): TImage32;
     procedure Apply(img: TImage32;
       const filterBounds: TRect; const matrix: TMatrixD);
   public
@@ -412,9 +416,9 @@ type
   private
     function GetParentAsFilterEl: TFilterElement;
   protected
-    in1: AnsiString;
-    in2: AnsiString;
-    res: AnsiString;
+    in1: UTF8String;
+    in2: UTF8String;
+    res: UTF8String;
     srcImg, dstImg: TImage32;
     srcRec, dstRec: TRect;
     function GetSrcAndDst: Boolean;
@@ -520,9 +524,9 @@ type
 const
   buffSize    = 32;
   clAlphaSet  = $00010101;
-  SourceImage   : AnsiString = 'SourceGraphic';
-  SourceAlpha   : AnsiString = 'SourceAlpha';
-  tmpFilterImg  : AnsiString = 'tmp';
+  SourceImage   : UTF8String = 'SourceGraphic';
+  SourceAlpha   : UTF8String = 'SourceAlpha';
+  tmpFilterImg  : UTF8String = 'tmp';
 
   //https://www.w3.org/TR/css-fonts-3/#font-family-prop
   emptyDrawInfo: TDrawInfo =
@@ -694,27 +698,27 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function AnsiStringToFloat(const ansiValue: AnsiString;
+function UTF8StringToFloat(const ansiValue: UTF8String;
   var value: double): Boolean;
 var
-  c: PAnsiChar;
+  c: PUTF8Char;
 begin
-  c := PAnsiChar(ansiValue);
+  c := PUTF8Char(ansiValue);
   Result := ParseNextNum(c, c + Length(ansiValue), false, value);
 end;
 //------------------------------------------------------------------------------
 
-function AnsiStringToFloatEx(const ansiValue: AnsiString;
+function UTF8StringToFloatEx(const ansiValue: UTF8String;
   var value: double; out measureUnit: TUnitType): Boolean;
 var
-  c: PAnsiChar;
+  c: PUTF8Char;
 begin
-  c := PAnsiChar(ansiValue);
+  c := PUTF8Char(ansiValue);
   Result := ParseNextNumEx(c, c + Length(ansiValue), false, value, measureUnit);
 end;
 //------------------------------------------------------------------------------
 
-procedure AnsiStringToOpacity(const ansiValue: AnsiString; var color: TColor32);
+procedure UTF8StringToOpacity(const ansiValue: UTF8String; var color: TColor32);
 var
   opacity: double;
 begin
@@ -725,7 +729,7 @@ begin
   end;
 
   if color = clInvalid then color := clNone32;
-  if not AnsiStringToFloat(ansiValue, opacity) then Exit;
+  if not UTF8StringToFloat(ansiValue, opacity) then Exit;
   with TARGB(color) do
     if (opacity <= 0) then
     begin
@@ -1362,7 +1366,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TFilterElement.FindNamedImage(const name: AnsiString): TImage32;
+function TFilterElement.FindNamedImage(const name: UTF8String): TImage32;
 var
   i, len: integer;
 begin
@@ -1377,7 +1381,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TFilterElement.AddNamedImage(const name: AnsiString): TImage32;
+function TFilterElement.AddNamedImage(const name: UTF8String): TImage32;
 var
   len: integer;
 begin
@@ -1391,7 +1395,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TFilterElement.GetNamedImage(const name: AnsiString): TImage32;
+function TFilterElement.GetNamedImage(const name: UTF8String): TImage32;
 var
   i, len: integer;
   hash: Cardinal;
@@ -2282,7 +2286,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TPathElement.ParseDAttrib(const value: AnsiString);
+procedure TPathElement.ParseDAttrib(const value: UTF8String);
 begin
   fSvgPaths := Image32_SVG_Core.ParseSvgPath(value);
 end;
@@ -2362,7 +2366,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TPolyElement.ParsePoints(const value: AnsiString);
+procedure TPolyElement.ParsePoints(const value: UTF8String);
 var
   currCnt, currCap: integer;
 
@@ -2379,11 +2383,11 @@ var
 
 var
   pt: TPointD;
-  c, endC: PAnsiChar;
+  c, endC: PUTF8Char;
 begin
   currCnt     := 0;
   currCap     := buffSize;
-  c := PAnsiChar(value);
+  c := PUTF8Char(value);
   endC := c + Length(value);
   SetLength(path, currCap);
   while IsNumPending(c, endC, true) and
@@ -2595,7 +2599,7 @@ begin
       el := TSubtextElement.Create(self, svgEl);
       Self.fChilds.Add(el);
       if assigned(svgEl.text.text) then
-        TSubtextElement(el).text := svgEl.text.AsAnsiString;
+        TSubtextElement(el).text := svgEl.text.AsUTF8String;
     end else
     begin
       elClass := HashToElementClass(svgEl.hash);
@@ -2851,7 +2855,7 @@ var
   s: string;
   i, len, charsThatFit: integer;
   d, fontScale, spacing: double;
-  utf8String: AnsiString;
+  utf8: UTF8String;
   mat: TMatrixD;
   tmpPath: TPathD;
   isClosed: Boolean;
@@ -2873,7 +2877,7 @@ begin
   //if first subtext then reset X offset
   if not isFirst then Exit;
   topTextEl.ResetTmpPt;
-  utf8String := '';
+  utf8 := '';
 
   //nb: only exit AFTER setting parentTextEl.tmpPt.
   if (fParserEl.text.len = 0) then
@@ -2887,20 +2891,20 @@ begin
         Exit;
     with TSubtextElement(el.fChilds[0]) do
     begin
-      utf8String := text;
+      utf8 := text;
       spacing := fDrawInfo.FontInfo.spacing;
     end;
   end else
   begin
-    utf8String := fParserEl.text.AsAnsiString;
+    utf8 := fParserEl.text.AsUTF8String;
     spacing := drawInfo.FontInfo.spacing;
   end;
 
   //trim CRLFs and multiple spaces
   {$IFDEF UNICODE}
-  s := UTF8ToUnicodeString(HtmlDecode(utf8String));
+  s := UTF8ToUnicodeString(HtmlDecode(utf8));
   {$ELSE}
-  s := Utf8Decode(HtmlDecode(utf8String));
+  s := Utf8Decode(HtmlDecode(utf8));
   {$ENDIF}
   for i := 1 to Length(s) do
     if s[i] < #32 then s[i] := #32;
@@ -3214,16 +3218,16 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TElement.FindRefElement(refname: AnsiString): TElement;
+function TElement.FindRefElement(refname: UTF8String): TElement;
 var
   i, len: integer;
-  c, endC: PAnsiChar;
-  ref: AnsiString;
+  c, endC: PUTF8Char;
+  ref: UTF8String;
 begin
   result := nil;
   len := Length(refname);
   if len = 0 then Exit;
-  c := PAnsiChar(refname);
+  c := PUTF8Char(refname);
   endC := c + len;
   if Match(c, 'url(') then
   begin
@@ -3231,7 +3235,7 @@ begin
     dec(endC); //removes trailing ')'
   end;
   if c^ = '#' then inc(c);
-  PAnsiCharToAnsiString(c, endC, ref);
+  PUTF8CharToUTF8String(c, endC, ref);
   i := fReader.fIdList.IndexOf(string(ref));
   if i >= 0 then
     Result := TElement(fReader.fIdList.Objects[i]) else
@@ -3242,34 +3246,34 @@ end;
 // dozens of function to process various element attributes
 //------------------------------------------------------------------------------
 
-procedure Id_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Id_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   aOwnerEl.fReader.fIdList.AddObject(string(value), aOwnerEl);
 end;
 //------------------------------------------------------------------------------
 
-procedure In_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure In_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if aOwnerEl is TFeBaseElement then
     TFeBaseElement(aOwnerEl).in1 := value;
 end;
 //------------------------------------------------------------------------------
 
-procedure In2_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure In2_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if aOwnerEl is TFeBaseElement then
     TFeBaseElement(aOwnerEl).in2 := value;
 end;
 //------------------------------------------------------------------------------
 
-procedure LetterSpacing_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure LetterSpacing_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   with TTextElement(aOwnerEl) do
-    AnsiStringToFloat(value, fDrawInfo.FontInfo.spacing);
+    UTF8StringToFloat(value, fDrawInfo.FontInfo.spacing);
 end;
 //------------------------------------------------------------------------------
 
-procedure Href_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Href_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   el: TElement;
 begin
@@ -3285,14 +3289,14 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure BaselineShift_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure BaselineShift_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
-  word: AnsiString;
-  c, endC: PAnsiChar;
+  word: UTF8String;
+  c, endC: PUTF8Char;
 begin
-  c := PAnsiChar(value);
+  c := PUTF8Char(value);
   endC := c + Length(value);
   ParseNextWord(c, endC, word);
   with aOwnerEl.fDrawInfo.FontInfo do
@@ -3302,19 +3306,19 @@ begin
       hBaseline: baseShift.SetValue(0, utPixel);
       else
       begin
-        AnsiStringToFloatEx(value, val, mu);
+        UTF8StringToFloatEx(value, val, mu);
         baseShift.SetValue(val, mu);
       end;
     end;
 end;
 //------------------------------------------------------------------------------
 
-procedure Color_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Color_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   color: TColor32;
 begin
   color := clInvalid;
-  AnsiStringToColor32(value, color);
+  UTF8StringToColor32(value, color);
   //for setting currentcolor when drawing (eg drawing shapes)
   aOwnerEl.fDrawInfo.currentColor := color;
   //for setting currentcolor during element creation (eg gradient colors)
@@ -3322,12 +3326,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure LightingColor_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure LightingColor_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   color: TColor32;
 begin
   color := clInvalid;
-  AnsiStringToColor32(value, color);
+  UTF8StringToColor32(value, color);
   if (aOwnerEl is TFeSpecLightElement) then
     TFeSpecLightElement(aOwnerEl).color := color
   else if (aOwnerEl is TFeDefuseLightElement) then
@@ -3335,62 +3339,62 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure ClipPath_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure ClipPath_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   aOwnerEl.fDrawInfo.clipPathEl := ExtractRef(value);
 end;
 //------------------------------------------------------------------------------
 
-procedure D_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure D_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if aOwnerEl is TPathElement then
     TPathElement(aOwnerEl).ParseDAttrib(value);
 end;
 //------------------------------------------------------------------------------
 
-procedure Fill_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Fill_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   case aOwnerEl.fParserEl.Hash of
     hfeDropShadow:
-      AnsiStringToColor32(value, TFeDropShadowElement(aOwnerEl).floodColor);
+      UTF8StringToColor32(value, TFeDropShadowElement(aOwnerEl).floodColor);
     hfeFlood:
-      AnsiStringToColor32(value, TFeFloodElement(aOwnerEl).floodColor);
+      UTF8StringToColor32(value, TFeFloodElement(aOwnerEl).floodColor);
     else
     begin
-      if Match(PAnsiChar(value), 'url(') then
+      if Match(PUTF8Char(value), 'url(') then
         aOwnerEl.fDrawInfo.fillEl := ExtractRef(value)
       else
-        AnsiStringToColor32(value, aOwnerEl.fDrawInfo.fillColor);
+        UTF8StringToColor32(value, aOwnerEl.fDrawInfo.fillColor);
     end;
   end;
 end;
 //------------------------------------------------------------------------------
 
-procedure FillOpacity_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure FillOpacity_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   val: double;
 begin
   case aOwnerEl.fParserEl.Hash of
     hfeDropShadow:
-      AnsiStringToOpacity(value, TFeDropShadowElement(aOwnerEl).floodColor);
+      UTF8StringToOpacity(value, TFeDropShadowElement(aOwnerEl).floodColor);
     hfeFlood:
-      AnsiStringToOpacity(value, TFeFloodElement(aOwnerEl).floodColor);
+      UTF8StringToOpacity(value, TFeFloodElement(aOwnerEl).floodColor);
     else
     begin
-      AnsiStringToFloat(value, val);
+      UTF8StringToFloat(value, val);
       aOwnerEl.fDrawInfo.fillOpacity := ClampRange(val, 0,1);
     end;
   end;
 end;
 //------------------------------------------------------------------------------
 
-procedure DashArray_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure DashArray_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
-  c, endC: PAnsiChar;
+  c, endC: PUTF8Char;
   val: double;
   len: integer;
 begin
-  c := PAnsiChar(value);
+  c := PUTF8Char(value);
   endC := c + Length(value);
   with aOwnerEl.fDrawInfo do
   begin
@@ -3405,39 +3409,39 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure DashOffset_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure DashOffset_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
-  c, endC: PAnsiChar;
+  c, endC: PUTF8Char;
 begin
-  c := PAnsiChar(value);
+  c := PUTF8Char(value);
   endC := c + Length(value);
   with aOwnerEl.fDrawInfo do
     ParseNextNum(c, endC, true, dashOffset);
 end;
 //------------------------------------------------------------------------------
 
-procedure Display_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Display_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if GetHash(value) = hNone then
     aOwnerEl.fDrawInfo.visible := false;
 end;
 //------------------------------------------------------------------------------
 
-procedure Font_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Font_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   GetSvgFontInfo(value, aOwnerEl.fDrawInfo.FontInfo);
 end;
 //------------------------------------------------------------------------------
 
-procedure FontFamily_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure FontFamily_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
-  word: AnsiString;
-  c, endC: PAnsiChar;
+  word: UTF8String;
+  c, endC: PUTF8Char;
 begin
   with aOwnerEl.fDrawInfo.FontInfo do
   begin
     family := ttfUnknown;
-    c := PAnsiChar(value);
+    c := PUTF8Char(value);
     endC := c + Length(value);
     while ParseNextWordEx(c, endC, word) do
     begin
@@ -3453,18 +3457,18 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure FontSize_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure FontSize_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   num: double;
-  c, endC: PAnsiChar;
+  c, endC: PUTF8Char;
 begin
-  c := PAnsiChar(value); endC := c + Length(value);
+  c := PUTF8Char(value); endC := c + Length(value);
   if not ParseNextNum(c, endC, false, num) then Exit;
   aOwnerEl.fDrawInfo.FontInfo.size := num;
 end;
 //------------------------------------------------------------------------------
 
-procedure FontStyle_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure FontStyle_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   with aOwnerEl.fDrawInfo.FontInfo do
     if GetHash(value) = hItalic then
@@ -3473,14 +3477,14 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure FontWeight_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure FontWeight_Attrib(aOwnerEl: TElement; const value: UTF8String);
 
 var
   num: double;
-  word: AnsiString;
-  c, endC: PAnsiChar;
+  word: UTF8String;
+  c, endC: PUTF8Char;
 begin
-  c := PAnsiChar(value);
+  c := PUTF8Char(value);
   endC := c + Length(value);
   with aOwnerEl.fDrawInfo.FontInfo do
   begin
@@ -3501,27 +3505,27 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Fx_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Fx_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if (aOwnerEl is TRadGradElement) then
     with TRadGradElement(aOwnerEl) do
     begin
-      AnsiStringToFloatEx(value, F.X.rawVal, F.X.unitType);
+      UTF8StringToFloatEx(value, F.X.rawVal, F.X.unitType);
     end;
 end;
 //------------------------------------------------------------------------------
 
-procedure Fy_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Fy_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if (aOwnerEl is TRadGradElement) then
     with TRadGradElement(aOwnerEl) do
     begin
-      AnsiStringToFloatEx(value, F.Y.rawVal, F.Y.unitType);
+      UTF8StringToFloatEx(value, F.Y.rawVal, F.Y.unitType);
     end;
 end;
 //------------------------------------------------------------------------------
 
-procedure TextAlign_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure TextAlign_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   with aOwnerEl.fDrawInfo.FontInfo do
     case GetHash(value) of
@@ -3532,7 +3536,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TextDecoration_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure TextDecoration_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   with aOwnerEl.fDrawInfo.FontInfo do
     case GetHash(value) of
@@ -3543,49 +3547,49 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TextLength_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure TextLength_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
-  AnsiStringToFloat(value, aOwnerEl.fDrawInfo.FontInfo.textLength);
+  UTF8StringToFloat(value, aOwnerEl.fDrawInfo.FontInfo.textLength);
 end;
 //------------------------------------------------------------------------------
 
 
-procedure MarkerStart_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure MarkerStart_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if not (aOwnerEl is TShapeElement) then Exit;
   aOwnerEl.fDrawInfo.markerStart := ExtractRef(value);
 end;
 //------------------------------------------------------------------------------
 
-procedure MarkerMiddle_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure MarkerMiddle_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if not (aOwnerEl is TShapeElement) then Exit;
   aOwnerEl.fDrawInfo.markerMiddle := ExtractRef(value);
 end;
 //------------------------------------------------------------------------------
 
-procedure MarkerEnd_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure MarkerEnd_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if not (aOwnerEl is TShapeElement) then Exit;
   aOwnerEl.fDrawInfo.markerEnd := ExtractRef(value);
 end;
 //------------------------------------------------------------------------------
 
-procedure Filter_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Filter_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if (aOwnerEl is TShapeElement) then
     aOwnerEl.fDrawInfo.filterEl := ExtractRef(value);
 end;
 //------------------------------------------------------------------------------
 
-procedure Mask_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Mask_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if (aOwnerEl is TShapeElement) then
     aOwnerEl.fDrawInfo.maskEl := ExtractRef(value);
 end;
 //------------------------------------------------------------------------------
 
-procedure Offset_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Offset_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   val: TValue;
 begin
@@ -3593,24 +3597,24 @@ begin
     with TGradStopElement(aOwnerEl) do
     begin
       val.Init;
-      AnsiStringToFloatEx(value, val.rawVal, val.unitType);
+      UTF8StringToFloatEx(value, val.rawVal, val.unitType);
       offset := val.GetValue(1, GetRelFracLimit);
     end
 end;
 //------------------------------------------------------------------------------
 
-procedure Opacity_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Opacity_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   opacity: double;
 begin
-  if not AnsiStringToFloat(value, opacity) then Exit;
+  if not UTF8StringToFloat(value, opacity) then Exit;
   if opacity < 0 then opacity := 0
   else if opacity > 1 then opacity := 1;
   aOwnerEl.fDrawInfo.opacity := Round(opacity * 255);
 end;
 //------------------------------------------------------------------------------
 
-procedure Operator_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Operator_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if (aOwnerEl is TFeCompositeElement) then
     with TFeCompositeElement(aOwnerEl) do
@@ -3625,7 +3629,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Orient_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Orient_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if (aOwnerEl is TMarkerElement) and
     (GetHash(value) = hauto_045_start_045_reverse) then
@@ -3633,14 +3637,14 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure StopColor_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure StopColor_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   acolor: TColor32;
 begin
   if aOwnerEl is TGradStopElement then
   begin
     acolor := clInvalid;
-    AnsiStringToColor32(value, acolor);
+    UTF8StringToColor32(value, acolor);
     with TGradStopElement(aOwnerEl) do
       if acolor = clCurrent then
         color := aOwnerEl.fReader.currentColor else
@@ -3649,35 +3653,35 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure StopOpacity_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure StopOpacity_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if aOwnerEl is TGradStopElement then
-  AnsiStringToOpacity(value, TGradStopElement(aOwnerEl).color);
+  UTF8StringToOpacity(value, TGradStopElement(aOwnerEl).color);
 end;
 //------------------------------------------------------------------------------
 
-procedure Points_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Points_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if aOwnerEl is TPolyElement then
     TPolyElement(aOwnerEl).ParsePoints(value);
 end;
 //------------------------------------------------------------------------------
 
-procedure Stroke_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Stroke_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
-  if Match(PAnsiChar(value), 'url(') then
+  if Match(PUTF8Char(value), 'url(') then
     aOwnerEl.fDrawInfo.strokeEl := ExtractRef(value)
   else
-    AnsiStringToColor32(value, aOwnerEl.fDrawInfo.strokeColor);
+    UTF8StringToColor32(value, aOwnerEl.fDrawInfo.strokeColor);
 end;
 //------------------------------------------------------------------------------
 
-procedure StrokeLineCap_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure StrokeLineCap_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
-  word: AnsiString;
-  c, endC: PAnsiChar;
+  word: UTF8String;
+  c, endC: PUTF8Char;
 begin
-  c := PAnsiChar(value);
+  c := PUTF8Char(value);
   endC := c + Length(value);
   ParseNextWord(c, endC, word);
   with aOwnerEl.fDrawInfo do
@@ -3689,12 +3693,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure StrokeLineJoin_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure StrokeLineJoin_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
-  word: AnsiString;
-  c, endC: PAnsiChar;
+  word: UTF8String;
+  c, endC: PUTF8Char;
 begin
-  c := PAnsiChar(value);
+  c := PUTF8Char(value);
   endC := c + Length(value);
   ParseNextWord(c, endC, word);
   with aOwnerEl.fDrawInfo do
@@ -3706,32 +3710,32 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure StrokeMiterLimit_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure StrokeMiterLimit_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
-  AnsiStringToFloat(value, aOwnerEl.fDrawInfo.strokeMitLim);
+  UTF8StringToFloat(value, aOwnerEl.fDrawInfo.strokeMitLim);
 end;
 //------------------------------------------------------------------------------
 
-procedure StrokeOpacity_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure StrokeOpacity_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   val: double;
 begin
-  AnsiStringToFloat(value, val);
+  UTF8StringToFloat(value, val);
   aOwnerEl.fDrawInfo.strokeOpacity := ClampRange(val, 0,1);
 end;
 //------------------------------------------------------------------------------
 
-procedure StrokeWidth_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure StrokeWidth_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   with aOwnerEl do
   begin
-    AnsiStringToFloatEx(value, fDrawInfo.strokewidth.rawVal,
+    UTF8StringToFloatEx(value, fDrawInfo.strokewidth.rawVal,
       fDrawInfo.strokewidth.unitType);
   end;
 end;
 //------------------------------------------------------------------------------
 
-procedure FillRule_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure FillRule_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if LowerCaseTable[value[1]] = 'e' then
     aOwnerEl.fDrawInfo.fillRule := frEvenOdd else
@@ -3739,7 +3743,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Style_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Style_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   with aOwnerEl do
     case fParserEl.Hash of
@@ -3748,23 +3752,23 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Transform_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Transform_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   with aOwnerEl.fDrawInfo do
     matrix := MatrixMultiply(matrix, ParseTransform(value));
 end;
 //------------------------------------------------------------------------------
 
-procedure Values_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Values_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   cnt: integer;
-  c, endC: PAnsiChar;
+  c, endC: PUTF8Char;
 begin
   if aOwnerEl is TFeColorMatrixElement then
     with TFeColorMatrixElement(aOwnerEl) do
     begin
       SetLength(values, 20);
-      c := PAnsiChar(value);
+      c := PUTF8Char(value);
       endC := c + Length(value);
       cnt := 0;
       while (cnt < 20) and ParseNextNum(c, endC, true, values[cnt]) do
@@ -3774,7 +3778,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure GradientTransform_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure GradientTransform_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mat: TMatrixD;
 begin
@@ -3785,7 +3789,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure GradientUnits_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure GradientUnits_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if aOwnerEl is TFillElement then
     with TFillElement(aOwnerEl) do
@@ -3793,13 +3797,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Viewbox_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Viewbox_Attrib(aOwnerEl: TElement; const value: UTF8String);
 
   function LoadViewbox: TRectWH;
   var
-    c, endC: PAnsiChar;
+    c, endC: PUTF8Char;
   begin
-    c := PAnsiChar(value);
+    c := PUTF8Char(value);
     endC := c + Length(value);
     with Result do
       if not ParseNextNum(c, endC, false, Left) or
@@ -3820,12 +3824,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Height_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Height_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
 begin
-  AnsiStringToFloatEx(value, val, mu);
+  UTF8StringToFloatEx(value, val, mu);
   with aOwnerEl do
   begin
     elRectWH.height.SetValue(val, mu);
@@ -3833,12 +3837,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Width_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Width_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
 begin
-  AnsiStringToFloatEx(value, val, mu);
+  UTF8StringToFloatEx(value, val, mu);
   with aOwnerEl do
   begin
     elRectWH.width.SetValue(val, mu);
@@ -3846,12 +3850,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Cx_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Cx_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
 begin
-  AnsiStringToFloatEx(value, val, mu);
+  UTF8StringToFloatEx(value, val, mu);
   case aOwnerEl.fParserEl.Hash of
     hCircle:
       with TCircleElement(aOwnerEl) do centerPt.X.SetValue(val, mu);
@@ -3866,12 +3870,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Cy_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Cy_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
 begin
-  AnsiStringToFloatEx(value, val, mu);
+  UTF8StringToFloatEx(value, val, mu);
   case aOwnerEl.fParserEl.Hash of
     hCircle:
       with TCircleElement(aOwnerEl) do centerPt.Y.SetValue(val, mu);
@@ -3886,12 +3890,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Dx_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Dx_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
 begin
-  AnsiStringToFloatEx(value, val, mu);
+  UTF8StringToFloatEx(value, val, mu);
   case aOwnerEl.fParserEl.Hash of
     hfeDropShadow:
       TFeDropShadowElement(aOwnerEl).offset.X.SetValue(val, mu);
@@ -3903,12 +3907,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Dy_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Dy_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
 begin
-  AnsiStringToFloatEx(value, val, mu);
+  UTF8StringToFloatEx(value, val, mu);
   case aOwnerEl.fParserEl.Hash of
     hfeDropShadow:
       TFeDropShadowElement(aOwnerEl).offset.Y.SetValue(val, mu);
@@ -3920,19 +3924,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Result_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Result_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if (aOwnerEl is TFeBaseElement) then
     TFeBaseElement(aOwnerEl).res := ExtractRef(value);
 end;
 //------------------------------------------------------------------------------
 
-procedure Rx_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Rx_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
 begin
-  AnsiStringToFloatEx(value, val, mu);
+  UTF8StringToFloatEx(value, val, mu);
   case aOwnerEl.fParserEl.Hash of
     hRect:
       with TRectElement(aOwnerEl) do
@@ -3962,12 +3966,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Ry_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Ry_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
 begin
-  AnsiStringToFloatEx(value, val, mu);
+  UTF8StringToFloatEx(value, val, mu);
   case aOwnerEl.fParserEl.Hash of
     hRect:
       with TRectElement(aOwnerEl) do
@@ -3985,13 +3989,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure SpreadMethod_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure SpreadMethod_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
-  word: AnsiString;
-  c, endC: PAnsiChar;
+  word: UTF8String;
+  c, endC: PUTF8Char;
 begin
   if not (aOwnerEl is TGradientElement) then Exit;
-  c := PAnsiChar(value);
+  c := PUTF8Char(value);
   endC := c + Length(value);
   ParseNextWord(c, endC, word);
   with TGradientElement(aOwnerEl) do
@@ -4003,22 +4007,22 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure SpectacularExponent(aOwnerEl: TElement; const value: AnsiString);
+procedure SpectacularExponent(aOwnerEl: TElement; const value: UTF8String);
 var
   se: double;
 begin
   if not (aOwnerEl is TFeSpecLightElement) then Exit;
-  AnsiStringToFloat(value, se);
+  UTF8StringToFloat(value, se);
   if (se > 0) and (se < 100) then
     TFeSpecLightElement(aOwnerEl).exponent := se;
 end;
 //------------------------------------------------------------------------------
 
-procedure StdDev_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure StdDev_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   sd: double;
 begin
-  AnsiStringToFloat(value, sd);
+  UTF8StringToFloat(value, sd);
   if (sd < 0) and (sd > 100) then Exit;
   case aOwnerEl.fParserEl.Hash of
     hfeGaussianBlur:
@@ -4029,52 +4033,52 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure K1_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure K1_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   val: double;
 begin
-  AnsiStringToFloat(value, val);
+  UTF8StringToFloat(value, val);
   if aOwnerEl is TFeCompositeElement then
     TFeCompositeElement(aOwnerEl).ks[0] := val;
 end;
 //------------------------------------------------------------------------------
 
-procedure K2_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure K2_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   val: double;
 begin
-  AnsiStringToFloat(value, val);
+  UTF8StringToFloat(value, val);
   if aOwnerEl is TFeCompositeElement then
     TFeCompositeElement(aOwnerEl).ks[1] := val;
 end;
 //------------------------------------------------------------------------------
 
-procedure K3_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure K3_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   val: double;
 begin
-  AnsiStringToFloat(value, val);
+  UTF8StringToFloat(value, val);
   if aOwnerEl is TFeCompositeElement then
     TFeCompositeElement(aOwnerEl).ks[2] := val;
 end;
 //------------------------------------------------------------------------------
 
-procedure K4_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure K4_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   val: double;
 begin
-  AnsiStringToFloat(value, val);
+  UTF8StringToFloat(value, val);
   if aOwnerEl is TFeCompositeElement then
     TFeCompositeElement(aOwnerEl).ks[3] := val;
 end;
 //------------------------------------------------------------------------------
 
-procedure X1_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure X1_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
 begin
-  AnsiStringToFloatEx(value, val, mu);
+  UTF8StringToFloatEx(value, val, mu);
   case aOwnerEl.fParserEl.Hash of
     hLine:
       TLineElement(aOwnerEl).path[0].X := val;
@@ -4094,12 +4098,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure X2_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure X2_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
 begin
-  AnsiStringToFloatEx(value, val, mu);
+  UTF8StringToFloatEx(value, val, mu);
   case aOwnerEl.fParserEl.Hash of
     hLine:
       TLineElement(aOwnerEl).path[1].X := val;
@@ -4112,12 +4116,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Y1_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Y1_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
 begin
-  AnsiStringToFloatEx(value, val, mu);
+  UTF8StringToFloatEx(value, val, mu);
   case aOwnerEl.fParserEl.Hash of
     hLine:
       TLineElement(aOwnerEl).path[0].Y := val;
@@ -4137,12 +4141,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Y2_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Y2_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   mu: TUnitType;
   val: double;
 begin
-  AnsiStringToFloatEx(value, val, mu);
+  UTF8StringToFloatEx(value, val, mu);
   case aOwnerEl.fParserEl.Hash of
     hLine:
       TLineElement(aOwnerEl).path[1].Y := val;
@@ -4155,11 +4159,11 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Z_Attrib(aOwnerEl: TElement; const value: AnsiString);
+procedure Z_Attrib(aOwnerEl: TElement; const value: UTF8String);
 var
   val: double;
 begin
-  AnsiStringToFloat(value, val);
+  UTF8StringToFloat(value, val);
   if aOwnerEl is TFePointLightElement then
     TFePointLightElement(aOwnerEl).z := val;
 end;
