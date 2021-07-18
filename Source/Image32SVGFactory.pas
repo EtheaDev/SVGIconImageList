@@ -187,31 +187,37 @@ end;
 procedure TImage32SVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
 var
   dx,dy: double;
+  color: TColor32;
 begin
-  FsvgReader.UseProportialScaling := KeepAspectRatio;
-
   //Define Image32 output size
   FImage32.SetSize(Round(R.Width), Round(R.Height));
-  //Draw SVG image to Image32 (scaled to R and with preserved aspect ratio)
+
+  //Update FsvgReader BEFORE calling FsvgReader.DrawImage
+  if FApplyFixedColorToRootOnly and not FGrayScale and
+    (FFixedColor <> TColors.SysDefault) and
+    (FFixedColor <> TColors.SysNone) then
+      color := Color32(FFixedColor)
+  else
+    color := clNone32;
+
+  fSvgReader.SetDefaultFillColor(color);
+  fSvgReader.SetDefaultStrokeColor(color);
+
+  FsvgReader.KeepAspectRatio := KeepAspectRatio;
+
+  //Draw SVG image to FImage32
   FsvgReader.DrawImage(FImage32, True);
+
+  //assuming KeepAspectRatio = true, prepare to center
   dx := (R.Width - FImage32.Width) *0.5;
   dy := (R.Height - FImage32.Height) *0.5;
 
-  //apply GrayScale and FixedColor to Image32
+  //Apply GrayScale and FixedColor to Image32
   if FGrayScale then
     FImage32.Grayscale
-  else if (FFixedColor <> TColors.SysDefault) then
-  begin
-    if FApplyFixedColorToRootOnly then
-    begin
-      fSvgReader.RootElement.SetFillColor(Color32(FFixedColor));
-      with fSvgReader.RootElement.DrawData do
-        if (strokeColor <> clInvalid) and (strokeColor <> clNone32) then
-          fSvgReader.RootElement.SetStrokeColor(Color32(FFixedColor));
-    end
-    else
+  else if (FFixedColor <> TColors.SysDefault) and
+    not FApplyFixedColorToRootOnly then
       FImage32.SetRGB(Color32(FFixedColor));
-  end;
 
   //Opacity applyed to Image32
   if FOpacity <> 1.0 then

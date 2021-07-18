@@ -88,8 +88,6 @@ type
   public
     constructor Create(parent: TElement; svgEl: TSvgTreeEl); virtual;
     destructor  Destroy; override;
-    procedure SetFillColor(color: TColor32);
-    procedure SetStrokeColor(color: TColor32);
     property DrawData: TDrawInfo read fDrawInfo;
   end;
 
@@ -114,6 +112,8 @@ type
     fRootElement      : TSvgElement;
     fFontCache        : TGlyphCache;
     fUsePropScale     : Boolean;
+    fDefFillColor     : TColor32;
+    fDefStrokeColor   : TColor32;
     function  LoadInternal: Boolean;
     function  GetIsEmpty: Boolean;
     procedure SetBlurQuality(quality: integer);
@@ -134,11 +134,14 @@ type
     function  LoadFromStream(stream: TStream): Boolean;
     function  LoadFromFile(const filename: string): Boolean;
     function  LoadFromString(const str: string): Boolean;
+
+    procedure SetDefaultFillColor(color: TColor32);
+    procedure SetDefaultStrokeColor(color: TColor32);
     property  BackgroundColor : TColor32 read fBkgndColor write fBkgndColor;
     property  BlurQuality     : integer read fBlurQuality write SetBlurQuality;
     property  IsEmpty         : Boolean read GetIsEmpty;
-    //UseProportialScaling: IMHO this property should always be true ;)
-    property  UseProportialScaling: Boolean
+    //KeepAspectRatio: IMHO this property should always be true ;)
+    property  KeepAspectRatio: Boolean
       read fUsePropScale write fUsePropScale;
     property  RootElement     : TSvgElement read fRootElement;
   end;
@@ -661,6 +664,7 @@ begin
       drawInfo.fontInfo.decoration := fontInfo.decoration;
     if fontInfo.baseShift.IsValid then
       drawInfo.fontInfo.baseShift := fontInfo.baseShift;
+
     if not IsIdentityMatrix(matrix) then
       drawInfo.matrix := MatrixMultiply(drawInfo.matrix, matrix);
   end;
@@ -795,8 +799,7 @@ var
 begin
   if fChilds.Count = 0 then Exit;
 
-  if not Assigned(drawInfo.useEl) then
-    UpdateDrawInfo(drawInfo, self);
+  UpdateDrawInfo(drawInfo, self);
 
   maskEl := FindRefElement(drawInfo.maskEl);
   clipEl := FindRefElement(drawInfo.clipPathEl);
@@ -927,7 +930,6 @@ begin
   el := FindRefElement(refEl);
   if not Assigned(el) then Exit;
 
-  UpdateDrawInfo(drawInfo, el);
   UpdateDrawInfo(drawInfo, self); //nb: <use> attribs override el's.
   scale := ExtractScaleFromMatrix(drawInfo.matrix);
 
@@ -1003,24 +1005,18 @@ end;
 procedure TMaskElement.GetPaths(const drawInfo: TDrawInfo);
 var
   i   : integer;
-  di,di2 : TDrawInfo;
   el  : TShapeElement;
 begin
-  di := drawInfo;
-  UpdateDrawInfo(di, self);
-
   maskRec := NullRect;
   for i := 0 to fChilds.Count -1 do
     if TElement(fChilds[i]) is TShapeElement then
     begin
       el := TShapeElement(fChilds[i]);
-      di2 := di;
-      UpdateDrawInfo(di2, el);
-      el.GetPaths(di2);
+      el.GetPaths(drawInfo);
       maskRec := Image32_Vector.UnionRect(maskRec,
         Image32_Vector.GetBounds(el.drawPathsF));
     end;
-  MatrixApply(di.matrix, maskRec);
+  MatrixApply(drawInfo.matrix, maskRec);
 end;
 //------------------------------------------------------------------------------
 
@@ -3178,24 +3174,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TElement.SetFillColor(color: TColor32);
-var
-  c: TARGB absolute color;
-begin
-  fDrawInfo.fillOpacity := c.A / 255;
-  fDrawInfo.fillColor := color;
-end;
-//------------------------------------------------------------------------------
-
-procedure TElement.SetStrokeColor(color: TColor32);
-var
-  c: TARGB absolute color;
-begin
-  fDrawInfo.strokeOpacity := c.A / 255;
-  fDrawInfo.strokeColor := color;
-end;
-//------------------------------------------------------------------------------
-
 function  TElement.IsFirstChild: Boolean;
 begin
   Result := not Assigned(fParent) or (self = fParent.fChilds[0]);
@@ -4416,7 +4394,15 @@ begin
   with fRootElement do
   begin
     di := fDrawInfo;
-    MatrixTranslate(di.matrix, -vbox.Left, -vbox.Top);
+
+    //override the image's default color (black)
+    if fDefFillColor <> clNone32 then
+      di.fillColor := fDefFillColor;
+    if (fDefStrokeColor <> clNone32) and
+      (di.strokeColor <> clInvalid) then
+        di.strokeColor := fDefStrokeColor;
+
+    MatrixTranslate(di.matrix, -viewboxWH.Left, -viewboxWH.Top);
 
     //the width and height attributes generally indicate the size of the
     //rendered image unless they are percentage values. Nevertheless, these
@@ -4424,7 +4410,7 @@ begin
 
     if vbox.IsEmpty then
       fDrawInfo.bounds := RectD(img.Bounds) else
-      fDrawInfo.bounds := vbox.RectD;
+      fDrawInfo.bounds := viewboxWH.RectD;
     userSpaceBounds  := fDrawInfo.bounds;
     di.bounds := fDrawInfo.bounds;
 
@@ -4533,6 +4519,19 @@ begin
   fBlurQuality := Max(0, Min(2, quality));
 end;
 //------------------------------------------------------------------------------
+
+procedure TSvgReader.SetDefaultFillColor(color: TColor32);
+begin
+  fDefFillColor := color;
+end;
+//------------------------------------------------------------------------------
+
+procedure TSvgReader.SetDefaultStrokeColor(color: TColor32);
+begin
+  fDefStrokeColor := color;
+end;
+//------------------------------------------------------------------------------
+
 
 function TSvgReader.GetIsEmpty: Boolean;
 begin

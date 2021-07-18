@@ -95,7 +95,7 @@ type
     procedure LoadFromFile(const FileName: string);
     procedure LoadFromText(const ASVGText: string);
     procedure PaintToBitmap(ABitmap: TBitmap;
-      const KeepAspectRatio: Boolean);
+      const AZoom: Integer = 100; const KeepAspectRatio: Boolean = True);
     property Opacity: Single read GetOpacity write SetOpacity;
     property FixedColor: TAlphaColor read GetFixedColor write SetFixedColor;
     property GrayScale: Boolean read GetGrayScale write SetGrayScale;
@@ -127,10 +127,10 @@ procedure CopyImage32ToFmxBitmap(AImage32: TImage32; ABitmap: TBitmap);
 var
   LSource, LDest: TBitmapData;
 begin
+  if not Assigned(AImage32) or not Assigned(ABitmap) then Exit;
   LSource := TBitMapData.Create(AImage32.Width, AImage32.Height, TPixelFormat.BGRA);
   LSource.Data := AImage32.PixelBase;
   LSource.Pitch := AImage32.Width * 4;
-  if not Assigned(AImage32) or not Assigned(ABitmap) then Exit;
   ABitmap.SetSize(AImage32.Width, AImage32.Height);
   if ABitmap.Map(TMapAccess.Write, LDest) then
   try
@@ -255,32 +255,41 @@ begin
 end;
 
 procedure TFmxImage32SVG.PaintToBitmap(ABitmap: TBitmap;
-  const KeepAspectRatio: Boolean);
+  const AZoom: Integer = 100; const KeepAspectRatio: Boolean = True);
+var
+  color: TColor32;
+  LWidth, LHeight: Integer;
 begin
   Assert(Assigned(FImage32));
   Assert(Assigned(ABitmap));
 
-  //Define Image32 output size
-  FImage32.SetSize(ABitmap.Width, ABitmap.Height);
+  LWidth := Round(ABitmap.Width * AZoom / 100);
+  LHeight := Round(ABitmap.Height * AZoom / 100);
 
-  //Draw SVG image to Image32
+  //Define Image32 output size
+  FImage32.SetSize(LWidth, LHeight);
+
+  //Update FsvgReader BEFORE calling FsvgReader.DrawImage
+  if FApplyFixedColorToRootOnly and not FGrayScale and
+    (FFixedColor <> clNone32) then
+      color := AlphaToColor32(FFixedColor)
+  else
+    color := clNone32;
+
+  fSvgReader.SetDefaultFillColor(color);
+  fSvgReader.SetDefaultStrokeColor(color);
+
+  FsvgReader.KeepAspectRatio := KeepAspectRatio;
+
+  //Draw SVG image to FImage32
   FsvgReader.DrawImage(FImage32, True);
 
-  //GrayScale and FixedColor applyed to Image32
+  //Apply GrayScale and FixedColor to Image32
   if FGrayScale then
     FImage32.Grayscale
-  else if (FFixedColor <> clNone32) then
-  begin
-    if FApplyFixedColorToRootOnly then
-    begin
-      fSvgReader.RootElement.SetFillColor(FFixedColor);
-      with fSvgReader.RootElement.DrawData do
-        if (strokeColor <> clInvalid) and (strokeColor <> clNone32) then
-          fSvgReader.RootElement.SetStrokeColor(FFixedColor);
-    end
-    else
-      FImage32.SetRGB(FFixedColor);
-  end;
+  else if (FFixedColor <> clNone32) and
+    not FApplyFixedColorToRootOnly then
+      FImage32.SetRGB(AlphaToColor32(FFixedColor));
 
   //Opacity applyed to Image32
   if FOpacity <> 1.0 then
