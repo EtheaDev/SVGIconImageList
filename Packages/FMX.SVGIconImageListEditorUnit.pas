@@ -548,7 +548,10 @@ end;
 
 procedure TSVGIconImageListEditorFMX.FormDestroy(Sender: TObject);
 begin
-  FreeAndNil(FEditingList);
+     IconImage.Images := nil;
+     ImageView.Images := nil;
+     
+     FreeAndNil(FEditingList);
   //Screen.Cursors[crColorPick] := 0;
 end;
 
