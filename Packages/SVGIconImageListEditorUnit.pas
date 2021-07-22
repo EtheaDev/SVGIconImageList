@@ -60,6 +60,9 @@ uses
 resourcestring
   SELECT_DIR = 'Select directory';
   FILES_SAVED = '%d File(s) saved into "%s" folder';
+  USING_ENGINE = 'Using %s';
+  ENGINE_HINT = 'Current Active Engine for rendering SVG images';
+
 type
   TOpenPictureDialogSvg = class(TOpenPictureDialog)
   protected
@@ -727,6 +730,8 @@ begin
   except
     on E: Exception do
     begin
+      SVGErrorStaticText.Font.Color := clRed;
+      SVGErrorStaticText.Font.Style := [fsBold];
       SVGErrorStaticText.Caption := E.Message;
       SVGErrorStaticText.Hint := E.Message;
       SelectedIcon.SVGText := '';
@@ -739,8 +744,9 @@ end;
 
 procedure TSVGIconImageListEditor.ResetError;
 begin
-  SVGErrorStaticText.Caption := '';
-  SVGErrorStaticText.Hint := '';
+  SVGErrorStaticText.Font.Color := clWindowText;
+  SVGErrorStaticText.Caption := Format(USING_ENGINE, [GetGlobalSVGFactoryDesc]);
+  SVGErrorStaticText.Hint := ENGINE_HINT;
 end;
 
 procedure TSVGIconImageListEditor.SVGTextEnter(Sender: TObject);
@@ -882,6 +888,7 @@ end;
 procedure TSVGIconImageListEditor.FormCreate(Sender: TObject);
 begin
   inherited;
+  ResetError;
   FEditingList := TSVGIconImageList.Create(Self);
   FOpenDialog := TOpenPictureDialogSvg.Create(Self);
   FOpenDialog.Filter := 'Scalable Vector Graphics (*.svg)|*.svg';
@@ -893,8 +900,6 @@ begin
   FModified := False;
   SVGText.Font.Name := 'Courier New';
   Caption := Format(Caption, [SVGIconImageListVersion]);
-  SVGErrorStaticText.Font.Color := clRed;
-  SVGErrorStaticText.Font.Style := [fsBold];
 end;
 
 procedure TSVGIconImageListEditor.Apply;

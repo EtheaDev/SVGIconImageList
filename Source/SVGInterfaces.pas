@@ -66,6 +66,7 @@ type
 
 function GlobalSVGFactory: ISVGFactory;
 procedure SetGlobalSVGFactory(const SVGFactory : ISVGFactory);
+function GetGlobalSVGFactoryDesc: string;
 
 implementation
 
@@ -130,6 +131,22 @@ end;
 procedure SetGlobalSVGFactory(const SVGFactory : ISVGFactory);
 begin
   FGlobalSVGFactory := SVGFactory;
+end;
+
+function GetGlobalSVGFactoryDesc: string;
+begin
+  {$IFDEF PreferNativeSvgSupport}
+  if WinSvgSupported then
+    Result := 'Direct2D Windows Engine'
+  else
+  {$ENDIF}
+  {$IF DEFINED(Delphi_SVGEngine)}
+    Result := 'Delphi TSVG Engine'
+  {$ELSEIF DEFINED(Image32_SVGEngine)}
+    Result := 'Delphi Image32 Engine'
+  {$ELSEIF DEFINED(Cairo_SVGEngine)}
+    Result := 'Cairo Engine'
+  {$ENDIF}
 end;
 
 end.
