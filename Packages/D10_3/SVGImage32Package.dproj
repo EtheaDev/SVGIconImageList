@@ -104,22 +104,22 @@
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="..\..\Image32\source\Image32.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_BMP.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_CQ.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Draw.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Extra.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Layers.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Resamplers.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SmoothPath.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SVG.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Transform.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Ttf.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Vector.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32Panels.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SVG\Image32_SVG_Core.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SVG\Image32_SVG_Reader.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SVG\Image32_SVG_Writer.pas"/>
+        <DCCReference Include="vclimg.dcp"/>
+        <DCCReference Include="..\..\Image32\source\Img32.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Fmt.PNG.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.CQ.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Draw.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Extra.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Layers.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Resamplers.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.SmoothPath.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Transform.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Text.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Vector.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Fmt.SVG.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.SVG.Core.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.SVG.Reader.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.SVG.Writer.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -141,13 +141,6 @@
                     <Source Name="MainSource">SVGImage32Package.dpk</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\dclISFLib7_D10_3.bpl">Ethea InstantSolutions 7 Framework Library</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\dclISOpenOffice7_D10_3.bpl">Ethea InstantSolutions 7 LibreOffice/OpenOffice Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\dclISRtl7_D10_3.bpl">Ethea InstantSolutions 7 Rtl Library</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\dclISVcl7_D10_3.bpl">Ethea InstantSolutions 7 Vcl Library</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\dclDCPcrypt_D10_3.bpl">DCPcrypt cryptographic component library v2 B3</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclDataSnapNativeServer260.bpl">Embarcadero DBExpress DataSnap Native Server Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k260.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">

@@ -1,9 +1,9 @@
-unit Image32_Transform;
+unit Img32.Transform;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.25                                                            *
-* Date      :  28 June 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -16,11 +16,11 @@ unit Image32_Transform;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 uses
   SysUtils, Classes, Math, Types,
-  Image32, Image32_Vector;
+  Img32, Img32.Vector;
 
 type
   PMatrixD = ^TMatrixD;

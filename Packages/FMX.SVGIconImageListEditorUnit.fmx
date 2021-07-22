@@ -534,8 +534,8 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.PlatformDefault = False
         TabOrder = 7
         OnExit = SVGTextExit
-        Viewport.Width = 471.000000000000000000
-        Viewport.Height = 137.000000000000000000
+        Viewport.Width = 467.000000000000000000
+        Viewport.Height = 133.000000000000000000
       end
       object GrayScaleItemCheckBox: TCheckBox
         Position.X = 90.000000000000000000

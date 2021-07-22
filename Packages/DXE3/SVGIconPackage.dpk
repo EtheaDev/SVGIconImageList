@@ -34,9 +34,9 @@ requires
   rtl,
   xmlrtl,
   vcl,
+  IndySystem,
   IndyProtocols,
-  IndyCore,
-  IndySystem;
+  IndyCore;
 
 contains
   SVG in '..\..\svg\SVG.pas',
@@ -51,4 +51,5 @@ contains
   GDIPKerning in '..\..\Svg\GDIPKerning.pas',
   GDIPOBJ2 in '..\..\Svg\GDIPOBJ2.pas',
   GDIPPathText in '..\..\Svg\GDIPPathText.pas';
+
 end.

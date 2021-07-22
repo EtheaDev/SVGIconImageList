@@ -111,7 +111,6 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_Description>Delphi Image32 Library for Ethea SVGIcon Components</DCC_Description>
-        <DllSuffix>_D10_4</DllSuffix>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -125,22 +124,22 @@
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="..\..\Image32\source\Image32.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_BMP.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_CQ.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Draw.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Extra.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Layers.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Resamplers.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SmoothPath.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SVG.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Transform.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Ttf.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Vector.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32Panels.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SVG\Image32_SVG_Core.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SVG\Image32_SVG_Reader.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SVG\Image32_SVG_Writer.pas"/>
+        <DCCReference Include="vclimg.dcp"/>
+        <DCCReference Include="..\..\Image32\source\Img32.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Fmt.PNG.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.CQ.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Draw.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Extra.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Layers.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Resamplers.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.SmoothPath.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Transform.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Text.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Vector.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Fmt.SVG.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.SVG.Core.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.SVG.Reader.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.SVG.Writer.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -162,12 +161,6 @@
                     <Source Name="MainSource">SVGImage32Package.dpk</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclISReportBuilder6_D10_4.bpl">Ethea InstantSolutions 6 ReportBuilder Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclISRtl6D10_4.bpl">Ethea InstantSolutions 6 Rtl Library</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclISVcl6_D10_4.bpl">Ethea InstantSolutions 6 Vcl Library</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclISOpenOffice6_D10_4.bpl">Ethea InstantSolutions 6 LibreOffice/OpenOffice Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclISFLib6_D10_4.bpl">Ethea InstantSolutions 6 Framework Library</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k270.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">

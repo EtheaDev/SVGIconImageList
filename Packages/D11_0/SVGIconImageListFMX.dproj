@@ -110,9 +110,10 @@
         </DelphiCompile>
         <DCCReference Include="fmx.dcp"/>
         <DCCReference Include="SVGImage32Package.dcp"/>
-        <DCCReference Include="..\..\Source\FMX.Image32SVG.pas"/>
+        <DCCReference Include="SVGIconPackage.dcp"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImageList.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImage.pas"/>
+        <DCCReference Include="..\..\Source\FMX.Image32SVG.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -133,10 +134,7 @@
                 <Source>
                     <Source Name="MainSource">SVGIconImageListFMX.dpk</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Deployment Version="3">
                 <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\SVGIconImageListFMX_D11_0.bpl" Configuration="Release" Class="ProjectOutput">

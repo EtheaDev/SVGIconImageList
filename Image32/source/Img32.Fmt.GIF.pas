@@ -1,9 +1,9 @@
-unit Image32_GIF;
+unit Img32.Fmt.GIF;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.27                                                            *
-* Date      :  15 July 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  GIF file format extension for TImage32                          *
@@ -12,14 +12,14 @@ unit Image32_GIF;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 {$IF COMPILERVERSION = 15}
 implementation
 {$ELSE}
 
 uses
-  SysUtils, Classes, Windows, Math, Image32, Graphics,
+  SysUtils, Classes, Windows, Math, Img32, Graphics,
   {$IFDEF DELPHI_GIF} GifImg {$ELSE} GifImage {$ENDIF};
 
 type

@@ -1,4 +1,4 @@
-unit Image32_Clipper;
+unit Img32.Clipper;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
@@ -14,7 +14,7 @@ interface
 
 uses
   ClipperCore, Clipper, ClipperOffset,
-  Image32, Image32_Draw, Image32_Vector;
+  Img32, Img32.Draw, Img32.Vector;
 
 //nb: InflatePath assumes that there's consistent winding where
 //outer paths wind in one direction and inner paths in the other

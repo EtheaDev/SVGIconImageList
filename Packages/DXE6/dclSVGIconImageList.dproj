@@ -106,11 +106,9 @@
         <DCCReference Include="..\SVGIconImageRegister.pas"/>
         <DCCReference Include="..\SVGTextPropertyEditorUnit.pas">
             <Form>SVGTextPropertyEditorForm</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\..\Source\dlgExportPNG.pas">
             <Form>ExportToPNGDialog</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>

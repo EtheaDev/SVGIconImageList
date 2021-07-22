@@ -44,7 +44,7 @@ uses
   , FMX.Graphics
   , FMX.Objects
   , FMX.Image32SVG
-  , Image32
+  , Img32
   ;
 
 const

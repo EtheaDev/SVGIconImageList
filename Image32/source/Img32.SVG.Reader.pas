@@ -1,9 +1,9 @@
-unit Image32_SVG_Reader;
+unit Img32.SVG.Reader;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.27                                                            *
-* Date      :  17 July 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -16,20 +16,20 @@ unit Image32_SVG_Reader;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 uses
   SysUtils, Classes, Types, Math,
   {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults,{$ENDIF}
-  Image32, Image32_SVG_Core, Image32_Vector, Image32_Draw,
-  Image32_Transform, Image32_Ttf;
+  Img32, Img32.SVG.Core, Img32.Vector, Img32.Draw,
+  Img32.Transform, Img32.Text;
 
 {$IFDEF ZEROBASEDSTR}
   {$ZEROBASEDSTRINGS OFF}
 {$ENDIF}
 
 type
-  TElement          = class;
+  TElement = class;
 
   TDrawInfo = record
     currentColor  : TColor32;
@@ -134,13 +134,16 @@ type
     function  LoadFromStream(stream: TStream): Boolean;
     function  LoadFromFile(const filename: string): Boolean;
     function  LoadFromString(const str: string): Boolean;
-
-    procedure SetDefaultFillColor(color: TColor32);
-    procedure SetDefaultStrokeColor(color: TColor32);
+    //Both SetOverrideFillColor & SetOverrideStrokeColor are intended
+    //for use by the third-party library - SVGIconImageList
+    //https://github.com/EtheaDev/SVGIconImageList/wiki
+    procedure SetOverrideFillColor(color: TColor32);
+    procedure SetOverrideStrokeColor(color: TColor32);
     property  BackgroundColor : TColor32 read fBkgndColor write fBkgndColor;
     property  BlurQuality     : integer read fBlurQuality write SetBlurQuality;
     property  IsEmpty         : Boolean read GetIsEmpty;
-    //KeepAspectRatio: IMHO this property should always be true ;)
+    //KeepAspectRatio: this property has also been added for the convenience of
+    //the third-party library: SVGIconImageList. IMHO it should always = true)
     property  KeepAspectRatio: Boolean
       read fUsePropScale write fUsePropScale;
     property  RootElement     : TSvgElement read fRootElement;
@@ -149,7 +152,7 @@ type
 implementation
 
 uses
-  Image32_Extra, StrUtils;
+  Img32.Extra, StrUtils;
 
 type
   TDefsElement = class(TElement)
@@ -812,7 +815,7 @@ begin
       clipPaths := CopyPaths(drawPathsF);
 
       MatrixApply(drawInfo.matrix, clipPaths);
-      clipRec := Image32_Vector.GetBounds(clipPaths);
+      clipRec := Img32.Vector.GetBounds(clipPaths);
     end;
     if IsEmptyRect(clipRec) then Exit;
 
@@ -1013,8 +1016,7 @@ begin
     begin
       el := TShapeElement(fChilds[i]);
       el.GetPaths(drawInfo);
-      maskRec := Image32_Vector.UnionRect(maskRec,
-        Image32_Vector.GetBounds(el.drawPathsF));
+      Types.UnionRect(maskRec, maskRec, Img32.Vector.GetBounds(el.drawPathsF));
     end;
   MatrixApply(drawInfo.matrix, maskRec);
 end;
@@ -1357,8 +1359,12 @@ begin
     Result.Right := Result.Left + recWH.Width;
     Result.Bottom := Result.Top + recWH.Height;
   end else
+  begin
     //default: inflate by 15%
-    Result := InflateRect(bounds, bounds.Width * 0.15, bounds.Height * 0.15);
+    Result := bounds;
+    Img32.Vector.InflateRect(Result,
+      bounds.Width * 0.15, bounds.Height * 0.15);
+  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -1430,7 +1436,7 @@ var
 begin
   fScale := ExtractAvgScaleFromMatrix(matrix);
   fFilterBounds := filterBounds;
-  fObjectBounds := Image32_Vector.IntersectRect(img.Bounds, fObjectBounds);
+  Types.IntersectRect(fObjectBounds, fObjectBounds, img.Bounds);
   fSrcImg := img;
   try
     for i := 0 to fChilds.Count -1 do
@@ -1724,7 +1730,7 @@ begin
   off := offset.GetPoint(RectD(pfe.fObjectBounds), GetRelFracLimit);
   off := ScalePoint(off, pfe.fScale);
   dstOffRec := dstRec;
-  with Point(off) do Image32_Vector.OffsetRect(dstOffRec, X, Y);
+  with Point(off) do Types.OffsetRect(dstOffRec, X, Y);
   dstImg.Copy(srcImg, srcRec, dstOffRec);
   dstImg.SetRGB(floodColor);
   alpha := floodColor shr 24;
@@ -1844,7 +1850,7 @@ begin
   off := offset.GetPoint(RectD(pfe.fObjectBounds), GetRelFracLimit);
   off := ScalePoint(off, pfe.fScale);
   dstOffRec := dstRec;
-  with Point(off) do Image32_Vector.OffsetRect(dstOffRec, X, Y);
+  with Point(off) do Types.OffsetRect(dstOffRec, X, Y);
 
   if srcImg = dstImg then
   begin
@@ -2002,7 +2008,7 @@ begin
           if HasFontUnits then
             d := GetValue(drawInfo.fontInfo.size, GetRelFracLimit) else
             d := GetValueXY(clipRec, GetRelFracLimit);
-        clipRec := InflateRect(clipRec, d * 0.5, d * 0.5);
+        Img32.Vector.InflateRect(clipRec, d * 0.5, d * 0.5);
       end;
       if Assigned(filterEl) then
         with TFilterElement(filterEl) do
@@ -2010,7 +2016,7 @@ begin
       MatrixApply(drawInfo.matrix, clipRec);
     end;
     clipRec2 := Rect(clipRec);
-    clipRec2 := Image32_Vector.IntersectRect(clipRec2, img.Bounds);
+    Types.IntersectRect(clipRec2, clipRec2, img.Bounds);
     if IsEmptyRect(clipRec2) then Exit;
     if image <> fReader.TempImage then
       img.Clear(clipRec2);
@@ -2284,7 +2290,7 @@ end;
 
 procedure TPathElement.ParseDAttrib(const value: UTF8String);
 begin
-  fSvgPaths := Image32_SVG_Core.ParseSvgPath(value);
+  fSvgPaths := ParseSvgPath(value);
 end;
 //------------------------------------------------------------------------------
 
@@ -4520,13 +4526,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgReader.SetDefaultFillColor(color: TColor32);
+procedure TSvgReader.SetOverrideFillColor(color: TColor32);
 begin
   fDefFillColor := color;
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgReader.SetDefaultStrokeColor(color: TColor32);
+procedure TSvgReader.SetOverrideStrokeColor(color: TColor32);
 begin
   fDefStrokeColor := color;
 end;

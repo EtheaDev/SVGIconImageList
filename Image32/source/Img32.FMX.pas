@@ -1,9 +1,9 @@
-unit Image32_FMX;
+unit Img32.FMX;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.27                                                            *
-* Date      :  15 July 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  Image file format support for TImage32 and FMX                  *
@@ -12,9 +12,9 @@ unit Image32_FMX;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 uses
-  SysUtils, Classes, Math, Image32, System.Rtti,
+  SysUtils, Classes, Math, Img32, System.Rtti,
   System.Generics.Collections, System.Generics.Defaults,
   FMX.Platform, FMX.Types, FMX.Surfaces, FMX.Graphics;
 

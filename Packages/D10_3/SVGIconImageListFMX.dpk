@@ -32,9 +32,11 @@ package SVGIconImageListFMX;
 
 requires
   fmx,
+  SVGImage32Package,
   SVGIconPackage;
 
 contains
+  FMX.Image32SVG in '..\..\Source\FMX.Image32SVG.pas',
   FMX.SVGIconImageList in '..\..\Source\FMX.SVGIconImageList.pas',
   FMX.SVGIconImage in '..\..\Source\FMX.SVGIconImage.pas';
 

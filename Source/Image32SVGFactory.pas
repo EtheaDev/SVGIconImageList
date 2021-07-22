@@ -26,12 +26,12 @@ Uses
   System.UITypes,
   System.SysUtils,
   System.Classes,
-  Image32,             //Warning: from version 2.3 the default rendering engine is Image32
-  Image32_SVG_Core,    //because is the best engine available with SVGIconImageList.
-  Image32_SVG_Reader,  //If you don't want to use it change SVGIconImageList.inc
-  Image32_SVG_Writer,  //Otherwise you must add two search path:
-  Image32_Ttf,         //- SVGIconImageList\Image32\Source
-  Image32_Vector;      //- SVGIconImageList\Image32\Source\Image32_SVG
+  Img32,             //Warning: from version 2.3 the default rendering engine is Image32
+  Img32.SVG.Core,    //because is the best engine available with SVGIconImageList.
+  Img32.SVG.Reader,  //If you don't want to use it change SVGIconImageList.inc
+  Img32.SVG.Writer,  //Otherwise you must add this search path:
+  Img32.Text,        //- SVGIconImageList\Image32\Source
+  Img32.Vector;
 
 resourcestring
   D2D_ERROR_NOT_AVAILABLE    = 'Windows SVG support is not available';
@@ -215,8 +215,8 @@ begin
   else
     color := clNone32;
 
-  fSvgReader.SetDefaultFillColor(color);
-  fSvgReader.SetDefaultStrokeColor(color);
+  fSvgReader.SetOverrideFillColor(color);
+  fSvgReader.SetOverrideStrokeColor(color);
 
   FsvgReader.KeepAspectRatio := KeepAspectRatio;
 

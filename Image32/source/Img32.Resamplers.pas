@@ -1,9 +1,9 @@
-unit Image32_Resamplers;
+unit Img32.Resamplers;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.24                                                            *
-* Date      :  26 June 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  For image transformations (scaling, rotating etc.)              *
@@ -12,10 +12,10 @@ unit Image32_Resamplers;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 uses
-  SysUtils, Classes, Types, Image32;
+  SysUtils, Classes, Types, Img32;
 
 //BoxDownSampling: As the name implies, this routine is only intended for
 //image down-sampling (ie when shrinking images) where it generally performs
@@ -34,7 +34,7 @@ function BicubicResample(img: TImage32; x256, y256: Integer): TColor32;
 implementation
 
 uses
-  Image32_Vector, Image32_Transform;
+  Img32.Vector, Img32.Transform;
 
 //------------------------------------------------------------------------------
 // NearestNeighbor resampler

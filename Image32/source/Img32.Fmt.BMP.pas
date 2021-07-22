@@ -1,9 +1,9 @@
-unit Image32_BMP;
+unit Img32.Fmt.BMP;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.27                                                            *
-* Date      :  15 July 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  BMP file format extension for TImage32                          *
@@ -12,10 +12,10 @@ unit Image32_BMP;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 uses
-  {$IFDEF MSWINDOWS} Windows,{$ENDIF} SysUtils, Classes, Math, Image32;
+  {$IFDEF MSWINDOWS} Windows,{$ENDIF} SysUtils, Classes, Math, Img32;
 
 type
 

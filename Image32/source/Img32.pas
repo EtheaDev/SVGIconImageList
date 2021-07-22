@@ -1,9 +1,9 @@
-unit Image32;
+unit Img32;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.27                                                            *
-* Date      :  15 July 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -16,7 +16,7 @@ unit Image32;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 uses
   {$IFDEF MSWINDOWS} Windows,{$ENDIF} Types, SysUtils, Classes,
@@ -452,7 +452,7 @@ const
 var
   ClockwiseRotationIsAnglePositive: Boolean = true;
 
-  //Resampling function identifiers (initialized in Image32_Resamplers)
+  //Resampling function identifiers (initialized in Img32.Resamplers)
   rNearestResampler : integer;
   rBilinearResampler: integer;
   rBicubicResampler : integer;
@@ -494,7 +494,7 @@ var
 implementation
 
 uses
-  Image32_Vector, Image32_Resamplers, Image32_Transform;
+  Img32.Vector, Img32.Resamplers, Img32.Transform;
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -1497,7 +1497,7 @@ var
   i,j, rw: Integer;
   c: PColor32;
 begin
-  rec := Image32_Vector.IntersectRect(rec, bounds);
+  Types.IntersectRect(rec, rec, bounds);
   if IsEmptyRect(rec) then Exit;
   rw := RectWidth(rec);
   c := @Pixels[rec.Top * Width + rec.Left];
@@ -1533,7 +1533,7 @@ begin
   setLength(result, w * h);
 
   if w * h = 0 then Exit;
-  recClipped := Image32_Vector.IntersectRect(rec, Bounds);
+  Types.IntersectRect(recClipped, rec, Bounds);
   //if recClipped is wholely outside the bounds of the image ...
   if IsEmptyRect(recClipped) then
   begin
@@ -1695,7 +1695,7 @@ var
   pc: PColor32;
 begin
   //this NearestNeighbor code is slightly more efficient than
-  //the more general purpose one in Image32_Resamplers
+  //the more general purpose one in Img32.Resamplers
 
   if (newWidth = fWidth) and (newHeight = fHeight) then Exit;
   SetLength(tmp, newWidth * newHeight * SizeOf(TColor32));
@@ -2114,12 +2114,12 @@ function TImage32.CopyBlend(src: TImage32; srcRec, dstRec: TRect;
   blendFunc: TBlendFunction): Boolean;
 var
   tmp: TImage32;
-  srcRecClipped, dstRecClipped: TRect;
+  srcRecClipped, dstRecClipped, r: TRect;
   scale, scaleSrc, scaleDst: TPointD;
 begin
   result := false;
   if IsEmptyRect(srcRec) or IsEmptyRect(dstRec) then Exit;
-  srcRecClipped := Image32_Vector.IntersectRect(srcRec, src.Bounds);
+  Types.IntersectRect(srcRecClipped, srcRec, src.Bounds);
 
   //get the scaling amount (if any) before
   //dstRec might be adjusted due to clipping ...
@@ -2152,7 +2152,7 @@ begin
     Exit;
   end;
 
-  dstRecClipped := Image32_Vector.IntersectRect(dstRec, Bounds);
+  Types.IntersectRect(dstRecClipped, dstRec, Bounds);
   if IsEmptyRect(dstRecClipped) then Exit;
 
   //there's no scaling if we get here, but further clipping may be needed if
@@ -2171,9 +2171,7 @@ begin
 
   //when copying to self and srcRec & dstRec overlap then
   //copy srcRec to a temporary image and use it as the source ...
-  if (src = self) and
-    not IsEmptyRect(Image32_Vector.IntersectRect(
-      srcRecClipped, dstRecClipped)) then
+  if (src = self) and Types.IntersectRect(r, srcRecClipped, dstRecClipped) then
   begin
     tmp := TImage32.Create(self, srcRecClipped);
     try
@@ -2273,7 +2271,7 @@ var
   isTransparent: Boolean;
   bf: BLENDFUNCTION;
 begin
-  rec := Image32_Vector.IntersectRect(srcRect, Bounds);
+  Types.IntersectRect(rec, srcRect, Bounds);
   if IsEmpty or IsEmptyRect(rec) or IsEmptyRect(dstRect) then Exit;
   wSrc := RectWidth(rec);
   hSrc := RectHeight(rec);
@@ -2557,7 +2555,7 @@ var
   i,j, dx: Integer;
   pc: PARGB;
 begin
-  rec := Image32_Vector.IntersectRect(rec, bounds);
+  Types.IntersectRect(rec, rec, bounds);
   if IsEmptyRect(rec) then Exit;
   r := rgb.R; g := rgb.G; b := rgb.B;
   pc := PARGB(PixelBase);
@@ -2616,7 +2614,7 @@ var
   i,j, rw: Integer;
   c: PARGB;
 begin
-  rec := Image32_Vector.IntersectRect(rec, bounds);
+  Types.IntersectRect(rec, rec, bounds);
   if IsEmptyRect(rec) then Exit;
   rw := RectWidth(rec);
   c := @Pixels[rec.Top * Width + rec.Left];

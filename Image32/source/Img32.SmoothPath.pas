@@ -1,9 +1,9 @@
-unit Image32_SmoothPath;
+unit Img32.SmoothPath;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.24                                                            *
-* Date      :  26 June 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -16,10 +16,10 @@ unit Image32_SmoothPath;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 uses
-  SysUtils, Classes, Math, Image32, Image32_Vector, Image32_Layers;
+  SysUtils, Classes, Types, Math, Img32, Img32.Vector, Img32.Layers;
 
 type
   TSmoothType = (stSmoothSym, stSmoothAsym, stSharpWithHdls, stSharpNoHdls);
@@ -160,9 +160,9 @@ implementation
 
 uses
   {$IFNDEF MSWINDOWS}
-  Image32_FMX,
+  Img32.FMX,
   {$ENDIF}
-  Image32_SVG_Core, Image32_Extra, Image32_Draw;
+  Img32.Extra, Img32.Draw;
 
 resourcestring
   rsSmoothPath = 'SmoothPath';
@@ -289,7 +289,7 @@ end;
 
 function  TSmoothPath.GetBounds: TRect;
 begin
-  Result := Image32_Vector.GetBounds(GetPoints);
+  Result := Img32.Vector.GetBounds(GetPoints);
 end;
 //------------------------------------------------------------------------------
 
@@ -887,7 +887,7 @@ begin
     //update group bounds
     if i = 0 then
       Result := btnLayer.Bounds else
-      Result := Image32_Vector.UnionRect(Result, btnLayer.Bounds);
+      Types.UnionRect(Result, Result, btnLayer.Bounds);
   end;
 end;
 //------------------------------------------------------------------------------
@@ -936,7 +936,7 @@ begin
       with ActiveButtonLayer do
       begin
         rec := RectD(Bounds);
-        rec := InflateRect(rec, Size/2, Size/2);
+        InflateRect(rec, Size/2, Size/2);
       end;
       OffsetRect(rec, -dx, -dy);
       tmpPath := Ellipse(rec);
@@ -1014,11 +1014,11 @@ begin
   BeginUpdate;
   try
     rec := UpdateButtonsAndCalcBounds;
-    rec := InflateRect(rec, margin, margin);
+    Img32.Vector.InflateRect(rec, margin, margin);
 
     VectorLayer.Margin := margin;
     //nb: assigning VectorLayer.Paths will adjust Bounds automatically
-    VectorLayer.Paths := Image32_Vector.Paths(SmoothPath.FlattenedPath);
+    VectorLayer.Paths := Img32.Vector.Paths(SmoothPath.FlattenedPath);
     DesignLayer.SetBounds(rec);
     PaintDesignerLayer;
   finally

@@ -1,9 +1,9 @@
-unit Image32_Extra;
+unit Img32.Extra;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.25                                                            *
-* Date      :  28 June 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -17,11 +17,11 @@ unit Image32_Extra;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 uses
   SysUtils, Classes, Math, Types,
-  Image32, Image32_Draw, Image32_Vector;
+  Img32, Img32.Draw, Img32.Vector;
 
 type
   TButtonShape = (bsRound, bsSquare, bsDiamond);
@@ -145,9 +145,9 @@ implementation
 
 uses
   {$IFNDEF MSWINDOWS}
-  Image32_FMX,
+  Img32.FMX,
   {$ENDIF}
-  Image32_Transform;
+  Img32.Transform;
 
 const
   FloodFillDefaultRGBTolerance: byte = 20;
@@ -269,7 +269,7 @@ begin
   x := depth * x;
   y := depth * y;
   blurSize := Max(1,Round(depth / 4));
-  rec := Image32_Vector.InflateRect(rec, Ceil(depth*2), Ceil(depth*2));
+  Img32.Vector.InflateRect(rec, Ceil(depth*2), Ceil(depth*2));
   polys := OffsetPath(polygons, -rec.Left, -rec.Top);
   shadowPolys := OffsetPath(polys, x, y);
   shadowImg := TImage32.Create(RectWidth(rec), RectHeight(rec));
@@ -305,7 +305,7 @@ begin
   rec := GetBounds(polygons);
   glowPolys := OffsetPath(polygons,
     blurRadius -rec.Left +1, blurRadius -rec.Top +1);
-  rec := Image32_Vector.InflateRect(rec, blurRadius +1, blurRadius +1);
+  Img32.Vector.InflateRect(rec, blurRadius +1, blurRadius +1);
   glowImg := TImage32.Create(RectWidth(rec), RectHeight(rec));
   try
     DrawPolygon(glowImg, glowPolys, fillRule, color);
@@ -397,7 +397,7 @@ begin
     path[0] := PointD(x, 0); path[1] := PointD(x, h);;
     for i := 1 to (w div minorInterval) do
     begin
-      Image32_Draw.DrawLine(img, path, 1, minColor, esSquare);
+      Img32.Draw.DrawLine(img, path, 1, minColor, esSquare);
       path[0].X := path[0].X + minorInterval;
       path[1].X := path[1].X + minorInterval;
     end;
@@ -405,7 +405,7 @@ begin
     path[0] := PointD(0, y); path[1] := PointD(w, y);
     for i := 1 to (h div minorInterval) do
     begin
-      Image32_Draw.DrawLine(img, path, 1, minColor, esSquare);
+      Img32.Draw.DrawLine(img, path, 1, minColor, esSquare);
       path[0].Y := path[0].Y + minorInterval;
       path[1].Y := path[1].Y + minorInterval;
     end;
@@ -416,7 +416,7 @@ begin
     path[0] := PointD(x, 0); path[1] := PointD(x, h);;
     for i := 1 to (w div majorInterval) do
     begin
-      Image32_Draw.DrawLine(img, path, 1, majColor, esSquare);
+      Img32.Draw.DrawLine(img, path, 1, majColor, esSquare);
       path[0].X := path[0].X + majorInterval;
       path[1].X := path[1].X + majorInterval;
     end;
@@ -424,7 +424,7 @@ begin
     path[0] := PointD(0, y); path[1] := PointD(w, y);
     for i := 1 to (h div majorInterval) do
     begin
-      Image32_Draw.DrawLine(img, path, 1, majColor, esSquare);
+      Img32.Draw.DrawLine(img, path, 1, majColor, esSquare);
       path[0].Y := path[0].Y + majorInterval;
       path[1].Y := path[1].Y + majorInterval;
     end;
@@ -504,7 +504,7 @@ begin
   else if k < 230 then k := 3
   else k := 4;
   cutoutRec := rect;
-  Image32_Vector.InflateRect(cutoutRec, k, k);
+  Img32.Vector.InflateRect(cutoutRec, k, k);
 
   cutout  := TImage32.Create(img, cutoutRec);
   mask    := TImage32.Create(cutout.Width, cutout.Height);
@@ -513,7 +513,7 @@ begin
     //fill behind the cutout with black also
     //blurring the fill to soften its edges
     rect3 := cutout.Bounds;
-    Image32_Vector.InflateRect(rect3, -k, -k);
+    Img32.Vector.InflateRect(rect3, -k, -k);
     path := Ellipse(rect3);
     DrawPolygon(mask, path, frNonZero, clBlack32);
     //given the very small area and small radius of the blur, the
@@ -722,7 +722,7 @@ begin
       end;
     bsSquare:
       begin
-        rec := InflateRect(rec, -1,-1);
+        Img32.Vector.InflateRect(rec, -1,-1);
         Result := Rectangle(rec);
       end;
     else
@@ -2516,7 +2516,7 @@ var
   row: PColor32Array;
   wcRow: PWeightedColorArray;
 begin
-  rec := Image32_Vector.IntersectRect(rec, img.Bounds);
+  Types.IntersectRect(rec, rec, img.Bounds);
   if IsEmptyRect(rec) or (radius < 1) then Exit
   else if radius > MaxBlur then radius := MaxBlur;
 
@@ -2682,7 +2682,7 @@ var
   p: PColor32;
 begin
   if not Assigned(img) then Exit;
-  rec2 := Image32_Vector.IntersectRect(rec, img.Bounds);
+  Types.IntersectRect(rec2, rec, img.Bounds);
   if IsEmptyRect(rec2) then Exit;
   blurFullImage := RectsEqual(rec2, img.Bounds);
 

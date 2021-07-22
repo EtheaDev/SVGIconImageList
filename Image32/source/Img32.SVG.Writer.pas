@@ -1,9 +1,9 @@
-unit Image32_SVG_Writer;
+unit Img32.SVG.Writer;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.27                                                            *
-* Date      :  17 July 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -19,13 +19,13 @@ unit Image32_SVG_Writer;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 uses
   SysUtils, Classes, Types, Math,
   {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults,{$ENDIF}
-  Image32, Image32_SVG_Core, Image32_Vector, Image32_Draw,
-  Image32_Transform, Image32_Ttf;
+  Img32, Img32.SVG.Core, Img32.Vector, Img32.Draw,
+  Img32.Transform, Img32.Text;
 
 {$IFDEF ZEROBASEDSTR}
   {$ZEROBASEDSTRINGS OFF}
@@ -227,7 +227,7 @@ end;
 
 procedure AppendInt(var s: string; val: double);
 begin
-  s := Format('%s%1.0d ',[s, val]);
+  s := Format('%s%1.0f ',[s, val]);
 end;
 //------------------------------------------------------------------------------
 

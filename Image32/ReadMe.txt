@@ -1,7 +1,7 @@
 
 Image32 - 2D graphics library for Delphi Pascal
-Latest version: 2.26
-Released: 13 July 2021
+Latest version: 3.0
+Released: 20 July 2021
 
 Copyright © 2019-2021 Angus Johnson
 Freeware released under Boost Software License
@@ -11,6 +11,11 @@ Documentation : http://www.angusj.com/delphi/image32/Docs/
 Download      : https://sourceforge.net/projects/image32/files/
 
 Recent changes:
+
+Version 3.0
+  The Library's unit structure has changed significantly.
+  (Please see the accompanying install instructions and 
+  the accompanying upgrade utility.)
 
 Version 2.26
   Image32_SVG_Reader

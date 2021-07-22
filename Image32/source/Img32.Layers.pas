@@ -1,9 +1,9 @@
-unit Image32_Layers;
+unit Img32.Layers;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.24                                                            *
-* Date      :  26 June 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -16,16 +16,16 @@ unit Image32_Layers;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 uses
   SysUtils, Classes, Math, Types,
   {$IFDEF XPLAT_GENERICS} Generics.Collections, {$ENDIF}
-  Image32, Image32_Draw, Image32_Extra, Image32_Vector, Image32_Transform;
+  Img32, Img32.Draw, Img32.Extra, Img32.Vector, Img32.Transform;
 
 type
   TSizingStyle = (ssCorners, ssEdges, ssEdgesAndCorners);
-  TButtonShape = Image32_Extra.TButtonShape;
+  TButtonShape = Img32.Extra.TButtonShape;
 
   TLayer32 = class;
   TLayer32Class = class of TLayer32;
@@ -418,7 +418,7 @@ implementation
 
 {$IFNDEF MSWINDOWS}
 uses
-  Image32_FMX;
+  Img32.FMX;
 {$ENDIF}
 
 resourcestring
@@ -625,7 +625,7 @@ begin
     with GroupOwner do
     begin
       if (fUpdateCount = 0) and not IsEmptyRect(rec) then
-        fLocalInvalidRect := Image32_Vector.UnionRect(fLocalInvalidRect, rec);
+        Types.UnionRect(fLocalInvalidRect, fLocalInvalidRect, rec);
     end;
   RefreshPending;
 end;
@@ -678,7 +678,7 @@ end;
 
 function TLayer32.GetMidPoint: TPointD;
 begin
-  Result := Image32_Vector.MidPoint(RectD(Bounds));
+  Result := Img32.Vector.MidPoint(RectD(Bounds));
 end;
 //------------------------------------------------------------------------------
 
@@ -952,16 +952,15 @@ begin
       with TGroupLayer32(Child[i]) do
     begin
       PreMerge(hideDesigners, forceRefresh);
-      if not forceRefresh then
-        Self.fLocalInvalidRect := Image32_Vector.UnionRect(
-          Self.fLocalInvalidRect, fLocalInvalidRect);
+      if not forceRefresh then Types.UnionRect(
+        Self.fLocalInvalidRect, Self.fLocalInvalidRect, fLocalInvalidRect);
       fLocalInvalidRect := NullRect;
     end else
     begin
       if not forceRefresh and Child[i].fRefreshPending then
-        Self.fLocalInvalidRect :=
-          Image32_Vector.UnionRect(Self.fLocalInvalidRect, Child[i].Bounds);
-      rec := Image32_Vector.UnionRect(rec, Child[i].Bounds);
+        Types.UnionRect(Self.fLocalInvalidRect,
+          Self.fLocalInvalidRect, Child[i].Bounds);
+      Types.UnionRect(rec, rec, Child[i].Bounds);
       Child[i].fRefreshPending := false;
     end;
     Child[i].fDirtyBounds := Child[i].Bounds;
@@ -994,7 +993,7 @@ begin
       (hideDesigners and (Child[i] is TDesignerLayer32)) then
         Continue;
 
-    srcRect := Image32_Vector.IntersectRect(staleRect, Child[i].Bounds);
+    Types.IntersectRect(srcRect, staleRect, Child[i].Bounds);
     if IsEmptyRect(srcRect) then Continue;
 
     if (Child[i] is TGroupLayer32) then
@@ -1002,9 +1001,9 @@ begin
 
     //make dstRect relative to groupLayer
     dstRect := srcRect;
-    Image32_Vector.OffsetRect(dstRect, -Left, -Top);
+    Types.OffsetRect(dstRect, -Left, -Top);
     //make srcRect relative to image
-    Image32_Vector.OffsetRect(srcRect, -Child[i].Left, -Child[i].Top);
+    Types.OffsetRect(srcRect, -Child[i].Left, -Child[i].Top);
 
     if Child[i].Opacity < 254 then //reduce layer opacity
     begin
@@ -1246,7 +1245,7 @@ begin
   begin
     //apply scaling and translation
     mat := IdentityMatrix;
-    rec := Image32_Vector.GetBounds(fPaths);
+    rec := Img32.Vector.GetBounds(fPaths);
     MatrixTranslate(mat, -rec.Left, -rec.Top);
     MatrixScale(mat, w/(Width - m2), h/(Height - m2));
     MatrixTranslate(mat, newBounds.Left + Margin, newBounds.Top + Margin);
@@ -1280,8 +1279,8 @@ procedure TVectorLayer32.RepositionAndDraw;
 var
   rec: TRect;
 begin
-  rec := Image32_Vector.GetBounds(fPaths);
-  rec := Image32_Vector.InflateRect(rec, Margin, Margin);
+  rec := Img32.Vector.GetBounds(fPaths);
+  Img32.Vector.InflateRect(rec, Margin, Margin);
   inherited SetBounds(rec);
   Image.BlockUpdate;
   try
@@ -1400,7 +1399,7 @@ begin
       end;
 
       with MasterImage do
-        fSavedSize := Image32_Vector.Size(Width, Height);
+        fSavedSize := Img32.Vector.Size(Width, Height);
       Image.Assign(MasterImage); //this will call ImageChange for Image
       Image.Resampler := RootOwner.Resampler;
     finally
@@ -1558,7 +1557,7 @@ begin
   fZeroOffset := startingZeroOffset;
 
   if buttonSize <= 0 then buttonSize := DefaultButtonSize;
-  pivot := Image32_Vector.MidPoint(rec);
+  pivot := Img32.Vector.MidPoint(rec);
   dist := Average(RectWidth(rec), RectHeight(rec)) div 2;
   rec2 := RectD(pivot.X -dist,pivot.Y -dist,pivot.X +dist,pivot.Y +dist);
 
@@ -1566,7 +1565,8 @@ begin
   begin
     SetBounds(Rect(rec2));
     i := DpiAwareI*2;
-    r := InflateRect(rec2, -i,-i);
+    r := rec2;
+    Img32.Vector.InflateRect(r, -i,-i);
     OffsetRect(r, -Left, -Top);
     DrawDashedLine(Image, Ellipse(r), dashes, nil, i, clRed32, esPolygon);
   end;
@@ -1578,7 +1578,7 @@ begin
     buttonLayerClass, rsButton)) do
   begin
     SetButtonAttributes(bsRound, buttonSize, centerButtonColor);
-    PositionCenteredAt(Image32_Vector.MidPoint(rec));
+    PositionCenteredAt(Img32.Vector.MidPoint(rec));
     CursorId := crSizeAll;
   end;
 
@@ -1623,14 +1623,14 @@ end;
 function TRotatingGroupLayer32.GetAngle: double;
 begin
   Result :=
-    Image32_Vector.GetAngle(Child[1].MidPoint, Child[2].MidPoint)  - fZeroOffset;
+    Img32.Vector.GetAngle(Child[1].MidPoint, Child[2].MidPoint)  - fZeroOffset;
   NormalizeAngle(Result);
 end;
 //------------------------------------------------------------------------------
 
 function TRotatingGroupLayer32.GetDistance: double;
 begin
-  Result := Image32_Vector.Distance(Child[1].MidPoint, Child[2].MidPoint);
+  Result := Img32.Vector.Distance(Child[1].MidPoint, Child[2].MidPoint);
 end;
 
 //------------------------------------------------------------------------------
@@ -1692,9 +1692,9 @@ end;
 
 procedure TButtonDesignerLayer32.Draw;
 begin
-  fButtonOutline := Image32_Extra.DrawButton(Image,
+  fButtonOutline := Img32.Extra.DrawButton(Image,
     image.MidPoint, fSize, fColor, fShape, [ba3D, baShadow]);
-  UpdateHitTestMask(Image32_Vector.Paths(fButtonOutline), frEvenOdd);
+  UpdateHitTestMask(Img32.Vector.Paths(fButtonOutline), frEvenOdd);
 end;
 
 //------------------------------------------------------------------------------
@@ -1755,7 +1755,7 @@ begin
     //to clip regions outside the drawing surface
     updateRect := Self.Bounds;
     if not forceRefresh then
-      updateRect := Image32_Vector.IntersectRect(fLocalInvalidRect, updateRect);
+      Types.IntersectRect(updateRect, fLocalInvalidRect, updateRect);
 
     fLocalInvalidRect := NullRect;
     if not IsEmptyRect(updateRect) then
@@ -2117,7 +2117,7 @@ function CreateRotatingButtonGroup(targetLayer: TLayer32;
 var
   pivot: TPointD;
 begin
-  pivot := PointD(Image32_Vector.MidPoint(targetLayer.Bounds));
+  pivot := PointD(Img32.Vector.MidPoint(targetLayer.Bounds));
   Result := CreateRotatingButtonGroup(targetLayer, pivot, buttonSize,
     pivotButtonColor, angleButtonColor, initialAngle, angleOffset,
     enablePivotMove, buttonLayerClass);

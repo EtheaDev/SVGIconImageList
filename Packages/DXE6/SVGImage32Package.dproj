@@ -88,22 +88,22 @@
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="..\..\Image32\source\Image32.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_BMP.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_CQ.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Draw.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Extra.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Layers.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Resamplers.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SmoothPath.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SVG.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Transform.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Ttf.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_Vector.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32Panels.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SVG\Image32_SVG_Core.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SVG\Image32_SVG_Reader.pas"/>
-        <DCCReference Include="..\..\Image32\source\Image32_SVG\Image32_SVG_Writer.pas"/>
+        <DCCReference Include="vclimg.dcp"/>
+        <DCCReference Include="..\..\Image32\source\Img32.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Fmt.PNG.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.CQ.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Draw.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Extra.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Layers.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Resamplers.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.SmoothPath.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Transform.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Text.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Vector.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Fmt.SVG.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.SVG.Core.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.SVG.Reader.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.SVG.Writer.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -124,10 +124,7 @@
                 <Source>
                     <Source Name="MainSource">SVGImage32Package.dpk</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k200.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp200.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Deployment Version="1">
                 <DeployFile LocalName="$(BDS)\Redist\iossimulator\libPCRE.dylib" Class="DependencyModule">
@@ -135,8 +132,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
-                    <Platform Name="iOSSimulator">
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\SVGImage32Package_D10_2.bpl" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>SVGImage32Package.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -168,9 +166,8 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\SVGImage32Package_D10_2.bpl" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>SVGImage32Package.bpl</RemoteName>
+                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
+                    <Platform Name="iOSSimulator">
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -195,24 +192,32 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPad_Launch1024x768">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPhone_Launch1792">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSResource">
+                    <Platform Name="iOSDevice">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -223,14 +228,6 @@
                     </Platform>
                     <Platform Name="iOSSimulator">
                         <RemoteDir>..\$(PROJECTNAME).launchscreen\Assets\AppIcon.appiconset</RemoteDir>
-                        <Operation>1</Operation>
-                    </Platform>
-                </DeployClass>
-                <DeployClass Name="ProjectiOSResource">
-                    <Platform Name="iOSDevice">
-                        <Operation>1</Operation>
-                    </Platform>
-                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -271,24 +268,24 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPhone_Launch1242">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPad_Launch1536x2048">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -314,13 +311,13 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPad_Launch2224">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -358,24 +355,24 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPhone_Launch2436">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPad_Launch2048x2732">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -487,24 +484,24 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPhone_Launch1242x2688">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPad_Launch2388x1668">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -525,13 +522,13 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPad_Launch2048x1536">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -554,13 +551,13 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPhone_Launch750">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -571,13 +568,13 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPhone_Launch1334">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -592,13 +589,13 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPhone_Launch2208">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -609,13 +606,13 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPhone_Launch1125">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -750,13 +747,13 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPhone_Launch1136x640">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -800,13 +797,13 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPhone_Launch828">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -854,13 +851,13 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPhone_Launch2688x1242">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -875,13 +872,13 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPad_Launch768x1024">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -908,13 +905,13 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPad_Launch1668">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -975,24 +972,24 @@
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPad_Launch1668x2388">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="iPad_Launch2732x2048">
-                    <Platform Name="iOSSimulator">
+                    <Platform Name="iOSDevice32">
                         <Operation>1</Operation>
                     </Platform>
                     <Platform Name="iOSDevice64">
                         <Operation>1</Operation>
                     </Platform>
-                    <Platform Name="iOSDevice32">
+                    <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
@@ -1037,17 +1034,17 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="iOSDevice" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="OSX64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="iOSDevice" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
-                <ProjectRoot Platform="Android64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Android64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
             </Deployment>
             <Platforms>
                 <Platform value="Win32">True</Platform>

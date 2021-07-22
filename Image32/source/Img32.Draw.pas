@@ -1,9 +1,9 @@
-unit Image32_Draw;
+unit Img32.Draw;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.25                                                            *
-* Date      :  30 June 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -16,16 +16,16 @@ unit Image32_Draw;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 {.$DEFINE MemCheck} //for debugging only (adds a minimal cost to performance)
 
 uses
-  SysUtils, Classes, Types, Math, Image32, Image32_Vector,
-  Image32_Transform; //experimental;
+  SysUtils, Classes, Types, Math, Img32, Img32.Vector,
+  Img32.Transform; //experimental;
 
 type
-  TFillRule = Image32_Vector.TFillRule;
+  TFillRule = Img32.Vector.TFillRule;
 
   //TGradientColor: used internally by both
   //TLinearGradientRenderer and TRadialGradientRenderer
@@ -280,9 +280,9 @@ type
 
   //Both DrawBoolMask and DrawAlphaMask require
   //'mask' length to equal 'img' width * height
-  procedure DrawBoolMask(img: TIMage32;
+  procedure DrawBoolMask(img: TImage32;
     const mask: TArrayOfByte; color: TColor32 = clBlack32);
-  procedure DrawAlphaMask(img: TIMage32;
+  procedure DrawAlphaMask(img: TImage32;
     const mask: TArrayOfByte; color: TColor32 = clBlack32);
 
   procedure Rasterize(const paths: TPathsD;
@@ -292,7 +292,7 @@ implementation
 
 {$IFDEF MemCheck}
 resourcestring
-  sMemCheckError = 'Image32_Draw: Memory allocation error';
+  sMemCheckError = 'Img32.Draw: Memory allocation error';
 {$ENDIF}
 
 type
@@ -341,7 +341,7 @@ var
 begin
   // Precondition: the background to text drawn onto 'img' must be transparent
 
-  // multiplication tables (see Image32.pas)
+  // multiplication tables (see Img32.pas)
   // 85 + (2 * 57) + (2 * 28) == 255
   primeTbl := PByteArray(@MulTable[85 + centerWeighting *2]);
   nearTbl  := PByteArray(@MulTable[57]);
@@ -961,7 +961,7 @@ var
 begin
   //See also https://nothings.org/gamedev/rasterize/
   if not assigned(renderer) then Exit;
-  clipRec2 := Image32_Vector.IntersectRect(clipRec, GetBounds(paths));
+  Types.IntersectRect(clipRec2, clipRec, GetBounds(paths));
   if IsEmptyRect(clipRec2) then Exit;
 
   paths2 := OffsetPath(paths, -clipRec2.Left, -clipRec2.Top);
@@ -1732,6 +1732,7 @@ begin
   if not assigned(lines) then exit;
   if (lineWidth < MinStrokeWidth) then lineWidth := MinStrokeWidth;
   lines2 := Outline(lines, lineWidth, joinStyle, endStyle, miterLimit);
+
   cr := TColorRenderer.Create(color);
   try
     if cr.Initialize(img) then
@@ -2026,7 +2027,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure DrawBoolMask(img: TIMage32; const mask: TArrayOfByte; color: TColor32);
+procedure DrawBoolMask(img: TImage32; const mask: TArrayOfByte; color: TColor32);
 var
   i, len: integer;
   pc: PColor32;
@@ -2050,7 +2051,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure DrawAlphaMask(img: TIMage32; const mask: TArrayOfByte; color: TColor32);
+procedure DrawAlphaMask(img: TImage32; const mask: TArrayOfByte; color: TColor32);
 var
   i, len: integer;
   pc: PColor32;

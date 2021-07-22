@@ -1,9 +1,9 @@
-unit Image32_SVG_Core;
+unit Img32.SVG.Core;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.27                                                            *
-* Date      :  17 July 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -16,12 +16,12 @@ unit Image32_SVG_Core;
 
 interface
 
-{$I ..\Image32.inc}
+{$I Img32.inc}
 
 uses
   SysUtils, Classes, Types, Math,
   {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults,{$ENDIF}
-  Image32, Image32_Vector, Image32_Ttf, Image32_Transform;
+  Img32, Img32.Vector, Img32.Text, Img32.Transform;
 
 {$IFDEF ZEROBASEDSTR}
   {$ZEROBASEDSTRINGS OFF}
@@ -87,6 +87,11 @@ type
   {$IFNDEF UNICODE}
   UTF8Char  = Char;
   PUTF8Char = PChar;
+  {$ELSE}
+    {$IF COMPILERVERSION < 31}
+    UTF8Char = AnsiChar;
+    PUTF8Char = PAnsiChar;
+    {$IFEND}
   {$ENDIF}
 
   TAnsi = {$IFDEF RECORD_METHODS} record {$ELSE} object {$ENDIF}
@@ -290,7 +295,7 @@ const
   space       = #32;
   SvgDecimalSeparator = '.'; //do not localize
 
-  {$I Image32_SVG_Hash_Consts.inc}
+  {$I Img32.SVG.HashConsts.inc}
 
 var
   LowerCaseTable : array[#0..#255] of UTF8Char;
@@ -312,7 +317,7 @@ const
   buffSize    = 32;
 
   //include hashed html entity constants
-  {$I html_entity_hash_consts.inc}
+  {$I Img32.SVG.HtmlHashConsts.inc}
 
 //------------------------------------------------------------------------------
 // Miscellaneous functions ...
@@ -1022,7 +1027,7 @@ begin
     begin
       //decode html entity ...
       case GetHashCaseSensitive(c, ce - c) of
-        {$I html_entity_values.inc}
+        {$I Img32.SVG.HtmlValues.inc}
       end;
     end;
 
@@ -2348,7 +2353,7 @@ end;
 
 function TValue.IsValid: Boolean;
 begin
-  Result := (unitType <> utUnknown) and Image32_Vector.IsValid(rawVal);
+  Result := (unitType <> utUnknown) and Img32.Vector.IsValid(rawVal);
 end;
 //------------------------------------------------------------------------------
 
@@ -2587,7 +2592,7 @@ begin
     if (radii.Y < 0) then radii.Y := -radii.Y;
     if (radii.X = 0) or (radii.Y = 0) then Exit;
 
-    Image32_Vector.GetSinCos(phi_rads, s_phi, c_phi);;
+    GetSinCos(phi_rads, s_phi, c_phi);;
     hd_x := (p1.X - p2.X) / 2.0; // half diff of x
     hd_y := (p1.Y - p2.Y) / 2.0; // half diff of y
     hs_x := (p1.X + p2.X) / 2.0; // half sum of x
@@ -2915,7 +2920,7 @@ procedure MakeColorConstList;
 var
   i   : integer;
   co  : TColorObj;
-  {$I html_color_consts.inc}
+  {$I Img32.SVG.HtmlColorConsts.inc}
 begin
   ColorConstList := TStringList.Create;
   ColorConstList.CaseSensitive := false;

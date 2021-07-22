@@ -1,9 +1,9 @@
-unit Image32_PNG;
+unit Img32.Fmt.PNG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.27                                                            *
-* Date      :  15 July 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  PNG file format extension for TImage32                          *
@@ -12,12 +12,12 @@ unit Image32_PNG;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 {$IFDEF DELPHI_PNG}
 
 uses
   SysUtils, Classes, Windows,
-  {$IFDEF FPC} Graphics {$ELSE} Math, PngImage {$ENDIF}, Image32;
+  {$IFDEF FPC} Graphics {$ELSE} Math, PngImage {$ENDIF}, Img32;
 
 type
 

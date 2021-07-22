@@ -32,24 +32,24 @@ package SVGImage32Package;
 
 requires
   rtl,
-  vcl;
+  vcl,
+  vclimg;
 
 contains
-  Image32 in '..\..\Image32\source\Image32.pas',
-  Image32_BMP in '..\..\Image32\source\Image32_BMP.pas',
-  Image32_CQ in '..\..\Image32\source\Image32_CQ.pas',
-  Image32_Draw in '..\..\Image32\source\Image32_Draw.pas',
-  Image32_Extra in '..\..\Image32\source\Image32_Extra.pas',
-  Image32_Layers in '..\..\Image32\source\Image32_Layers.pas',
-  Image32_Resamplers in '..\..\Image32\source\Image32_Resamplers.pas',
-  Image32_SmoothPath in '..\..\Image32\source\Image32_SmoothPath.pas',
-  Image32_SVG in '..\..\Image32\source\Image32_SVG.pas',
-  Image32_Transform in '..\..\Image32\source\Image32_Transform.pas',
-  Image32_Ttf in '..\..\Image32\source\Image32_Ttf.pas',
-  Image32_Vector in '..\..\Image32\source\Image32_Vector.pas',
-  Image32Panels in '..\..\Image32\source\Image32Panels.pas',
-  Image32_SVG_Core in '..\..\Image32\source\Image32_SVG\Image32_SVG_Core.pas',
-  Image32_SVG_Reader in '..\..\Image32\source\Image32_SVG\Image32_SVG_Reader.pas',
-  Image32_SVG_Writer in '..\..\Image32\source\Image32_SVG\Image32_SVG_Writer.pas';
+  Img32 in '..\..\Image32\source\Img32.pas',
+  Img32.Fmt.PNG in '..\..\Image32\source\Img32.Fmt.PNG.pas',
+  Img32.CQ in '..\..\Image32\source\Img32.CQ.pas',
+  Img32.Draw in '..\..\Image32\source\Img32.Draw.pas',
+  Img32.Extra in '..\..\Image32\source\Img32.Extra.pas',
+  Img32.Layers in '..\..\Image32\source\Img32.Layers.pas',
+  Img32.Resamplers in '..\..\Image32\source\Img32.Resamplers.pas',
+  Img32.SmoothPath in '..\..\Image32\source\Img32.SmoothPath.pas',
+  Img32.Transform in '..\..\Image32\source\Img32.Transform.pas',
+  Img32.Text in '..\..\Image32\source\Img32.Text.pas',
+  Img32.Vector in '..\..\Image32\source\Img32.Vector.pas',
+  Img32.Fmt.SVG in '..\..\Image32\source\Img32.Fmt.SVG.pas',
+  Img32.SVG.Core in '..\..\Image32\source\Img32.SVG\Img32.SVG.Core.pas',
+  Img32.SVG.Reader in '..\..\Image32\source\Img32.SVG\Img32.SVG.Reader.pas',
+  Img32.SVG.Writer in '..\..\Image32\source\Img32.SVG\Img32.SVG.Writer.pas';
 
 end.

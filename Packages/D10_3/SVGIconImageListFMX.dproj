@@ -89,9 +89,11 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="fmx.dcp"/>
+        <DCCReference Include="SVGImage32Package.dcp"/>
         <DCCReference Include="SVGIconPackage.dcp"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImageList.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImage.pas"/>
+        <DCCReference Include="..\..\Source\FMX.Image32SVG.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -113,8 +115,6 @@
                     <Source Name="MainSource">SVGIconImageListFMX.dpk</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\20.0\Bpl\ChromeTabs_D.250.bpl">Chrome Tabs</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k260.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">

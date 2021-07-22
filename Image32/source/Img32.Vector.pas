@@ -1,9 +1,9 @@
-unit Image32_Vector;
+unit Img32.Vector;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.24                                                            *
-* Date      :  26 June 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -16,10 +16,10 @@ unit Image32_Vector;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 uses
-  SysUtils, Classes, Math, Types, Image32;
+  SysUtils, Classes, Math, Types, Img32;
 
 type
   TArrowStyle = (asNone, asSimple, asFancy, asDiamond, asCircle, asTail);
@@ -51,8 +51,9 @@ type
   function RectWH(left, top, width, height: double ): TRectWH; overload;
   function RectWH(const rec: TRectD): TRectWH; overload;
 
-  function InflateRect(const rec: TRect; dx, dy: integer): TRect; overload;
-  function InflateRect(const rec: TRectD; dx, dy: double): TRectD; overload;
+  //InflateRect: missing in Delphi 7
+  procedure InflateRect(var rec: TRect; dx, dy: integer); overload;
+  procedure InflateRect(var rec: TRectD; dx, dy: double); overload;
 
   function Rectangle(const rec: TRect): TPathD; overload;
   function Rectangle(const rec: TRectD): TPathD; overload;
@@ -210,7 +211,6 @@ type
 
   function Area(const path: TPathD): Double;
   function RectsEqual(const rec1, rec2: TRect): Boolean;
-  procedure OffsetRect(var rec: TRect; dx, dy: integer); overload;
   procedure OffsetRect(var rec: TRectD; dx, dy: double); overload;
 
   function IsValid(value: integer): Boolean; overload;
@@ -241,9 +241,7 @@ type
 
   function ReflectPoint(const pt, pivot: TPointD): TPointD;
   {$IFDEF INLINING} inline; {$ENDIF}
-  function IntersectRect(const rec1, rec2: TRect): TRect; overload;
   function IntersectRect(const rec1, rec2: TRectD): TRectD; overload;
-  function UnionRect(const rec1, rec2: TRect): TRect; overload;
   function UnionRect(const rec1, rec2: TRectD): TRectD; overload;
 
   //these 2 functions are only needed to support older versions of Delphi
@@ -406,7 +404,7 @@ end;
 
 function TRectWH.RectD: TRectD;
 begin
-  Result := Image32.RectD(left, top, left + Width, top + Height);
+  Result := Img32.RectD(left, top, left + Width, top + Height);
 end;
 
 //------------------------------------------------------------------------------
@@ -655,15 +653,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure OffsetRect(var rec: TRect; dx, dy: integer);
-begin
-  rec.Left := rec.Left + dx;
-  rec.Top := rec.Top + dy;
-  rec.Right := rec.Right + dx;
-  rec.Bottom := rec.Bottom + dy;
-end;
-//------------------------------------------------------------------------------
-
 procedure OffsetRect(var rec: TRectD; dx, dy: double);
 begin
   rec.Left := rec.Left + dx;
@@ -713,39 +702,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function IntersectRect(const rec1, rec2: TRect): TRect;
-begin
-  result.Left := Max(rec1.Left, rec2.Left);
-  result.Top := Max(rec1.Top, rec2.Top);
-  result.Right := Min(rec1.Right, rec2.Right);
-  result.Bottom := Min(rec1.Bottom, rec2.Bottom);
-  if (Result.Left > Result.Right) or
-    (Result.Top > Result.Bottom) then Result := NullRect;
-end;
-//------------------------------------------------------------------------------
-
 function IntersectRect(const rec1, rec2: TRectD): TRectD;
 begin
   result.Left := Max(rec1.Left, rec2.Left);
   result.Top := Max(rec1.Top, rec2.Top);
   result.Right := Min(rec1.Right, rec2.Right);
   result.Bottom := Min(rec1.Bottom, rec2.Bottom);
-end;
-//------------------------------------------------------------------------------
-
-function UnionRect(const rec1, rec2: TRect): TRect;
-begin
-  if IsEmptyRect(rec1) then
-    Result := rec2
-  else if IsEmptyRect(rec2) then
-    Result := rec1
-  else
-  begin
-    result.Left := Min(rec1.Left, rec2.Left);
-    result.Top := Min(rec1.Top, rec2.Top);
-    result.Right := Max(rec1.Right, rec2.Right);
-    result.Bottom := Max(rec1.Bottom, rec2.Bottom);
-  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -1492,13 +1454,22 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function Sign(const value: Double): integer; {$IFDEF INLINE} inline; {$ENDIF}
+begin
+  if value < 0 then Result := -1
+  else if value > 0 then Result := 1
+  else Result := 0;
+end;
+//------------------------------------------------------------------------------
+
 function Grow(const path, normals: TPathD; delta: double;
   joinStyle: TJoinStyle; miterLimOrRndScale: double): TPathD;
 var
   i,prevI, highI: cardinal;
   buffLen, resultLen: cardinal;
-  steps360, stepsPerRad: double;
+  steps360, stepsPerRad, pathArea, resultArea: double;
   stepSin, stepCos, cosA: double;
+  isDeflating: Boolean;
   P: TPointD;
   norms: TPathD;
   normalA, normalB: TPointD;
@@ -1565,6 +1536,9 @@ begin
   if (highI < 1) then exit;
   if delta < MinStrokeWidth/2 then delta := MinStrokeWidth/2;
 
+  pathArea := Area(path);
+  isDeflating := (Abs(pathArea) > 0.001) and (Sign(pathArea) <> Sign(delta));
+
   if delta < 1 then        //ie linewidth < 2
     joinStyle := jsSquare
   else if joinStyle = jsAuto then
@@ -1622,7 +1596,13 @@ begin
     end;
     PrevI := i;
   end;
+
   setLength(result, resultLen);
+  if not isDeflating then Exit;
+  resultArea := area(Result);
+  if (Sign(resultArea) <> Sign(pathArea)) or
+    (abs(resultArea) > abs(pathArea)) then
+      Result := nil;
 end;
 //------------------------------------------------------------------------------
 
@@ -2066,21 +2046,21 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function InflateRect(const rec: TRect; dx, dy: integer): TRect;
+procedure InflateRect(var rec: TRect; dx, dy: integer);
 begin
-  result.Left := rec.Left - dx;
-  result.Top := rec.Top - dy;
-  result.Right := rec.Right + dx;
-  result.Bottom := rec.Bottom + dy;
+  rec.Left := rec.Left - dx;
+  rec.Top := rec.Top - dy;
+  rec.Right := rec.Right + dx;
+  rec.Bottom := rec.Bottom + dy;
 end;
 //------------------------------------------------------------------------------
 
-function InflateRect(const rec: TRectD; dx, dy: double): TRectD;
+procedure InflateRect(var rec: TRectD; dx, dy: double);
 begin
-  result.Left := rec.Left - dx;
-  result.Top := rec.Top - dy;
-  result.Right := rec.Right + dx;
-  result.Bottom := rec.Bottom + dy;
+  rec.Left := rec.Left - dx;
+  rec.Top := rec.Top - dy;
+  rec.Right := rec.Right + dx;
+  rec.Bottom := rec.Bottom + dy;
 end;
 //------------------------------------------------------------------------------
 

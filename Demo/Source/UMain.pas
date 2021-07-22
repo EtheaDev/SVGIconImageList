@@ -38,7 +38,9 @@ uses
   ActnList, ExtCtrls, ComCtrls, ToolWin,
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
   System.Actions,
-  System.ImageList, //if you are compiling with older version than XE7 remove this line
+  {$IF COMPILERVERSION >= 28}
+  System.ImageList,
+  {$ENDIF}
   SVGIconImageListBase, SVGIconImageCollection, SVGIconVirtualImageList,
   UDataModule;
 

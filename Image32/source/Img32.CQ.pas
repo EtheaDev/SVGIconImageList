@@ -1,9 +1,9 @@
-unit Image32_CQ;
+unit Img32.CQ;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.0                                                             *
-* Date      :  6 March 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  Color reduction for TImage32                                    *
@@ -13,11 +13,11 @@ unit Image32_CQ;
 
 interface
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 uses
   {$IFDEF MSWINDOWS} Windows,{$ENDIF}
-  SysUtils, Classes, Math, Image32, Image32_Vector;
+  SysUtils, Classes, Types, Math, Img32, Img32.Vector;
 
 function MakePalette(image: TImage32;
   MaxColors: integer): TArrayOfColor32; overload;
@@ -947,13 +947,13 @@ begin
   if len < 16 then w := len else w := 16;
   h := (len +15) div 16;
   image.SetSize(w * 16, h * 16);
-  rec := Image32_Vector.Rect(0,0,16,16);
+  rec := Img32.Vector.Rect(0,0,16,16);
   for i := 0 to len -1 do
   begin
     image.FillRect(rec, palette[i] or $FF000000);
     if (i + 1) mod w = 0 then
-      OffsetRect(rec, -15 * w, 16) else
-      OffsetRect(rec, 16, 0);
+      Types.OffsetRect(rec, -15 * w, 16) else
+      Types.OffsetRect(rec, 16, 0);
   end;
 end;
 
@@ -1016,7 +1016,7 @@ end;
   img := TImage32.Create(i * 16, 16);
   for i := 0 to i -1 do
     DrawPolygon(img, Rectangle(i * 16, 0, (i +1) * 16, 16),
-      Image32_Vector.frEvenOdd, pal[i]);
+      Img32.Vector.frEvenOdd, pal[i]);
   img.SaveToFile('tmp.png');
   img.Free;
 *)

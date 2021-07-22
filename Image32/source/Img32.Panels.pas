@@ -1,9 +1,9 @@
-unit Image32Panels;
+unit Img32.Panels;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  2.24                                                            *
-* Date      :  26 June 2021                                                    *
+* Version   :  3.0                                                             *
+* Date      :  20 July 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  Component that displays images on a TPanel descendant           *
@@ -15,9 +15,9 @@ interface
 uses
   SysUtils, Classes, Windows, Messages, Types, Graphics,
   Controls, Forms, ExtCtrls, Themes, uxTheme, Math, ShellApi, ClipBrd,
-  Image32;
+  Img32;
 
-{$I Image32.inc}
+{$I Img32.inc}
 
 const
   WM_MOUSEHWHEEL = $020E;
