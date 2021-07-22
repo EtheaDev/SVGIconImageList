@@ -97,7 +97,7 @@ type
     procedure UpdateSVGFactory;
     destructor Destroy; override;
     procedure Clear;
-    function SVGIconItem(const AImageIndex: Integer): TSVGIconItem;
+    function SVGIconItem: TSVGIconItem;
     function Empty: Boolean;
     procedure LoadFromFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
@@ -287,7 +287,7 @@ begin
     if FImageIndex >= 0 then
     begin
       if FImageIndex < FImageList.Count then
-        Result := SVGIconItem(FImageIndex).ApplyFixedColorToRootOnly;
+        Result := SVGIconItem.ApplyFixedColorToRootOnly;
     end;
     Result := Result or TSVGIconImageListBase(FImageList).ApplyFixedColorToRootOnly;
   end;
@@ -303,7 +303,7 @@ begin
     if FImageIndex >= 0 then
     begin
       if FImageIndex < FImageList.Count then
-        Result := SVGIconItem(FImageIndex).FixedColor;
+        Result := SVGIconItem.FixedColor;
       if Result <> SVG_INHERIT_COLOR then
         exit;
     end;
@@ -314,7 +314,7 @@ end;
 function TSVGIconImage.GetSVG: ISVG;
 begin
   if not UsingSVGText then
-    Result := SVGIconItem(FImageIndex).SVG
+    Result := SVGIconItem.SVG
   else
     Result := FSVG;
 end;
@@ -330,7 +330,7 @@ begin
     Invalidate;
 end;
 
-function TSVGIconImage.SVGIconItem(const AImageIndex: Integer): TSVGIconItem;
+function TSVGIconImage.SVGIconItem: TSVGIconItem;
 var
   {$IFDEF D10_3+}
   LVirtualImageList: TVirtualImageList;
@@ -372,7 +372,7 @@ var
   LOrigin: TPointF;
 begin
   if not UsingSVGText then
-    LSVG := SVGIconItem(FImageIndex).SVG
+    LSVG := SVGIconItem.SVG
 
   else
     LSVG := FSVG;
