@@ -282,6 +282,7 @@ end;
     fApplyFixedColorToRootOnly: Boolean;
     FIdDict: TDictionary<string, TSVGObject>;
 
+    FOnChanged: TNotifyEvent;
     procedure SetViewBox(const Value: TRectF);
 
     procedure SetSVGOpacity(Opacity: TFloat);
@@ -298,6 +299,7 @@ end;
     procedure CalcMatrix; override;
     procedure AssignTo(Dest: TPersistent); override;
     procedure ReadStyles(const Reader: IXMLReader);
+    procedure DoChange; virtual;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -327,6 +329,7 @@ end;
     function RenderToIcon(Size: Integer): HICON;
     function RenderToBitmap(Width, Height: Integer): HBITMAP;
 
+    property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
     property InitialMatrix: TAffineMatrix read FInitialMatrix write FInitialMatrix;
     property SVGOpacity: TFloat write SetSVGOpacity;
     property Source: string read FSource;
@@ -2043,6 +2046,8 @@ begin
         end;
       end;
     end;
+
+    DoChange;
   except
     FSource := '';
     raise;
@@ -2344,10 +2349,14 @@ begin
 end;
 
 procedure TSVG.AssignTo(Dest: TPersistent);
+var
+  SaveChange: TNotifyEvent;
 begin
   inherited;
   if Dest is TSVG then
   begin
+    SaveChange := FOnChanged;
+    FOnChanged := nil;
     TSVG(Dest).FViewBox := FViewBox;
     TSVG(Dest).FSource := Source;
 
@@ -2356,7 +2365,15 @@ begin
     TSVG(Dest).FFileName := FFileName;
     TSVG(Dest).FGrayscale := FGrayscale;
     TSVG(Dest).FFixedColor := FFixedColor;
+        FOnChanged := SaveChange;
+        DoChange;
   end;
+end;
+
+procedure TSVG.DoChange;
+begin
+    if Assigned(FOnChanged) then
+      FOnChanged(Self);
 end;
 
 procedure TSVG.ReadStyles(const Reader: IXMLReader);
