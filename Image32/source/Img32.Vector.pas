@@ -278,6 +278,7 @@ type
   function Distance(const path: TPathD; stopAt: integer = 0): double; overload;
   function GetDistances(const path: TPathD): TArrayOfDouble;
   function GetCumulativeDistances(const path: TPathD): TArrayOfDouble;
+  function PerpendicularDistSqrd(const pt, line1, line2: TPointD): double;
 
   function PointInPolygon(const pt: TPointD;
     const polygon: TPathD; fillRule: TFillRule): Boolean;
@@ -1192,6 +1193,20 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function PerpendicularDistSqrd(const pt, line1, line2: TPointD): double;
+var
+  a,b,c,d: double;
+begin
+  a := pt.X - line1.X;
+  b := pt.Y - line1.Y;
+  c := line2.X - line1.X;
+  d := line2.Y - line1.Y;
+  if (c = 0) and (d = 0) then
+    result := 0 else
+    result := Sqr(a * d - c * b) / (c * c + d * d);
+end;
+//------------------------------------------------------------------------------
+
 function PointInPolyWindingCount(const pt: TPointD;
   const path: TPathD; out PointOnEdgeDir: integer): integer;
 var
@@ -1467,9 +1482,10 @@ function Grow(const path, normals: TPathD; delta: double;
 var
   i,prevI, highI: cardinal;
   buffLen, resultLen: cardinal;
-  steps360, stepsPerRad, pathArea, resultArea: double;
+  steps360, stepsPerRad, pathArea, absPathArea, resultArea: double;
+  pathBounds: TRectD;
   stepSin, stepCos, cosA: double;
-  isDeflating: Boolean;
+  isShrinking: Boolean;
   P: TPointD;
   norms: TPathD;
   normalA, normalB: TPointD;
@@ -1537,7 +1553,15 @@ begin
   if delta < MinStrokeWidth/2 then delta := MinStrokeWidth/2;
 
   pathArea := Area(path);
-  isDeflating := (Abs(pathArea) > 0.001) and (Sign(pathArea) <> Sign(delta));
+  absPathArea := Abs(pathArea);
+  isShrinking := (absPathArea > 0.001) and
+    (Sign(pathArea) <> Sign(delta));
+  if isShrinking then
+  begin
+    pathBounds := GetBoundsD(path);
+    if (pathBounds.Width < abs(delta) *2) or
+      (pathBounds.Height < abs(delta) *2) then Exit;
+  end;
 
   if delta < 1 then        //ie linewidth < 2
     joinStyle := jsSquare
@@ -1598,10 +1622,11 @@ begin
   end;
 
   setLength(result, resultLen);
-  if not isDeflating then Exit;
+
+  if not isShrinking then Exit;
   resultArea := area(Result);
   if (Sign(resultArea) <> Sign(pathArea)) or
-    (abs(resultArea) > abs(pathArea)) then
+    (abs(resultArea) > absPathArea) then
       Result := nil;
 end;
 //------------------------------------------------------------------------------

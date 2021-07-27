@@ -4,6 +4,8 @@ const
   harithmetic                 = $978C7D6F;    // arithmetic
   hAtop                       = $7655315D;    // Atop
   hauto_045_start_045_reverse = $EE4545A2;    // auto-start-reverse
+  hBackgroundAlpha            = $DA55EB83;    // BackgroundAlpha
+  hBackgroundImage            = $0313D8C9;    // BackgroundImage
   hBaseline                   = $C7461648;    // Baseline
   hbaseline_045_shift         = $56FA5107;    // baseline-shift
   hBevel                      = $BF36E150;    // Bevel
@@ -74,10 +76,10 @@ const
   hIn2                        = $FBFE02B1;    // In2
   hIntercept                  = $7CBB607F;    // Intercept
   hItalic                     = $F07E7786;    // Italic
-  hk1                         = $33176D43;    // k1
-  hk2                         = $DD11C139;    // k2
-  hk3                         = $CF4B25AC;    // k3
-  hk4                         = $77CCF6AD;    // k4
+  hK1                         = $33176D43;    // K1
+  hK2                         = $DD11C139;    // K2
+  hK3                         = $CF4B25AC;    // K3
+  hK4                         = $77CCF6AD;    // K4
   hkernelUnitLength           = $3B25E980;    // kernelUnitLength
   hletter_045_spacing         = $5130BCF5;    // letter-spacing
   hLighten                    = $85E826DE;    // Lighten

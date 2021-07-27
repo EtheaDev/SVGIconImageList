@@ -50,9 +50,9 @@ type
     markerStart   : UTF8String;
     markerMiddle  : UTF8String;
     markerEnd     : UTF8String;
-    filterEl      : UTF8String;
-    maskEl        : UTF8String;
-    clipPathEl    : UTF8String;
+    filterElRef   : UTF8String;
+    maskElRef     : UTF8String;
+    clipElRef     : UTF8String;
     opacity       : integer;
     matrix        : TMatrixD;
     visible       : Boolean;
@@ -102,6 +102,7 @@ type
   private
     fSvgParser        : TSvgParser;
     fBkgndColor       : TColor32;
+    fBackgndImage     : TImage32;
     fTempImage        : TImage32;
     fBlurQuality      : integer;
     fIdList           : TStringList;
@@ -124,6 +125,7 @@ type
     property  RadGradRenderer: TSvgRadialGradientRenderer read fRadGradRenderer;
     property  LinGradRenderer: TLinearGradientRenderer read fLinGradRenderer;
     property  ImageRenderer  : TImageRenderer read fImgRenderer;
+    property  BackgndImage   : TImage32 read fBackgndImage;
     property  TempImage      : TImage32 read fTempImage;
   public
     constructor Create;
@@ -135,7 +137,7 @@ type
     function  LoadFromFile(const filename: string): Boolean;
     function  LoadFromString(const str: string): Boolean;
     //Both SetOverrideFillColor & SetOverrideStrokeColor are intended
-    //for use by the third-party library - SVGIconImageList
+    //primarily for use by the third-party library - SVGIconImageList
     //https://github.com/EtheaDev/SVGIconImageList/wiki
     procedure SetOverrideFillColor(color: TColor32);
     procedure SetOverrideStrokeColor(color: TColor32);
@@ -143,7 +145,7 @@ type
     property  BlurQuality     : integer read fBlurQuality write SetBlurQuality;
     property  IsEmpty         : Boolean read GetIsEmpty;
     //KeepAspectRatio: this property has also been added for the convenience of
-    //the third-party library: SVGIconImageList. IMHO it should always = true)
+    //the third-party SVGIconImageList. (IMHO it should always = true)
     property  KeepAspectRatio: Boolean
       read fUsePropScale write fUsePropScale;
     property  RootElement     : TSvgElement read fRootElement;
@@ -410,7 +412,7 @@ type
     function GetAdjustedBounds(const bounds: TRectD): TRectD;
     function FindNamedImage(const name: UTF8String): TImage32;
     function AddNamedImage(const name: UTF8String): TImage32;
-    function GetNamedImage(const name: UTF8String): TImage32;
+    function GetNamedImage(const name: UTF8String; asSource: Boolean): TImage32;
     procedure Apply(img: TImage32;
       const filterBounds: TRect; const matrix: TMatrixD);
   public
@@ -547,7 +549,7 @@ const
     textLength: 0; italic: sfsUndefined; weight: -1; align: staUndefined;
     decoration: fdUndefined; baseShift: (rawVal: InvalidD; unitType: utNumber));
     markerStart: ''; markerMiddle: ''; markerEnd: '';
-    filterEl: ''; maskEl: ''; clipPathEl: ''; opacity: MaxInt;
+    filterElRef: ''; maskElRef: ''; clipElRef: ''; opacity: MaxInt;
     matrix: ((1, 0, 0),(0, 1, 0),(0, 0, 1)); visible: true;
     useEl: nil; bounds: (Left:0; Top:0; Right:0; Bottom:0));
 
@@ -620,8 +622,6 @@ begin
       drawInfo.fillOpacity := fillOpacity;
     if (fillEl <> '') then
       drawInfo.fillEl := fillEl;
-    if (clipPathEl <> '') then
-      drawInfo.clipPathEl := clipPathEl;
     if (strokeColor = clCurrent) then
       drawInfo.strokeColor := thisElement.fReader.currentColor
     else if strokeColor <> clInvalid then
@@ -640,10 +640,13 @@ begin
       drawInfo.strokeEl := strokeEl;
     if opacity < MaxInt then
       drawInfo.opacity := opacity;
-    if (filterEl <> '') then
-      drawInfo.filterEl := filterEl;
-    if (maskEl <> '') then
-      drawInfo.maskEl := maskEl;
+
+    if (clipElRef <> '') then
+      drawInfo.clipElRef := clipElRef;
+    if (maskElRef <> '') then
+      drawInfo.maskElRef := maskElRef;
+    if (filterElRef <> '') then
+      drawInfo.filterElRef := filterElRef;
 
     if fontInfo.family <> ttfUnknown then
       drawInfo.fontInfo.family := fontInfo.family;
@@ -804,13 +807,13 @@ begin
 
   UpdateDrawInfo(drawInfo, self);
 
-  maskEl := FindRefElement(drawInfo.maskEl);
-  clipEl := FindRefElement(drawInfo.clipPathEl);
+  maskEl := FindRefElement(DrawInfo.maskElRef);
+  clipEl := FindRefElement(DrawInfo.clipElRef);
   if Assigned(clipEl) then
   begin
-    drawInfo.clipPathEl := ''; //avoids propagation
     with TClipPathElement(clipEl) do
     begin
+      DrawInfo.clipElRef := '';
       GetPaths(drawInfo);
       clipPaths := CopyPaths(drawPathsF);
 
@@ -829,7 +832,7 @@ begin
   end
   else if Assigned(maskEl) then
   begin
-    drawInfo.maskEl := '';    //prevent propagation
+    DrawInfo.maskElRef := '';
     with TMaskElement(maskEl) do
     begin
       GetPaths(drawInfo);
@@ -1397,22 +1400,51 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TFilterElement.GetNamedImage(const name: UTF8String): TImage32;
+function TFilterElement.GetNamedImage(const name: UTF8String; asSource: Boolean): TImage32;
 var
   i, len: integer;
   hash: Cardinal;
 begin
   hash := GetHash(name);
   case hash of
-    hSourceGraphic, hSourceAlpha:
+    hBackgroundImage:
+      begin
+        Result := FindNamedImage(name);
+        if not Assigned(Result) then
+          Result := AddNamedImage(name);
+        Result.Copy(fReader.BackgndImage, fFilterBounds, Result.Bounds);
+        Exit;
+      end;
+    hBackgroundAlpha:
+      begin
+        Result := FindNamedImage(name);
+        if not Assigned(Result) then
+          Result := AddNamedImage(name);
+        Result.Copy(fReader.BackgndImage, fFilterBounds, Result.Bounds);
+        Result.SetRGB(clNone32, Result.Bounds);
+        Exit;
+      end;
+    hSourceGraphic:
+      begin
+        if asSource then
+        begin
+          Result := fSrcImg;
+          Exit;
+        end;
+        Result := FindNamedImage(name);
+        if Assigned(Result) then Exit;
+        Result := AddNamedImage(name);
+        Result.Copy(fSrcImg, fFilterBounds, Result.Bounds);
+        Exit;
+      end;
+    hSourceAlpha:
       begin
         Result := FindNamedImage(name);
         if not Assigned(Result) then
         begin
           Result := AddNamedImage(name);
           Result.Copy(fSrcImg, fFilterBounds, Result.Bounds);
-          if hash = hSourceAlpha then
-            Result.SetRGB(clNone32, Result.Bounds);
+          Result.SetRGB(clNone32, Result.Bounds);
         end;
         Exit;
       end;
@@ -1438,24 +1470,24 @@ begin
   fFilterBounds := filterBounds;
   Types.IntersectRect(fObjectBounds, fObjectBounds, img.Bounds);
   fSrcImg := img;
+
   try
     for i := 0 to fChilds.Count -1 do
     begin
       case TElement(fChilds[i]).fParserEl.hash of
-        hfeBlend        : TFeBlendElement(fChilds[i]).Apply;
-        hfeColorMatrix  : TFeColorMatrixElement(fChilds[i]).Apply;
-        hfeComposite    : TFeCompositeElement(fChilds[i]).Apply;
-        hfeDefuseLighting : TFeDefuseLightElement(fChilds[i]).Apply;
-        hfeDropShadow   : TFeDropShadowElement(fChilds[i]).Apply;
-        hfeFlood        : TFeFloodElement(fChilds[i]).Apply;
-        hFeGaussianBlur : TFeGaussElement(fChilds[i]).Apply;
-        hfeMerge        : TFeMergeElement(fChilds[i]).Apply;
-        hfeOffset       : TFeOffsetElement(fChilds[i]).Apply;
+        hfeBlend            : TFeBlendElement(fChilds[i]).Apply;
+        hfeColorMatrix      : TFeColorMatrixElement(fChilds[i]).Apply;
+        hfeComposite        : TFeCompositeElement(fChilds[i]).Apply;
+        hfeDefuseLighting   : TFeDefuseLightElement(fChilds[i]).Apply;
+        hfeDropShadow       : TFeDropShadowElement(fChilds[i]).Apply;
+        hfeFlood            : TFeFloodElement(fChilds[i]).Apply;
+        hFeGaussianBlur     : TFeGaussElement(fChilds[i]).Apply;
+        hfeMerge            : TFeMergeElement(fChilds[i]).Apply;
+        hfeOffset           : TFeOffsetElement(fChilds[i]).Apply;
         hfeSpecularLighting : TFeSpecLightElement(fChilds[i]).Apply;
       end;
     end;
-    if fLastImg <> fSrcImg then
-      fSrcImg.Copy(fLastImg, fLastImg.Bounds, fFilterBounds);
+    fSrcImg.Copy(fLastImg, fLastImg.Bounds, fFilterBounds);
   finally
     Clear;
   end;
@@ -1495,15 +1527,15 @@ var
 begin
   pfe := ParentFilterEl;
   if (in1 <> '') then
-    srcImg := pfe.GetNamedImage(in1)
+    srcImg := pfe.GetNamedImage(in1, true)
   else if Assigned(pfe.fLastImg) then
     srcImg := pfe.fLastImg
   else
-    srcImg := pfe.GetNamedImage(SourceImage);
+    srcImg := pfe.GetNamedImage(SourceImage, true);
 
   if (res <> '') then
-    dstImg := pfe.GetNamedImage(res) else
-    dstImg := pfe.fSrcImg;
+    dstImg := pfe.GetNamedImage(res, false) else
+    dstImg := pfe.GetNamedImage(SourceImage, false);
 
   Result := Assigned(srcImg) and Assigned(dstImg);
   if not Result then Exit;
@@ -1530,7 +1562,7 @@ begin
     dstImg2 := dstImg;
   dstRec2 := GetBounds(dstImg2);
 
-  srcImg2 := pfe.GetNamedImage(in2);
+  srcImg2 := pfe.GetNamedImage(in2, true);
   srcRec2 := GetBounds(srcImg2);
   dstImg2.CopyBlend(srcImg2, srcRec2, dstRec2, BlendToAlpha);
   dstImg2.CopyBlend(srcImg,  srcRec,  dstRec2, BlendToAlpha);
@@ -1606,13 +1638,14 @@ begin
   if not GetSrcAndDst then Exit;
   pfe := ParentFilterEl;
   if (in2 = '') then Exit;
-  if dstImg = srcImg then
+
+  srcImg2 := pfe.GetNamedImage(in2, true);
+  srcRec2 := GetBounds(srcImg2); //either filter bounds or image bounds
+
+  if (dstImg = srcImg) or (dstImg = srcImg2) then
     dstImg2 := pfe.AddNamedImage(tmpFilterImg) else
     dstImg2 := dstImg;
-  dstRec2 := GetBounds(dstImg2);
-
-  srcImg2 := pfe.GetNamedImage(in2);
-  srcRec2 := GetBounds(srcImg2);
+  dstRec2 := GetBounds(dstImg2); //either filter bounds or image bounds
 
   case compositeOp of
     coIn:
@@ -1636,7 +1669,7 @@ begin
         dstImg2.CopyBlend(srcImg,  srcRec,  dstRec2, BlendToAlpha);
       end;
   end;
-  if dstImg = srcImg then
+  if (dstImg <> dstImg2) then
     dstImg.Copy(dstImg2, dstRec2, dstRec);
 end;
 
@@ -1724,7 +1757,7 @@ var
 begin
   if not GetSrcAndDst then Exit;
   pfe := ParentFilterEl;
-  dropShadImg := pfe.GetNamedImage(tmpFilterImg);
+  dropShadImg := pfe.GetNamedImage(tmpFilterImg, false);
   dropShadImg.Copy(srcImg, srcRec, dropShadImg.Bounds);
 
   off := offset.GetPoint(RectD(pfe.fObjectBounds), GetRelFracLimit);
@@ -1760,7 +1793,7 @@ begin
   if not GetSrcAndDst then Exit;
   if elRectWH.IsValid then
     rec := Rect(elRectWH.GetRectD(RectD(srcRec), GetRelFracLimit)) else
-    rec := srcRec;
+    rec := dstRec;
   dstImg.FillRect(rec, floodColor);
 end;
 
@@ -1804,6 +1837,7 @@ var
 begin
   tmpImg := nil; tmpRec := NullRect;
   if not GetSrcAndDst then Exit;
+  pfe := ParentFilterEl;
 
   for i := 0 to fChilds.Count -1 do
     if TElement(fChilds[i]) is TFeMergeNodeElement then
@@ -1811,17 +1845,14 @@ begin
       begin
         if not GetSrcAndDst then Continue;
         if Assigned(tmpImg) then
-        begin
-          tmpImg.CopyBlend(srcImg, srcRec, tmpRec, BlendToAlpha);
-        end else
-        begin
+          tmpImg.CopyBlend(srcImg, srcRec, tmpImg.Bounds, BlendToAlpha)
+        else if srcImg = pfe.fSrcImg then
+          tmpImg := pfe.GetNamedImage(SourceImage, false)
+        else
           tmpImg := srcImg;
-          tmpRec := srcRec;
-        end;
       end;
 
-  dstImg.Copy(tmpImg, tmpRec, dstRec);
-  pfe := ParentFilterEl;
+  dstImg.Copy(tmpImg, tmpImg.Bounds, dstRec);
   pfe.fLastImg := dstImg;
 end;
 
@@ -1854,7 +1885,7 @@ begin
 
   if srcImg = dstImg then
   begin
-    tmpImg := pfe.GetNamedImage(tmpFilterImg);
+    tmpImg := pfe.GetNamedImage(tmpFilterImg, false);
     tmpImg.Copy(srcImg, srcRec, tmpImg.Bounds);
     dstImg.Clear(dstRec);
     dstImg.Copy(tmpImg, tmpImg.Bounds, dstOffRec);
@@ -1963,13 +1994,11 @@ begin
 
   img := image;
   clipRec2 := NullRect;
-  clipPathEl := nil; filterEl := nil; maskEl := nil;
-  if (drawInfo.clipPathEl <> '') then
-    clipPathEl := FindRefElement(drawInfo.clipPathEl);
-  if (drawInfo.filterEl <> '') then
-    filterEl := FindRefElement(drawInfo.filterEl);
-  if (drawInfo.maskEl <> '') then
-    maskEl := FindRefElement(drawInfo.maskEl);
+
+  maskEl := FindRefElement(DrawInfo.maskElRef);
+  clipPathEl := FindRefElement(DrawInfo.clipElRef);
+  filterEl := FindRefElement(DrawInfo.filterElRef);
+
   if (drawInfo.fillEl <> '') and
     (drawInfo.fillOpacity > 0) and (drawInfo.fillOpacity < 1) then
       DrawInfo.opacity := Round(drawInfo.fillOpacity * 255);
@@ -1983,6 +2012,7 @@ begin
     //get special effects bounds
     if Assigned(clipPathEl) then
     begin
+      DrawInfo.clipElRef := '';
       di := drawInfo;
       with TClipPathElement(clipPathEl) do
       begin
@@ -1993,7 +2023,7 @@ begin
     end
     else if Assigned(maskEl) then
     begin
-      drawInfo.maskEl := '';
+      DrawInfo.maskElRef := '';
       with TMaskElement(maskEl) do
       begin
         GetPaths(drawInfo);
@@ -2011,8 +2041,11 @@ begin
         Img32.Vector.InflateRect(clipRec, d * 0.5, d * 0.5);
       end;
       if Assigned(filterEl) then
+      begin
+        DrawInfo.filterElRef := '';
         with TFilterElement(filterEl) do
           clipRec := GetAdjustedBounds(clipRec);
+      end;
       MatrixApply(drawInfo.matrix, clipRec);
     end;
     clipRec2 := Rect(clipRec);
@@ -3325,7 +3358,7 @@ end;
 
 procedure ClipPath_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
-  aOwnerEl.fDrawInfo.clipPathEl := ExtractRef(value);
+  aOwnerEl.fDrawInfo.clipElRef := ExtractRef(value);
 end;
 //------------------------------------------------------------------------------
 
@@ -3562,14 +3595,14 @@ end;
 procedure Filter_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if (aOwnerEl is TShapeElement) then
-    aOwnerEl.fDrawInfo.filterEl := ExtractRef(value);
+    aOwnerEl.fDrawInfo.filterElRef := ExtractRef(value);
 end;
 //------------------------------------------------------------------------------
 
 procedure Mask_Attrib(aOwnerEl: TElement; const value: UTF8String);
 begin
   if (aOwnerEl is TShapeElement) then
-    aOwnerEl.fDrawInfo.maskEl := ExtractRef(value);
+    aOwnerEl.fDrawInfo.maskElRef := ExtractRef(value);
 end;
 //------------------------------------------------------------------------------
 
@@ -4195,7 +4228,7 @@ begin
     hk3:                    K3_Attrib(self, value);
     hk4:                    K4_Attrib(self, value);
     hletter_045_spacing:    LetterSpacing_Attrib(self, value);
-    hlighting_045_color:    LightingColor_Attrib(self, value);
+//    hlighting_045_color:    LightingColor_Attrib(self, value);
     hMarker_045_End:        MarkerEnd_Attrib(self, value);
     hMarkerHeight:          Height_Attrib(self, value);
     hMarker_045_Mid:        MarkerMiddle_Attrib(self, value);
@@ -4393,9 +4426,10 @@ var
   vbox: TRectWH;
   di: TDrawInfo;
 begin
-  if not Assigned(fRootElement) then Exit;
+  if not Assigned(fRootElement) or not assigned(img) then Exit;
   vbox := GetViewbox(img.Width, img.Height);
   if vbox.IsEmpty then Exit;
+  fBackgndImage := img;
 
   with fRootElement do
   begin
@@ -4548,3 +4582,4 @@ end;
 //------------------------------------------------------------------------------
 
 end.
+

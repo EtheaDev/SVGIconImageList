@@ -77,6 +77,7 @@ type
     fFillClr     : TColor32;
     fStrokeClr   : TColor32;
     fStrokeWidth : double;
+    fDashes     : TArrayOfDouble;
     function WriteHeader: string; override;
   public
     Matrix      : TMatrixD;
@@ -84,9 +85,10 @@ type
     procedure Rotate(const pivotPt: TPointD; angleRad: double);
     procedure Translate(dx, dy: double);
     procedure Skew(dx, dy: double);
-    property FillColor: TColor32 read fFillClr write fFillClr;
-    property StrokeColor: TColor32 read fStrokeClr write fStrokeClr;
-    property StrokeWidth: double read fStrokeWidth write fStrokeWidth;
+    property FillColor    : TColor32 read fFillClr write fFillClr;
+    property StrokeColor  : TColor32 read fStrokeClr write fStrokeClr;
+    property StrokeWidth  : double read fStrokeWidth write fStrokeWidth;
+    property Dashes       : TArrayOfDouble read fDashes write fDashes;
   end;
 
   TSvgGroupWriter = class(TExBaseElWriter)
@@ -436,6 +438,14 @@ begin
   begin
     AppendColorAttrib(Result, 'stroke', fStrokeClr);
     AppendFloatAttrib(Result, 'stroke-width', fStrokeWidth);
+  end;
+
+  if Assigned(fDashes) then
+  begin
+    AppendStr(Result, 'stroke-dasharray="', true);
+    for i := 0 to High(fDashes) do
+      AppendFloat(Result, fDashes[i]);
+    AppendStr(Result, '"');
   end;
 
   if not IsIdentityMatrix(Matrix) then
