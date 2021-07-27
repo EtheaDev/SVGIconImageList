@@ -25,7 +25,7 @@ package SVGIconPackage;
 {$IMAGEBASE $400000}
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'SVG Package for Ethea SVGIcon Components'}
+{$DESCRIPTION 'Delphi TSVG Package for SVGIconImageList Components'}
 {$LIBSUFFIX '_DXE8'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}

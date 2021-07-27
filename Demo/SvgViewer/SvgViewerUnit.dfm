@@ -79,15 +79,18 @@ object Form1: TForm1
       ExplicitTop = 301
       ExplicitWidth = 311
       ExplicitHeight = 302
-      inherited SVGPaintBox: TPaintBox
+      inherited ClientPanel: TPanel
         Width = 311
-        Height = 277
-        ExplicitWidth = 311
-        ExplicitHeight = 273
-      end
-      inherited TitlePanel: TPanel
-        Width = 311
-        ExplicitWidth = 311
+        Height = 302
+        inherited SVGPaintBox: TPaintBox
+          Width = 307
+          ExplicitWidth = 311
+          ExplicitHeight = 273
+        end
+        inherited TitlePanel: TPanel
+          Width = 307
+          ExplicitWidth = 307
+        end
       end
     end
     inline FrameViewTSVG: TFrameView
@@ -101,15 +104,18 @@ object Form1: TForm1
       ExplicitTop = 1
       ExplicitWidth = 311
       ExplicitHeight = 300
-      inherited SVGPaintBox: TPaintBox
+      inherited ClientPanel: TPanel
         Width = 311
-        Height = 275
-        ExplicitWidth = 303
-        ExplicitHeight = 275
-      end
-      inherited TitlePanel: TPanel
-        Width = 311
-        ExplicitWidth = 311
+        Height = 300
+        inherited SVGPaintBox: TPaintBox
+          Width = 307
+          ExplicitWidth = 303
+          ExplicitHeight = 275
+        end
+        inherited TitlePanel: TPanel
+          Width = 307
+          ExplicitWidth = 307
+        end
       end
     end
   end
@@ -131,15 +137,18 @@ object Form1: TForm1
       ExplicitTop = 301
       ExplicitWidth = 309
       ExplicitHeight = 302
-      inherited SVGPaintBox: TPaintBox
+      inherited ClientPanel: TPanel
         Width = 309
-        Height = 277
-        ExplicitWidth = 303
-        ExplicitHeight = 273
-      end
-      inherited TitlePanel: TPanel
-        Width = 309
-        ExplicitWidth = 309
+        Height = 302
+        inherited SVGPaintBox: TPaintBox
+          Width = 305
+          ExplicitWidth = 303
+          ExplicitHeight = 273
+        end
+        inherited TitlePanel: TPanel
+          Width = 305
+          ExplicitWidth = 305
+        end
       end
     end
     inline FrameViewerD2D: TFrameView
@@ -153,15 +162,18 @@ object Form1: TForm1
       ExplicitTop = 1
       ExplicitWidth = 309
       ExplicitHeight = 300
-      inherited SVGPaintBox: TPaintBox
+      inherited ClientPanel: TPanel
         Width = 309
-        Height = 275
-        ExplicitWidth = 303
-        ExplicitHeight = 275
-      end
-      inherited TitlePanel: TPanel
-        Width = 309
-        ExplicitWidth = 309
+        Height = 300
+        inherited SVGPaintBox: TPaintBox
+          Width = 305
+          ExplicitWidth = 303
+          ExplicitHeight = 275
+        end
+        inherited TitlePanel: TPanel
+          Width = 305
+          ExplicitWidth = 305
+        end
       end
     end
   end

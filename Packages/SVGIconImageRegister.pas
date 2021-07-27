@@ -121,6 +121,7 @@ uses
   , SVGIconImageListBase
   , SVGIconImageList
   , SVGIconItems
+  , Img32.Panels
   , SVGIconVirtualImageList
   , SVGIconImageCollection
   , SVGIconImageListEditorUnit
@@ -236,6 +237,9 @@ end;
 
 procedure Register;
 begin
+  RegisterComponents('Image32 Panels',
+    [TImage32Panel]);
+
   RegisterComponents('Ethea',
     [TSVGIconImage,
      TSVGIconImageList,

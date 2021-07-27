@@ -2365,8 +2365,8 @@ begin
     TSVG(Dest).FFileName := FFileName;
     TSVG(Dest).FGrayscale := FGrayscale;
     TSVG(Dest).FFixedColor := FFixedColor;
-        FOnChanged := SaveChange;
-        DoChange;
+    FOnChanged := SaveChange;
+    DoChange;
   end;
 end;
 

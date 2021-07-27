@@ -9,23 +9,23 @@ package SVGImage32Package;
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
-{$LOCALSYMBOLS ON}
+{$LOCALSYMBOLS OFF}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION OFF}
+{$OPTIMIZATION ON}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
-{$REFERENCEINFO ON}
+{$REFERENCEINFO OFF}
 {$SAFEDIVIDE OFF}
-{$STACKFRAMES ON}
+{$STACKFRAMES OFF}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DEFINE DEBUG}
+{$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'Delphi Image32 Library for Ethea SVGIcon Components'}
+{$DESCRIPTION 'Image32 2D Graphic Library - Copyright Angus Johnson'}
 {$LIBSUFFIX '_D10_4'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
@@ -37,6 +37,7 @@ requires
 
 contains
   Img32 in '..\..\Image32\source\Img32.pas',
+  Img32.Panels in '..\..\Image32\source\Img32.Panels.pas',
   Img32.Fmt.PNG in '..\..\Image32\source\Img32.Fmt.PNG.pas',
   Img32.CQ in '..\..\Image32\source\Img32.CQ.pas',
   Img32.Draw in '..\..\Image32\source\Img32.Draw.pas',

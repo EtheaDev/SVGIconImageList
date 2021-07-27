@@ -32,6 +32,7 @@ package SVGIconImageList;
 
 requires
   vcl,
+  VclSmp,
   SVGIconPackage,
   SVGImage32Package,
   vclwinx;
@@ -48,6 +49,7 @@ contains
   Winapi.D2DMissing in '..\..\Source\Winapi.D2DMissing.pas',
   PasSVGFactory in '..\..\Source\PasSVGFactory.pas',
   Image32SVGFactory in '..\..\Source\Image32SVGFactory.pas',
-  SVGInterfaces in '..\..\Source\SVGInterfaces.pas';
+  SVGInterfaces in '..\..\Source\SVGInterfaces.pas',
+  dlgExportPNG in '..\..\Source\dlgExportPNG.pas' {ExportToPNGDialog};
 
 end.

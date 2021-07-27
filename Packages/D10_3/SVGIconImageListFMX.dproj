@@ -91,9 +91,9 @@
         <DCCReference Include="fmx.dcp"/>
         <DCCReference Include="SVGImage32Package.dcp"/>
         <DCCReference Include="SVGIconPackage.dcp"/>
+        <DCCReference Include="..\..\Source\FMX.Image32SVG.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImageList.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImage.pas"/>
-        <DCCReference Include="..\..\Source\FMX.Image32SVG.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -114,8 +114,7 @@
                 <Source>
                     <Source Name="MainSource">SVGIconImageListFMX.dpk</Source>
                 </Source>
-                <Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Deployment Version="3">
                 <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
