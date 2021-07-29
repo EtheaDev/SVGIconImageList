@@ -2,6 +2,7 @@ package dclSVGIconImageList;
 
 {$R *.res}
 {$R '..\SVGIconImageList.dcr'}
+{$R '..\..\Image32\Source\Img32.Panels.dcr'}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -33,14 +34,11 @@ package dclSVGIconImageList;
 
 requires
   DesignIDE,
-  SVGIconPackage,
-  SVGIconImageList,
-  VclSmp;
+  SVGIconImageList;
 
 contains
   SVGIconImageListEditorUnit in '..\SVGIconImageListEditorUnit.pas' {SVGIconImageListEditor},
   SVGIconImageRegister in '..\SVGIconImageRegister.pas',
-  SVGTextPropertyEditorUnit in '..\SVGTextPropertyEditorUnit.pas' {SVGTextPropertyEditorForm},
-  dlgExportPNG in '..\..\Source\dlgExportPNG.pas' {ExportToPNGDialog};
+  SVGTextPropertyEditorUnit in '..\SVGTextPropertyEditorUnit.pas' {SVGTextPropertyEditorForm};
 
 end.
