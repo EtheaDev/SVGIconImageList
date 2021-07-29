@@ -203,7 +203,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       Margins.Bottom = 2.000000000000000000
       Position.X = 2.000000000000000000
       Position.Y = 2.000000000000000000
-      Size.Width = 69.794998168945310000
+      Size.Width = 69.794998168945320000
       Size.Height = 32.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 14
@@ -230,7 +230,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       Margins.Top = 2.000000000000000000
       Margins.Right = 2.000000000000000000
       Margins.Bottom = 2.000000000000000000
-      Position.X = 75.794998168945310000
+      Position.X = 75.794998168945320000
       Position.Y = 2.000000000000000000
       Size.Width = 95.000000000000000000
       Size.Height = 32.000000000000000000
@@ -246,7 +246,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       Margins.Bottom = 2.000000000000000000
       Position.X = 182.000015258789100000
       Position.Y = 2.000000000000000000
-      Size.Width = 97.999984741210940000
+      Size.Width = 97.999984741210930000
       Size.Height = 32.000000000000000000
       Size.PlatformDefault = False
       TextSettings.HorzAlign = Trailing
@@ -627,6 +627,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'calendar'
         SVGText = 
@@ -656,6 +657,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'about'
         SVGText = 
@@ -670,6 +672,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'accept_database'
         SVGText = 
@@ -688,6 +691,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'add_column'
         SVGText = 
@@ -703,6 +707,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'add_database'
         SVGText = 
@@ -722,6 +727,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'add_image'
         SVGText = 
@@ -740,6 +746,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'add_row'
         SVGText = 
@@ -756,6 +763,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'address_book'
         SVGText = 
@@ -780,6 +788,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'advance'
         SVGText = 
@@ -795,6 +804,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'advertising'
         SVGText = 
@@ -816,6 +826,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'alarm_clock'
         SVGText = 
@@ -842,6 +853,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'alphabetical_sorting_az'
         SVGText = 
@@ -857,6 +869,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'alphabetical_sorting_za'
         SVGText = 
@@ -872,6 +885,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'automatic'
         SVGText = 
@@ -895,6 +909,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'automotive'
         SVGText = 
@@ -917,6 +932,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'bearish'
         SVGText = 
@@ -937,6 +953,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'binoculars'
         SVGText = 
@@ -963,6 +980,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'briefcase'
         SVGText = 
@@ -981,6 +999,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'bullish'
         SVGText = 
@@ -1001,6 +1020,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'camcorder'
         SVGText = 
@@ -1027,6 +1047,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'camcorder_pro'
         SVGText = 
@@ -1052,6 +1073,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'camera'
         SVGText = 
@@ -1074,6 +1096,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'cancel'
         SVGText = 
@@ -1088,6 +1111,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'cell_phone'
         SVGText = 
@@ -1120,6 +1144,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'charge_battery'
         SVGText = 
@@ -1136,6 +1161,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'checkmark'
         SVGText = 
@@ -1148,6 +1174,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'clapperboard'
         SVGText = 
@@ -1172,6 +1199,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'clock'
         SVGText = 
@@ -1188,6 +1216,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'close_up_mode'
         SVGText = 
@@ -1210,6 +1239,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'cloth'
         SVGText = 
@@ -1272,6 +1302,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'collaboration'
         SVGText = 
@@ -1290,6 +1321,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'collapse'
         SVGText = 
@@ -1302,6 +1334,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'collect'
         SVGText = 
@@ -1322,6 +1355,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'combo_chart'
         SVGText = 
@@ -1343,6 +1377,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'command_line'
         SVGText = 
@@ -1375,6 +1410,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'comments'
         SVGText = 
@@ -1387,6 +1423,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'compact_camera'
         SVGText = 
@@ -1405,6 +1442,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'conference_call'
         SVGText = 
@@ -1424,6 +1462,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'contacts'
         SVGText = 
@@ -1439,6 +1478,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'copyleft'
         SVGText = 
@@ -1454,6 +1494,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'customer_support'
         SVGText = 
@@ -1480,6 +1521,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'data_sheet'
         SVGText = 
@@ -1497,6 +1539,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'department'
         SVGText = 
@@ -1520,6 +1563,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'diploma_2'
         SVGText = 
@@ -1540,6 +1584,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'disclaimer'
         SVGText = 
@@ -1564,6 +1609,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'document'
         SVGText = 
@@ -1580,6 +1626,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'donate'
         SVGText = 
@@ -1605,6 +1652,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'doughnut_chart'
         SVGText = 
@@ -1621,6 +1669,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'edit_image'
         SVGText = 
@@ -1644,6 +1693,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'electronics'
         SVGText = 
@@ -1660,6 +1710,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'empty_trash'
         SVGText = 
@@ -1674,6 +1725,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'factory'
         SVGText = 
@@ -1692,6 +1744,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'faq'
         SVGText = 
@@ -1718,6 +1771,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'feedback'
         SVGText = 
@@ -1735,6 +1789,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'filing_cabinet'
         SVGText = 
@@ -1756,6 +1811,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'film'
         SVGText = 
@@ -1770,6 +1826,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'film_reel'
         SVGText = 
@@ -1786,6 +1843,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'fine_print'
         SVGText = 
@@ -1811,6 +1869,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'flash_auto'
         SVGText = 
@@ -1825,6 +1884,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'flash_off'
         SVGText = 
@@ -1838,6 +1898,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'flash_on'
         SVGText = 
@@ -1850,6 +1911,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'flow_chart'
         SVGText = 
@@ -1866,6 +1928,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'folder'
         SVGText = 
@@ -1880,6 +1943,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'frame'
         SVGText = 
@@ -1904,6 +1968,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'full_battery'
         SVGText = 
@@ -1918,6 +1983,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'full_trash'
         SVGText = 
@@ -1934,6 +2000,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'gallery'
         SVGText = 
@@ -1951,6 +2018,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'globe'
         SVGText = 
@@ -1997,6 +2065,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'graduation_cap'
         SVGText = 
@@ -2017,6 +2086,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'high_priority'
         SVGText = 
@@ -2036,6 +2106,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'home'
         SVGText = 
@@ -2055,6 +2126,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'icons8_cup'
         SVGText = 
@@ -2076,6 +2148,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'idea'
         SVGText = 
@@ -2101,6 +2174,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'in_transit'
         SVGText = 
@@ -2129,6 +2203,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'inspection'
         SVGText = 
@@ -2149,6 +2224,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'ipad'
         SVGText = 
@@ -2164,6 +2240,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'iphone'
         SVGText = 
@@ -2179,6 +2256,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'key'
         SVGText = 
@@ -2198,6 +2276,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'kindle'
         SVGText = 
@@ -2218,6 +2297,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'landscape'
         SVGText = 
@@ -2234,6 +2314,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'like'
         SVGText = 
@@ -2247,6 +2328,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'list'
         SVGText = 
@@ -2266,6 +2348,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'lock'
         SVGText = 
@@ -2281,6 +2364,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'lock_landscape'
         SVGText = 
@@ -2299,6 +2383,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'lock_portrait'
         SVGText = 
@@ -2317,6 +2402,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'manager'
         SVGText = 
@@ -2339,6 +2425,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'mms'
         SVGText = 
@@ -2354,6 +2441,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'multiple_devices'
         SVGText = 
@@ -2374,6 +2462,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'multiple_smartphones'
         SVGText = 
@@ -2398,6 +2487,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'old_time_camera'
         SVGText = 
@@ -2423,6 +2513,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'online_support'
         SVGText = 
@@ -2449,6 +2540,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'opened_folder'
         SVGText = 
@@ -2463,6 +2555,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'org_unit'
         SVGText = 
@@ -2478,6 +2571,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'organization'
         SVGText = 
@@ -2501,6 +2595,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'overtime'
         SVGText = 
@@ -2530,6 +2625,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'phone'
         SVGText = 
@@ -2544,6 +2640,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'picture'
         SVGText = 
@@ -2559,6 +2656,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'survey'
         SVGText = 
@@ -2582,6 +2680,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'switch_camera'
         SVGText = 
@@ -2602,6 +2701,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'two_smartphones'
         SVGText = 
@@ -2622,6 +2722,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'video_projector'
         SVGText = 
@@ -2654,6 +2755,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'view_details'
         SVGText = 
@@ -2672,6 +2774,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'vlc'
         SVGText = 
@@ -2708,6 +2811,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'voice_presentation'
         SVGText = 
@@ -2722,6 +2826,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'webcam'
         SVGText = 
@@ -2741,6 +2846,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'wi-fi_logo'
         SVGText = 
@@ -2774,6 +2880,7 @@ object SVGIconImageListForm: TSVGIconImageListForm
       item
         MultiResBitmap = <
           item
+            Size = 64
           end>
         IconName = 'android_os'
         SVGText = 
@@ -2850,856 +2957,856 @@ object SVGIconImageListForm: TSVGIconImageListForm
         Layers = <
           item
             Name = 'calendar'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'about'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'accept_database'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'add_column'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'add_database'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'add_image'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'add_row'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'address_book'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'advance'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'advertising'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'alarm_clock'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'alphabetical_sorting_az'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'alphabetical_sorting_za'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'automatic'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'automotive'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'bearish'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'binoculars'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'briefcase'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'bullish'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'camcorder'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'camcorder_pro'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'camera'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'cancel'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'cell_phone'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'charge_battery'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'checkmark'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'clapperboard'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'clock'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'close_up_mode'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'cloth'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'collaboration'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'collapse'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'collect'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'combo_chart'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'command_line'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'comments'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'compact_camera'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'conference_call'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'contacts'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'copyleft'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'customer_support'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'data_sheet'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'department'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'diploma_2'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'disclaimer'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'document'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'donate'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'doughnut_chart'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'edit_image'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'electronics'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'empty_trash'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'factory'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'faq'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'feedback'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'filing_cabinet'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'film'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'film_reel'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'fine_print'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'flash_auto'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'flash_off'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'flash_on'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'flow_chart'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'folder'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'frame'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'full_battery'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'full_trash'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'gallery'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'globe'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'graduation_cap'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'high_priority'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'home'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'icons8_cup'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'idea'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'in_transit'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'inspection'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'ipad'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'iphone'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'key'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'kindle'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'landscape'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'like'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'list'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'lock'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'lock_landscape'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'lock_portrait'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'manager'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'mms'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'multiple_devices'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'multiple_smartphones'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'old_time_camera'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'online_support'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'opened_folder'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'org_unit'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'organization'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'overtime'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'phone'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'picture'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'survey'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'switch_camera'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'two_smartphones'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'video_projector'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'view_details'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'vlc'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'voice_presentation'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'webcam'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'wi-fi_logo'
-            SourceRect.Right = 62.000000000000000000
-            SourceRect.Bottom = 62.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item
         Layers = <
           item
             Name = 'android_os'
-            SourceRect.Right = 120.000000000000000000
-            SourceRect.Bottom = 120.000000000000000000
+            SourceRect.Right = 64.000000000000000000
+            SourceRect.Bottom = 64.000000000000000000
           end>
       end
       item

@@ -2538,12 +2538,17 @@ begin
   r := rgb.R; g := rgb.G; b := rgb.B;
   pc := PARGB(PixelBase);
   for i := 0 to Width * Height -1 do
-  begin
-    pc.R := r;
-    pc.G := g;
-    pc.B := b;
-    inc(pc);
-  end;
+    if pc.A = 0 then
+    begin
+      pc.Color := 0;
+      inc(pc);
+    end else
+    begin
+      pc.R := r;
+      pc.G := g;
+      pc.B := b;
+      inc(pc);
+    end;
   Changed;
 end;
 //------------------------------------------------------------------------------
