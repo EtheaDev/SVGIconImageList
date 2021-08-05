@@ -257,7 +257,7 @@ end;
 procedure TFmxImage32SVG.PaintToBitmap(ABitmap: TBitmap;
   const AZoom: Integer = 100; const KeepAspectRatio: Boolean = True);
 var
-  color: TColor32;
+  LColor: TColor32;
   LWidth, LHeight: Integer;
 begin
   Assert(Assigned(FImage32));
@@ -272,12 +272,12 @@ begin
   //Update FsvgReader BEFORE calling FsvgReader.DrawImage
   if FApplyFixedColorToRootOnly and not FGrayScale and
     (FFixedColor <> clNone32) then
-      color := AlphaToColor32(FFixedColor)
+      LColor := AlphaToColor32(FFixedColor)
   else
-    color := clNone32;
+    LColor := clNone32;
 
-  fSvgReader.SetOverrideFillColor(color);
-  fSvgReader.SetOverrideStrokeColor(color);
+  fSvgReader.SetOverrideFillColor(LColor);
+  fSvgReader.SetOverrideStrokeColor(LColor);
 
   FsvgReader.KeepAspectRatio := KeepAspectRatio;
 
@@ -289,7 +289,7 @@ begin
     FImage32.Grayscale
   else if (FFixedColor <> clNone32) and
     not FApplyFixedColorToRootOnly then
-      FImage32.SetRGB(AlphaToColor32(FFixedColor));
+      FImage32.SetRGB(FFixedColor);
 
   //Opacity applyed to Image32
   if FOpacity <> 1.0 then
