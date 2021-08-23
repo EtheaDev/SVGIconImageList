@@ -2,8 +2,8 @@ unit Img32.SVG.Core;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.0                                                             *
-* Date      :  20 July 2021                                                    *
+* Version   :  3.1                                                             *
+* Date      :  15 August 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -285,6 +285,7 @@ type
 
 type
   TSetOfUTF8Char = set of UTF8Char;
+  UTF8Strings = array of UTF8String;
 
 function CharInSet(chr: UTF8Char; chrs: TSetOfUTF8Char): Boolean;
 
@@ -337,6 +338,30 @@ end;
 function CharInSet(chr: UTF8Char; chrs: TSetOfUTF8Char): Boolean;
 begin
   Result := chr in chrs;
+end;
+//------------------------------------------------------------------------------
+
+function Split(const str: UTF8String): UTF8Strings;
+var
+  i,j,k, spcCnt, len: integer;
+begin
+  spcCnt := 0;
+  i := 1;
+  len := Length(str);
+  while (len > 0) and (str[len] <= #32) do dec(len);
+  while (i <= len) and (str[i] <= #32) do inc(i);
+  for j := i + 1 to len do
+    if (str[j] <= #32) and (str[j -1] > #32) then inc(spcCnt);
+  SetLength(Result, spcCnt +1);
+  for k := 0 to spcCnt do
+  begin
+    j := i;
+    while (j <= len) and (str[j] > #32) do inc(j);
+    SetLength(Result[k], j -i);
+    Move(str[i], Result[k][1], j -i);
+    while (j <= len) and (str[j] <= #32) do inc(j);
+    i := j;
+  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -1410,7 +1435,9 @@ end;
 
 function TXmlEl.ParseAttributes(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 var
+  i: integer;
   attrib, styleAttrib, classAttrib, idAttrib: PSvgAttrib;
+  classes: UTF8Strings;
   ansi: UTF8String;
 begin
   Result := false;
@@ -1451,19 +1478,23 @@ begin
     end;    
   end;
 
-  if assigned(classAttrib) then 
+  if assigned(classAttrib) then
     with classAttrib^ do
     begin
-      //get the 'dotted' classname
-      ansi := SvgDecimalSeparator + value;
-      //get the style definition
-      ansi := owner.classStyles.GetStyle(ansi);
-      if ansi <> '' then ParseStyleAttribute(ansi);
+      //get the 'dotted' classname(s)
+      classes := Split(value);
+      for i := 0 to High(classes) do
+      begin
+        ansi := SvgDecimalSeparator + classes[i];
+        //get the style definition
+        ansi := owner.classStyles.GetStyle(ansi);
+        if ansi <> '' then ParseStyleAttribute(ansi);
+      end;
     end;
 
   if assigned(styleAttrib) then
     ParseStyleAttribute(styleAttrib.value);
-    
+
   if assigned(idAttrib) then
   begin
     //get the 'hashed' classname

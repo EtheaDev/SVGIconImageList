@@ -2,8 +2,8 @@ unit Img32;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.0                                                             *
-* Date      :  20 July 2021                                                    *
+* Version   :  3.1                                                             *
+* Date      :  15 August 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -19,14 +19,17 @@ interface
 {$I Img32.inc}
 
 uses
-  {$IFDEF MSWINDOWS} Windows,{$ENDIF} Types, SysUtils, Classes,
+  {$IFDEF MSWINDOWS} Windows, {$ENDIF} Types, SysUtils, Classes,
   {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults, Character,{$ENDIF}
   {$IFDEF UITYPES} UITypes,{$ENDIF} Math;
 
 type
   TRect = Types.TRect;
   TColor32 = type Cardinal;
-  TPointD = record X, Y: double; end;
+
+  TPointD = record
+    X, Y: double;
+  end;
 
 const
   clNone32     = TColor32($00000000);
@@ -306,19 +309,37 @@ type
   TArrayOfDouble = array of double;
   TArrayOfString = array of string;
 
-  TRectD = {$IFDEF RECORD_METHODS} record {$ELSE} object {$ENDIF}
-    Left, Top, Right, Bottom: double;
+{$IFDEF RECORD_METHODS}
+  TRectD = record
     function IsEmpty: Boolean;
     function Width: double;
     function Height: double;
-    //Normalize: Returns True if swapping either top & bottom or left & right
-    function Normalize: Boolean;
+    //NormalizeRect:
+    //Returns True if swapping either top & bottom or left & right
+    function NormalizeRect: Boolean;
     function Contains(const Pt: TPoint): Boolean; overload;
     function Contains(const Pt: TPointD): Boolean; overload;
+    function MidPoint: TPointD;
+    case Integer of
+      0: (Left, Top, Right, Bottom: Double);
+      1: (TopLeft, BottomRight: TPointD);
+  end;
+{$ELSE}
+  TRectD = object
+    Left, Top, Right, Bottom: Double;
+    function IsEmpty: Boolean;
+    function Width: double;
+    function Height: double;
+    //NormalizeRect:
+    //Returns True if swapping either top & bottom or left & right
+    function NormalizeRect: Boolean;
+    function Contains(const Pt: TPoint): Boolean; overload;
+    function Contains(const Pt: TPointD): Boolean; overload;
+    function MidPoint: TPointD;
     function TopLeft: TPointD;
     function BottomRight: TPointD;
-    function MidPoint: TPointD;
   end;
+{$ENDIF}
 
   {$IFNDEF PBYTE}
   PByte = type PChar;
@@ -332,6 +353,10 @@ type
   function BlendToAlpha(bgColor, fgColor: TColor32): TColor32;
   //BlendMask: Whereever the mask is, preserves the background
   function BlendMask(bgColor, alphaMask: TColor32): TColor32;
+  function BlendDifference(bgColor, fgColor: TColor32): TColor32;
+  function BlendSubtract(bgColor, fgColor: TColor32): TColor32;
+  function BlendLighten(bgColor, fgColor: TColor32): TColor32;
+  function BlendDarken(bgColor, fgColor: TColor32): TColor32;
   function BlendInvertedMask(bgColor, alphaMask: TColor32): TColor32;
   //BlendBlueChannel: typically useful for white color masks
   function BlendBlueChannel(bgColor, blueMask: TColor32): TColor32;
@@ -367,7 +392,6 @@ type
   //RGBColor: Converts a TColor32 value into a COLORREF value
   function RGBColor(color: TColor32): Cardinal;
   function InvertColor(color: TColor32): TColor32;
-  procedure Monochrome(var color: TColor32);
 
   //RgbToHsl: See https://en.wikipedia.org/wiki/HSL_and_HSV
   function RgbToHsl(color: TColor32): THsl;
@@ -595,6 +619,22 @@ begin
   Result := Integer(imgFmtRec1.SortOrder) - Integer(imgFmtRec2.SortOrder);
 end;
 
+function ClampByte(val: Integer): byte;
+begin
+  if val < 0 then result := 0
+  else if val > 255 then result := 255
+  else result := val;
+end;
+//------------------------------------------------------------------------------
+
+function ClampByte(val: double): byte;
+begin
+  if val <= 0 then result := 0
+  else if val >= 255 then result := 255
+  else result := Round(val);
+end;
+//------------------------------------------------------------------------------
+
 //------------------------------------------------------------------------------
 // Blend functions - used by TImage32.CopyBlend()
 //------------------------------------------------------------------------------
@@ -659,6 +699,78 @@ begin
   Result := bgColor;
   res.A := MulTable[bg.A, fg.A];
   if res.A = 0 then Result := 0;
+end;
+//------------------------------------------------------------------------------
+
+function BlendDifference(bgColor, fgColor: TColor32): TColor32;
+var
+  res: TARGB absolute Result;
+  bg: TARGB absolute bgColor;
+  fg: TARGB absolute fgColor;
+begin
+  if fg.A = 0 then Result := bgColor
+  else if bg.A = 0 then Result := fgColor
+  else
+  begin
+    res.A := (((fg.A xor 255) * (bg.A xor 255)) shr 8) xor 255;
+    res.R := Abs(fg.R - bg.R);
+    res.G := Abs(fg.G - bg.G);
+    res.B := Abs(fg.B - bg.B);
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function BlendSubtract(bgColor, fgColor: TColor32): TColor32;
+var
+  res: TARGB absolute Result;
+  bg: TARGB absolute bgColor;
+  fg: TARGB absolute fgColor;
+begin
+  if fg.A = 0 then Result := bgColor
+  else if bg.A = 0 then Result := fgColor
+  else
+  begin
+    res.A := (((fg.A xor 255) * (bg.A xor 255)) shr 8) xor 255;
+    res.R := ClampByte(fg.R - bg.R);
+    res.G := ClampByte(fg.G - bg.G);
+    res.B := ClampByte(fg.B - bg.B);
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function BlendLighten(bgColor, fgColor: TColor32): TColor32;
+var
+  res: TARGB absolute Result;
+  bg: TARGB absolute bgColor;
+  fg: TARGB absolute fgColor;
+begin
+  if fg.A = 0 then Result := bgColor
+  else if bg.A = 0 then Result := fgColor
+  else
+  begin
+    res.A := (((fg.A xor 255) * (bg.A xor 255)) shr 8) xor 255;
+    res.R := Max(fg.R, bg.R);
+    res.G := Max(fg.G, bg.G);
+    res.B := Max(fg.B, bg.B);
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function BlendDarken(bgColor, fgColor: TColor32): TColor32;
+var
+  res: TARGB absolute Result;
+  bg: TARGB absolute bgColor;
+  fg: TARGB absolute fgColor;
+begin
+  if fg.A = 0 then Result := bgColor
+  else if bg.A = 0 then Result := fgColor
+  else
+  begin
+    res.A := (((fg.A xor 255) * (bg.A xor 255)) shr 8) xor 255;
+    res.R := Min(fg.R, bg.R);
+    res.G := Min(fg.G, bg.G);
+    res.B := Min(fg.B, bg.B);
+  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -818,16 +930,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Monochrome(var color: TColor32);
-var
-  c: TARGB absolute color;
-begin
-  c.R := (c.R * 61 + c.G * 174 + c.B * 21) shr 8;
-  if c.R > 127 then c.R := 255 else c.R := 0;
-  c.G := c.R; c.B := c.R; c.A := 255;
-end;
-//------------------------------------------------------------------------------
-
 function Alpha(color: TColor32): TColor32;
 {$IFDEF INLINE} inline; {$ENDIF}
 begin
@@ -897,22 +999,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 {$ENDIF}
-
-function ClampByte(val: Integer): byte;
-begin
-  if val < 0 then result := 0
-  else if val > 255 then result := 255
-  else result := val;
-end;
-//------------------------------------------------------------------------------
-
-function ClampByte(val: double): byte;
-begin
-  if val <= 0 then result := 0
-  else if val >= 255 then result := 255
-  else result := Round(val);
-end;
-//------------------------------------------------------------------------------
 
 function GrayScale(color: TColor32): TColor32;
 var
@@ -1202,18 +1288,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TRectD.TopLeft: TPointD;
-begin
-  result := PointD(Left, Top);
-end;
-//------------------------------------------------------------------------------
-
-function TRectD.BottomRight: TPointD;
-begin
-  result := PointD(Right, Bottom);
-end;
-//------------------------------------------------------------------------------
-
 function TRectD.MidPoint: TPointD;
 begin
   Result.X := (Right + Left)/2;
@@ -1221,7 +1295,23 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TRectD.Normalize: Boolean;
+{$IFNDEF RECORD_METHODS}
+function TRectD.TopLeft: TPointD;
+begin
+  Result.X := Left;
+  Result.Y := Top;
+end;
+//------------------------------------------------------------------------------
+
+function TRectD.BottomRight: TPointD;
+begin
+  Result.X := Right;
+  Result.Y := Bottom;
+end;
+//------------------------------------------------------------------------------
+{$ENDIF}
+
+function TRectD.NormalizeRect: Boolean;
 var
   d: double;
 begin

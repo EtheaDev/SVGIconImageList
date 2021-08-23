@@ -2,8 +2,8 @@ unit Img32.Vector;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.0                                                             *
-* Date      :  20 July 2021                                                    *
+* Version   :  3.1                                                             *
+* Date      :  15 August 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -30,9 +30,11 @@ type
   TFillRule = (frEvenOdd, frNonZero, frPositive, frNegative);
 
   TSizeD = {$IFDEF RECORD_METHODS} record {$ELSE} object {$ENDIF}
-    sx  : double;
-    sy  : double;
+    cx  : double;
+    cy  : double;
     function average: double;
+    property Width: Double read cx write cx;
+    property Height: Double read cy write cy;
   end;
 
   TRectWH = {$IFDEF RECORD_METHODS} record {$ELSE} object {$ENDIF}
@@ -206,8 +208,8 @@ type
   function Rect(const recD: TRectD): TRect; overload;
   function Rect(const left,top,right,bottom: integer): TRect; overload;
 
-  function Size(sx, sy: integer): TSize;
-  function SizeD(sx, sy: double): TSizeD;
+  function Size(cx, cy: integer): TSize;
+  function SizeD(cx, cy: double): TSizeD;
 
   function Area(const path: TPathD): Double;
   function RectsEqual(const rec1, rec2: TRect): Boolean;
@@ -241,7 +243,13 @@ type
 
   function ReflectPoint(const pt, pivot: TPointD): TPointD;
   {$IFDEF INLINING} inline; {$ENDIF}
+
+  function RectsOverlap(const rec1, rec2: TRect): Boolean;
+
   function IntersectRect(const rec1, rec2: TRectD): TRectD; overload;
+  //UnionRect: this behaves differently to types.UnionRect
+  //in that if either parameter is empty the other parameter is returned
+  function UnionRect(const rec1, rec2: TRect): TRect; overload;
   function UnionRect(const rec1, rec2: TRectD): TRectD; overload;
 
   //these 2 functions are only needed to support older versions of Delphi
@@ -358,7 +366,7 @@ const
 
 function TSizeD.average: double;
 begin
-  Result := (sx + sy) * 0.5;
+  Result := (cx + cy) * 0.5;
 end;
 
 //------------------------------------------------------------------------------
@@ -621,17 +629,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function Size(sx, sy: integer): TSize;
+function Size(cx, cy: integer): TSize;
 begin
-  Result.cx := sx;
-  Result.cy := sy;
+  Result.cx := cx;
+  Result.cy := cy;
 end;
 //------------------------------------------------------------------------------
 
-function SizeD(sx, sy: double): TSizeD;
+function SizeD(cx, cy: double): TSizeD;
 begin
-  Result.sx := sx;
-  Result.sy := sy;
+  Result.cx := cx;
+  Result.cy := cy;
 end;
 //------------------------------------------------------------------------------
 
@@ -703,12 +711,35 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function RectsOverlap(const rec1, rec2: TRect): Boolean;
+begin
+  Result := (rec1.Left < rec2.Right) and (rec1.Right > rec2.Left) and
+     (rec1.Top < rec2.Bottom) and (rec1.Bottom > rec2.Top);
+end;
+//------------------------------------------------------------------------------
+
 function IntersectRect(const rec1, rec2: TRectD): TRectD;
 begin
   result.Left := Max(rec1.Left, rec2.Left);
   result.Top := Max(rec1.Top, rec2.Top);
   result.Right := Min(rec1.Right, rec2.Right);
   result.Bottom := Min(rec1.Bottom, rec2.Bottom);
+end;
+//------------------------------------------------------------------------------
+
+function UnionRect(const rec1, rec2: TRect): TRect;
+begin
+  if IsEmptyRect(rec1) then
+    Result := rec2
+  else if IsEmptyRect(rec2) then
+    Result := rec1
+  else
+  begin
+    result.Left := Min(rec1.Left, rec2.Left);
+    result.Top := Min(rec1.Top, rec2.Top);
+    result.Right := Max(rec1.Right, rec2.Right);
+    result.Bottom := Max(rec1.Bottom, rec2.Bottom);
+  end;
 end;
 //------------------------------------------------------------------------------
 

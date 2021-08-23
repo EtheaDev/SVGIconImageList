@@ -2,8 +2,8 @@ unit Img32.Transform;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.0                                                             *
-* Date      :  20 July 2021                                                    *
+* Version   :  3.1                                                             *
+* Date      :  15 August 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -1023,14 +1023,14 @@ begin
   if (a <> 0) or (b <> 0) then
   begin
     q := Sqrt(a * a + b * b);
-    Result.sx	:= q;
-	  Result.sy	:= delta / q;
+    Result.cx	:= q;
+	  Result.cy	:= delta / q;
   end
   else if (c <> 0) or (d <> 0) then
   begin
     q := Sqrt(c * c + d * d);
-    Result.sx := delta / q;
-    Result.sy := q;
+    Result.cx := delta / q;
+    Result.cy := q;
   end else
     Result := SizeD(0.0, 0.0);
 end;
@@ -1041,7 +1041,7 @@ var
   scale: TSizeD;
 begin
   scale := ExtractScaleFromMatrix(mat);
-  Result := Average(Abs(scale.sx), Abs(scale.sy));
+  Result := Average(Abs(scale.cx), Abs(scale.cy));
 end;
 //------------------------------------------------------------------------------
 

@@ -2,8 +2,8 @@ unit Img32.Extra;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.0                                                             *
-* Date      :  20 July 2021                                                    *
+* Version   :  3.1                                                             *
+* Date      :  15 August 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -92,11 +92,11 @@ procedure EraseOutsidePaths(img: TImage32; const paths: TPathsD;
 procedure Draw3D(img: TImage32; const polygon: TPathD;
   fillRule: TFillRule; height, blurRadius: double;
   colorLt: TColor32 = $DDFFFFFF; colorDk: TColor32 = $80000000;
-  angleRads: double = angle45); overload;
+  angleRads: double = angle225); overload;
 procedure Draw3D(img: TImage32; const polygons: TPathsD;
   fillRule: TFillRule; height, blurRadius: double;
   colorLt: TColor32 = $DDFFFFFF; colorDk: TColor32 = $80000000;
-  angleRads: double = angle45); overload;
+  angleRads: double = angle225); overload;
 
 function RainbowColor(fraction: double): TColor32;
 function GradientColor(color1, color2: TColor32; frac: single): TColor32;
@@ -265,6 +265,7 @@ begin
   rec := GetBounds(polygons);
   if IsEmptyRect(rec) or (depth < 1) then Exit;
   if not ClockwiseRotationIsAnglePositive then angleRads := -angleRads;
+  NormalizeAngle(angleRads);
   GetSinCos(angleRads, y, x);
   x := depth * x;
   y := depth * y;
@@ -605,37 +606,35 @@ procedure Draw3D(img: TImage32; const polygons: TPathsD;
   colorLt: TColor32; colorDk: TColor32; angleRads: double);
 var
   tmp: TImage32;
-  recI: TRect;
-  recD: TRectD;
+  rec: TRect;
   paths, paths2: TPathsD;
   x,y: double;
 begin
+  rec := GetBounds(polygons);
+  if IsEmptyRect(rec) then Exit;
   if not ClockwiseRotationIsAnglePositive then angleRads := -angleRads;
   GetSinCos(angleRads, y, x);
-  recD := GetBoundsD(polygons);
-  if recD.IsEmpty then Exit;
-  recI := Rect(recD);
-  paths := OffsetPath(polygons, -recI.Left, -recI.Top);
-  tmp := TImage32.Create(rectWidth(recI), rectHeight(recI));
+  paths := OffsetPath(polygons, -rec.Left, -rec.Top);
+  tmp := TImage32.Create(rectWidth(rec), rectHeight(rec));
   try
     if colorLt shr 24 > 0 then
     begin
       tmp.Clear(colorLt);
-      paths2 := OffsetPath(paths, height*x, height*y);
+      paths2 := OffsetPath(paths, -height*x, -height*y);
       EraseInsidePaths(tmp, paths2, fillRule);
       FastGaussianBlur(tmp, tmp.Bounds, Round(blurRadius), 0);
       EraseOutsidePaths(tmp, paths, fillRule, tmp.Bounds);
-      img.CopyBlend(tmp, tmp.Bounds, recI, BlendToAlpha);
+      img.CopyBlend(tmp, tmp.Bounds, rec, BlendToAlpha);
     end;
 
     if colorDk shr 24 > 0 then
     begin
       tmp.Clear(colorDk);
-      paths2 := OffsetPath(paths, -height*x, -height*y);
+      paths2 := OffsetPath(paths, height*x, height*y);
       EraseInsidePaths(tmp, paths2, fillRule);
       FastGaussianBlur(tmp, tmp.Bounds, Round(blurRadius), 0);
       EraseOutsidePaths(tmp, paths, fillRule, tmp.Bounds);
-      img.CopyBlend(tmp, tmp.Bounds, recI, BlendToAlpha);
+      img.CopyBlend(tmp, tmp.Bounds, rec, BlendToAlpha);
     end;
   finally
     tmp.Free;
@@ -701,12 +700,12 @@ var
   i: integer;
   radius: double;
   rec: TRectD;
-  shadowSize, shadowAngle: double;
+  lightSize, lightAngle: double;
 begin
   img.Clear;
   if (size < 5) then Exit;
   radius := size * 0.5;
-  shadowSize := radius * 0.25;
+  lightSize := radius * 0.25;
 
   rec := RectD(pt.X -radius, pt.Y -radius, pt.X +radius, pt.Y +radius);
 
@@ -728,7 +727,7 @@ begin
     else
       Result := Ellipse(rec);
   end;
-  shadowAngle := angle45;
+  lightAngle := angle225;
 
   img.BeginUpdate;
   try
@@ -736,15 +735,15 @@ begin
     //nb: only need to cutout the inside shadow if
     //the pending color fill is semi-transparent
     if baShadow in buttonAttributes then
-      DrawShadow(img, Result, frNonZero, shadowSize,
-        shadowAngle, $AA000000, color shr 24 < 254);
+      DrawShadow(img, Result, frNonZero, lightSize,
+        (lightAngle + angle180), $AA000000, color shr 24 < 254);
 
     if color shr 24 > 2 then
       DrawPolygon(img, Result, frNonZero, color);
 
     if ba3D in buttonAttributes then
-      Draw3D(img, Result, frNonZero, shadowSize*2,
-        Ceil(shadowSize), $CCFFFFFF, $AA000000, shadowAngle);
+      Draw3D(img, Result, frNonZero, lightSize*2,
+        Ceil(lightSize), $CCFFFFFF, $AA000000, lightAngle);
     DrawLine(img, Result, DpiAwareI, clBlack32, esPolygon);
   finally
     img.EndUpdate;
@@ -1766,20 +1765,6 @@ end;
 
 //------------------------------------------------------------------------------
 // RamerDouglasPeucker - and support functions
-//------------------------------------------------------------------------------
-
-function PerpendicularDistSqrd(const pt, line1, line2: TPointD): double;
-var
-  a,b,c,d: double;
-begin
-  a := pt.X - line1.X;
-  b := pt.Y - line1.Y;
-  c := line2.X - line1.X;
-  d := line2.Y - line1.Y;
-  if (c = 0) and (d = 0) then
-    result := 0 else
-    result := Sqr(a * d - c * b) / (c * c + d * d);
-end;
 //------------------------------------------------------------------------------
 
 procedure RDP(const path: TPathD; startIdx, endIdx: integer;

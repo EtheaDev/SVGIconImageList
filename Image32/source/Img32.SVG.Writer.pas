@@ -2,8 +2,8 @@ unit Img32.SVG.Writer;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.0                                                             *
-* Date      :  20 July 2021                                                    *
+* Version   :  3.1                                                             *
+* Date      :  15 August 2021                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -714,7 +714,7 @@ const
 begin
   currPath := GetCurrentPath;
   currSeg  := GetNewOrAppendSeg(currPath, dsArc);
-  AddSegmentValues(currSeg, [radii.sx, radii.sy, angle,
+  AddSegmentValues(currSeg, [radii.cx, radii.cy, angle,
     boolVal[arcFlag], boolVal[sweepFlag], endPt.X, endPt.Y]);
   fLastPt := endPt;
 end;
@@ -824,8 +824,8 @@ begin
   Result := inherited WriteHeader;
   AppendFloatAttrib(Result, 'cx', Origin.X);
   AppendFloatAttrib(Result, 'cy', Origin.Y);
-  AppendFloatAttrib(Result, 'rx', radii.sx);
-  AppendFloatAttrib(Result, 'ry', radii.sy);
+  AppendFloatAttrib(Result, 'rx', radii.cx);
+  AppendFloatAttrib(Result, 'ry', radii.cy);
 end;
 
 //------------------------------------------------------------------------------
@@ -846,10 +846,10 @@ begin
   AppendFloatAttrib(Result, 'y', RecWH.Top);
   AppendFloatAttrib(Result, 'width', RecWH.Width);
   AppendFloatAttrib(Result, 'height', RecWH.Height);
-  if radii.sx > 0 then
-    AppendFloatAttrib(Result, 'rx', radii.sx);
-  if radii.sy > 0 then
-    AppendFloatAttrib(Result, 'ry', radii.sy);
+  if radii.cx > 0 then
+    AppendFloatAttrib(Result, 'rx', radii.cx);
+  if radii.cy > 0 then
+    AppendFloatAttrib(Result, 'ry', radii.cy);
 end;
 
 //------------------------------------------------------------------------------
@@ -902,8 +902,8 @@ begin
   inherited;
   fElStr := 'text';
   fontInfo := nullfontInfo;
-  offset.sx := InvalidD;
-  offset.sy := InvalidD;
+  offset.cx := InvalidD;
+  offset.cy := InvalidD;
 end;
 //------------------------------------------------------------------------------
 
@@ -946,10 +946,10 @@ begin
   if position.Y <> InvalidD then
     AppendFloatAttrib(Result, 'y', position.Y);
 
-  if offset.sx <> InvalidD then
-    AppendFloatAttrib(Result, 'dx', offset.sx);
-  if offset.sy <> InvalidD then
-    AppendFloatAttrib(Result, 'dy', offset.sy);
+  if offset.cx <> InvalidD then
+    AppendFloatAttrib(Result, 'dx', offset.cx);
+  if offset.cy <> InvalidD then
+    AppendFloatAttrib(Result, 'dy', offset.cy);
 
 end;
 //------------------------------------------------------------------------------

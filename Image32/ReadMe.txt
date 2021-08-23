@@ -1,7 +1,7 @@
 
 Image32 - 2D graphics library for Delphi Pascal
-Latest version: 3.0
-Released: 20 July 2021
+Latest version: 3.1
+Released: 15 August 2021
 
 Copyright © 2019-2021 Angus Johnson
 Freeware released under Boost Software License
@@ -11,6 +11,27 @@ Documentation : http://www.angusj.com/delphi/image32/Docs/
 Download      : https://sourceforge.net/projects/image32/files/
 
 Recent changes:
+
+Version 3.1
+  Img32
+    renamed TRectD.Normalize to TRectD.NormalizeRect
+      to emulate Delphi's TRectF method naming
+  Img32.Vector
+    renamed TSizeD's sx and sy fields to cx and cy respectively
+      again to emulate Delphi's TSize field naming
+    add RectsOverlap function
+    add a UnionRect function that replaces the same function
+      in Delphi's Types unit. The function in the Types unit
+      unions empty rects which was causes problems in the library
+  Img32.Extra
+    fixed incorrect rotation angle in Draw3D function
+  Img32.Layers
+    added TLayer32.Move method
+    changed TLayer32 Tag property to UserData property
+    Added TGroupLayer32.ClipPath property
+    Fixed drawing bug with deeply nested group layers
+  Samples
+    Added Layers301 to demonstrate clipped and nested group layers
 
 Version 3.0
   The Library's unit structure has changed significantly.
