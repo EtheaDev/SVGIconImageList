@@ -48,7 +48,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '2.5.0';
+  SVGIconImageListVersion = '3.0.0';
   DEFAULT_SIZE = 32;
   ZOOM_DEFAULT = 100;
   SVG_INHERIT_COLOR = TAlphaColors.Null;
