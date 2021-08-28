@@ -2,7 +2,7 @@
 
 ## Four engines to render SVG (Delphi Image32, Delphi TSVG, Direct2D wrapper or Cairo wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 2.5.0 (VCL+FMX)
+### Actual official version 3.0.0 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -75,6 +75,10 @@ You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtension
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 ### RELEASE NOTES
+28 Aug 2021: version 3.0.0 (VCL+FMX)
+- Updated Packages for Delphi 11
+- Updated some documentation (Images and Wiki)
+
 24 Aug 2021: version 2.5.0 (VCL+FMX)
 - Aligned to Image32 library ver.3.1
 
