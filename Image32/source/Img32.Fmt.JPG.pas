@@ -2,8 +2,8 @@ unit Img32.Fmt.JPG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.2                                                             *
+* Date      :  19 August 2021                                                  *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  JPG/JPEG file format extension for TImage32                     *
@@ -15,7 +15,7 @@ interface
 {$IFNDEF FPC}
 {$I Img32.inc}
 uses
-  SysUtils, Classes, Windows, Math, Img32, Graphics, JPEG;
+  SysUtils, Classes, Windows, Math, Img32, JPEG;
 
 type
 

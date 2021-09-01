@@ -202,21 +202,25 @@ end;
 procedure TImage32SVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
 var
   dx,dy: double;
-  color: TColor32;
+  LFixedColor: TColor32;
+  dd: TDrawData;
 begin
   //Define Image32 output size
   FImage32.SetSize(Round(R.Width), Round(R.Height));
 
   //Update FsvgReader BEFORE calling FsvgReader.DrawImage
+  //to apply fixed color to root only
   if FApplyFixedColorToRootOnly and not FGrayScale and
     (FFixedColor <> TColors.SysDefault) and
     (FFixedColor <> TColors.SysNone) then
-      color := Color32(FFixedColor)
-  else
-    color := clNone32;
-
-  fSvgReader.SetOverrideFillColor(color);
-  fSvgReader.SetOverrideStrokeColor(color);
+  begin
+    LFixedColor := Color32(FFixedColor);
+    dd := fSvgReader.RootElement.DrawData;
+    dd.FillColor := LFixedColor;
+    if dd.strokeColor <> clInvalid then
+      dd.strokeColor := LFixedColor;
+    fSvgReader.RootElement.DrawData := dd;
+  end;
 
   FsvgReader.KeepAspectRatio := KeepAspectRatio;
 

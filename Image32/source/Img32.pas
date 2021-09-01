@@ -353,7 +353,7 @@ type
   function BlendToAlpha(bgColor, fgColor: TColor32): TColor32;
   //BlendMask: Whereever the mask is, preserves the background
   function BlendMask(bgColor, alphaMask: TColor32): TColor32;
-  function BlendDifference(bgColor, fgColor: TColor32): TColor32;
+  function BlendDifference(color1, color2: TColor32): TColor32;
   function BlendSubtract(bgColor, fgColor: TColor32): TColor32;
   function BlendLighten(bgColor, fgColor: TColor32): TColor32;
   function BlendDarken(bgColor, fgColor: TColor32): TColor32;
@@ -702,14 +702,14 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function BlendDifference(bgColor, fgColor: TColor32): TColor32;
+function BlendDifference(color1, color2: TColor32): TColor32;
 var
   res: TARGB absolute Result;
-  bg: TARGB absolute bgColor;
-  fg: TARGB absolute fgColor;
+  bg: TARGB absolute color1;
+  fg: TARGB absolute color2;
 begin
-  if fg.A = 0 then Result := bgColor
-  else if bg.A = 0 then Result := fgColor
+  if fg.A = 0 then Result := color1
+  else if bg.A = 0 then Result := color2
   else
   begin
     res.A := (((fg.A xor 255) * (bg.A xor 255)) shr 8) xor 255;
@@ -781,7 +781,7 @@ var
   fg: TARGB absolute blueMask;
 begin
   Result := bgColor;
-  res.A := MulTable[bg.A, MulTable[fg.B, fg.A]];
+  res.A := MulTable[bg.A, fg.B];
 end;
 //------------------------------------------------------------------------------
 

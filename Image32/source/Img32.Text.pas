@@ -142,7 +142,7 @@ type
     minorVersion   : Word;
     fontRevision   : TFixed;
     checkSumAdjust : Cardinal;
-    magicNumber    : Cardinal;  //$5F0F3CF5
+    magicNumber    : Cardinal;  // $5F0F3CF5
     flags          : Word;
     unitsPerEm     : Word;
     dateCreated    : UInt64;
@@ -322,6 +322,8 @@ type
 
   TFontReader = class(TNotifySender)
   private
+    fFontManager       : TFontManager;
+    fDestroying        : Boolean;
     fStream            : TMemoryStream;
     fFontWeight        : integer;
     fFontInfo          : TFontInfo;
@@ -844,7 +846,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-
 {$IFDEF MSWINDOWS}
 constructor TFontReader.Create(const fontname: string);
 begin
@@ -858,6 +859,11 @@ destructor TFontReader.Destroy;
 begin
   Clear;
   fStream.Free;
+  if Assigned(fFontManager) then
+  begin
+    fDestroying := true;
+    fFontManager.Delete(self);
+  end;
   inherited;
 end;
 //------------------------------------------------------------------------------
@@ -2906,7 +2912,11 @@ var
   i: integer;
 begin
   for i := 0 to fFontList.Count -1 do
-    TFontReader(fFontList[i]).Free;
+    with TFontReader(fFontList[i]) do
+    begin
+      fFontManager := nil;
+      Free;
+    end;
   fFontList.Clear;
 end;
 //------------------------------------------------------------------------------
@@ -2927,6 +2937,8 @@ begin
   except
     FreeAndNil(Result);
   end;
+  if Assigned(Result) then
+    Result.fFontManager := self;
 end;
 //------------------------------------------------------------------------------
 {$ENDIF}
@@ -2947,6 +2959,8 @@ begin
   except
     FreeAndNil(Result);
   end;
+  if Assigned(Result) then
+    Result.fFontManager := self;
 end;
 //------------------------------------------------------------------------------
 
@@ -2966,6 +2980,8 @@ begin
   except
     FreeAndNil(Result);
   end;
+  if Assigned(Result) then
+    Result.fFontManager := self;
 end;
 //------------------------------------------------------------------------------
 
@@ -2985,6 +3001,8 @@ begin
   except
     FreeAndNil(Result);
   end;
+  if Assigned(Result) then
+    Result.fFontManager := self;
 end;
 //------------------------------------------------------------------------------
 
@@ -2999,7 +3017,7 @@ begin
   if not Assigned(fr2) or
     ((fr.fFontInfo.macStyles <> fr2.fFontInfo.macStyles) or
     not SameText(fr.fFontInfo.faceName, fr2.fFontInfo.faceName)) then
-      fFontList.Add(fr)
+    fFontList.Add(fr)
   else
       Result := false;
 end;
@@ -3012,7 +3030,8 @@ begin
   for i := 0 to fFontList.Count -1 do
     if TFontReader(fFontList[i]) = fontReader then
     begin
-      fontReader.Free;
+      //make sure the FontReader object isn't destroying itself externally
+      if not fontReader.fDestroying then fontReader.Free;
       fFontList.Delete(i);
       Result := true;
       Exit;

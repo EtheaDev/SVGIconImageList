@@ -2,8 +2,8 @@ unit Img32.Layers;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.2                                                             *
+* Date      :  19 August 2021                                                  *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -72,12 +72,14 @@ type
     fOpacity        : Byte;
     fCursorId       : integer;
     fUserData       : TObject;
+    fBlendFunc      : TBlendFunction;
     fOldBounds      : TRect;    //bounds at last layer merge
     fRefreshPending : boolean;
     function   GetMidPoint: TPointD;
     procedure  SetVisible(value: Boolean);
     function   GetHeight: integer;
     function   GetWidth: integer;
+    procedure  SetBlendFunc(func: TBlendFunction);
   protected
     procedure  BeginUpdate; virtual;
     procedure  EndUpdate;   virtual;
@@ -121,6 +123,7 @@ type
     property   Visible: Boolean read fVisible write SetVisible;
     property   Width: integer read GetWidth;
     property   UserData: TObject read fUserData write fUserData;
+    property   BlendFunc: TBlendFunction read fBlendFunc write SetBlendFunc;
   end;
 
   TUpdateType = (utUndefined, utShowDesigners, utHideDesigners);
@@ -791,6 +794,15 @@ begin
   end;
   newGroupOwner.RefreshPending;
 end;
+//------------------------------------------------------------------------------
+
+procedure TLayer32.SetBlendFunc(func: TBlendFunction);
+begin
+  if not Assigned(fGroupOwner) then Exit;
+  fBlendFunc := func;
+  if Visible then
+    fGroupOwner.Invalidate(Bounds);
+end;
 
 //------------------------------------------------------------------------------
 // TGroupLayer32 class
@@ -1050,12 +1062,20 @@ begin
           EraseOutsidePath(tmp, clpPath, frNonZero, tmp.Bounds);
         end;
 
-        Image.CopyBlend(tmp, childRect, groupRect, BlendToAlpha);
+        if Assigned(ChildLayer.BlendFunc) then
+          Image.CopyBlend(tmp, childRect, groupRect, ChildLayer.BlendFunc) else
+          Image.CopyBlend(tmp, childRect, groupRect, BlendToAlpha);
+
       finally
         tmp.Free;
       end;
-    end else
-      Image.CopyBlend(ChildLayer.Image, childRect, groupRect, BlendToAlpha);
+    end
+    else if Assigned(ChildLayer.BlendFunc) then
+      Image.CopyBlend(ChildLayer.Image,
+        childRect, groupRect, ChildLayer.BlendFunc)
+    else
+      Image.CopyBlend(ChildLayer.Image,
+        childRect, groupRect, BlendToAlpha);
 
     ChildLayer.fRefreshPending := false;
   end;

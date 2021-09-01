@@ -2545,68 +2545,84 @@ end;
 //http://blog.ivank.net/fastest-gaussian-blur.html
 //https://www.peterkovesi.com/papers/FastGaussianSmoothing.pdf
 
-function BoxesForGauss(stdDev, boxCnt, maxVal: integer): TArrayOfInteger;
+function BoxesForGauss(stdDev, boxCnt: integer): TArrayOfInteger;
 var
   i, wl, wu, m: integer;
   wIdeal, mIdeal: double;
 begin
-  wIdeal := Sqrt((12*stdDev*stdDev/boxCnt)+1);
-  wl := Floor(wIdeal);
-  if (wl mod 2 = 0) then dec(wl);
-  wu := wl+2;
-
-  mIdeal := (12 *stdDev*stdDev
-    -boxCnt *wl*wl - 4*boxCnt *wl - 3 *boxCnt) / (-4 *wl - 4);
-  m := Round(mIdeal);
   SetLength(Result, boxCnt);
-  wl := Min(maxVal, wl);
-  wu := Min(maxVal, wu);
+
+  wIdeal := Sqrt((12*stdDev*stdDev/boxCnt)+1); // Ideal averaging filter width
+  wl := Floor(wIdeal); if not Odd(wl) then dec(wl);
+  mIdeal :=
+    (-3*stdDev*stdDev +0.25*boxCnt*wl*wl +boxCnt*wl +0.75*boxCnt)/(wl+1);
+
+  m := Floor(mIdeal) div 2;   //nb: variation on Ivan Kutskir's code.
+  wl := (wl -1) div 2;        //    It's better to do this here
+  wu := wl+1;                 //    than later in both BoxBlurH & BoxBlurV
 
   for i := 0 to boxCnt -1 do
     if i < m then
-      Result[i] := (wl -1) div 2 else
-      Result[i] := (wu -1) div 2;
+      Result[i] := wl else
+      Result[i] := wu;
 end;
 //------------------------------------------------------------------------------
 
 procedure BoxBlurH(var src, dst: TArrayOfColor32; w,h, stdDev: integer);
 var
-  i,j, ti, li, ri: integer;
+  i,j, ti, li, ri, re, ovr: integer;
   fv, lv, val: TWeightedColor;
+  rc: TColor32;
 begin
+  ovr := Max(0, stdDev - w);
   for i := 0 to h -1 do
   begin
     ti := i * w;
     li := ti;
     ri := ti +stdDev;
 
+    re := ti +w -1; //idx of last pixel in row
+    rc := src[re];  //color of last pixel in row
+
     fv.Reset;
     lv.Reset;
     val.Reset;
 
     fv.Add(src[ti], 1);
-    lv.Add(src[ti +w -1], 1);
-    val.Add(fv.Color, stdDev +1);
+    lv.Add(rc, 1);
+    val.Add(src[ti], stdDev +1);
 
-    for j := 0 to stdDev -1 do
+    for j := 0 to stdDev -1 - ovr do
       val.Add(src[ti + j]);
+    if ovr > 0 then val.Add(rc, ovr);
+
     for j := 0 to stdDev do
     begin
-      val.Add(src[ri]); inc(ri);
+      if ri > re then
+        val.Add(rc) else
+        val.Add(src[ri]);
+      inc(ri);
       val.Subtract(fv);
-      dst[ti] := val.Color; inc(ti);
+      if ti <= re then
+        dst[ti] := val.Color;
+      inc(ti);
     end;
     for j := stdDev +1 to w - stdDev -1 do
     begin
-      val.Add(src[ri]); inc(ri);
-      val.Subtract(src[li]); inc(li);
+      if ri <= re then
+      begin
+        val.Add(src[ri]); inc(ri);
+        val.Subtract(src[li]); inc(li);
+      end;
       dst[ti] := val.Color; inc(ti);
     end;
-    for j := w - stdDev to w -1 do
+    while ti <= re do
     begin
+      if ti > re then Break;
       val.Add(lv);
       val.Subtract(src[li]); inc(li);
-      dst[ti] := val.Color; inc(ti);
+      dst[ti] := val.Color;
+      inc(ti);
     end;
   end;
 end;
@@ -2614,9 +2630,11 @@ end;
 
 procedure BoxBlurT(var src, dst: TArrayOfColor32; w, h, stdDev: integer);
 var
-  i,j, ti, li, ri: integer;
+  i,j, ti, li, ri, re, ovr: integer;
   fv, lv, val: TWeightedColor;
+  rc: TColor32;
 begin
+  ovr := Max(0, stdDev - h);
   for i := 0 to w -1 do
   begin
     ti := i;
@@ -2627,30 +2645,43 @@ begin
     lv.Reset;
     val.Reset;
 
-    fv.Add(src[ti]);
-    lv.Add(src[ti +w *(h-1)], 1);
-    val.Add(fv.Color, stdDev +1);
+    re := ti +w *(h-1); //idx of last pixel in column
+    rc := src[re];      //color of last pixel in column
 
-    for j := 0 to stdDev -1 do
+    fv.Add(src[ti]);
+    lv.Add(rc, 1);
+    val.Add(src[ti], stdDev +1);
+
+    for j := 0 to stdDev -1 -ovr do
       val.Add(src[ti + j *w]);
+    if ovr > 0 then val.Add(rc, ovr);
+
     for j := 0 to stdDev do
     begin
-      val.Add(src[ri]); inc(ri, w);
+      if ri > re then
+        val.Add(rc) else
+        val.Add(src[ri]);
+      inc(ri, w);
       val.Subtract(fv);
-      dst[ti] := val.Color; inc(ti, w);
-
+      if ti <= re then
+        dst[ti] := val.Color;
+      inc(ti, w);
     end;
     for j := stdDev +1 to h - stdDev -1 do
     begin
-      val.Add(src[ri]); inc(ri, w);
-      val.Subtract(src[li]); inc(li, w);
+      if ri <= re then
+      begin
+        val.Add(src[ri]); inc(ri, w);
+        val.Subtract(src[li]); inc(li, w);
+      end;
       dst[ti] := val.Color; inc(ti, w);
     end;
-    for j := h - stdDev to h -1 do
+    while ti <= re do
     begin
       val.Add(lv);
       val.Subtract(src[li]); inc(li, w);
-      dst[ti] := val.Color; inc(ti, w);
+      dst[ti] := val.Color;
+      inc(ti, w);
     end;
   end;
 end;
@@ -2659,7 +2690,7 @@ end;
 procedure FastGaussianBlur(img: TImage32;
   const rec: TRect; stdDev: integer; repeats: integer);
 var
-  i,j,len, w,h, maxStdDev: integer;
+  i,j,len, w,h: integer;
   rec2: TRect;
   boxes: TArrayOfInteger;
   src, dst: TArrayOfColor32;
@@ -2673,15 +2704,11 @@ begin
 
   w := RectWidth(rec2);
   h := RectHeight(rec2);
+  if (Min(w, h) < 2) or (stdDev < 1) then Exit;
+
   len := w * h;
   SetLength(src, len);
   SetLength(dst, len);
-
-  //safety check to avoid overflows
-  maxStdDev := Min(w, h) div 2 -1;
-  if stdDev > maxStdDev then
-    stdDev := maxStdDev;
-  if stdDev < 1 then Exit;
 
   if blurFullImage then
   begin
@@ -2689,7 +2716,7 @@ begin
     Move(img.PixelBase^, dst[0], len * SizeOf(TColor32));
   end else
   begin
-    //copy just a rectangular region into  dst array
+    //copy just a rectangular region into dst array
     p := @dst[0];
     for i := rec2.Top to rec2.Bottom -1 do
     begin
@@ -2700,8 +2727,8 @@ begin
   end;
 
   //do the blur
-  inc(repeats);
-  boxes := BoxesForGauss(stdDev, repeats, maxStdDev);
+  inc(repeats); //now represents total iterations
+  boxes := BoxesForGauss(stdDev, repeats);
   for j := 0 to repeats -1 do
     begin
       BoxBlurH(dst, src, w, h, boxes[j]);

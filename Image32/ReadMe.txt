@@ -21,8 +21,8 @@ Version 3.1
       again to emulate Delphi's TSize field naming
     add RectsOverlap function
     add a UnionRect function that replaces the same function
-      in Delphi's Types unit. The function in the Types unit
-      unions empty rects which was causes problems in the library
+      in Delphi's Types unit. (The function in the Types unit
+      incorrectly unions empty rects which was causing problems)
   Img32.Extra
     fixed incorrect rotation angle in Draw3D function
   Img32.Layers

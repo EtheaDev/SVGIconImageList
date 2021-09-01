@@ -2,8 +2,8 @@ unit Img32.Fmt.PNG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.2                                                             *
+* Date      :  19 August 2021                                                  *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  PNG file format extension for TImage32                          *
@@ -97,7 +97,7 @@ var
   BitDepth: integer;
   pAlpha, pColor: PByte;
   pDst: PARGB;
-  transColor: ColorRef;
+  transColor: Cardinal;
   palleteChunk: TChunkPLTE;
 begin
   result := false;
@@ -108,7 +108,7 @@ begin
     png.LoadFromStream(stream);
     if png.Transparent then
       transColor := png.TransparentColor else
-      transColor := DWord(-1);
+      transColor := Cardinal(-1);
     if png.Empty then Exit;
 
     img32.SetSize(png.Header.Width, png.Header.Height);

@@ -82,11 +82,11 @@ end;
 class function TImageFormat_SVG.IsValidImageStream(stream: TStream): Boolean;
 var
   i, savedPos, len: integer;
-  buff: array [1..256] of AnsiChar;
+  buff: array [1..1024] of AnsiChar;
 begin
   Result := false;
   savedPos := stream.Position;
-  len := Min(256, stream.Size - savedPos);
+  len := Min(1024, stream.Size - savedPos);
   stream.Read(buff[1], len);
   stream.Position := savedPos;
   for i := 1 to len -4 do

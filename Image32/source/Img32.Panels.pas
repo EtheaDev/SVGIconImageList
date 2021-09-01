@@ -184,7 +184,6 @@ procedure Register;
 begin
   RegisterComponents('Image32 Panels', [TImage32Panel]);
 end;
-
 type
   TNotifyImage32 = class(TImage32)
   protected
@@ -1222,6 +1221,7 @@ end;
 constructor TImage32Panel.Create(AOwner: TComponent);
 begin
   inherited;
+  Color := clWhite;
   fImage := TNotifyImage32.Create(Self);
   fImage.Resampler := rBicubicResampler;
   fImage.SetSize(200,200);
