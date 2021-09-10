@@ -84,7 +84,7 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 
 22 Jul 2021: version 2.4.0 (VCL+FMX)
 - Updated and aligned to Image32 ver.3 library
-- Added packages for Delphi 11 Olympus
+- Added packages for Delphi 11 Alexandria
 
 18 Jul 2021: version 2.3.1 (VCL+FMX)
 - Fixed rendering files with color defined by 8 digits

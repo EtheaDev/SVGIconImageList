@@ -125,7 +125,7 @@
   {$DEFINE D10_4+}
 {$ENDIF}
 
-// Delphi 11.0 Olympus
+// Delphi 11.0 Alexandria
 {$IFDEF VER350}
   {$DEFINE D2010+}
   {$DEFINE DXE+}
