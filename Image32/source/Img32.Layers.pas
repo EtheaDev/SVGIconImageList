@@ -2,8 +2,8 @@ unit Img32.Layers;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.2                                                             *
-* Date      :  19 August 2021                                                  *
+* Version   :  3.3                                                             *
+* Date      :  21 September 2021                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -28,23 +28,16 @@ type
   TButtonShape = Img32.Extra.TButtonShape;
 
   TLayer32 = class;
+  TGroupLayer32 = class;
   TLayer32Class = class of TLayer32;
   TLayeredImage32 = class;
-  TGroupLayer32 = class;
 
-  TLayerHitTestEvent =
-    function (layer: TLayer32; const pt: TPoint): Boolean of Object;
-
-  TArrayOfPointer = array of Pointer;
-
-  //THitTestRec is used for hit-testing (see TLayeredImage32.GetLayerAt).
-  THitTestRec = {$IFDEF RECORD_METHODS} record {$ELSE} object {$ENDIF}
-    PtrPixels : TArrayOfPointer;
-    width  : integer;
-    height : integer;
-    function IsEmpty: Boolean;
-    procedure Init(ownerLayer: TLayer32);
-    procedure Clear;
+  //THitTest is used for hit-testing (see TLayeredImage32.GetLayerAt).
+  THitTest = class
+    htImage   : TImage32;
+    enabled   : Boolean;
+    constructor Create;
+    destructor Destroy; override;
   end;
 
   TLayerNotifyImage32 = class(TImage32)
@@ -61,11 +54,11 @@ type
 
   TLayer32 = class  //base layer class (rarely if ever instantiated)
   private
-    fLayeredImage   : TLayeredImage32;
-    fGroupOwner     : TGroupLayer32;
     fLeft           : integer;
     fTop            : integer;
     fImage          : TImage32;
+    fMergeImage     : TImage32;
+    fClipImage      : TImage32;
     fName           : string;
     fIndex          : integer;
     fVisible        : Boolean;
@@ -75,21 +68,46 @@ type
     fBlendFunc      : TBlendFunction;
     fOldBounds      : TRect;    //bounds at last layer merge
     fRefreshPending : boolean;
+    fLayeredImage   : TLayeredImage32;
+    fParent         : TLayer32;
+{$IFDEF XPLAT_GENERICS}
+    fChilds         : TList<TLayer32>;
+{$ELSE}
+    fChilds         : TList;
+{$ENDIF}
+    fInvalidRect    : TRect;
+    fUpdateCount    : Integer; //see beginUpdate/EndUpdate
+    fClipPath       : TPathsD;
+    function   TopLeft: TPoint;
     function   GetMidPoint: TPointD;
     procedure  SetVisible(value: Boolean);
     function   GetHeight: integer;
     function   GetWidth: integer;
     procedure  SetBlendFunc(func: TBlendFunction);
+
+    function   GetChildCount: integer;
+    function   GetChild(index: integer): TLayer32;
+    function   GetRoot: TGroupLayer32;
+    function   FindLayerNamed(const name: string): TLayer32; virtual;
+    procedure  ReindexChildsFrom(startIdx: Integer);
+    procedure  SetClipPath(const path: TPathsD);
+    procedure  UpdateBounds;
   protected
     procedure  BeginUpdate; virtual;
     procedure  EndUpdate;   virtual;
-    function   CanUpdate: Boolean;
+    procedure  RefreshPending;
+    procedure  PreMerge(hideDesigners: Boolean);
+    procedure  PreMergeAll(hideDesigners: Boolean);
+    procedure  Merge(hideDesigners: Boolean; const updateRect: TRect);
+    function   GetLayerAt(const pt: TPoint; ignoreDesigners: Boolean): TLayer32;
+    procedure  InternalDeleteChild(index: integer; fromChild: Boolean);
+
+    function   HasChildren: Boolean;
     function   GetBounds: TRect;
     procedure  SetOpacity(value: Byte); virtual;
     procedure  ImageChanged(Sender: TImage32); virtual;
   public
-    constructor Create(groupOwner: TGroupLayer32;
-      const name: string = ''); virtual;
+    constructor Create(parent: TLayer32; const name: string = ''); virtual;
     destructor Destroy; override;
     procedure  SetSize(width, height: integer);
 
@@ -97,20 +115,31 @@ type
     function   SendBackOne: Boolean;
     function   BringToFront: Boolean;
     function   SendToBack: Boolean;
-    function   Move(newGroupOwner: TGroupLayer32; idx: integer): Boolean;
+    function   Move(newParent: TLayer32; idx: integer): Boolean;
+    function   GetAbsoluteOrigin: TPoint;
 
     procedure  PositionAt(const pt: TPoint); overload;
-    procedure  PositionAt(x, y: integer); overload;
+    procedure  PositionAt(x, y: integer); overload; virtual;
     procedure  PositionCenteredAt(X, Y: integer); overload;
     procedure  PositionCenteredAt(const pt: TPoint); overload;
     procedure  PositionCenteredAt(const pt: TPointD); overload;
     procedure  SetBounds(const newBounds: TRect); virtual;
     procedure  Invalidate(rec: TRect); virtual;
 
+    function   AddChild(layerClass: TLayer32Class; const name: string = ''): TLayer32;
+    function   InsertChild(layerClass: TLayer32Class; index: integer; const name: string = ''): TLayer32;
+    procedure  DeleteChild(index: integer);
+    procedure  ClearChildren;
+
+    property   ChildCount: integer read GetChildCount;
+    property   Child[index: integer]: TLayer32 read GetChild; default;
+    //ClipPath: defines a client region for child layers (in child coords).
+    //When undefined, the clip region is the layer's bounds.
+    property   ClipPath: TPathsD read fClipPath write SetClipPath;
     procedure  Offset(dx, dy: integer); virtual;
     property   Bounds: TRect read GetBounds;
     property   CursorId: integer read fCursorId write fCursorId;
-    property   GroupOwner: TGroupLayer32 read fGroupOwner;
+    property   Parent: TLayer32 read fParent;
     property   Height: integer read GetHeight;
     property   Image: TImage32 read fImage;
     property   Index: integer read fIndex;
@@ -118,6 +147,7 @@ type
     property   MidPoint: TPointD read GetMidPoint;
     property   Name: string read fName write fName;
     property   Opacity: Byte read fOpacity write SetOpacity;
+    property   Root: TGroupLayer32 read GetRoot;
     property   RootOwner: TLayeredImage32 read fLayeredImage;
     property   Top: integer read fTop;
     property   Visible: Boolean read fVisible write SetVisible;
@@ -126,56 +156,24 @@ type
     property   BlendFunc: TBlendFunction read fBlendFunc write SetBlendFunc;
   end;
 
-  TUpdateType = (utUndefined, utShowDesigners, utHideDesigners);
-
-  TGroupLayer32 = class(TLayer32) //container class for other layers
-  private
-{$IFDEF XPLAT_GENERICS}
-    fChilds                 : TList<TLayer32>;
-{$ELSE}
-    fChilds                 : TList;
-{$ENDIF}
-    fLastUpdateType         : TUpdateType;
-    fInvalidRect            : TRect;
-    fUpdateCount            : Integer; //see beginUpdate/EndUpdate
-    fClipPath               : TPathD;
-    function  GetChildCount: integer;
-    function  GetChild(index: integer): TLayer32;
-    function  FindLayerNamed(const name: string): TLayer32; virtual;
-    procedure ReindexChildsFrom(startIdx: Integer);
-  protected
-    procedure  BeginUpdate; override;
-    procedure  EndUpdate;   override;
-    procedure  RefreshPending;
-    procedure  SetOpacity(value: Byte); override;
-    procedure PreMerge(hideDesigners, forceRefresh: Boolean);
-    procedure Merge(hideDesigners: Boolean; const staleRect: TRect);
-    function  GetLayerAt(const pt: TPoint; ignoreDesigners: Boolean): TLayer32;
-    procedure InternalDeleteChild(index: integer; fromChild: Boolean);
+  TGroupLayer32 = class(TLayer32)
   public
-    constructor Create(groupOwner: TGroupLayer32; const name: string = ''); override;
-    destructor Destroy; override;
-    function   AddChild(layerClass: TLayer32Class; const name: string = ''): TLayer32;
-    function   InsertChild(layerClass: TLayer32Class; index: integer; const name: string = ''): TLayer32;
-    procedure  DeleteChild(index: integer);
-    procedure  Invalidate(rec: TRect); override;
     procedure  Offset(dx, dy: integer); override;
-    procedure  ClearChildren;
-
-    property   ChildCount: integer read GetChildCount;
-    property   Child[index: integer]: TLayer32 read GetChild; default;
-    property   ClipPath: TPathD read fClipPath write fClipPath;
   end;
 
   THitTestLayer32 = class(TLayer32) //abstract classs
   private
-    fHitTestRec     : THitTestRec;
+    fHitTest    : THitTest;
+    procedure ClearHitTesting;
+    function  GetEnabled: Boolean;
+    procedure SetEnabled(value: Boolean);
   protected
     procedure  ImageChanged(Sender: TImage32); override;
-    property   HitTestRec : THitTestRec read fHitTestRec write fHitTestRec;
+    property   HitTestRec : THitTest read fHitTest write fHitTest;
   public
-    function GetPathsFromHitTestMask: TPathsD;
-    procedure ClearHitTesting;
+    constructor Create(parent: TLayer32; const name: string = ''); override;
+    destructor Destroy; override;
+    property HitTestEnabled: Boolean read GetEnabled write SetEnabled;
   end;
 
   TRotateLayer32 = class(THitTestLayer32) //abstract rotating layer class
@@ -189,8 +187,8 @@ type
   protected
     procedure SetPivotPt(const pivot: TPointD); virtual;
   public
-    constructor Create(groupOwner: TGroupLayer32; const name: string = ''); override;
-    procedure Rotate(angleDelta: double); virtual;
+    constructor Create(parent: TLayer32; const name: string = ''); override;
+    function Rotate(angleDelta: double): Boolean; virtual;
     procedure ResetAngle;
     procedure Offset(dx, dy: integer); override;
     property  Angle: double read fAngle write SetAngle;
@@ -205,14 +203,14 @@ type
     fOnDraw     : TNotifyEvent;
     procedure SetMargin(new: integer);
     procedure RepositionAndDraw;
-    procedure SetPaths(const newPaths: TPathsD);
   protected
+    procedure SetPaths(const newPaths: TPathsD); virtual;
     procedure Draw; virtual;
   public
-    constructor Create(groupOwner: TGroupLayer32; const name: string = ''); override;
+    constructor Create(parent: TLayer32;  const name: string = ''); override;
     procedure SetBounds(const newBounds: TRect); override;
     procedure Offset(dx,dy: integer); override;
-    procedure Rotate(angleDelta: double); override;
+    function Rotate(angleDelta: double): Boolean; override;
     procedure UpdateHitTestMask(const vectorRegions: TPathsD;
       fillRule: TFillRule); virtual;
     property  Paths: TPathsD read fPaths write SetPaths;
@@ -237,16 +235,17 @@ type
   protected
     procedure ImageChanged(Sender: TImage32); override;
     procedure SetPivotPt(const pivot: TPointD); override;
+    procedure UpdateHitTestMaskTranspar(compareFunc: TCompareFunction;
+      referenceColor: TColor32; tolerance: integer);
   public
-    constructor Create(groupOwner: TGroupLayer32; const name: string = ''); override;
+    constructor Create(parent: TLayer32;  const name: string = ''); override;
     destructor  Destroy; override;
     procedure Offset(dx,dy: integer); override;
-    procedure UpdateHitTestMaskOpaque;
-    procedure UpdateHitTestMaskTransparent; overload; virtual;
-    procedure UpdateHitTestMaskTransparent(compareFunc: TCompareFunction;
-      referenceColor: TColor32; tolerance: integer); overload; virtual;
+    procedure UpdateHitTestMask;
+    procedure UpdateHitTestMaskOpaque; virtual;
+    procedure UpdateHitTestMaskTransparent(alphaValue: Byte = 127); overload; virtual;
     procedure SetBounds(const newBounds: TRect); override;
-    procedure Rotate(angleDelta: double); override;
+    function  Rotate(angleDelta: double): Boolean; override;
 
     property  AutoSetHitTestMask: Boolean read fAutoHitTest write fAutoHitTest;
     property  MasterImage: TImage32 read fMasterImg;
@@ -287,7 +286,6 @@ type
     property DistBetweenButtons: double read GetDistance;
   end;
 
-
   TButtonGroupLayer32 = class(TGroupLayer32) //groups generic buttons
   private
     fBtnSize: integer;
@@ -301,6 +299,7 @@ type
 
   TDesignerLayer32 = class(THitTestLayer32) //generic design layer
   public
+    constructor Create(parent: TLayer32; const name: string = ''); override;
     procedure UpdateHitTestMask(const vectorRegions: TPathsD;
       fillRule: TFillRule); virtual;
   end;
@@ -315,8 +314,7 @@ type
     procedure SetButtonAttributes(const shape: TButtonShape;
       size: integer; color: TColor32); virtual;
   public
-    constructor Create(groupOwner: TGroupLayer32;
-      const name: string = ''); override;
+    constructor Create(parent: TLayer32; const name: string = ''); override;
     procedure Draw; virtual;
 
     property Size  : integer read fSize write fSize;
@@ -325,12 +323,15 @@ type
     property ButtonOutline: TPathD read fButtonOutline write fButtonOutline;
   end;
 
+  TUpdateType = (utUndefined, utShowDesigners, utHideDesigners);
+
   TLayeredImage32 = class
   private
     fRoot              : TGroupLayer32;
     fBounds            : TRect;
     fBackColor         : TColor32;
     fResampler         : integer;
+    fLastUpdateType    : TUpdateType;
     function  GetRootLayersCount: integer;
     function  GetLayer(index: integer): TLayer32;
     function  GetImage: TImage32;
@@ -348,12 +349,12 @@ type
     procedure Clear;
     procedure Invalidate;
     function  AddLayer(layerClass: TLayer32Class = nil;
-      group: TGroupLayer32 = nil; const name: string = ''): TLayer32;
-    function  InsertLayer(layerClass: TLayer32Class; group: TGroupLayer32;
+      group: TLayer32 = nil; const name: string = ''): TLayer32;
+    function  InsertLayer(layerClass: TLayer32Class; group: TLayer32;
       index: integer; const name: string = ''): TLayer32;
     procedure DeleteLayer(layer: TLayer32); overload;
     procedure DeleteLayer(layerIndex: integer;
-      groupOwner: TGroupLayer32 = nil); overload;
+      parent: TLayer32 = nil); overload;
     function  FindLayerNamed(const name: string): TLayer32;
     function  GetLayerAt(const pt: TPoint; ignoreDesigners: Boolean = false): TLayer32;
     function  GetMergedImage(hideDesigners: Boolean = false): TImage32; overload;
@@ -382,7 +383,6 @@ function CreateRotatingButtonGroup(targetLayer: TLayer32;
   pivotButtonColor: TColor32 = clWhite32;
   angleButtonColor: TColor32 = clBlue32;
   initialAngle: double = 0; angleOffset: double = 0;
-  enablePivotMove: Boolean = True;
   buttonLayerClass: TButtonDesignerLayer32Class = nil): TRotatingGroupLayer32; overload;
 
 function CreateRotatingButtonGroup(targetLayer: TLayer32;
@@ -390,10 +390,9 @@ function CreateRotatingButtonGroup(targetLayer: TLayer32;
   pivotButtonColor: TColor32 = clWhite32;
   angleButtonColor: TColor32 = clBlue32;
   initialAngle: double = 0; angleOffset: double = 0;
-  enablePivotMove: Boolean = True;
   buttonLayerClass: TButtonDesignerLayer32Class = nil): TRotatingGroupLayer32; overload;
 
-function CreateButtonGroup(groupOwner: TGroupLayer32;
+function CreateButtonGroup(parent: TLayer32;
   const buttonPts: TPathD; buttonShape: TButtonShape;
   buttonSize: integer; buttonColor: TColor32;
   buttonLayerClass: TButtonDesignerLayer32Class = nil): TButtonGroupLayer32;
@@ -420,7 +419,7 @@ implementation
 
 {$IFNDEF MSWINDOWS}
 uses
-  Img32.FMX;
+  Img32.FMX, Img32.Layers;
 {$ENDIF}
 
 resourcestring
@@ -429,7 +428,7 @@ resourcestring
   rsButton                 = 'Button';
   rsSizingButtonGroup      = 'SizingButtonGroup';
   rsRotatingButtonGroup    = 'RotatingButtonGroup';
-  rsChildIndexRangeError   = 'TGroupLayer32 - child index error';
+  rsChildIndexRangeError   = 'TLayer32 - child index error';
   rsCreateButtonGroupError = 'CreateButtonGroup - invalid target layer';
   rsUpdateRotateGroupError = 'UpdateRotateGroup - invalid group';
 
@@ -452,111 +451,58 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-// THitTestRec
+// THitTest
 //------------------------------------------------------------------------------
 
-function THitTestRec.IsEmpty: Boolean;
+constructor THitTest.Create;
 begin
-  Result := (width <= 0) or (height <= 0);
+  htImage := TImage32.Create;
+  htImage.BlockNotify; //ie never notify :)
+  enabled := true;
 end;
 //------------------------------------------------------------------------------
 
-procedure THitTestRec.Init(ownerLayer: TLayer32);
+destructor THitTest.Destroy;
 begin
-  width := ownerLayer.width;
-  height := ownerLayer.height;
-  PtrPixels := nil;
-  if not IsEmpty then
-    SetLength(PtrPixels, width * height);
-end;
-//------------------------------------------------------------------------------
-
-procedure THitTestRec.Clear;
-begin
-  width := 0; height := 0; PtrPixels := nil;
+  htImage.Free;
+  inherited;
 end;
 
 //------------------------------------------------------------------------------
-// TPointerRenderer: renders both 32 & 64bits pointer 'pixels' for hit-testing
-//------------------------------------------------------------------------------
-
-type
-
-  TPointerRenderer = class(TCustomRenderer)
-  private
-    fObjPointer: Pointer;
-  protected
-    procedure RenderProc(x1, x2, y: integer; alpha: PByte); override;
-  public
-    constructor Create(objectPtr: Pointer);
-  end;
-
-procedure TPointerRenderer.RenderProc(x1, x2, y: integer; alpha: PByte);
-var
-  i: integer;
-  dst: PPointer;
-begin
-  dst := GetDstPixel(x1,y);
-  for i := x1 to x2 do
-  begin
-    if Byte(alpha^) > 127 then dst^ := fObjPointer;
-    inc(PByte(dst), PixelSize); inc(alpha);
-  end;
-end;
-//------------------------------------------------------------------------------
-
-constructor TPointerRenderer.Create(objectPtr: Pointer);
-begin
-  fObjPointer := objectPtr;
-end;
-
-//------------------------------------------------------------------------------
-// THitTestRec helper functions
+// THitTest helper functions
 //------------------------------------------------------------------------------
 
 procedure UpdateHitTestMaskUsingPath(layer: THitTestLayer32;
   const paths: TPathsD; fillRule: TFillRule);
-var
-  monoRenderer: TPointerRenderer;
 begin
-  monoRenderer := TPointerRenderer.Create(layer);
-  try
-    with layer.HitTestRec do
-    begin
-      if IsEmpty then Exit;
-      monoRenderer.Initialize(@PtrPixels[0], width, height, sizeOf(Pointer));
-      Rasterize(paths, Rect(0,0,width,height), fillRule, monoRenderer);
-    end;
-  finally
-    monoRenderer.Free;
-  end;
+  with layer.Image do
+    layer.HitTestRec.htImage.SetSize(width, height);
+  if not layer.Image.IsEmpty then
+    DrawPolygon(layer.HitTestRec.htImage, paths, fillRule, clWhite32);
 end;
 //------------------------------------------------------------------------------
 
-//Creates a pointer hit-test mask using the supplied image and compareFunc.
-procedure UpdateHitTestMaskUsingImage(var htr: THitTestRec;
+//Creates a hit-test mask using the supplied image and compareFunc.
+procedure UpdateHitTestMaskUsingImage(var htr: THitTest;
   objPtr: Pointer; img: TImage32; compareFunc: TCompareFunction;
   referenceColor: TColor32; tolerance: integer);
 var
   i: integer;
-  pc: PColor32;
-  pp: PPointer;
+  pSrc, pDst: PColor32;
 begin
   with img do
   begin
-    htr.width := Width;
-    htr.height := Height;
-    htr.PtrPixels := nil;
-    if IsEmpty then Exit;
-    SetLength(htr.PtrPixels, Width * Height);
-  end;
+    htr.htImage.SetSize(Width, Height);
+    if htr.htImage.IsEmpty then Exit;
 
-  pc := img.PixelBase;
-  pp := @htr.PtrPixels[0];
-  for i := 0 to high(htr.PtrPixels) do
-  begin
-    if compareFunc(referenceColor, pc^, tolerance) then pp^ := objPtr;
-    inc(pc); inc(pp);
+    pSrc := PixelBase;
+    pDst := htr.htImage.PixelBase;
+    for i := 0 to Width * Height -1 do
+    begin
+      if compareFunc(referenceColor, pSrc^, tolerance) then
+        pDst^ := clWhite32;
+      inc(pSrc); inc(pDst);
+    end;
   end;
 end;
 
@@ -564,26 +510,38 @@ end;
 // TLayer32 class
 //------------------------------------------------------------------------------
 
-constructor TLayer32.Create(groupOwner: TGroupLayer32; const name: string);
+constructor TLayer32.Create(parent: TLayer32; const name: string);
 begin
-  fGroupOwner := groupOwner;
-  if assigned(groupOwner) then
-    fLayeredImage := groupOwner.fLayeredImage
-  else if name <> rsRoot then
-    raise Exception.Create(rsCreateLayerError);
-  fImage      := TLayerNotifyImage32.Create(self);
-  fName       := name;
-  fVisible    := True;
-  fOpacity    := 255;
-  CursorId    := crDefault;
+{$IFDEF XPLAT_GENERICS}
+  fChilds       := TList<TLayer32>.Create;
+{$ELSE}
+  fChilds       := TList.Create;
+{$ENDIF}
+  fImage        := TLayerNotifyImage32.Create(self);
+  fParent       := parent;
+  fName         := name;
+  fVisible      := True;
+  fOpacity      := 255;
+  CursorId      := crDefault;
+  if assigned(parent) then
+    fLayeredImage := parent.fLayeredImage;
 end;
 //------------------------------------------------------------------------------
 
 destructor TLayer32.Destroy;
 begin
+  ClearChildren;
   fImage.Free;
-  if Assigned(fGroupOwner) then
-    fGroupOwner.InternalDeleteChild(Index, true);
+  fChilds.Free;
+  FreeAndNil(fMergeImage);
+  FreeAndNil(fClipImage);
+  if Assigned(fParent) then
+  begin
+    if fRefreshPending then
+      fParent.Invalidate(fOldBounds);
+    fParent.Invalidate(fInvalidRect);
+    fParent.InternalDeleteChild(Index, true);
+  end;
   inherited;
 end;
 //------------------------------------------------------------------------------
@@ -592,34 +550,26 @@ procedure TLayer32.BeginUpdate;
 begin
   if not fRefreshPending then
     Invalidate(fOldBounds);
-  Inc(fGroupOwner.fUpdateCount);
+  Inc(fParent.fUpdateCount);
 end;
 //------------------------------------------------------------------------------
 
 procedure TLayer32.EndUpdate;
 begin
-  Dec(fGroupOwner.fUpdateCount);
-end;
-//------------------------------------------------------------------------------
-
-function TLayer32.CanUpdate: Boolean;
-begin
-  Result := not fRefreshPending and (fGroupOwner.fUpdateCount = 0);
+  Dec(fParent.fUpdateCount);
 end;
 //------------------------------------------------------------------------------
 
 procedure TLayer32.Invalidate(rec: TRect);
 begin
-  fRefreshPending := true;
-  if assigned(GroupOwner) then
-    GroupOwner.Invalidate(rec);
+  fInvalidRect := Img32.Vector.UnionRect(fInvalidRect, rec);
+  RefreshPending;
 end;
 //------------------------------------------------------------------------------
 
 procedure TLayer32.ImageChanged(Sender: TImage32);
 begin
-  if not (Self is TGroupLayer32) and not fRefreshPending then
-    Invalidate(fOldBounds);
+  if not fRefreshPending then Invalidate(fOldBounds);
 end;
 //------------------------------------------------------------------------------
 
@@ -642,11 +592,14 @@ end;
 //------------------------------------------------------------------------------
 
 procedure  TLayer32.SetBounds(const newBounds: TRect);
+var
+  w,h: integer;
 begin
   fLeft := newBounds.Left;
   fTop := newBounds.Top;
   //nb: Image.SetSize will call the ImageChanged method
-  Image.SetSize(RectWidth(newBounds),RectHeight(newBounds));
+  RectWidthHeight(newBounds, w, h);
+  Image.SetSize(w, h);
 end;
 //------------------------------------------------------------------------------
 
@@ -695,9 +648,7 @@ var
 begin
   l := Round(pt.X - Image.Width * 0.5);
   t := Round(pt.Y - Image.Height * 0.5);
-
   if (l = fLeft) and (t = fTop) then Exit;
-
   fLeft := l; fTop := t;
   if not fRefreshPending then
     Invalidate(fOldBounds);
@@ -713,7 +664,7 @@ end;
 
 procedure TLayer32.SetVisible(value: Boolean);
 begin
-  if (value = fVisible) or (RootOwner.Root = Self) then Exit;
+  if (value = fVisible) or (Root = Self) then Exit;
   fVisible := value;
   Invalidate(fOldBounds);
 end;
@@ -729,115 +680,127 @@ end;
 
 function TLayer32.BringForwardOne: Boolean;
 begin
-  Result := assigned(fGroupOwner) and (index < fGroupOwner.ChildCount -1);
+  Result := assigned(fParent) and (index < fParent.ChildCount -1);
   if not Result then Exit;
-  fGroupOwner.fChilds.Move(index, index +1);
-  fGroupOwner.ReindexChildsFrom(index);
+  fParent.fChilds.Move(index, index +1);
+  fParent.ReindexChildsFrom(index);
   Invalidate(Bounds);
 end;
 //------------------------------------------------------------------------------
 
 function TLayer32.SendBackOne: Boolean;
 begin
-  Result := assigned(fGroupOwner) and (index > 0);
+  Result := assigned(fParent) and (index > 0);
   if not Result then Exit;
-  fGroupOwner.fChilds.Move(index, index -1);
-  fGroupOwner.ReindexChildsFrom(index -1);
+  fParent.fChilds.Move(index, index -1);
+  fParent.ReindexChildsFrom(index -1);
   Invalidate(Bounds);
 end;
 //------------------------------------------------------------------------------
 
 function TLayer32.BringToFront: Boolean;
 begin
-  Result := assigned(fGroupOwner) and
-    (index < fGroupOwner.ChildCount -1);
+  Result := assigned(fParent) and
+    (index < fParent.ChildCount -1);
   if not Result then Exit;
-  fGroupOwner.fChilds.Move(index, fGroupOwner.ChildCount -1);
-  fGroupOwner.ReindexChildsFrom(index);
+  fParent.fChilds.Move(index, fParent.ChildCount -1);
+  fParent.ReindexChildsFrom(index);
   Invalidate(Bounds);
 end;
 //------------------------------------------------------------------------------
 
 function TLayer32.SendToBack: Boolean;
 begin
-  Result := assigned(fGroupOwner) and (index > 0);
+  Result := assigned(fParent) and (index > 0);
   if not Result then Exit;
-  fGroupOwner.fChilds.Move(index, 0);
-  fGroupOwner.ReindexChildsFrom(0);
+  fParent.fChilds.Move(index, 0);
+  fParent.ReindexChildsFrom(0);
   Invalidate(Bounds);
 end;
 //------------------------------------------------------------------------------
 
-function TLayer32.Move(newGroupOwner: TGroupLayer32; idx: integer): Boolean;
+function TLayer32.TopLeft: TPoint;
 begin
-  Result := assigned(fGroupOwner) and assigned(newGroupOwner);
-  if not Result then Exit;
+  Result := types.Point(Left, Top);
+end;
+//------------------------------------------------------------------------------
 
-  with newGroupOwner do
+function TLayer32.GetAbsoluteOrigin: TPoint;
+var
+  layer: TLayer32;
+begin
+  Result := NullPoint;
+  layer := Parent;
+  while Assigned(layer) do
+    with layer do
+    begin
+      if not (layer is TGroupLayer32) then
+        Result := OffsetPoint(Result, Left, Top);
+      layer := Parent;
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function TLayer32.Move(newParent: TLayer32; idx: integer): Boolean;
+var
+  layer: TLayer32;
+begin
+  Result := false;
+  if not assigned(fParent) or not assigned(newParent) then
+    Exit;
+
+  //make sure we don't create circular parenting
+  layer := newParent;
+  while assigned(layer) do
+    if (layer = self) then Exit
+    else layer := layer.Parent;
+
+  with newParent do
     if idx < 0 then idx := 0
     else if idx >= ChildCount then idx := ChildCount;
 
-  if newGroupOwner = fGroupOwner then
+  if newParent = fParent then
   begin
     if idx = fIndex then Exit;
-    fGroupOwner.fChilds.Move(fIndex, idx);
-    newGroupOwner.ReindexChildsFrom(Min(idx, fIndex));
+    fParent.fChilds.Move(fIndex, idx);
+    fParent.ReindexChildsFrom(Min(idx, fIndex));
   end else
   begin
     if Visible then
-      fGroupOwner.Invalidate(Bounds);
-    fGroupOwner.ReindexChildsFrom(fIndex);
+      fParent.Invalidate(Bounds);
+    fParent.ReindexChildsFrom(fIndex);
 
     fIndex := idx;
-    newGroupOwner.fChilds.Insert(idx, self);
-    newGroupOwner.ReindexChildsFrom(idx +1);
+    newParent.fChilds.Insert(idx, self);
+    newParent.ReindexChildsFrom(idx +1);
   end;
-  newGroupOwner.RefreshPending;
+  newParent.RefreshPending;
+  Result := true;
 end;
 //------------------------------------------------------------------------------
 
 procedure TLayer32.SetBlendFunc(func: TBlendFunction);
 begin
-  if not Assigned(fGroupOwner) then Exit;
+  if not Assigned(fParent) then Exit;
   fBlendFunc := func;
   if Visible then
-    fGroupOwner.Invalidate(Bounds);
-end;
-
-//------------------------------------------------------------------------------
-// TGroupLayer32 class
-//------------------------------------------------------------------------------
-
-constructor TGroupLayer32.Create(groupOwner: TGroupLayer32; const name: string);
-begin
-  inherited;
-{$IFDEF XPLAT_GENERICS}
-  fChilds := TList<TLayer32>.Create;
-{$ELSE}
-  fChilds := TList.Create;
-{$ENDIF}
-
-  fLastUpdateType := utUndefined;
+    fParent.Invalidate(Bounds);
 end;
 //------------------------------------------------------------------------------
 
-destructor TGroupLayer32.Destroy;
-begin
-  ClearChildren;
-  fChilds.Free;
-  if Assigned(fGroupOwner) then
-    fGroupOwner.Invalidate(fInvalidRect);
-  inherited;
-end;
-//------------------------------------------------------------------------------
-
-function TGroupLayer32.GetChildCount: integer;
+function TLayer32.GetChildCount: integer;
 begin
   Result := fChilds.Count;
 end;
 //------------------------------------------------------------------------------
 
-function TGroupLayer32.GetChild(index: integer): TLayer32;
+function TLayer32.HasChildren: Boolean;
+begin
+  Result := fChilds.Count > 0;
+end;
+//------------------------------------------------------------------------------
+
+function TLayer32.GetChild(index: integer): TLayer32;
 begin
   if (index < 0) or (index >= fChilds.Count) then
     raise Exception.Create(rsChildIndexRangeError);
@@ -845,26 +808,29 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TGroupLayer32.ClearChildren;
+procedure TLayer32.ClearChildren;
 var
   i: integer;
 begin
   for i := fChilds.Count -1 downto 0 do
     TLayer32(fChilds[i]).Free;
   fChilds.Clear;
-  fLastUpdateType := utUndefined;
+  Image.BlockNotify;
   Image.SetSize(0, 0);
+  Image.UnblockNotify;
+  FreeAndNil(fMergeImage);
+  fClipPath := nil;
 end;
 //------------------------------------------------------------------------------
 
-function   TGroupLayer32.AddChild(layerClass: TLayer32Class;
+function   TLayer32.AddChild(layerClass: TLayer32Class;
   const name: string = ''): TLayer32;
 begin
   Result := InsertChild(layerClass, MaxInt, name);
 end;
 //------------------------------------------------------------------------------
 
-function   TGroupLayer32.InsertChild(layerClass: TLayer32Class;
+function   TLayer32.InsertChild(layerClass: TLayer32Class;
   index: integer; const name: string = ''): TLayer32;
 begin
   Result := layerClass.Create(self, name);
@@ -881,7 +847,31 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure  TGroupLayer32.InternalDeleteChild(index: integer; fromChild: Boolean);
+function TLayer32.GetRoot: TGroupLayer32;
+begin
+  if Assigned(fLayeredImage) then
+    Result := fLayeredImage.fRoot else
+    Result := nil;
+end;
+//------------------------------------------------------------------------------
+
+procedure TLayer32.SetClipPath(const path: TPathsD);
+begin
+  RefreshPending;
+  fClipPath := path;
+  if Assigned(fClipPath) and (self is THitTestLayer32) then
+  begin
+    //create a clip mask
+    if Assigned(fClipImage) then
+      fClipImage.SetSize(Width, Height) else
+      fClipImage := TImage32.Create(Width, Height);
+    DrawPolygon(fClipImage, path, frNonZero, clWhite32);
+  end else
+    FreeAndNil(fClipImage);
+end;
+//------------------------------------------------------------------------------
+
+procedure  TLayer32.InternalDeleteChild(index: integer; fromChild: Boolean);
 var
   child: TLayer32;
 begin
@@ -890,13 +880,16 @@ begin
 
   child := TLayer32(fChilds[index]);
   fChilds.Delete(index);
-
+  FreeAndNil(fMergeImage);
   if child.Visible then
-    child.Invalidate(child.Bounds);
+  begin
+    Invalidate(child.fOldBounds);
+    Invalidate(child.Bounds);
+  end;
 
   if not fromChild then
   begin
-    child.fGroupOwner := nil; //avoids recursion :)
+    child.fParent := nil; //avoids recursion :)
     child.Free;
   end;
   if index < ChildCount then
@@ -904,212 +897,253 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TGroupLayer32.DeleteChild(index: integer);
+procedure TLayer32.DeleteChild(index: integer);
 begin
-  InternalDeleteChild(index, false);
+  if (ChildCount = 1) then
+    ClearChildren else
+    InternalDeleteChild(index, false);
 end;
 //------------------------------------------------------------------------------
 
-procedure TGroupLayer32.Offset(dx, dy: integer);
+procedure TLayer32.RefreshPending;
+begin
+  if fRefreshPending then Exit;
+  fRefreshPending := true;
+  if Assigned(Parent) then
+    Parent.RefreshPending;
+end;
+//------------------------------------------------------------------------------
+
+procedure TLayer32.UpdateBounds;
 var
   i: integer;
+  rec: TRect;
 begin
-  if (dx = 0) and (dy = 0) then Exit;
+  rec := nullRect;
   for i := 0 to ChildCount -1 do
-    Child[i].Offset(dx, dy);
+    rec := Img32.Vector.UnionRect(rec, Child[i].Bounds);
+  Image.BlockNotify;
+  SetBounds(rec);
+  Image.UnblockNotify;
 end;
 //------------------------------------------------------------------------------
 
-procedure TGroupLayer32.Invalidate(rec: TRect);
-begin
-  if not IsEmptyRect(rec) then
-    fInvalidRect := Img32.Vector.UnionRect(fInvalidRect, rec);
-  RefreshPending;
-end;
-//------------------------------------------------------------------------------
-
-procedure TGroupLayer32.RefreshPending;
-begin
-  fRefreshPending := true;
-  if Assigned(GroupOwner) then
-    GroupOwner.RefreshPending;
-end;
-//------------------------------------------------------------------------------
-
-procedure TGroupLayer32.BeginUpdate;
-begin
-end;
-//------------------------------------------------------------------------------
-
-procedure TGroupLayer32.EndUpdate;
-begin
-end;
-//------------------------------------------------------------------------------
-
-procedure TGroupLayer32.SetOpacity(value: Byte);
-begin
-  if fOpacity = value then Exit;
-  fOpacity := value;
-  Invalidate(Bounds);
-end;
-//------------------------------------------------------------------------------
-
-procedure TGroupLayer32.PreMerge(hideDesigners, forceRefresh: Boolean);
+procedure TLayer32.PreMerge(hideDesigners: Boolean);
 var
-  i           : integer;
-  rec, rec2   : TRect;
-  aChild      : TLayer32;
-  aChildGroup : TGroupLayer32;
+  i         : integer;
+  rec       : TRect;
+  childLayer: TLayer32;
 begin
-  if forceRefresh then fRefreshPending := true;
-  if not fRefreshPending then Exit;
-
-  //this method is recursive and updates Bounds and fInvalidRect
-  rec := NullRect;
+  //this method is recursive and updates each group's fInvalidRect
   for i := 0 to ChildCount -1 do
   begin
-    if not Child[i].Visible or
-      (hideDesigners and (Child[i] is TDesignerLayer32)) then
+    childLayer := Child[i];
+
+    if not childLayer.Visible or
+      (hideDesigners and (childLayer is TDesignerLayer32)) then
         Continue;
 
-    aChild := TLayer32(Child[i]);
-    if (Child[i] is TGroupLayer32) then
-      aChildGroup := TGroupLayer32(Child[i]) else
-      aChildGroup := nil;
+    fInvalidRect := Img32.Vector.UnionRect(fInvalidRect,
+      childLayer.fInvalidRect);
 
-    if Assigned(aChildGroup) then
+    with childLayer do
+      if HasChildren and fRefreshPending then
+        PreMerge(hideDesigners);
+
+    if childLayer.fRefreshPending then
     begin
-      aChildGroup.PreMerge(hideDesigners, forceRefresh);
-      if not forceRefresh then
-        fInvalidRect := Img32.Vector.UnionRect(fInvalidRect, aChildGroup.fInvalidRect);
-      aChildGroup.fInvalidRect := NullRect;
-    end else
-    begin
-      if not forceRefresh and aChild.fRefreshPending then
-        fInvalidRect := Img32.Vector.UnionRect(fInvalidRect, aChild.Bounds);
+      if (childLayer is TGroupLayer32) then
+      begin
+        fInvalidRect := Img32.Vector.UnionRect(fInvalidRect, childLayer.Bounds);
+        childLayer.UpdateBounds;
+      end;
+      rec := childLayer.Bounds;
+      fInvalidRect := Img32.Vector.UnionRect(fInvalidRect, rec);
     end;
-    rec := Img32.Vector.UnionRect(rec, aChild.Bounds);
-    aChild.fOldBounds := aChild.Bounds;
-  end;
 
-  //nb: the root's bounds is fixed to the layeredImage's bounds
-  if not Assigned(GroupOwner) then Exit;
-
-  if Assigned(fClipPath) then
-  begin
-    rec2 := img32.Vector.GetBounds(fClipPath);
-    types.IntersectRect(rec, rec, rec2);
+    childLayer.fInvalidRect := NullRect;
+    childLayer.fOldBounds := childLayer.Bounds;
   end;
-  SetBounds(rec);
 end;
 //------------------------------------------------------------------------------
 
-procedure TGroupLayer32.Merge(hideDesigners: Boolean; const staleRect: TRect);
+procedure TLayer32.PreMergeAll(hideDesigners: Boolean);
 var
-  ChildLayer: TLayer32;
-  tmpOpacity: byte;
+  i         : integer;
+  childLayer: TLayer32;
+begin
+  //this method is recursive and updates each group's fInvalidRect
+  for i := 0 to ChildCount -1 do
+  begin
+    childLayer := Child[i];
+
+    if not childLayer.Visible or
+      (hideDesigners and (childLayer is TDesignerLayer32)) then
+        Continue;
+
+    if childLayer.HasChildren then
+      childLayer.PreMergeAll(hideDesigners);
+
+    if (childLayer is TGroupLayer32) then
+      childLayer.UpdateBounds;
+
+    childLayer.fInvalidRect := NullRect;
+    childLayer.fOldBounds := childLayer.Bounds;
+  end;
+end;
+//------------------------------------------------------------------------------
+
+procedure TLayer32.Merge(hideDesigners: Boolean; const updateRect: TRect);
+var
+  childLayer: TLayer32;
   i: integer;
-  tmp: TImage32;
-  childRect, groupRect: TRect;
-  clpPath: TPathD;
+  img, img2, childImg: TImage32;
+  origOffset: TPoint;
+  rec, dstRect, srcRect: TRect;
 begin
   if not Visible or (Opacity < 2) or
-    Image.IsEmpty or not fRefreshPending then
+    not fRefreshPending or Image.IsEmpty then
       Exit;
 
-  //merge redraw the entire grouplayer
+  if assigned(Parent) and (ChildCount > 0) then
+  begin
+    if not Assigned(fMergeImage) then
+      fMergeImage := TImage32.Create(fImage) else
+      fMergeImage.Assign(fImage);
+    img := fMergeImage;
+  end else
+    img := Image;
+
+  if (self is TGroupLayer32) then
+    origOffset := TopLeft else
+    origOffset := NullPoint;
+
+  //merge redraw all children
   for i := 0 to ChildCount -1 do
   begin
-    ChildLayer := Child[i];
+    childLayer := Child[i];
 
-    if not ChildLayer.Visible or
-      (hideDesigners and (ChildLayer is TDesignerLayer32)) then
-        Continue;
-
-    //any layer that's outside 'staleRect' can safely be ignored
-    if (self = fLayeredImage.fRoot) and
-      not RectsOverlap(staleRect, ChildLayer.Bounds) then
+    if not childLayer.Visible or
+      (hideDesigners and (childLayer is TDesignerLayer32)) then
         Continue;
 
     //recursive merge
-    if (ChildLayer is TGroupLayer32) then
-      TGroupLayer32(ChildLayer).Merge(hideDesigners, staleRect);
+    if (childLayer.HasChildren) then
+      TLayer32(childLayer).Merge(hideDesigners, NullRect);
 
-    //childRect - the source rect in the child's image
-    childRect := ChildLayer.Bounds;
+    if Assigned(childLayer.fMergeImage) then
+      childImg := childLayer.fMergeImage else
+      childImg := childLayer.Image;
 
-    //groupRect - the destination rect in the group's image
-    groupRect :=  childRect;
-    Types.OffsetRect(groupRect, -Left, -Top);
-    Types.OffsetRect(childRect, -ChildLayer.Left, -ChildLayer.Top);
-
-    //get the opacity
-    if ChildLayer.Opacity < 254 then
-      tmpOpacity := MulBytes(fOpacity, ChildLayer.Opacity) else
-      tmpOpacity := fOpacity;
-
-    //finally, draw to the group's image
-    if (tmpOpacity < 254) or Assigned(fClipPath) then
+    if Assigned(fParent) then
     begin
-      tmp := TImage32.Create(ChildLayer.Image);
-      try
-        if (tmpOpacity < 254) then
-          tmp.ReduceOpacity(tmpOpacity);
+      dstRect := childLayer.Bounds;
+      types.OffsetRect(dstRect, -origOffset.X, -origOffset.Y);
+      rec := Image.Bounds;
+      types.IntersectRect(dstRect, dstRect, rec);
+    end else
+    begin
+      //this must be the root layer
+      dstRect := childLayer.Bounds;
+      types.IntersectRect(dstRect, dstRect, fLayeredImage.Bounds);
+      types.IntersectRect(dstRect, dstRect, updateRect);
+    end;
 
-        if Assigned(fClipPath) then
+    srcRect := dstRect;
+    with childLayer do
+      types.OffsetRect(srcRect, origOffset.X - Left, origOffset.Y - Top);
+
+    //draw the child  onto the group's image
+    img2 := nil;
+    img.BlockNotify;
+    try
+      if (childLayer.Opacity < 254) or Assigned(fClipPath) then
+      begin
+        img2 := TImage32.Create(childImg);
+        img2.ReduceOpacity(childLayer.Opacity);
+        if Assigned(fClipImage) then
         begin
-          clpPath := OffsetPath(fClipPath, -ChildLayer.Left, -ChildLayer.Top);
-          EraseOutsidePath(tmp, clpPath, frNonZero, tmp.Bounds);
+          rec := fClipImage.Bounds;
+          types.OffsetRect(rec, -childLayer.Left, -childLayer.Top);
+          img2.CopyBlend(fClipImage, fClipImage.Bounds, rec, BlendMask);
         end;
-
-        if Assigned(ChildLayer.BlendFunc) then
-          Image.CopyBlend(tmp, childRect, groupRect, ChildLayer.BlendFunc) else
-          Image.CopyBlend(tmp, childRect, groupRect, BlendToAlpha);
-
-      finally
-        tmp.Free;
+      end else
+      begin
+        img2 := childImg;
       end;
-    end
-    else if Assigned(ChildLayer.BlendFunc) then
-      Image.CopyBlend(ChildLayer.Image,
-        childRect, groupRect, ChildLayer.BlendFunc)
-    else
-      Image.CopyBlend(ChildLayer.Image,
-        childRect, groupRect, BlendToAlpha);
 
-    ChildLayer.fRefreshPending := false;
+      if Assigned(childLayer.BlendFunc) then
+      begin
+        img.CopyBlend(img2, srcRect, dstRect, childLayer.BlendFunc);
+      end else
+      begin
+        img.CopyBlend(img2, srcRect, dstRect, BlendToAlpha);
+      end;
+
+    finally
+      if Assigned(img2) and (img2 <> childImg) then
+        img2.Free;
+      img.UnblockNotify;
+    end;
+    childLayer.fRefreshPending := false;
   end;
   fInvalidRect := NullRect;
   fRefreshPending := false;
 end;
 //------------------------------------------------------------------------------
 
-function TGroupLayer32.GetLayerAt(const pt: TPoint;
+function TLayer32.GetLayerAt(const pt: TPoint;
   ignoreDesigners: Boolean): TLayer32;
 var
-  i, htIdx: integer;
+  i: integer;
+  childLayer: TLayer32;
+  pt2: TPoint;
+  Result2: TLayer32;
 begin
   Result := nil;
+
+  if (self is TGroupLayer32) then
+    pt2 := pt else
+    pt2 := OffsetPoint(pt, -Left, -Top);
+
+  //if 'pt2' is outside the clip mask then don't continue
+  if Assigned(fClipImage) then
+    if TARGB(fClipImage.Pixel[pt2.X, pt2.Y]).A < 128 then Exit;
+
   for i := ChildCount -1 downto 0 do
   begin
-    if Child[i] is TGroupLayer32 then //recursive
-      Result := TGroupLayer32(Child[i]).GetLayerAt(pt, ignoreDesigners)
-    else if not Child[i].Visible or
-      (ignoreDesigners and (Child[i] is TDesignerLayer32)) then
-        Continue
-    else if Child[i] is THitTestLayer32 then
-      with THitTestLayer32(Child[i]) do
-        if not fHitTestRec.IsEmpty and PtInRect(Bounds, pt) then
+    childLayer := Child[i];
+
+    if not childLayer.Visible or not PtInRect(childLayer.Bounds, pt2) or
+      (ignoreDesigners and (childLayer is TDesignerLayer32)) then
+        Continue;
+
+    if (childLayer is THitTestLayer32) then
+      with THitTestLayer32(childLayer) do
+        if not HitTestRec.enabled then
+          Continue
+        else if fHitTest.htImage.IsEmpty then
+          Result := childLayer //ie rectangles
+        else
         begin
-          htIdx := fHitTestRec.width * (pt.Y - Top) + (pt.X  -Left);
-          Result := fHitTestRec.PtrPixels[htIdx];
+          if TARGB(fHitTest.htImage.Pixel[pt2.X-left, pt2.Y-top]).A >= 128 then
+            Result := childLayer;
+          if Assigned(Result) and not childLayer.HasChildren then Exit;
         end;
-    if Assigned(Result) then Break;
+
+    if childLayer.HasChildren and
+      (Assigned(Result) or (childLayer is TGroupLayer32)) then
+    begin
+      //recursive
+      Result2 := childLayer.GetLayerAt(pt2, ignoreDesigners);
+      if Assigned(Result2) then Result := Result2;
+    end;
+    if Assigned(Result) then Exit;
   end;
 end;
 //------------------------------------------------------------------------------
 
-procedure TGroupLayer32.ReindexChildsFrom(startIdx: Integer);
+procedure TLayer32.ReindexChildsFrom(startIdx: Integer);
 var
   i: integer;
 begin
@@ -1118,7 +1152,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TGroupLayer32.FindLayerNamed(const name: string): TLayer32;
+function TLayer32.FindLayerNamed(const name: string): TLayer32;
 var
   i: integer;
 begin
@@ -1131,9 +1165,9 @@ begin
   Result := nil;
   for i := 0 to ChildCount -1 do
   begin
-    if Child[i] is TGroupLayer32 then
+    if Child[i] is TLayer32 then
     begin
-      Result := TGroupLayer32(Child[i]).FindLayerNamed(name);
+      Result := TLayer32(Child[i]).FindLayerNamed(name);
       if assigned(Result) then Break;
     end else if SameText(self.Name, name) then
     begin
@@ -1144,56 +1178,76 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+// TGroupLayer32 class
+//------------------------------------------------------------------------------
+
+procedure TGroupLayer32.Offset(dx, dy: integer);
+var
+  i: integer;
+begin
+  if (dx = 0) and (dy = 0) then Exit;
+  Invalidate(Bounds);
+  PositionAt(fLeft + dx, fTop + dy);
+  BeginUpdate;
+  try
+  for i := 0 to ChildCount -1 do
+    Child[i].Offset(dx, dy);
+  finally
+    EndUpdate;
+  end;
+end;
+
+//------------------------------------------------------------------------------
 // THitTestLayer32 class
+//------------------------------------------------------------------------------
+
+constructor THitTestLayer32.Create(parent: TLayer32; const name: string = '');
+begin
+  inherited;
+  fHitTest := THitTest.Create;
+  fHitTest.enabled := true;
+end;
+//------------------------------------------------------------------------------
+
+destructor THitTestLayer32.Destroy;
+begin
+  inherited;
+  fHitTest.Free; //do last
+end;
 //------------------------------------------------------------------------------
 
 procedure THitTestLayer32.ImageChanged(Sender: TImage32);
 begin
   inherited;
-  fHitTestRec.Clear;
+  ClearHitTesting;
 end;
 //------------------------------------------------------------------------------
 
-function THitTestLayer32.GetPathsFromHitTestMask: TPathsD;
-var
-  i, len: integer;
-  tmpImg: TImage32;
-  pp: PPointer;
-  pc: PColor32;
+function THitTestLayer32.GetEnabled: Boolean;
 begin
-  Result := nil;
-  with fHitTestRec do
-  begin
-    len := Length(PtrPixels);
-    if (len = 0) or (len <> width * height) then Exit;
-    tmpImg := TImage32.Create(width, height);
-    try
-      pc := tmpImg.PixelBase;
-      pp := @PtrPixels[0];
-      for i := 0 to len -1 do
-      begin
-        if pp^ <> nil then pc^ := clWhite32;
-        inc(pp); inc(pc);
-      end;
-      result := Vectorize(tmpImg, clWhite32, CompareAlpha, 0);
-    finally
-      tmpImg.Free;
-    end;
-  end;
+  Result := fHitTest.enabled;
+end;
+//------------------------------------------------------------------------------
+
+procedure THitTestLayer32.SetEnabled(value: Boolean);
+begin
+  if fHitTest.enabled = value then Exit;
+  fHitTest.enabled := value;
+  if not value then ClearHitTesting;
 end;
 //------------------------------------------------------------------------------
 
 procedure THitTestLayer32.ClearHitTesting;
 begin
-  fHitTestRec.Clear;
+  if not fHitTest.htImage.IsEmpty then
+    fHitTest.htImage.SetSize(0,0);
 end;
 
 //------------------------------------------------------------------------------
 // TRotateLayer32 class
 //------------------------------------------------------------------------------
 
-constructor TRotateLayer32.Create(groupOwner: TGroupLayer32;
-  const name: string = '');
+constructor TRotateLayer32.Create(parent: TLayer32; const name: string = '');
 begin
   inherited;
   fAutoPivot := true;
@@ -1211,9 +1265,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TRotateLayer32.Rotate(angleDelta: double);
+function TRotateLayer32.Rotate(angleDelta: double): Boolean;
 begin
-  if angleDelta = 0 then Exit;
+  Result := (angleDelta <> 0) and not HasChildren;
+  if not Result then Exit;
   fAngle := fAngle + angleDelta;
   NormalizeAngle(fAngle);
   //the rest is done in descendant classes
@@ -1264,30 +1319,33 @@ end;
 // TVectorLayer32 class
 //------------------------------------------------------------------------------
 
-constructor TVectorLayer32.Create(groupOwner: TGroupLayer32;
+constructor TVectorLayer32.Create(parent: TLayer32;
   const name: string = '');
 begin
   inherited;
-  fMargin := DpiAwareI *2;
+  fMargin := dpiAware1 *2;
   fCursorId := crHandPoint;
 end;
 //------------------------------------------------------------------------------
 
-procedure TVectorLayer32.Rotate(angleDelta: double);
+function TVectorLayer32.Rotate(angleDelta: double): Boolean;
 begin
-  if angleDelta = 0 then Exit;
-  inherited;
-
+  Result := inherited Rotate(angleDelta);
+  if not Result then Exit;
   fPaths := RotatePath(fPaths, fPivotPt, angleDelta);
   RepositionAndDraw;
 end;
 //------------------------------------------------------------------------------
 
 procedure TVectorLayer32.SetPaths(const newPaths: TPathsD);
+var
+  rec: TRect;
 begin
   fPaths := CopyPaths(newPaths);
+  rec := Img32.Vector.GetBounds(fPaths);
+  Img32.Vector.InflateRect(rec, Margin, margin);
   fPivotPt := InvalidPointD;
-  RepositionAndDraw;
+  SetBounds(rec);
 end;
 //------------------------------------------------------------------------------
 
@@ -1302,7 +1360,8 @@ begin
   h := RectHeight(newBounds) -m2;
 
   //make sure the bounds are large enough to scale safely
-  if (Width > m2) and (Height > m2) and (w > 1) and (h > 1)  then
+  if Assigned(fPaths) and
+    (Width > m2) and (Height > m2) and (w > 1) and (h > 1)  then
   begin
     //apply scaling and translation
     mat := IdentityMatrix;
@@ -1314,7 +1373,10 @@ begin
     if fAutoPivot then fPivotPt := InvalidPointD;
     RepositionAndDraw;
   end else
+  begin
     inherited;
+    RepositionAndDraw;
+  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -1340,14 +1402,17 @@ procedure TVectorLayer32.RepositionAndDraw;
 var
   rec: TRect;
 begin
-  rec := Img32.Vector.GetBounds(fPaths);
-  Img32.Vector.InflateRect(rec, Margin, Margin);
-  inherited SetBounds(rec);
-  Image.BlockUpdate;
+  if Assigned(fPaths) then
+  begin
+    rec := Img32.Vector.GetBounds(fPaths);
+    Img32.Vector.InflateRect(rec, Margin, Margin);
+    inherited SetBounds(rec);
+  end;
+  Image.BlockNotify;
   try
     Draw;
   finally
-    Image.UnblockUpdate;
+    Image.UnblockNotify;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -1363,7 +1428,7 @@ end;
 procedure  TVectorLayer32.UpdateHitTestMask(const vectorRegions: TPathsD;
   fillRule: TFillRule);
 begin
-  fHitTestRec.Init(self);
+  //fHitTest.Init(self);
   UpdateHitTestMaskUsingPath(self, vectorRegions, fillRule);
 end;
 
@@ -1371,7 +1436,7 @@ end;
 // TRasterLayer32 class
 //------------------------------------------------------------------------------
 
-constructor TRasterLayer32.Create(groupOwner: TGroupLayer32; const name: string = '');
+constructor TRasterLayer32.Create(parent: TLayer32;  const name: string = '');
 begin
   inherited;
   fMasterImg := TLayerNotifyImage32.Create(self);
@@ -1387,44 +1452,40 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure TRasterLayer32.UpdateHitTestMask;
+begin
+  fHitTest.htImage.Assign(Image);
+end;
+//------------------------------------------------------------------------------
+
 procedure TRasterLayer32.UpdateHitTestMaskOpaque;
+begin
+  UpdateHitTestMask;
+end;
+//------------------------------------------------------------------------------
+
+function CompareAlpha(master, current: TColor32; data: integer): Boolean;
 var
-  i: integer;
-  htr: THitTestRec;
-  pp: PPointer;
+  mARGB: TARGB absolute master;
+  cARGB: TARGB absolute current;
 begin
-  //fill the entire Hittest mask with self pointers
-  with Image do
-  begin
-    htr.width := Width;
-    htr.height := Height;
-    SetLength(htr.PtrPixels, Width * Height);
-    if not IsEmpty then
-    begin
-      pp := @htr.PtrPixels[0];
-      for i := 0 to High(htr.PtrPixels) do
-      begin
-        pp^ := self; inc(pp);
-      end;
-    end;
-  end;
-  HitTestRec := htr;
+  Result := mARGB.A - cARGB.A < data;
 end;
 //------------------------------------------------------------------------------
 
-procedure TRasterLayer32.UpdateHitTestMaskTransparent;
+procedure TRasterLayer32.UpdateHitTestMaskTransparent(alphaValue: Byte);
 begin
-  //this method will mark all pixels with an opacity > 127.
-  UpdateHitTestMaskUsingImage(fHitTestRec,
-    Self, Image, CompareAlpha, clWhite32, 128);
+  if alphaValue = 127 then
+    UpdateHitTestMask else
+    UpdateHitTestMaskTranspar(CompareAlpha, clWhite32, alphaValue);
 end;
 //------------------------------------------------------------------------------
 
-procedure  TRasterLayer32.UpdateHitTestMaskTransparent(
+procedure  TRasterLayer32.UpdateHitTestMaskTranspar(
   compareFunc: TCompareFunction;
-   referenceColor: TColor32; tolerance: integer);
+  referenceColor: TColor32; tolerance: integer);
 begin
-  UpdateHitTestMaskUsingImage(fHitTestRec, Self, Image,
+  UpdateHitTestMaskUsingImage(fHitTest, Self, Image,
   compareFunc, referenceColor, tolerance);
 end;
 //------------------------------------------------------------------------------
@@ -1432,12 +1493,8 @@ end;
 procedure TRasterLayer32.DoAutoHitTest;
 begin
   if fAutoHitTest then
-  begin
-    if Image.HasTransparency then
-      UpdateHitTestMaskTransparent else
-      UpdateHitTestMaskOpaque;
-  end else
-    HitTestRec.Clear;
+    fHitTest.htImage.Assign(Image) else
+    HitTestRec.htImage.SetSize(0,0);
 end;
 //------------------------------------------------------------------------------
 
@@ -1445,28 +1502,40 @@ procedure TRasterLayer32.ImageChanged(Sender: TImage32);
 begin
   if (Sender = MasterImage) then
   begin
-    MasterImage.BlockUpdate; //avoid endless recursion
-    try
-      //reset the layer whenever MasterImage changes
-      fAngle := 0;
-      fMatrix := IdentityMatrix;
-      fRotating := false;
+    if MasterImage.IsBlank then Exit;
 
-      if not fRefreshPending then
-      begin
-        if not IsEmptyRect(fOldBounds) then Invalidate(fOldBounds);
-        fRefreshPending := true;
-      end;
+    //reset the layer whenever MasterImage changes
+    fAngle := 0;
+    fMatrix := IdentityMatrix;
+    fRotating := false;
 
-      with MasterImage do
-        fSavedSize := Img32.Vector.Size(Width, Height);
+    if not fRefreshPending then
+      Invalidate(fOldBounds);
+
+    if not Image.IsEmpty then Exit;
+    MasterImage.BlockNotify;
+    MasterImage.CropTransparentPixels;
+    MasterImage.UnblockNotify;
+    fSavedSize := Img32.Vector.Size(MasterImage.Width, MasterImage.Height);
+    if (TLayerNotifyImage32(Image).UpdateCount = 0) then
       Image.Assign(MasterImage); //this will call ImageChange for Image
-      Image.Resampler := RootOwner.Resampler;
-    finally
-      MasterImage.UnblockUpdate;
-    end;
+    Image.Resampler := RootOwner.Resampler;
+
   end else
+  begin
+    if MasterImage.IsEmpty and not Image.IsBlank then
+    begin
+      Image.BlockNotify;
+      try
+        Image.CropTransparentPixels;
+        MasterImage.Assign(Image); //this will call ImageChanged again
+      finally
+        Image.UnblockNotify;
+      end;
+    end;
     inherited;
+    DoAutoHitTest;
+  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -1489,8 +1558,7 @@ var
   newWidth, newHeight: integer;
 begin
   DoPreScaleCheck;
-  newWidth := RectWidth(newBounds);
-  newHeight := RectHeight(newBounds);
+  RectWidthHeight(newBounds, newWidth, newHeight);
 
   //make sure the image is large enough to scale safely
   if (MasterImage.Width > 1) and (MasterImage.Height > 1) and
@@ -1502,8 +1570,7 @@ begin
       Image.Resampler := RootOwner.Resampler;
       //apply any prior transformations
       AffineTransformImage(Image, fMatrix);
-      //unfortunately cropping isn't an affine transformation
-      //so we have to crop separately and before the final resize
+      //cropping is very important with rotation
       SymmetricCropTransparent(Image);
       Image.Resize(newWidth, newHeight);
       PositionAt(newBounds.TopLeft);
@@ -1520,7 +1587,6 @@ procedure TRasterLayer32.DoPreScaleCheck;
 begin
   if not fRotating or not Assigned(Image) then Exit;
   fRotating := false;
-
   //rotation has just ended so add the rotation angle to fMatrix
   if (fAngle <> 0) then
     MatrixRotate(fMatrix, Image.MidPoint, fAngle);
@@ -1533,24 +1599,32 @@ end;
 
 procedure TRasterLayer32.DoPreRotationCheck;
 begin
-  if fRotating or not Assigned(Image) then Exit;
+  if fRotating or not Assigned(Image) or
+    not Assigned(MasterImage) then Exit;
   fRotating := true;
-
   fSavedMidPt := MidPoint;
   if fAutoPivot then fPivotPt := fSavedMidPt;
 
   //scaling has just ended and rotating is about to start
   //so apply the current scaling to the matrix
-  MatrixScale(fMatrix, Image.Width/fSavedSize.cx,
-    Image.Height/fSavedSize.cy);
+  if (fSavedSize.cx = 0) or (fSavedSize.cy = 0) then
+  begin
+    fSavedSize.cx := Image.Width;
+    fSavedSize.cy := Image.Height;
+    MatrixScale(fMatrix, Image.Width/MasterImage.Width,
+      Image.Height/MasterImage.Height);
+  end else
+  begin
+    MatrixScale(fMatrix, Image.Width/fSavedSize.cx,
+      Image.Height/fSavedSize.cy);
+  end;
 end;
 //------------------------------------------------------------------------------
 
 function TRasterLayer32.GetMatrix: TMatrixD;
 begin
   Result := fMatrix;
-
-  //and update for transformations not yet unapplied to fMatrix
+  //update for transformations not yet unapplied to fMatrix
   if fRotating then
   begin
     if fAngle <> 0 then
@@ -1563,13 +1637,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TRasterLayer32.Rotate(angleDelta: double);
+function TRasterLayer32.Rotate(angleDelta: double): Boolean;
 var
   mat: TMatrixD;
   rec: TRectD;
 begin
-  if MasterImage.IsEmpty or (angleDelta = 0) then Exit;
-  inherited;
+  Result := not MasterImage.IsEmpty and inherited Rotate(angleDelta);
+  if not Result then Exit;
 
   DoPreRotationCheck;
 
@@ -1578,7 +1652,9 @@ begin
 
   Image.BeginUpdate;
   try
+    ////////////////////////////////
     Image.Assign(MasterImage);
+    ////////////////////////////////
     Image.Resampler := RootOwner.Resampler;
     rec := GetRotatedRectBounds(RectD(Image.Bounds), Angle);
 
@@ -1588,9 +1664,11 @@ begin
     MatrixRotate(mat, NullPointD, Angle);
     MatrixTranslate(mat, rec.Width/2, rec.Height/2);
 
+    ////////////////////////////////
     AffineTransformImage(Image, mat);
     //symmetric cropping prevents center wobbling
     SymmetricCropTransparent(Image);
+    ////////////////////////////////
   finally
     Image.EndUpdate;
   end;
@@ -1621,10 +1699,10 @@ begin
   dist := Average(RectWidth(rec), RectHeight(rec)) div 2;
   rec2 := RectD(pivot.X -dist,pivot.Y -dist,pivot.X +dist,pivot.Y +dist);
 
-  with AddChild(TDesignerLayer32) do     //Layer 0 - design layer
+  with AddChild(TDesignerLayer32) do    //Layer 0 - design layer
   begin
     SetBounds(Rect(rec2));
-    i := DpiAwareI*2;
+    i := dpiAware1*2;
     r := rec2;
     Img32.Vector.InflateRect(r, -i,-i);
     OffsetRect(r, -Left, -Top);
@@ -1634,7 +1712,7 @@ begin
   if not assigned(buttonLayerClass) then
     buttonLayerClass := TButtonDesignerLayer32;
 
-  with TButtonDesignerLayer32(AddChild(  //Layer 1 - pivot button
+  with TButtonDesignerLayer32(AddChild( //Layer 1 - pivot button
     buttonLayerClass, rsButton)) do
   begin
     SetButtonAttributes(bsRound, buttonSize, centerButtonColor);
@@ -1697,10 +1775,17 @@ end;
 // TDesignerLayer32
 //------------------------------------------------------------------------------
 
+constructor TDesignerLayer32.Create(parent: TLayer32; const name: string = '');
+begin
+  inherited;
+  fHitTest.enabled := false;
+end;
+//------------------------------------------------------------------------------
+
 procedure  TDesignerLayer32.UpdateHitTestMask(const vectorRegions: TPathsD;
   fillRule: TFillRule);
 begin
-  fHitTestRec.Init(self);
+  //fHitTest.Init(self);
   UpdateHitTestMaskUsingPath(self, vectorRegions, fillRule);
 end;
 
@@ -1730,10 +1815,11 @@ end;
 // TButtonDesignerLayer32 class
 //------------------------------------------------------------------------------
 
-constructor TButtonDesignerLayer32.Create(groupOwner: TGroupLayer32;
+constructor TButtonDesignerLayer32.Create(parent: TLayer32;
   const name: string = '');
 begin
   inherited;
+  fHitTest.enabled := true;
   SetButtonAttributes(bsRound, DefaultButtonSize, clGreen32);
 end;
 //------------------------------------------------------------------------------
@@ -1754,7 +1840,7 @@ procedure TButtonDesignerLayer32.Draw;
 begin
   fButtonOutline := Img32.Extra.DrawButton(Image,
     image.MidPoint, fSize, fColor, fShape, [ba3D, baShadow]);
-  UpdateHitTestMask(Img32.Vector.Paths(fButtonOutline), frEvenOdd);
+  //UpdateHitTestMask(Img32.Vector.Paths(fButtonOutline), frEvenOdd);
 end;
 
 //------------------------------------------------------------------------------
@@ -1768,6 +1854,7 @@ begin
   fBounds := Rect(0, 0, Width, Height);
   fRoot.SetSize(width, Height);
   fResampler := DefaultResampler;
+  fLastUpdateType := utUndefined;
 end;
 //------------------------------------------------------------------------------
 
@@ -1793,7 +1880,7 @@ function TLayeredImage32.GetMergedImage(hideDesigners: Boolean): TImage32;
 var
   updateRect: TRect;
 begin
-  Root.fLastUpdateType := utUndefined; //forces a full repaint
+  fLastUpdateType := utUndefined; //forces a full repaint
   Result := GetMergedImage(hideDesigners, updateRect);
 end;
 //------------------------------------------------------------------------------
@@ -1803,30 +1890,33 @@ function TLayeredImage32.GetMergedImage(hideDesigners: Boolean;
 var
   forceRefresh: Boolean;
 begin
-  updateRect := NullRect;
+  Result := Image;
+  if IsEmptyRect(Bounds) then Exit;
 
-  forceRefresh := (Root.fLastUpdateType = utUndefined) or
-    (hideDesigners <> (Root.fLastUpdateType = utHideDesigners));
+  forceRefresh :=
+    (fLastUpdateType = utUndefined) or
+    (hideDesigners <> (fLastUpdateType = utHideDesigners));
+
   with Root do
   begin
     //PreMerge resizes (and clears) invalidated groups
-    PreMerge(hideDesigners, forceRefresh);
+    if forceRefresh then PreMergeAll(hideDesigners)
+    else if fRefreshPending then PreMerge(hideDesigners);
 
-    //clip fInvalidRect to the drawing surface
-    updateRect := Self.Bounds;
-    if not forceRefresh then
-      Types.IntersectRect(updateRect, fInvalidRect, updateRect);
+    if forceRefresh then
+      updateRect := Self.Bounds else
+      Types.IntersectRect(updateRect, fInvalidRect, Self.Bounds);
 
-    if not IsEmptyRect(updateRect) then
-    begin
-      Image.Clear(updateRect, fBackColor);
-      Merge(hideDesigners, updateRect);
-      if hideDesigners then
-        fLastUpdateType := utHideDesigners else
-        fLastUpdateType := utShowDesigners;
-    end;
     fInvalidRect := NullRect;
-    Result := Image;
+    if IsEmptyRect(updateRect) then Exit;
+
+    Image.Clear(updateRect, fBackColor);
+    Merge(hideDesigners, updateRect);
+
+    if fOpacity < 254 then Image.ReduceOpacity(fOpacity);
+    if hideDesigners then
+      fLastUpdateType := utHideDesigners else
+      fLastUpdateType := utShowDesigners;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -1841,7 +1931,7 @@ end;
 procedure TLayeredImage32.Invalidate;
 begin
   fRoot.fInvalidRect := fBounds;
-  Root.fLastUpdateType := utUndefined;
+  fLastUpdateType := utUndefined;
 end;
 //------------------------------------------------------------------------------
 
@@ -1911,7 +2001,7 @@ end;
 //------------------------------------------------------------------------------
 
 function TLayeredImage32.AddLayer(layerClass: TLayer32Class;
-  group: TGroupLayer32; const name: string): TLayer32;
+  group: TLayer32; const name: string): TLayer32;
 begin
   if not Assigned(layerClass) then layerClass := TLayer32;
   Result := InsertLayer(layerClass, group, MaxInt, name);
@@ -1919,7 +2009,7 @@ end;
 //------------------------------------------------------------------------------
 
 function TLayeredImage32.InsertLayer(layerClass: TLayer32Class;
-  group: TGroupLayer32; index: integer; const name: string): TLayer32;
+  group: TLayer32; index: integer; const name: string): TLayer32;
 begin
   if not Assigned(group) then group := fRoot;
   Result := group.InsertChild(layerClass, index, name);
@@ -1934,18 +2024,18 @@ end;
 
 procedure TLayeredImage32.DeleteLayer(layer: TLayer32);
 begin
-  if not assigned(layer) or not assigned(layer.fGroupOwner) then Exit;
-  layer.fGroupOwner.DeleteChild(layer.Index);
+  if not assigned(layer) or not assigned(layer.fParent) then Exit;
+  layer.fParent.DeleteChild(layer.Index);
 end;
 //------------------------------------------------------------------------------
 
 procedure TLayeredImage32.DeleteLayer(layerIndex: integer;
-  groupOwner: TGroupLayer32 = nil);
+  parent: TLayer32 = nil);
 begin
-  if not assigned(groupOwner) then groupOwner := Root;
-  if (layerIndex < 0) or (layerIndex >= groupOwner.ChildCount) then
+  if not assigned(parent) then parent := Root;
+  if (layerIndex < 0) or (layerIndex >= parent.ChildCount) then
     raise Exception.Create(rsChildIndexRangeError);
-  groupOwner.DeleteChild(layerIndex);
+  parent.DeleteChild(layerIndex);
 end;
 //------------------------------------------------------------------------------
 
@@ -1977,6 +2067,7 @@ function CreateSizingButtonGroup(targetLayer: TLayer32;
   buttonLayerClass: TButtonDesignerLayer32Class = nil): TSizingGroupLayer32;
 var
   i: integer;
+  pt: TPoint;
   rec: TRectD;
   corners, edges: TPathD;
 const
@@ -1989,10 +2080,14 @@ begin
     not (targetLayer is THitTestLayer32) then
       raise Exception.Create(rsCreateButtonGroupError);
   Result := TSizingGroupLayer32(
-    targetLayer.RootOwner.AddLayer(TSizingGroupLayer32,
-    nil, rsSizingButtonGroup));
+    targetLayer.RootOwner.AddLayer(TSizingGroupLayer32, nil,
+    rsSizingButtonGroup));
   Result.SizingStyle := sizingStyle;
+  //get targetlayer's absolute bounds (disregarding nesting)
   rec := RectD(targetLayer.Bounds);
+  pt := targetLayer.GetAbsoluteOrigin;
+  OffsetRect(rec, pt.X, pt.Y);
+
   corners := Rectangle(rec);
   edges := GetRectEdgeMidPoints(rec);
 
@@ -2028,6 +2123,7 @@ end;
 function UpdateSizingButtonGroup(movedButton: TLayer32): TRect;
 var
   i: integer;
+  pt: TPoint;
   path, corners, edges: TPathD;
   group: TSizingGroupLayer32;
   rec: TRectD;
@@ -2040,11 +2136,12 @@ begin
   Result := NullRect;
   if not assigned(movedButton) or
     not (movedButton is TButtonDesignerLayer32) or
-    not (movedButton.GroupOwner is TSizingGroupLayer32) then Exit;
+    not (movedButton.Parent is TSizingGroupLayer32) then Exit;
 
-  group := TSizingGroupLayer32(movedButton.GroupOwner);
+  group := TSizingGroupLayer32(movedButton.Parent);
   with group do
   begin
+    pt := Parent.TopLeft;
     SetLength(path, ChildCount);
     for i := 0 to ChildCount -1 do
       path[i] := Child[i].MidPoint;
@@ -2138,14 +2235,13 @@ function CreateRotatingButtonGroup(targetLayer: TLayer32;
   const pivot: TPointD; buttonSize: integer;
   pivotButtonColor, angleButtonColor: TColor32;
   initialAngle: double; angleOffset: double;
-  enablePivotMove: Boolean;
   buttonLayerClass: TButtonDesignerLayer32Class): TRotatingGroupLayer32;
 var
   rec: TRectD;
   radius: integer;
 begin
   if not assigned(targetLayer) or
-    not (targetLayer is THitTestLayer32) then
+    not (targetLayer is TRotateLayer32) then
       raise Exception.Create(rsCreateButtonGroupError);
 
   Result := TRotatingGroupLayer32(targetLayer.RootOwner.AddLayer(
@@ -2162,8 +2258,9 @@ begin
     pivotButtonColor, angleButtonColor, initialAngle,
     angleOffset, buttonLayerClass);
 
-  if not enablePivotMove then
-    Result.PivotButton.ClearHitTesting;
+
+  if TRotateLayer32(targetLayer).AutoPivot then
+    Result.PivotButton.HitTestEnabled := false;
 end;
 //------------------------------------------------------------------------------
 
@@ -2172,7 +2269,6 @@ function CreateRotatingButtonGroup(targetLayer: TLayer32;
   pivotButtonColor: TColor32;
   angleButtonColor: TColor32;
   initialAngle: double; angleOffset: double;
-  enablePivotMove: Boolean;
   buttonLayerClass: TButtonDesignerLayer32Class): TRotatingGroupLayer32;
 var
   pivot: TPointD;
@@ -2180,7 +2276,7 @@ begin
   pivot := PointD(Img32.Vector.MidPoint(targetLayer.Bounds));
   Result := CreateRotatingButtonGroup(targetLayer, pivot, buttonSize,
     pivotButtonColor, angleButtonColor, initialAngle, angleOffset,
-    enablePivotMove, buttonLayerClass);
+    buttonLayerClass);
 end;
 //------------------------------------------------------------------------------
 
@@ -2189,6 +2285,7 @@ var
   rec: TRect;
   mp, pt2: TPointD;
   i, radius: integer;
+  designer: TDesignerLayer32;
   rotateGroup: TRotatingGroupLayer32;
 begin
 
@@ -2197,8 +2294,8 @@ begin
   begin
     if rotateButton is TRotatingGroupLayer32 then
       rotateGroup := TRotatingGroupLayer32(rotateButton)
-    else if (rotateButton.GroupOwner is TRotatingGroupLayer32) then
-      rotateGroup := TRotatingGroupLayer32(rotateButton.GroupOwner);
+    else if (rotateButton.Parent is TRotatingGroupLayer32) then
+      rotateGroup := TRotatingGroupLayer32(rotateButton.Parent);
   end;
   if not assigned(rotateGroup) then
         raise Exception.Create(rsUpdateRotateGroupError);
@@ -2209,26 +2306,26 @@ begin
     pt2 := AngleButton.MidPoint;
     radius := Round(Distance(mp, pt2));
     rec := Rect(RectD(mp.X -radius, mp.Y -radius, mp.X +radius,mp.Y +radius));
-    DesignLayer.SetBounds(rec);
-    i :=  DpiAwareI *2;
-    DrawDashedLine(Child[0].Image, Ellipse(Rect(i,i,radius*2 -i, radius*2 -i)),
+    designer := DesignLayer;
+    designer.SetBounds(rec);
+    i :=  dpiAware1 *2;
+    DrawDashedLine(designer.Image, Ellipse(Rect(i,i,radius*2 -i, radius*2 -i)),
       dashes, nil, i, clRed32, esPolygon);
     Result := Angle;
   end;
 end;
 //------------------------------------------------------------------------------
 
-function CreateButtonGroup(groupOwner: TGroupLayer32;
-  const buttonPts: TPathD; buttonShape: TButtonShape;
+function CreateButtonGroup(parent: TLayer32; const buttonPts: TPathD; buttonShape: TButtonShape;
   buttonSize: integer; buttonColor: TColor32;
   buttonLayerClass: TButtonDesignerLayer32Class = nil): TButtonGroupLayer32;
 var
   i: integer;
 begin
-  if not assigned(groupOwner) then
+  if not assigned(parent) then
     raise Exception.Create(rsCreateButtonGroupError);
 
-  Result := TButtonGroupLayer32(groupOwner.AddChild(TButtonGroupLayer32));
+  Result := TButtonGroupLayer32(parent.AddChild(TButtonGroupLayer32));
   if not assigned(buttonLayerClass) then
     buttonLayerClass := TButtonDesignerLayer32;
 
@@ -2248,11 +2345,11 @@ end;
 procedure InitDashes;
 begin
   setLength(dashes, 2);
-  dashes[0] := DpiAwareI *2; dashes[1] := DpiAwareI *4;
+  dashes[0] := dpiAware1 *2; dashes[1] := dpiAware1 *4;
 end;
 
 initialization
   InitDashes;
-  DefaultButtonSize := DpiAwareI*10;
+  DefaultButtonSize := dpiAware1*10;
 
 end.

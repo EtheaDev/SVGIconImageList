@@ -68,7 +68,7 @@ object Form1: TForm1
     Height = 604
     Align = alLeft
     TabOrder = 1
-    inline FrameViewCairo: TFrameView
+    inline FrameViewSkia: TFrameView
       Left = 1
       Top = 301
       Width = 311
@@ -82,8 +82,11 @@ object Form1: TForm1
       inherited ClientPanel: TPanel
         Width = 311
         Height = 302
+        ExplicitWidth = 311
+        ExplicitHeight = 302
         inherited SVGPaintBox: TPaintBox
           Width = 307
+          Height = 275
           ExplicitWidth = 311
           ExplicitHeight = 273
         end
@@ -107,8 +110,11 @@ object Form1: TForm1
       inherited ClientPanel: TPanel
         Width = 311
         Height = 300
+        ExplicitWidth = 311
+        ExplicitHeight = 300
         inherited SVGPaintBox: TPaintBox
           Width = 307
+          Height = 273
           ExplicitWidth = 303
           ExplicitHeight = 275
         end
@@ -140,8 +146,11 @@ object Form1: TForm1
       inherited ClientPanel: TPanel
         Width = 309
         Height = 302
+        ExplicitWidth = 309
+        ExplicitHeight = 302
         inherited SVGPaintBox: TPaintBox
           Width = 305
+          Height = 275
           ExplicitWidth = 303
           ExplicitHeight = 273
         end
@@ -165,8 +174,11 @@ object Form1: TForm1
       inherited ClientPanel: TPanel
         Width = 309
         Height = 300
+        ExplicitWidth = 309
+        ExplicitHeight = 300
         inherited SVGPaintBox: TPaintBox
           Width = 305
+          Height = 273
           ExplicitWidth = 303
           ExplicitHeight = 275
         end

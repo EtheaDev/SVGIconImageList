@@ -2,8 +2,8 @@ unit Img32.Text;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.3                                                             *
+* Date      :  21 September 2021                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -489,8 +489,8 @@ type
     const rec: TRect;
     const text: UnicodeString;
     textAlign: TTextAlign; textAlignV: TTextVAlign;
-    glyphCache: TGlyphCache;
-    textColor: TColor32 = clBlack32): TPointD; overload;
+    glyphCache: TGlyphCache; textColor: TColor32 = clBlack32;
+    useClearType: Boolean = false): TPointD; overload;
 
   function DrawAngledText(image: TImage32;
   x, y: double; angleRadians: double;
@@ -513,6 +513,7 @@ type
     out charsThatFit: integer): TPathsD; overload;
 
   {$IFDEF MSWINDOWS}
+  procedure CheckFontHeight(var logFont: TLogFont);
   function PointHeightToPixelHeight(pt: double): double;
   function GetFontFolder: string;
   function GetInstalledTtfFilenames: TArrayOfString;
@@ -2323,7 +2324,7 @@ function TGlyphCache.GetTextGlyphs(const rec: TRect;
   const text: UnicodeString; textAlign: TTextAlign; textAlignV: TTextVAlign;
   out nextIdx: integer; out nextPt: TPointD): TPathsD;
 var
-  i,j,k, lenCurr, lenRem, spcCount: integer;
+  i,j,k, lenCurr, lenRem, spcCount, recW: integer;
   lh, currLineWidthPxls, spcDx, dx, dy, y2, w: double;
   currentLine, remainingText: UnicodeString;
   offsets: TArrayOfDouble;
@@ -2343,6 +2344,7 @@ begin
 
   currentLine := '';
   currLineWidthPxls := 0;
+  recW := RectWidth(rec);
 
   remainingText := text;
   while (remainingText <> '') do
@@ -2363,7 +2365,7 @@ begin
       //get character offsets to see how many will fit within rec.Width
       offsets := GetCharOffsets(currentLine);
       j := 0;
-      while (j < High(offsets)) and (offsets[j+1] < RectWidth(rec)) do inc(j);
+      while (j < High(offsets)) and (offsets[j+1] < recW) do inc(j);
       if j = 0 then Exit; //there's no room for any text!
 
       //if currentLine is too long to fit, break it at a space character ...
@@ -2409,9 +2411,9 @@ begin
         if not hardCR then
         begin
           spcCount := CountSpaces(currentLine);
-          if (spcCount > 0) and (currLineWidthPxls < RectWidth(rec)) then
+          if (spcCount > 0) and (currLineWidthPxls < recW) then
           begin
-            spcDx := (RectWidth(rec) - currLineWidthPxls)/spcCount;
+            spcDx := (recW - currLineWidthPxls)/spcCount;
             j := lenCurr;
             while spcCount > 0 do
             begin
@@ -2423,7 +2425,7 @@ begin
               Dec(spcCount);
               j := i -1;
             end;
-            currLineWidthPxls := RectWidth(rec); //needed for underlining
+            currLineWidthPxls := recW; //needed for underlining
           end;
         end;
       end;
@@ -2625,6 +2627,16 @@ end;
 //------------------------------------------------------------------------------
 
 {$IFDEF MSWINDOWS}
+
+procedure CheckFontHeight(var logFont: TLogFont);
+const
+  _96Div72 = 96/72;
+begin
+  if logFont.lfHeight > 0 then
+    logFont.lfHeight := -Round(DpiAware(logFont.lfHeight * _96Div72));
+end;
+//------------------------------------------------------------------------------
+
 function PointHeightToPixelHeight(pt: double): double;
 const
   _96Div72 = 96/72;
@@ -2700,8 +2712,8 @@ end;
 //------------------------------------------------------------------------------
 
 function DrawText(image: TImage32; const rec: TRect; const text: UnicodeString;
-  textAlign: TTextAlign; textAlignV: TTextVAlign;
-  glyphCache: TGlyphCache; textColor: TColor32 = clBlack32): TPointD;
+  textAlign: TTextAlign; textAlignV: TTextVAlign; glyphCache: TGlyphCache;
+  textColor: TColor32 = clBlack32; useClearType: Boolean = false): TPointD;
 var
   glyphs: TPathsD;
   dummy: integer; //assumes all characters will be drawn
@@ -2710,7 +2722,9 @@ begin
   if not assigned(glyphCache) or not glyphCache.IsValidFont then Exit;
   glyphs := glyphCache.GetTextGlyphs(rec, text,
     textAlign, textAlignV, dummy, Result);
-  DrawPolygon(image, glyphs, frNonZero, textColor);
+  if useClearType then
+    DrawPolygon_ClearType(image, glyphs, frNonZero, textColor) else
+    DrawPolygon(image, glyphs, frNonZero, textColor);
 end;
 //------------------------------------------------------------------------------
 

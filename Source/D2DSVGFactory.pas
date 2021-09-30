@@ -100,7 +100,7 @@ const
   cRegEx = '(\<(style|text)|class=\")';
 begin
   if TRegEx.IsMatch(FSource, cRegEx, [roIgnoreCase]) then
-    raise Exception.CreateRes(@D2D_ERROR_UNSUPPORTED_SVG);
+    raise ESVGException.CreateRes(@D2D_ERROR_UNSUPPORTED_SVG);
 end;
 {$ENDIF}
 

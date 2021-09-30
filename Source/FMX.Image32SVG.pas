@@ -43,9 +43,8 @@ Uses
   , Img32             //Warning: from version 2.3 the default rendering engine is Image32
   , Img32.SVG.Core    //because is the best engine available with SVGIconImageList.
   , Img32.SVG.Reader  //If you don't want to use it change SVGIconImageList.inc
-  , Img32.SVG.Writer  //Otherwise you must add this search path:
-  , Img32.Text        //- SVGIconImageList\Image32\Source
-  , Img32.Vector;
+  , Img32.Text        //Otherwise you must add this search path:
+  , Img32.Vector;     //- SVGIconImageList\Image32\Source
 
 resourcestring
   SVG_ERROR_PARSING_SVG_TEXT = 'Error parsing SVG Text: %s';

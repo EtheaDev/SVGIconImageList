@@ -2,8 +2,8 @@ unit Img32.Extra;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.3                                                             *
+* Date      :  21 September 2021                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -27,6 +27,11 @@ type
   TButtonShape = (bsRound, bsSquare, bsDiamond);
   TButtonAttribute = (baShadow, ba3D);
   TButtonAttributes = set of TButtonAttribute;
+
+procedure DrawEdge(img: TImage32; const rec: TRect;
+  topLeftColor, bottomRightColor: TColor32; penWidth: double = 1.0);
+procedure DrawEdgePath(img: TImage32; const path: TPathD;
+  topLeftColor, bottomRightColor: TColor32; penWidth: double = 1.0);
 
 procedure DrawShadow(img: TImage32; const polygon: TPathD;
   fillRule: TFillRule; depth: double; angleRads: double = angle45;
@@ -239,6 +244,56 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure DrawEdge(img: TImage32; const rec: TRect;
+  topLeftColor, bottomRightColor: TColor32; penWidth: double = 1.0);
+var
+  p: TPathD;
+begin
+  if topLeftColor <> bottomRightColor then
+  begin
+    with rec do
+    begin
+      p := MakePathD([left, bottom, left, top, right, top]);
+      DrawLine(img, p, penWidth, topLeftColor, esButt);
+      p := MakePathD([right, top, right, bottom, left, bottom]);
+      DrawLine(img, p, penWidth, bottomRightColor, esButt);
+    end;
+  end else
+    DrawLine(img, Rectangle(rec), penWidth, topLeftColor, esPolygon);
+end;
+//------------------------------------------------------------------------------
+
+procedure DrawEdgePath(img: TImage32; const path: TPathD;
+  topLeftColor, bottomRightColor: TColor32; penWidth: double = 1.0);
+var
+  i, len: integer;
+  angle: double;
+  p: TPathD;
+  lp: TPointD;
+  c: TColor32;
+begin
+  len := Length(path);
+  if len < 3 then Exit;
+  SetLength(p, 2);
+  lp := path[len -1];
+  for i := 0 to High(path) do
+  begin
+    angle := GetAngle(lp, path[i]);
+    if angle < -angle135 then                             //-180..-135
+      c := GradientColor(topLeftColor, bottomRightColor,
+        (-angle-angle135)/angle45)
+    else if angle <= angle0 then c := topLeftColor        //-135..0
+    else if angle < angle45 then
+      c := GradientColor(topLeftColor, bottomRightColor,  //0..45
+        angle/angle45)
+    else c := bottomRightColor;
+    p[0] := lp; p[1] := path[i];
+    DrawLine(img, p, penWidth, c, esButt);
+    lp := path[i];
+  end;
+end;
+//------------------------------------------------------------------------------
+
 procedure DrawShadow(img: TImage32; const polygon: TPathD;
   fillRule: TFillRule; depth: double; angleRads: double;
   color: TColor32; cutoutInsideShadow: Boolean);
@@ -257,7 +312,7 @@ procedure DrawShadow(img: TImage32; const polygons: TPathsD;
   color: TColor32; cutoutInsideShadow: Boolean);
 var
   x, y: double;
-  blurSize: integer;
+  blurSize, w,h: integer;
   rec: TRect;
   polys, shadowPolys: TPathsD;
   shadowImg: TImage32;
@@ -273,7 +328,8 @@ begin
   Img32.Vector.InflateRect(rec, Ceil(depth*2), Ceil(depth*2));
   polys := OffsetPath(polygons, -rec.Left, -rec.Top);
   shadowPolys := OffsetPath(polys, x, y);
-  shadowImg := TImage32.Create(RectWidth(rec), RectHeight(rec));
+  RectWidthHeight(rec, w, h);
+  shadowImg := TImage32.Create(w, h);
   try
     DrawPolygon(shadowImg, shadowPolys, fillRule, color);
     FastGaussianBlur(shadowImg, shadowImg.Bounds, blurSize, 1);
@@ -299,6 +355,7 @@ end;
 procedure DrawGlow(img: TImage32; const polygons: TPathsD;
   fillRule: TFillRule; color: TColor32; blurRadius: integer);
 var
+  w,h: integer;
   rec: TRect;
   glowPolys: TPathsD;
   glowImg: TImage32;
@@ -307,7 +364,8 @@ begin
   glowPolys := OffsetPath(polygons,
     blurRadius -rec.Left +1, blurRadius -rec.Top +1);
   Img32.Vector.InflateRect(rec, blurRadius +1, blurRadius +1);
-  glowImg := TImage32.Create(RectWidth(rec), RectHeight(rec));
+  RectWidthHeight(rec, w, h);
+  glowImg := TImage32.Create(w, h);
   try
     DrawPolygon(glowImg, glowPolys, fillRule, color);
     FastGaussianBlur(glowImg, glowImg.Bounds, blurRadius);
@@ -558,9 +616,11 @@ procedure EraseOutsidePath(img: TImage32; const path: TPathD;
 var
   mask: TImage32;
   p: TPathD;
+  w,h: integer;
 begin
   if not assigned(path) then Exit;
-  mask := TImage32.Create(RectWidth(outsideBounds), RectHeight(outsideBounds));
+  RectWidthHeight(outsideBounds, w,h);
+  mask := TImage32.Create(w, h);
   try
     p := OffsetPath(path, -outsideBounds.Left, -outsideBounds.top);
     DrawPolygon(mask, p, fillRule, clBlack32);
@@ -576,9 +636,11 @@ procedure EraseOutsidePaths(img: TImage32; const paths: TPathsD;
 var
   mask: TImage32;
   pp: TPathsD;
+  w,h: integer;
 begin
   if not assigned(paths) then Exit;
-  mask := TImage32.Create(RectWidth(outsideBounds), RectHeight(outsideBounds));
+  RectWidthHeight(outsideBounds, w,h);
+  mask := TImage32.Create(w, h);
   try
     pp := OffsetPath(paths, -outsideBounds.Left, -outsideBounds.top);
     DrawPolygon(mask, pp, fillRule, clBlack32);
@@ -608,6 +670,7 @@ var
   tmp: TImage32;
   rec: TRect;
   paths, paths2: TPathsD;
+  w,h: integer;
   x,y: double;
 begin
   rec := GetBounds(polygons);
@@ -615,7 +678,8 @@ begin
   if not ClockwiseRotationIsAnglePositive then angleRads := -angleRads;
   GetSinCos(angleRads, y, x);
   paths := OffsetPath(polygons, -rec.Left, -rec.Top);
-  tmp := TImage32.Create(rectWidth(rec), rectHeight(rec));
+  RectWidthHeight(rec, w, h);
+  tmp := TImage32.Create(w, h);
   try
     if colorLt shr 24 > 0 then
     begin
@@ -643,53 +707,56 @@ end;
 //------------------------------------------------------------------------------
 
 function RainbowColor(fraction: double): TColor32;
+var
+  hsl: THsl;
 begin
-  if (fraction >= 1) or (fraction <= 0) then
-    result := clRed32
-  else
+  if (fraction > 0) and (fraction < 1) then
   begin
-    fraction := fraction * 6;
-    case trunc(fraction) of
-      0: result := GradientColor(clRed32, clYellow32, frac(fraction));
-      1: result := GradientColor(clYellow32, clLime32, frac(fraction));
-      2: result := GradientColor(clLime32, clAqua32, frac(fraction));
-      3: result := GradientColor(clAqua32, clBlue32, frac(fraction));
-      4: result := GradientColor(clBlue32, clFuchsia32, frac(fraction));
-      else result := GradientColor(clFuchsia32, clRed32, frac(fraction));
-    end;
-  end;
+    hsl.hue := Round(fraction * 255);
+    hsl.sat := 255;
+    hsl.lum := 255;
+    hsl.alpha := 255;
+    Result := HslToRgb(hsl);
+  end else
+    result := clRed32
 end;
 //------------------------------------------------------------------------------
 
 function GradientColor(color1, color2: TColor32; frac: single): TColor32;
 var
-  c1: TARGB absolute color1;
-  c2: TARGB absolute color2;
-  r:  TARGB absolute Result;
+  hsl1, hsl2: THsl;
 begin
-  if frac >= 1 then
-    result := color2
-  else if frac <= 0 then
-    result := color1
+  if (frac <= 0) then result := color1
+  else if (frac >= 1) then result := color2
   else
   begin
-    r.B := trunc(c1.B*(1-frac) + c2.B*frac);
-    r.G := trunc(c1.G*(1-frac) + c2.G*frac);
-    r.R := trunc(c1.R*(1-frac) + c2.R*frac);
-    r.A := trunc(c1.A*(1-frac) + c2.A*frac);
+    hsl1 := RgbToHsl(color1); hsl2 := RgbToHsl(color2);
+    hsl1.hue := ClampByte(hsl1.hue*(1-frac) + hsl2.hue*frac);
+    hsl1.sat := ClampByte(hsl1.sat*(1-frac) + hsl2.sat*frac);
+    hsl1.lum := ClampByte(hsl1.lum*(1-frac) + hsl2.lum*frac);
+    hsl1.alpha := ClampByte(hsl1.alpha*(1-frac) + hsl2.alpha*frac);
+    Result := HslToRgb(hsl1);
   end;
 end;
 //------------------------------------------------------------------------------
 
 function MakeDarker(color: TColor32; percent: cardinal): TColor32;
+var
+  hsl: THsl;
 begin
-  result := GradientColor(color, $FF000000, percent/100);
+  hsl := RgbToHsl(color);
+  hsl.lum := ClampByte(hsl.lum - (percent/100 * hsl.lum));
+  Result := HslToRgb(hsl);
 end;
 //------------------------------------------------------------------------------
 
 function MakeLighter(color: TColor32; percent: cardinal): TColor32;
+var
+  hsl: THsl;
 begin
-  result := GradientColor(color, $FFFFFFFF, percent/100);
+  hsl := RgbToHsl(color);
+  hsl.lum := ClampByte(hsl.lum + percent/100 * (255 - hsl.lum));
+  Result := HslToRgb(hsl);
 end;
 //------------------------------------------------------------------------------
 
@@ -708,7 +775,6 @@ begin
   lightSize := radius * 0.25;
 
   rec := RectD(pt.X -radius, pt.Y -radius, pt.X +radius, pt.Y +radius);
-
   case buttonShape of
     bsDiamond:
       begin
@@ -731,7 +797,6 @@ begin
 
   img.BeginUpdate;
   try
-
     //nb: only need to cutout the inside shadow if
     //the pending color fill is semi-transparent
     if baShadow in buttonAttributes then
@@ -744,7 +809,7 @@ begin
     if ba3D in buttonAttributes then
       Draw3D(img, Result, frNonZero, lightSize*2,
         Ceil(lightSize), $CCFFFFFF, $AA000000, lightAngle);
-    DrawLine(img, Result, DpiAwareI, clBlack32, esPolygon);
+    DrawLine(img, Result, dpiAware1, clBlack32, esPolygon);
   finally
     img.EndUpdate;
   end;
@@ -2494,7 +2559,7 @@ end;
 
 procedure GaussianBlur(img: TImage32; rec: TRect; radius: Integer);
 var
-  i, x,y,yy,z: Integer;
+  i, w,h, x,y,yy,z: Integer;
   gaussTable: array [-MaxBlur .. MaxBlur] of Cardinal;
   wc: TWeightedColor;
   wca: TArrayOfWeightedColor;
@@ -2511,27 +2576,28 @@ begin
     gaussTable[-i] := gaussTable[i];
   end;
 
-  setLength(wca, RectWidth(rec) * RectHeight(rec));
+  RectWidthHeight(rec, w, h);
+  setLength(wca, w * h);
 
-  for y := 0 to RectHeight(rec) -1 do
+  for y := 0 to h -1 do
   begin
     row := PColor32Array(@img.Pixels[(y + rec.Top) * img.Width + rec.Left]);
-    wcRow := PWeightedColorArray(@wca[y * RectWidth(rec)]);
-    for x := 0 to RectWidth(rec) -1 do
+    wcRow := PWeightedColorArray(@wca[y * w]);
+    for x := 0 to w -1 do
       for z := max(0, x - radius) to min(img.Width -1, x + radius) do
         wcRow[x].Add(row[z], gaussTable[x-z]);
   end;
 
-  for x := 0 to RectWidth(rec) -1 do
+  for x := 0 to w -1 do
   begin
-    for y := 0 to RectHeight(rec) -1 do
+    for y := 0 to h -1 do
     begin
       wc.Reset;
-      yy := max(0, y - radius) * RectWidth(rec);
-      for z := max(0, y - radius) to min(RectHeight(rec) -1, y + radius) do
+      yy := max(0, y - radius) * w;
+      for z := max(0, y - radius) to min(h -1, y + radius) do
       begin
         wc.Add(wca[x + yy].Color, gaussTable[y-z]);
-        inc(yy, RectWidth(rec));
+        inc(yy, w);
       end;
       img.Pixels[x + rec.Left + (y + rec.Top) * img.Width] := wc.Color;
     end;
@@ -2702,8 +2768,7 @@ begin
   if IsEmptyRect(rec2) then Exit;
   blurFullImage := RectsEqual(rec2, img.Bounds);
 
-  w := RectWidth(rec2);
-  h := RectHeight(rec2);
+  RectWidthHeight(rec2, w, h);
   if (Min(w, h) < 2) or (stdDev < 1) then Exit;
 
   len := w * h;

@@ -2,8 +2,8 @@ unit Img32.Fmt.SVG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.3                                                             *
+* Date      :  21 September 2021                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  SVG file format extension for TImage32                          *
@@ -50,26 +50,33 @@ begin
     if not Result then Exit;
     r := GetViewbox(img32.Width, img32.Height);
 
-    //if the current image's dimensions are larger than the
-    //SVG's viewbox, then scale the SVG image up to fit
-    if not r.IsEmpty then
-    begin
-      w := r.Width;
-      h := r.Height;
-      sx := img32.Width / w;
-      sy := img32.Height / h;
-      if sy < sx then sx := sy;
-      if sx > 1 then
+    img32.BeginUpdate;
+    try
+      //if the current image's dimensions are larger than the
+      //SVG's viewbox, then scale the SVG image up to fit
+      if not r.IsEmpty then
       begin
-        w := w * sx;
-        h := h * sx;
+        w := r.Width;
+        h := r.Height;
+        sx := img32.Width / w;
+        sy := img32.Height / h;
+        if sy < sx then sx := sy;
+        if not(SameValue(sx, 1, 0.00001)) then
+        begin
+          w := w * sx;
+          h := h * sx;
+        end;
+        img32.SetSize(Round(w), Round(h));
       end;
-      img32.SetSize(Round(w), Round(h));
-    end
-    else if img32.IsEmpty then
-      img32.SetSize(defaultSvgWidth, defaultSvgHeight);
-    //draw the SVG image to fit inside the canvas
-    DrawImage(img32, True);
+
+      if img32.IsEmpty then
+        img32.SetSize(defaultSvgWidth, defaultSvgHeight);
+
+      //draw the SVG image to fit inside the canvas
+      DrawImage(img32, True);
+    finally
+      img32.EndUpdate;
+    end;
   finally
     Free;
   end;

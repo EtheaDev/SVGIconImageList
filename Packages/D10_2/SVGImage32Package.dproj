@@ -18,11 +18,6 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
-        <Base_Win64>true</Base_Win64>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
@@ -93,14 +88,12 @@
         <DCCReference Include="..\..\Image32\source\Img32.Extra.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.Layers.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.Resamplers.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.SmoothPath.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.Transform.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.Text.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.Vector.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.Fmt.SVG.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.SVG.Core.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.SVG.Reader.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.SVG.Writer.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

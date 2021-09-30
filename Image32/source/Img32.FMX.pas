@@ -2,8 +2,8 @@ unit Img32.FMX;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.3                                                             *
+* Date      :  21 September 2021                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  Image file format support for TImage32 and FMX                  *
@@ -35,19 +35,8 @@ type
     property Ext: string read fExt write fExt;
   end;
 
-function DPIAwareFMX(val: Integer): Integer; overload; inline;
-function DPIAwareFMX(val: double): double; overload; inline;
-
 const
   RT_BITMAP = PChar(2);
-
-var
-  screenScale: double;
-
-  {$IFNDEF MSWINDOWS}
-  dpiAwareI: integer;
-  DpiAwareD: double;
-  {$ENDIF}
 
 implementation
 
@@ -209,41 +198,10 @@ var
 begin
   if TPlatformServices.Current.SupportsPlatformService(
   IFMXScreenService, IInterface(ScreenService)) then
-    ScreenScale := ScreenService.GetScreenScale else
-    ScreenScale := 1;
+    DpiAwareOne := ScreenService.GetScreenScale else
+    DpiAwareOne := 1;
+  dpiAware1 := Round(DpiAwareOne);
 end;
-//------------------------------------------------------------------------------
-
-function DPIAwareFMX(val: Integer): Integer;
-begin
-  Result := Round(screenScale * val);
-end;
-//------------------------------------------------------------------------------
-
-function DPIAwareFMX(val: double): double;
-begin
-  Result := screenScale * val;
-end;
-//------------------------------------------------------------------------------
-
-procedure InitScreenScale;
-var
-  ScreenService: IFMXScreenService;
-begin
-  if TPlatformServices.Current.SupportsPlatformService (
-    IFMXScreenService, IInterface(ScreenService)) then
-      screenScale := ScreenService.GetScreenScale else
-      screenScale := 1.0;
-end;
-//------------------------------------------------------------------------------
-
-{$IFNDEF MSWINDOWS}
-procedure InitDpiVars;
-begin
-  dpiAwareI := DPIAwareFMX(1);
-  DpiAwareD := DPIAwareFMX(1.0);
-end;
-{$ENDIF}
 
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -253,9 +211,8 @@ initialization
   TImage32.RegisterImageFormatClass('PNG', TImageFormat_FMX, cpHigh);
   TImage32.RegisterImageFormatClass('JPG', TImageFormat_FMX, cpLow);
   TImage32.RegisterImageFormatClass('GIF', TImageFormat_FMX, cpLow);
-  CheckScreenScale;
 {$IFNDEF MSWINDOWS}
-  InitDpiVars;
+  CheckScreenScale;
 {$ENDIF}
 
 end.

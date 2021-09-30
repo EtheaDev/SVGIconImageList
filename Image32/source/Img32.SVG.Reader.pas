@@ -2,8 +2,8 @@ unit Img32.SVG.Reader;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.2                                                             *
-* Date      :  30 August 2021                                                    *
+* Version   :  3.3                                                             *
+* Date      :  21 September 2021                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -151,8 +151,10 @@ type
     function  LoadFromFile(const filename: string): Boolean;
     function  LoadFromString(const str: string): Boolean;
 
-    procedure SetOverrideFillColor(color: TColor32); deprecated;
-    procedure SetOverrideStrokeColor(color: TColor32); deprecated;
+    //The following two methods are deprecated and intended only for ...
+    //https://github.com/EtheaDev/SVGIconImageList
+    procedure SetOverrideFillColor(color: TColor32); //deprecated;
+    procedure SetOverrideStrokeColor(color: TColor32); //deprecated;
 
     function  FindElement(const idName: UTF8String): TSvgElement;
     property  BackgroundColor : TColor32 read fBkgndColor write fBkgndColor;
@@ -237,8 +239,8 @@ type
 
   TPathElement = class(TShapeElement)
   private
-    fSavedPaths : TSvgPaths;
-    fSvgPaths   : TSvgPaths;
+    fSavedPaths : TSvgPath;
+    fSvgPaths   : TSvgPath;
     procedure Flatten(index: integer; scalePending: double;
       out path: TPathD; out isClosed: Boolean);
   protected
@@ -248,6 +250,9 @@ type
     function  GetUncurvedPath(const drawDat: TDrawData): TPathsD; override;
     procedure SaveCopy; override;
     procedure RestoreCopy(recursive: Boolean); override;
+  public
+    constructor Create(parent: TSvgElement; svgEl: TSvgTreeEl); override;
+    destructor Destroy; override;
   end;
 
   TPolyElement = class(TShapeElement) //polyline or polygon
@@ -568,6 +573,7 @@ type
 
   TClipPathElement = class(TShapeElement)
   protected
+    units: Cardinal;
     procedure GetPaths(const drawDat: TDrawData); override;
   public
     constructor Create(parent: TSvgElement; svgEl: TSvgTreeEl); override;
@@ -872,13 +878,17 @@ begin
     end;
     if IsEmptyRect(clipRec) then Exit;
 
-    tmpImg := fReader.TempImage;
-    tmpImg.Clear(clipRec);
-    DrawChildren(tmpImg, drawDat);
+    //nb: it's not safe to use fReader.TempImage when calling DrawChildren
+    tmpImg := TImage32.Create(Image.Width, Image.Height);
+    try
+      DrawChildren(tmpImg, drawDat);
+      with TClipPathElement(clipEl) do
+        EraseOutsidePaths(tmpImg, clipPaths, fDrawData.fillRule, clipRec);
+      image.CopyBlend(tmpImg, clipRec, clipRec, BlendToAlpha);
+    finally
+      tmpImg.Free;
+    end;
 
-    with TClipPathElement(clipEl) do
-      EraseOutsidePaths(tmpImg, clipPaths, fDrawData.fillRule, clipRec);
-    image.CopyBlend(tmpImg, clipRec, clipRec, BlendToAlpha);
   end
   else if Assigned(maskEl) then
   begin
@@ -1483,13 +1493,13 @@ end;
 
 function TFilterElement.AddNamedImage(const name: UTF8String): TImage32;
 var
-  len: integer;
+  len, w, h: integer;
 begin
   len := Length(fNames);
   SetLength(fNames, len+1);
   SetLength(fImages, len+1);
-  Result :=
-    TImage32.Create(RectWidth(fFilterBounds), RectHeight(fFilterBounds));
+  RectWidthHeight(fFilterBounds, w, h);
+  Result := TImage32.Create(w, h);
   fImages[len] := Result;
   fNames[len] := name;
 end;
@@ -1692,13 +1702,13 @@ procedure ArithmeticBlend(src1, src2, dst: TImage32;
   const recS1, recS2, recDst: TRect; const ks: TFourDoubles);
 var
   kk: array[0..3] of byte;
-  w,h,i,j: integer;
+  w,h, w2,h2, w3,h3, i,j: integer;
   p1,p2,r: PColor32;
 begin
-  w := RectWidth(recS1);
-  h := RectHeight(recS1);
-  if (RectWidth(recS2) <> w) or (RectWidth(recDst) <> w) or
-    (RectHeight(recS2) <> h) or (RectHeight(recDst) <> h) or
+  RectWidthHeight(recS1, w, h);
+  RectWidthHeight(recS2, w2, h2);
+  RectWidthHeight(recDst, w3, h3);
+  if (w2 <> w) or (w3 <> w) or (h2 <> h) or (h3 <> h) or
     (ks[0] = InvalidD) or (ks[1] = InvalidD) or
     (ks[2] = InvalidD) or (ks[3] = InvalidD) then Exit;
 
@@ -2287,6 +2297,8 @@ var
   fillPaths: TPathsD;
 begin
   if not assigned(drawPathsF) then Exit;
+  if drawDat.fillColor = clCurrent then
+    drawDat.fillColor := fReader.currentColor;
 
   fillPaths := MatrixApply(drawPathsF, drawDat.matrix);
   if (drawDat.fillEl <> '') then
@@ -2349,6 +2361,8 @@ begin
   end;
   if not Assigned(strokePaths) then Exit;
   joinStyle := fDrawData.strokeJoin;
+  if drawDat.strokeColor = clCurrent then
+    drawDat.strokeColor := fReader.currentColor;
 
   scale := ExtractAvgScaleFromMatrix(drawDat.matrix);
   bounds := fReader.userSpaceBounds;
@@ -2417,36 +2431,43 @@ end;
 // TPathElement
 //------------------------------------------------------------------------------
 
+constructor TPathElement.Create(parent: TSvgElement; svgEl: TSvgTreeEl);
+begin
+  inherited;
+  fSvgPaths := TSvgPath.Create;
+end;
+//------------------------------------------------------------------------------
+
+destructor TPathElement.Destroy;
+begin
+  fSvgPaths.Free;
+  inherited;
+end;
+//------------------------------------------------------------------------------
+
 function TPathElement.GetBounds: TRectD;
 var
   i: integer;
 begin
   Result := NullRectD;
-  for i := 0 to High(fSvgPaths) do
+  for i := 0 to fSvgPaths.Count -1 do
     Result := UnionRect(Result, fSvgPaths[i].GetBounds);
 end;
 //------------------------------------------------------------------------------
 
 procedure TPathElement.SaveCopy;
-var
-  i, len: integer;
 begin
-  len := Length(fSvgPaths);
-  SetLength(fSavedPaths, len);
-  for i := 0 to len -1 do
-    fSavedPaths[i] := fSvgPaths[i].Clone;
+  FreeAndNil(fSavedPaths);
+  fSavedPaths := fSvgPaths.Clone;
   inherited;
 end;
 //------------------------------------------------------------------------------
 
 procedure TPathElement.RestoreCopy(recursive: Boolean);
-var
-  i, len: integer;
 begin
-  len := Length(fSavedPaths);
-  SetLength(fSvgPaths, len);
-  for i := 0 to len -1 do
-    fSvgPaths[i] := fSavedPaths[i].Clone;
+  FreeAndNil(fSvgPaths);
+  fSvgPaths := fSavedPaths;
+  fSavedPaths := nil;
   inherited RestoreCopy(recursive);
 end;
 //------------------------------------------------------------------------------
@@ -2454,7 +2475,7 @@ end;
 
 procedure TPathElement.ParseDAttrib(const value: UTF8String);
 begin
-  fSvgPaths := ParseSvgPath(value);
+  ParseSvgPath(value, fSvgPaths);
 end;
 //------------------------------------------------------------------------------
 
@@ -2475,7 +2496,7 @@ var
 begin
   if Assigned(drawPathsC) or Assigned(drawPathsO) then inherited;
   scalePending := ExtractAvgScaleFromMatrix(drawDat.matrix);
-  for i := 0 to High(fSvgPaths) do
+  for i := 0 to fSvgPaths.Count -1 do
   begin
     Flatten(i, scalePending, path, isClosed);
     if not Assigned(path) then Continue;
@@ -2491,11 +2512,10 @@ end;
 
 function TPathElement.GetUncurvedPath(const drawDat: TDrawData): TPathsD;
 var
-  i, len: integer;
+  i: integer;
 begin
-  len := Length(fSvgPaths);
-  SetLength(Result, len);
-  for i := 0 to High(fSvgPaths) do
+  SetLength(Result, fSvgPaths.Count);
+  for i := 0 to fSvgPaths.Count -1 do
     Result[i] := fSvgPaths[i].GetSimplePath;
 end;
 
@@ -3188,7 +3208,7 @@ begin
   begin
     mat := fDrawData.matrix;
     MatrixScale(mat, 1/fontScale);
-    for i := 0 to High(fSvgPaths) do
+    for i := 0 to fSvgPaths.Count -1 do
     begin
       Flatten(i, fontScale, tmpPath, isClosed);
       //'path' is temporarily scaled to accommodate fReader.fFontCache's
@@ -4710,6 +4730,9 @@ begin
   with fRootElement do
   begin
     di := fDrawData;
+    if di.currentColor = clInvalid then
+      di.currentColor := currentColor;
+
     MatrixTranslate(di.matrix, -viewboxWH.Left, -viewboxWH.Top);
 
     //the width and height attributes generally indicate the size of the
@@ -4717,10 +4740,9 @@ begin
     //values can be still overridden by the scaleToImage parameter above
 
     if vbox.IsEmpty then
-      fDrawData.bounds := RectD(img.Bounds) else
-      fDrawData.bounds := viewboxWH.RectD;
+      di.bounds := RectD(img.Bounds) else
+      di.bounds := viewboxWH.RectD;
     userSpaceBounds  := fDrawData.bounds;
-    di.bounds := fDrawData.bounds;
 
     if scaleToImage and not img.IsEmpty then
     begin
@@ -4751,11 +4773,14 @@ begin
   if fBkgndColor <> clNone32 then
     img.Clear(fBkgndColor);
 
+  img.BeginUpdate;
   fTempImage := TImage32.Create(img.Width, img.Height);
   try
+    fTempImage.BlockNotify;
     fRootElement.Draw(img, di);
   finally
     fTempImage.Free;
+    img.EndUpdate;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -4797,13 +4822,10 @@ procedure TSvgReader.SetOverrideFillColor(color: TColor32);
 var
   dd: TDrawData;
 begin
-  if not Assigned(RootElement) then Exit;
-  if color <> clNone32 then
-  begin
-    dd := RootElement.DrawData;
-    dd.fillColor := color;
-    RootElement.DrawData := dd;
-  end;
+  if not Assigned(RootElement) or (color = clNone32) then Exit;
+  dd := RootElement.DrawData;
+  dd.fillColor := color;
+  RootElement.DrawData := dd;
 end;
 //------------------------------------------------------------------------------
 
@@ -4811,13 +4833,11 @@ procedure TSvgReader.SetOverrideStrokeColor(color: TColor32);
 var
   dd: TDrawData;
 begin
-  if not Assigned(RootElement) then Exit;
-  if (color <> clNone32) and (dd.strokeColor <> clInvalid) then
-  begin
-    dd := RootElement.DrawData;
-    dd.strokeColor := color;
-    RootElement.DrawData := dd;
-  end;
+  if not Assigned(RootElement) or (color = clNone32) then Exit;
+  dd := RootElement.DrawData;
+  if dd.strokeColor = clInvalid then Exit;
+  dd.strokeColor := color;
+  RootElement.DrawData := dd;
 end;
 //------------------------------------------------------------------------------
 

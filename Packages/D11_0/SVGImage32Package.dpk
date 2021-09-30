@@ -44,13 +44,12 @@ contains
   Img32.Extra in '..\..\Image32\source\Img32.Extra.pas',
   Img32.Layers in '..\..\Image32\source\Img32.Layers.pas',
   Img32.Resamplers in '..\..\Image32\source\Img32.Resamplers.pas',
-  Img32.SmoothPath in '..\..\Image32\source\Img32.SmoothPath.pas',
   Img32.Transform in '..\..\Image32\source\Img32.Transform.pas',
   Img32.Text in '..\..\Image32\source\Img32.Text.pas',
   Img32.Vector in '..\..\Image32\source\Img32.Vector.pas',
   Img32.Fmt.SVG in '..\..\Image32\source\Img32.Fmt.SVG.pas',
   Img32.SVG.Core in '..\..\Image32\source\Img32.SVG.Core.pas',
-  Img32.SVG.Reader in '..\..\Image32\source\Img32.SVG.Reader.pas',
-  Img32.SVG.Writer in '..\..\Image32\source\Img32.SVG.Writer.pas';
+  //Img32.SVG.Writer in '..\..\Image32\source\Img32.SVG.Writer.pas',
+  Img32.SVG.Reader in '..\..\Image32\source\Img32.SVG.Reader.pas';
 
 end.

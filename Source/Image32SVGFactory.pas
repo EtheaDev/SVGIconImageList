@@ -9,8 +9,10 @@ unit Image32SVGFactory;
 interface
 
 Uses
-  Winapi.D2D1,
   SVGInterfaces;
+
+resourcestring
+  IMAGE32_ERROR_PARSING_SVG_TEXT = 'Error parsing SVG with Image32 Library';
 
 // Factory Methods
 function GetImage32SVGFactory: ISVGFactory;
@@ -29,14 +31,8 @@ Uses
   Img32,             //Warning: from version 2.3 the default rendering engine is Image32
   Img32.SVG.Core,    //because is the best engine available with SVGIconImageList.
   Img32.SVG.Reader,  //If you don't want to use it change SVGIconImageList.inc
-  Img32.SVG.Writer,  //Otherwise you must add this search path:
-  Img32.Text,        //- SVGIconImageList\Image32\Source
-  Img32.Vector;
-
-resourcestring
-  D2D_ERROR_NOT_AVAILABLE    = 'Windows SVG support is not available';
-  D2D_ERROR_PARSING_SVG_TEXT = 'Error parsing SVG Text: %s';
-  D2D_ERROR_UNSUPPORTED_SVG  = '<style> or <text> elements and class="" attributes are not supported by Windows SVG';
+  Img32.Text,        //Otherwise you must add this search path:
+  Img32.Vector;      //- SVGIconImageList\Image32\Source
 
 type
   TImage32SVG = class(TInterfacedObject, ISVG)
@@ -180,7 +176,7 @@ begin
   if FSource <> '' then
   begin
     if not fSvgReader.LoadFromString(FSource) then
-      raise Exception.Create('Error parsing SVG');
+      raise ESVGException.Create(IMAGE32_ERROR_PARSING_SVG_TEXT);
     UpdateSizeInfo(100, 100);
   end;
 end;

@@ -15,7 +15,7 @@ uses
   Vcl.ImgList,
   SVGInterfaces,
   SVGIconImageCollection, SVGIconImage, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  SVGIconImageListBase, SVGIconVirtualImageList;
+  SVGIconImageListBase, SVGIconVirtualImageList, Vcl.BaseImageCollection;
 
 type
   TfrmBenchmark = class(TForm)
@@ -74,6 +74,7 @@ uses
   CairoSVGFactory,
   D2DSVGFactory,
   PasSVGFactory,
+  SkiaSVGFactory,
   System.IOUtils,
   System.Math,
   System.StrUtils,
@@ -213,10 +214,13 @@ begin
         memOutput.Lines.Add(Format('Benchmark: Repeat %d times. Draw %svisible.', [speLoops.Value, IfThen(chkDrawVisible.Checked, '', 'in')]));
 
         memOutput.Lines.Add(LLine);
+(*
         RunBenchmark(0);
         RunBenchmark(1);
         RunBenchmark(2);
+*)
         RunBenchmark(3);
+        RunBenchmark(4);
 
         SVGIconImage.ImageIndex := 0;
       finally
@@ -233,6 +237,7 @@ begin
   grpFactory.Items.Add('Direct 2D');
   grpFactory.Items.Add('Cairo');
   grpFactory.Items.Add('Image32');
+  grpFactory.Items.Add('Skia');
   SetFactory(0);
 end;
 
@@ -346,6 +351,8 @@ begin
       SetGlobalSvgFactory(GetCairoSVGFactory);
     3:
       SetGlobalSvgFactory(GetImage32SVGFactory);
+    4:
+      SetGlobalSvgFactory(GetSkiaSVGFactory);
   end;
   grpFactory.ItemIndex := AIndex;
 end;

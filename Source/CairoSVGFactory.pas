@@ -1,7 +1,7 @@
 {-----------------------------------------------------------------------------
  Unit Name: CairoSVGFactory
  Author:    Lübbe Onken
- Purpose:   High-level encapsulation of Cario Svg functionality using
+ Purpose:   High-level encapsulation of Cairo Svg functionality using
             the cairo and rsvg libraries
 -----------------------------------------------------------------------------}
 unit CairoSVGFactory;
@@ -15,7 +15,7 @@ uses
 function GetCairoSVGFactory: ISVGFactory;
 
 resourcestring
-  CAIRO_ERROR_PARSING_SVG_TEXT = 'Error parsing SVG Text: %s';
+  CAIRO_ERROR_PARSING_SVG_TEXT = 'Error parsing SVG Text with Cairo: %s';
 
 implementation
 
@@ -293,7 +293,7 @@ begin
     FWidth := FSvgObject.Dimensions.width;
   except
     on E: Exception do
-      raise Exception.CreateFmt(CAIRO_ERROR_PARSING_SVG_TEXT, [E.Message]);
+      raise ESVGException.CreateFmt(CAIRO_ERROR_PARSING_SVG_TEXT, [E.Message]);
   end;
 end;
 

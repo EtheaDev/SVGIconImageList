@@ -2,8 +2,8 @@ unit Img32.Transform;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.3                                                             *
+* Date      :  21 September 2021                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -439,8 +439,7 @@ begin
 
   //auto-resize the image so it'll fit transformed image
   dstRec := GetTransformBounds(img, matrix);
-  newWidth := RectWidth(dstRec);
-  newHeight := RectHeight((dstRec));
+  RectWidthHeight(dstRec, newWidth, newHeight);
   //auto-translate the image too
   Result := dstRec.TopLeft;
 
@@ -448,7 +447,7 @@ begin
   //the fractional coordinates in the untransformed image
   if not MatrixInvert(matrix) then Exit;
 
-  SetLength(tmp, RectWidth(dstRec) * RectHeight(dstRec));
+  SetLength(tmp, newWidth * newHeight);
   pc := @tmp[0];
 
   for i := dstRec.Top to + dstRec.Bottom -1 do
@@ -579,8 +578,7 @@ begin
   dstPts2 := OffsetPath(dstPts, -rec.Left, -rec.Top);
 
   mat := GetProjectionMatrix(srcPts, dstPts2);
-  w := RectWidth(rec);
-  h := RectHeight(rec);
+  RectWidthHeight(rec, w, h);
   SetLength(tmp, w * h);
   pc := @tmp[0];
   for i :=  0 to h -1 do
@@ -744,8 +742,7 @@ begin
   topPath := InterpolatePathForX(topPath);
   len := Length(topPath);
   inc(rec.Bottom, img.Height);
-  w := RectWidth(rec);
-  h := RectHeight(rec);
+  RectWidthHeight(rec, w, h);
   SetLength(tmp, (w+1) * h);
 
   prevX := topPath[0].X;
@@ -814,8 +811,7 @@ begin
   leftPath := InterpolatePathForY(leftPath);
   len := Length(leftPath);
   inc(rec.Right, img.Width);
-  w := RectWidth(rec);
-  h := RectHeight(rec);
+  RectWidthHeight(rec, w, h);
   SetLength(tmp, w * (h+1));
 
   prevY := leftPath[0].Y;

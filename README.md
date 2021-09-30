@@ -1,6 +1,6 @@
 ﻿# SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## Four advanced components to simplify use of SVG images and SVG icons into ImageList (for VCL and FMX). Choose the preferred engine to render SVG (Delphi Image32, Delphi TSVG, Direct2D or Cairo);
+## Four engines to render SVG (Delphi Image32, Delphi TSVG, Direct2D wrapper or Cairo wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
 ### Actual official version 3.0.0 (VCL+FMX)
 

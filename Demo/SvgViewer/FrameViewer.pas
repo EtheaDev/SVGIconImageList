@@ -26,11 +26,19 @@ implementation
 
 {$R *.dfm}
 
+uses
+  System.Types;
+
 { TFrameView }
 
 procedure TFrameView.DrawFile(const AFileName: string);
 begin
-  FSvg.LoadFromFile(AFileName);
+  try
+    FSvg.LoadFromFile(AFileName);
+  except
+    On E: ESVGException do ;
+    else raise;
+  end;
   SVGPaintBox.Invalidate;
 end;
 
@@ -47,7 +55,7 @@ procedure TFrameView.SVGPaintBoxPaint(Sender: TObject);
 begin
   FSVG.Grayscale := FGrayScale;
   FSVG.PaintTo(SVGPaintBox.Canvas.Handle,
-    TRect.Create(0, 0, SVGPaintBox.Width, SVGPaintBox.Height), True);
+    TRectF.Create(0, 0, SVGPaintBox.Width, SVGPaintBox.Height), True);
 end;
 
 end.

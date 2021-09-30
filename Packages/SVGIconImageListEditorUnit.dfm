@@ -297,7 +297,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             end
             object GrayScaleCheckBox: TCheckBox
               Left = 73
-              Top = 150
+              Top = 149
               Width = 85
               Height = 17
               Caption = 'GrayScale'
@@ -482,7 +482,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       end
       object IconFixedColorLabel: TLabel
         Left = 343
-        Top = 12
+        Top = 13
         Width = 140
         Height = 15
         AutoSize = False
@@ -557,7 +557,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       end
       object FixedColorItemComboBox: TColorBox
         Left = 343
-        Top = 29
+        Top = 30
         Width = 140
         Height = 22
         NoneColorColor = clNone

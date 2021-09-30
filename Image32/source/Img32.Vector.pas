@@ -2,8 +2,8 @@ unit Img32.Vector;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.3                                                             *
+* Date      :  21 September 2021                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -56,6 +56,7 @@ type
   //InflateRect: missing in Delphi 7
   procedure InflateRect(var rec: TRect; dx, dy: integer); overload;
   procedure InflateRect(var rec: TRectD; dx, dy: double); overload;
+  function NormalizeRect(var rect: TRect): Boolean;
 
   function Rectangle(const rec: TRect): TPathD; overload;
   function Rectangle(const rec: TRectD): TPathD; overload;
@@ -73,8 +74,9 @@ type
   function Circle(const pt: TPoint; radius: double): TPathD; overload;
   function Circle(const pt: TPointD; radius: double): TPathD; overload;
 
+  function Star(const rec: TRectD; points: integer; indentFrac: double = 0.4): TPathD; overload;
   function Star(const focalPt: TPointD;
-    innerRadius, outerRadius: double; points: integer): TPathD;
+    innerRadius, outerRadius: double; points: integer): TPathD; overload;
 
   function Arc(const rec: TRectD;
     startAngle, endAngle: double; scale: double = 0): TPathD;
@@ -211,9 +213,11 @@ type
   function Size(cx, cy: integer): TSize;
   function SizeD(cx, cy: double): TSizeD;
 
+  function IsClockwise(const path: TPathD): Boolean;
   function Area(const path: TPathD): Double;
   function RectsEqual(const rec1, rec2: TRect): Boolean;
   procedure OffsetRect(var rec: TRectD; dx, dy: double); overload;
+
 
   function IsValid(value: integer): Boolean; overload;
   function IsValid(value: double): Boolean; overload;
@@ -245,6 +249,7 @@ type
   {$IFDEF INLINING} inline; {$ENDIF}
 
   function RectsOverlap(const rec1, rec2: TRect): Boolean;
+  function IsSameRect(const rec1, rec2: TRect): Boolean;
 
   function IntersectRect(const rec1, rec2: TRectD): TRectD; overload;
   //UnionRect: this behaves differently to types.UnionRect
@@ -587,8 +592,7 @@ begin
   begin
     GetSinCos(angle, sinA, cosA); //the sign of the angle isn't important
     sinA := Abs(sinA); cosA := Abs(cosA);
-    recW := RectWidth(rec);
-    recH := RectHeight(rec);
+    RectWidthHeight(rec, recW, recH);
     w := Ceil((recW *cosA + recH *sinA) /2);
     h := Ceil((recW *sinA + recH *cosA) /2);
     mp := MidPoint(rec);
@@ -640,6 +644,12 @@ function SizeD(cx, cy: double): TSizeD;
 begin
   Result.cx := cx;
   Result.cy := cy;
+end;
+//------------------------------------------------------------------------------
+
+function IsClockwise(const path: TPathD): Boolean;
+begin
+  Result := Area(path) > 0;
 end;
 //------------------------------------------------------------------------------
 
@@ -715,6 +725,13 @@ function RectsOverlap(const rec1, rec2: TRect): Boolean;
 begin
   Result := (rec1.Left < rec2.Right) and (rec1.Right > rec2.Left) and
      (rec1.Top < rec2.Bottom) and (rec1.Bottom > rec2.Top);
+end;
+//------------------------------------------------------------------------------
+
+function IsSameRect(const rec1, rec2: TRect): Boolean;
+begin
+  Result := (rec1.Left = rec2.Left) and (rec1.Top = rec2.Top) and
+    (rec1.Right = rec2.Right) and (rec1.Bottom = rec2.Bottom);
 end;
 //------------------------------------------------------------------------------
 
@@ -2120,6 +2137,31 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function NormalizeRect(var rect: TRect): Boolean;
+var
+  i: integer;
+begin
+  Result := False;
+  with rect do
+  begin
+    if Left > Right then
+    begin
+      i := Left;
+      Left := Right;
+      Right := i;
+      Result := True;
+    end;
+    if Top > Bottom then
+    begin
+      i := Top;
+      Top := Bottom;
+      Bottom := i;
+      Result := True;
+    end;
+  end;
+end;
+//------------------------------------------------------------------------------
+
 function RoundRect(const rec: TRect; radius: integer): TPathD;
 begin
   Result := RoundRect(RectD(rec), PointD(radius, radius));
@@ -2282,6 +2324,37 @@ begin
     delta :=  PointD(delta.X * cosA - delta.Y * sinA,
       delta.Y * cosA + delta.X * sinA);
   end; //rotates clockwise
+end;
+//------------------------------------------------------------------------------
+
+function Star(const rec: TRectD; points: integer; indentFrac: double): TPathD;
+var
+  i: integer;
+  innerOff: double;
+  p, p2: TPathD;
+  rec2: TRectD;
+begin
+  Result := nil;
+  if points < 5 then points := 5
+  else if points > 15 then points := 15;
+  if indentFrac < 0.2 then indentFrac := 0.2
+  else if indentFrac > 0.8 then indentFrac := 0.8;
+  innerOff := Min(rec.Width, rec.Height) * indentFrac * 0.5;
+
+  if not Odd(points) then inc(points);
+  p := Ellipse(rec, points);
+  if not Assigned(p) then Exit;
+  rec2 := rec;
+  Img32.Vector.InflateRect(rec2, -innerOff, -innerOff);
+  if rec2.IsEmpty then
+    p2 := Ellipse(rec, points*2) else
+    p2 := Ellipse(rec2, points*2);
+  SetLength(Result, points*2);
+  for i := 0 to points -1 do
+  begin
+    Result[i*2] := p[i];
+    Result[i*2+1] := p2[i*2+1];
+  end;
 end;
 //------------------------------------------------------------------------------
 

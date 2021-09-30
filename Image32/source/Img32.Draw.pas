@@ -2,8 +2,8 @@ unit Img32.Draw;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.3                                                             *
+* Date      :  21 September 2021                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -703,8 +703,7 @@ var
 begin
   dy := pt1.Y - pt2.Y;
   dx := pt2.X - pt1.X;
-  maxY := RectHeight(clipRec);
-  maxX := RectWidth(clipRec);
+  RectWidthHeight(clipRec, maxX, maxY);
   absDx := abs(dx);
 
   if dy > 0 then
@@ -971,13 +970,12 @@ begin
   //the FastMM4 memory manager is enabled.)
   savedRoundMode := SetRoundMode(rmDown);
 
-  maxW := RectWidth(clipRec2);
-  maxH := RectHeight(clipRec2);
+  RectWidthHeight(clipRec2, maxW, maxH);
   SetLength(scanlines, maxH +1);
   SetLength(windingAccum, maxW +2);
   AllocateScanlines(paths2, scanlines, maxH, maxW-1);
   InitializeScanlines(paths2, scanlines, clipRec2);
-  SetLength(byteBuffer, RectWidth(clipRec2));
+  SetLength(byteBuffer, maxW);
   if byteBuffer = nil then Exit;
 
   scanline := @scanlines[0];

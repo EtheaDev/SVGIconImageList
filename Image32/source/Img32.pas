@@ -2,8 +2,8 @@ unit Img32;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.3                                                             *
+* Date      :  21 September 2021                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -108,6 +108,7 @@ type
     fOnChange: TNotifyEvent;
     fOnResize: TNotifyEvent;
     fUpdateCnt: integer;
+    fNotifyBlocked: Boolean;
     function GetPixel(x,y: Integer): TColor32;
     procedure SetPixel(x,y: Integer; color: TColor32);
     function GetIsBlank: Boolean;
@@ -138,8 +139,8 @@ type
     destructor Destroy; override;
     procedure BeginUpdate;
     procedure EndUpdate;
-    procedure BlockUpdate;    //Changed not called when unblocked.
-    procedure UnblockUpdate;
+    procedure BlockNotify;
+    procedure UnblockNotify;
 
     procedure Assign(src: TImage32);
     procedure AssignTo(dst: TImage32);
@@ -188,11 +189,13 @@ type
     procedure Clear(color: TColor32 = 0); overload;
     procedure Clear(const rec: TRect; color: TColor32 = 0); overload;
     procedure FillRect(rec: TRect; color: TColor32);
+
     procedure ConvertToBoolMask(reference: TColor32;
       tolerance: integer; colorFunc: TCompareFunction;
       maskBg: TColor32 = clWhite32; maskFg: TColor32 = clBlack32);
     procedure ConvertToAlphaMask(reference: TColor32;
       colorFunc: TCompareFunctionEx);
+
     procedure FlipVertical;
     procedure FlipHorizontal;
     procedure PreMultiply;
@@ -207,8 +210,6 @@ type
     procedure Grayscale;
     procedure InvertColors;
     procedure InvertAlphas;
-    procedure Tile(newWidth, newHeight: integer;
-      style: TTileFillStyle = tfsRepeat);
     procedure AdjustHue(percent: Integer);         //ie +/- 100%
     procedure AdjustLuminance(percent: Integer);   //ie +/- 100%
     procedure AdjustSaturation(percent: Integer);  //ie +/- 100%
@@ -228,7 +229,8 @@ type
     procedure ScaleAlpha(scale: double);
     class procedure RegisterImageFormatClass(ext: string;
       bm32ExClass: TImageFormatClass; clipPriority: TClipboardPriority);
-    class function GetImageFormatClass(const ext: string): TImageFormatClass;
+    class function GetImageFormatClass(const ext: string): TImageFormatClass; overload;
+    class function GetImageFormatClass(stream: TStream): TImageFormatClass; overload;
     class function IsRegisteredFormat(const ext: string): Boolean;
     function SaveToFile(filename: string): Boolean;
     function SaveToStream(stream: TStream; const FmtExt: string): Boolean;
@@ -489,17 +491,13 @@ var
   //DivTable[a,b] = a * 255/b (for a &lt;= b)
   DivTable: array [Byte,Byte] of Byte;
 
-  //ScreenScale: Useful for DPIAware sizing of images and controls.
-  ScreenScale: double = 1.0;
-
-  {$IFDEF MSWINDOWS}
-  dpiAwareI   : integer;
-  DpiAwareD   : double;
-  {$ENDIF}
+  dpiAware1   : integer = 1;
+  DpiAwareOne : double  = 1.0;
 
   //AND BECAUSE OLDER DELPHI COMPILERS (OLDER THAN D2006)
   //DON'T SUPPORT RECORD METHODS
-
+  procedure RectWidthHeight(const rec: TRect; out width, height: Integer);
+  {$IFDEF INLINE} inline; {$ENDIF}
   function RectWidth(const rec: TRect): Integer;
   {$IFDEF INLINE} inline; {$ENDIF}
   function RectHeight(const rec: TRect): Integer;
@@ -894,6 +892,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure RectWidthHeight(const rec: TRect; out width, height: Integer);
+begin
+  width := rec.Right - rec.Left;
+  height := rec.Bottom - rec.Top;
+end;
+//------------------------------------------------------------------------------
+
 function RectWidth(const rec: TRect): Integer;
 begin
   Result := rec.Right - rec.Left;
@@ -989,13 +994,13 @@ end;
 
 function DPIAware(val: Integer): Integer;
 begin
-  result := Round( val * ScreenScale);
+  result := Round( val * DpiAwareOne);
 end;
 //------------------------------------------------------------------------------
 
 function DPIAware(val: double): double;
 begin
-  result := val * ScreenScale;
+  result := val * DpiAwareOne;
 end;
 //------------------------------------------------------------------------------
 {$ENDIF}
@@ -1029,10 +1034,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure ScaleRect(var rec: TRect; scale: TPointD);
+procedure ScaleRect(var rec: TRect; x,y: double);
 begin
-  rec.Right := rec.Left + Round((rec.Right - rec.Left) * scale.X);
-  rec.Bottom := rec.Top + Round((rec.Bottom - rec.Top) * scale.Y);
+  rec.Right := rec.Left + Round((rec.Right - rec.Left) * x);
+  rec.Bottom := rec.Top + Round((rec.Bottom - rec.Top) * y);
 end;
 //------------------------------------------------------------------------------
 
@@ -1387,13 +1392,15 @@ end;
 //------------------------------------------------------------------------------
 
 constructor TImage32.Create(src: TImage32; const srcRec: TRect);
+var
+  rec: TRect;
 begin
   fResampler := src.fResampler;
-  fUpdateCnt := 1;
-  SetSize(RectWidth(srcRec), RectHeight(srcRec));
-  if not IsEmptyRect(srcRec) then
-    fPixels := src.CopyPixels(srcRec);
-  fUpdateCnt := 0;
+  types.IntersectRect(rec, src.Bounds, srcRec);
+  RectWidthHeight(rec, fWidth, fHeight);
+  SetLength(fPixels, fWidth * fHeight);
+  if (fWidth = 0) or (fheight = 0) then Exit;
+  fPixels := src.CopyPixels(srcRec);
 end;
 //------------------------------------------------------------------------------
 
@@ -1471,6 +1478,22 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+class function TImage32.GetImageFormatClass(stream: TStream): TImageFormatClass;
+var
+  i: integer;
+begin
+  Result := nil;
+  for i := 0 to imageFormatClassList.count -1 do
+    with PImgFmtRec(imageFormatClassList[i])^ do
+      if Obj.IsValidImageStream(stream) then
+      begin
+        Result := Obj;
+        break;
+      end;
+end;
+//------------------------------------------------------------------------------
+
+
 procedure TImage32.Assign(src: TImage32);
 begin
   if assigned(src) then
@@ -1509,33 +1532,40 @@ end;
 
 procedure TImage32.Resized;
 begin
-  if Assigned(fOnResize) then fOnResize(Self);
-  Changed;
+  if fUpdateCnt <> 0 then Exit
+  else if Assigned(fOnResize) then fOnResize(Self)
+  else Changed;
 end;
 //------------------------------------------------------------------------------
 
 procedure TImage32.BeginUpdate;
 begin
+  if fNotifyBlocked then Exit;
   inc(fUpdateCnt);
 end;
 //------------------------------------------------------------------------------
 
 procedure TImage32.EndUpdate;
 begin
+  if fNotifyBlocked then Exit;
   dec(fUpdateCnt);
-  Changed;
+  if fUpdateCnt = 0 then Changed;
 end;
 //------------------------------------------------------------------------------
 
-procedure TImage32.BlockUpdate;
+procedure TImage32.BlockNotify;
 begin
+  if fUpdateCnt <> 0 then Exit;
   inc(fUpdateCnt);
+  fNotifyBlocked := true;
 end;
 //------------------------------------------------------------------------------
 
-procedure TImage32.UnblockUpdate;
+procedure TImage32.UnblockNotify;
 begin
+  if not fNotifyBlocked then Exit;
   dec(fUpdateCnt);
+  fNotifyBlocked := false;
 end;
 //------------------------------------------------------------------------------
 
@@ -1618,8 +1648,7 @@ var
   pSrc, pDst, pDst2: PColor32;
   recClipped: TRect;
 begin
-  w := RectWidth(rec);
-  h := RectHeight(rec);
+  RectWidthHeight(rec, w,h);
   setLength(result, w * h);
 
   if w * h = 0 then Exit;
@@ -1630,7 +1659,6 @@ begin
     //rec is considered valid even when completely outside the image bounds,
     //and so when that happens we simply return a fully transparent image ...
     FillChar(Result[0], w * h * SizeOf(TColor32), 0);
-    Changed;
     Exit;
   end;
 
@@ -1644,7 +1672,6 @@ begin
       Move(pSrc^, pDst^, w * SizeOf(TColor32));
       inc(pSrc, Width); inc(pDst, w);
     end;
-    Changed;
     Exit;
   end;
 
@@ -1684,22 +1711,26 @@ begin
     FillChar(pDst^, w * SizeOf(TColor32), 0);
     inc(pDst, w);
   end;
-  Changed;
 end;
 //------------------------------------------------------------------------------
 
 procedure TImage32.Crop(const rec: TRect);
 var
   newPixels: TArrayOfColor32;
+  w,h: integer;
 begin
+  RectWidthHeight(rec, w, h);
+  if (w = Width) and (h = Height) then Exit;
   newPixels := CopyPixels(rec);
-  BeginUpdate;
+  BlockNotify;
   try
-    SetSize(RectWidth(rec), RectHeight(rec));
-    if not IsEmptyRect(rec) then fPixels := newPixels;
+    SetSize(w, h);
+    if not IsEmptyRect(rec) then
+      fPixels := newPixels;
   finally
-    EndUpdate;
+    UnblockNotify;
   end;
+  Resized;
 end;
 //------------------------------------------------------------------------------
 
@@ -1719,16 +1750,16 @@ procedure TImage32.SetSize(newWidth, newHeight: Integer; color: TColor32);
 begin
   fwidth := Max(0, newWidth);
   fheight := Max(0, newHeight);
-  fPixels := nil; //prevents unnecessary (and unsafe) pixel copy
+  fPixels := nil; //forces a blank image
   SetLength(fPixels, fwidth * fheight);
   fIsPremultiplied := false;
-  BeginUpdate;
-  try
-    if color > 0 then Clear(color);
-    Resized;
-  finally
-    EndUpdate;
+  if color > 0 then
+  begin
+    BlockNotify;
+    Clear(color);
+    UnblockNotify;
   end;
+  Resized;
 end;
 //------------------------------------------------------------------------------
 
@@ -1737,21 +1768,23 @@ var
   tmp: TImage32;
   rec: TRect;
 begin
+
   if (newWidth <= 0) or (newHeight <= 0) then
   begin
     SetSize(0, 0);
     Exit;
-
-  end;
-  if (newWidth = fwidth) and (newHeight = fheight) then Exit;
-
-  if IsEmpty then
+  end
+  else if (newWidth = fwidth) and (newHeight = fheight) then
+  begin
+    Exit
+  end
+  else if IsEmpty then
   begin
     SetSize(newWidth, newHeight);
     Exit;
   end;
 
-  BeginUpdate;
+  BlockNotify;
   try
     if stretchImage then
     begin
@@ -1771,9 +1804,9 @@ begin
       end;
     end;
   finally
-    Resized;
-    EndUpdate;
+    UnblockNotify;
   end;
+  Resized;
 end;
 //------------------------------------------------------------------------------
 
@@ -1859,10 +1892,12 @@ var
   tmp: TImage32;
   rec2: TRect;
 begin
-  if IsEmpty or (width <= 0) or (height <= 0) then Exit;
+  if IsEmpty or (width <= 0) or (height <= 0) or
+    ((width = self.Width) and (height = self.Height)) then Exit;
+
   sx := width / self.Width;
   sy := height / self.Height;
-  BeginUpdate;
+  BlockNotify;
   try
     if sx <= sy then
     begin
@@ -1892,8 +1927,9 @@ begin
       end;
     end;
   finally
-    EndUpdate;
+    UnblockNotify;
   end;
+  Resized;
 end;
 //------------------------------------------------------------------------------
 
@@ -2074,38 +2110,34 @@ end;
 
 function TImage32.LoadFromFile(const filename: string): Boolean;
 var
-  image32FileFmtClass: TImageFormatClass;
+  stream: TFileStream;
 begin
-  image32FileFmtClass := GetImageFormatClass(ExtractFileExt(filename));
-  result := assigned(image32FileFmtClass);
-  if not result then Exit;
+  Result := false;
+  if not FileExists(filename) then Exit;
 
-  with image32FileFmtClass.Create do
+  stream := TFileStream.Create(filename, fmOpenRead or fmShareDenyNone);
   try
-    result := LoadFromFile(filename, self);
+    result := LoadFromStream(stream);
   finally
-    free;
+    stream.Free;
   end;
 end;
 //------------------------------------------------------------------------------
 
 function TImage32.LoadFromStream(stream: TStream): Boolean;
 var
-  i: integer;
+  ifc: TImageFormatClass;
 begin
-  Result := false;
-  for i := 0 to imageFormatClassList.count -1 do
-    with PImgFmtRec(imageFormatClassList[i])^ do
-      if Obj.IsValidImageStream(stream) then
-      begin
-        with obj.Create do
-        try
-          result := LoadFromStream(stream, self);
-        finally
-          free;
-        end;
-        break;
-      end;
+  ifc := GetImageFormatClass(stream);
+  Result := Assigned(ifc);
+  if not Result then Exit;
+
+  with ifc.Create do
+  try
+    result := LoadFromStream(stream, self);
+  finally
+    free;
+  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -2205,7 +2237,8 @@ function TImage32.CopyBlend(src: TImage32; srcRec, dstRec: TRect;
 var
   tmp: TImage32;
   srcRecClipped, dstRecClipped, r: TRect;
-  scale, scaleSrc, scaleDst: TPointD;
+  scaleX, scaleY: double;
+  w,h, dstW,dstH, srcW,srcH: integer;
 begin
   result := false;
   if IsEmptyRect(srcRec) or IsEmptyRect(dstRec) then Exit;
@@ -2213,28 +2246,30 @@ begin
 
   //get the scaling amount (if any) before
   //dstRec might be adjusted due to clipping ...
-  scale.X := RectWidth(dstRec)/RectWidth(srcRec);
-  scale.Y := RectHeight(dstRec)/RectHeight(srcRec);
+  RectWidthHeight(dstRec, dstW, dstH);
+  RectWidthHeight(srcRec, srcW, srcH);
+  scaleX := dstW / srcW;
+  scaleY := dstH / srcH;
 
   //check if the source rec has been clipped ...
   if not RectsEqual(srcRecClipped, srcRec) then
   begin
     if IsEmptyRect(srcRecClipped) then Exit;
     //the source has been clipped so clip the destination too ...
-    scaleSrc.X := RectWidth(srcRecClipped)/RectWidth(srcRec);
-    scaleSrc.Y := RectHeight(srcRecClipped)/RectHeight(srcRec);
-    ScaleRect(dstRec, scaleSrc);
+    RectWidthHeight(srcRecClipped, w, h);
+    RectWidthHeight(srcRec, srcW, srcH);
+    ScaleRect(dstRec, w / srcW, h / srcH);
     Types.OffsetRect(dstRec,
       srcRecClipped.Left - srcRec.Left,
       srcRecClipped.Top - srcRec.Top);
   end;
 
-  if (scale.X <> 1.0) or (scale.Y <> 1.0) then
+  if (scaleX <> 1.0) or (scaleY <> 1.0) then
   begin
     //scale source (tmp) to the destination then call CopyBlend() again ...
     tmp := TImage32.Create(src, srcRecClipped);
     try
-      tmp.Scale(scale.X, scale.Y);
+      tmp.Scale(scaleX, scaleY);
       result := CopyBlend(tmp, tmp.Bounds, dstRec, blendFunc);
     finally
       tmp.Free;
@@ -2251,9 +2286,9 @@ begin
   if not RectsEqual(dstRecClipped, dstRec) then
   begin
     //the destination rec has been clipped so clip the source too ...
-    scaleDst.X := RectWidth(dstRecClipped)/RectWidth(dstRec);
-    scaleDst.Y := RectHeight(dstRecClipped)/RectHeight(dstRec);
-    ScaleRect(srcRecClipped, scaleDst);
+    RectWidthHeight(dstRecClipped, w, h);
+    RectWidthHeight(dstRec, dstW, dstH);
+    ScaleRect(srcRecClipped, w / dstW, h / dstH);
     Types.OffsetRect(srcRecClipped,
       dstRecClipped.Left - dstRec.Left,
       dstRecClipped.Top - dstRec.Top);
@@ -2303,8 +2338,7 @@ var
 begin
   BeginUpdate;
   try
-    w := RectWidth(srcRect);
-    h := RectHeight(srcRect);
+    RectWidthHeight(srcRect, w,h);
     SetSize(w, h);
     bi := Get32bitBitmapInfoHeader(w, h);
     dc := GetDC(0);
@@ -2342,9 +2376,11 @@ end;
 
 procedure TImage32.CopyToDc(const srcRect: TRect; dstDc: HDC;
   x: Integer = 0; y: Integer = 0; transparent: Boolean = true);
+var
+  recW, recH: integer;
 begin
-  CopyToDc(srcRect, Types.Rect(x,y, x +RectWidth(srcRect),
-    y +RectHeight(srcRect)), dstDc, transparent);
+  RectWidthHeight(srcRect, recW, recH);
+  CopyToDc(srcRect, Types.Rect(x,y, x+recW, y+recH), dstDc, transparent);
 end;
 //------------------------------------------------------------------------------
 
@@ -2363,10 +2399,8 @@ var
 begin
   Types.IntersectRect(rec, srcRect, Bounds);
   if IsEmpty or IsEmptyRect(rec) or IsEmptyRect(dstRect) then Exit;
-  wSrc := RectWidth(rec);
-  hSrc := RectHeight(rec);
-  wDest := RectWidth(dstRect);
-  hDest := RectHeight(dstRect);
+  RectWidthHeight(rec, wSrc, hSrc);
+  RectWidthHeight(dstRect, wDest, hDest);
   x := dstRect.Left;
   y := dstRect.Top;
   inc(x, rec.Left - srcRect.Left);
@@ -2764,91 +2798,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TImage32.Tile(newWidth, newHeight: integer;
-  style: TTileFillStyle = tfsRepeat);
-var
-  i,j, w,h, w2,h2: integer;
-  pc1, pc2: PColor32;
-  tmp: TImage32;
-begin
-  w := Min(Width, newWidth); h := Min(Height, newHeight);
-  w2 := Min(w*2, newWidth);
-  h2 := Min(h*2, newHeight);
-
-  //do the first 4 tile square (as further tiling will be simple copies)
-  tmp := TImage32.Create(self, Types.Rect(0, 0, w, h));
-  try
-    SetSize(newWidth, newHeight);
-    for i := 0 to h -1 do
-    begin
-      pc1 := tmp.PixelRow[i];
-      pc2 := PixelRow[i];
-      Move(pc1^, pc2^, w * SizeOf(TColor32));
-    end;
-
-    case style of
-      tfsMirrorHorz: tmp.FlipHorizontal;
-      tfsMirrorVert: tmp.FlipVertical;
-      tfsRotate180: tmp.Rotate180;
-    end;
-
-    if w2 > w then
-    begin
-      for i := 0 to h -1 do
-      begin
-        pc1 := tmp.PixelRow[i];
-        pc2 := @Pixels[i * newWidth + w];
-        Move(pc1^, pc2^, (w2 - w) * SizeOf(TColor32));
-      end;
-    end;
-
-    if h2 > h then
-    begin
-      for i := 0 to w2 -1 do
-      begin
-        pc1 := @Pixels[i];
-        pc2 := @Pixels[h * newWidth + i];
-        for j := h to h2 -1 do
-        begin
-          pc2^ := pc1^;
-          inc(pc1, newWidth);
-          inc(pc2, newWidth);
-        end;
-      end;
-    end;
-  finally
-    tmp.Free;
-  end;
-
-  //now straight copy the first 4 tile block to fill the rest of the image
-  w := w2; h := h2;
-  while (w2 < newWidth) do
-  begin
-    j := Min(w2 + w, newWidth);
-    for i := 0 to h -1 do
-    begin
-      pc1 := PixelRow[i];
-      pc2 := IncPColor32(pc1, w2);
-      Move(pc1^, pc2^, (j - w2) * SizeOf(TColor32));
-    end;
-    inc(w2, w);
-  end;
-
-  while (h2 < newHeight) do
-  begin
-    j := Min(h2 + h, newHeight);
-    for i := h2 to j -1 do
-    begin
-      pc1 := PixelRow[i-h2];
-      pc2 := PixelRow[i];
-      Move(pc1^, pc2^, newWidth * SizeOf(TColor32));
-    end;
-    inc(h2, h);
-  end;
-  Changed;
-end;
-//------------------------------------------------------------------------------
-
 procedure TImage32.AdjustHue(percent: Integer);
 var
   i: Integer;
@@ -3226,13 +3175,11 @@ begin
   dc := GetDC(0);
   try
     ScreenPixelsY := GetDeviceCaps(dc, LOGPIXELSY);
-    ScreenScale := ScreenPixelsY / 96;
+    DpiAwareOne := ScreenPixelsY / 96;
   finally
     ReleaseDC(0, dc);
   end;
-
-  dpiAwareI   := Round(ScreenScale);
-  DpiAwareD  := ScreenScale;
+  dpiAware1   := Round(DpiAwareOne);
 end;
 {$ENDIF}
 //------------------------------------------------------------------------------

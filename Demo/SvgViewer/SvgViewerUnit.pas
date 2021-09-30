@@ -16,7 +16,7 @@ type
     OpenPanel: TPanel;
     OpenButton: TButton;
     LeftPanel: TPanel;
-    FrameViewCairo: TFrameView;
+    FrameViewSkia: TFrameView;
     FrameViewTSVG: TFrameView;
     ClientPanel: TPanel;
     FrameViewImage32: TFrameView;
@@ -45,13 +45,13 @@ implementation
 
 uses
   Winapi.GDIPAPI, System.IOUtils, System.Types, SVGColor, FileCtrl,
-  PasSVGFactory, Image32SVGFactory, D2DSVGFactory, CairoSVGFactory;
+  PasSVGFactory, Image32SVGFactory, D2DSVGFactory, SkiaSVGFactory;
 
 procedure TForm1.DrawImage(const AFileName: string);
 begin
   FrameViewTSVG.DrawFile(AFileName);
   FrameViewerD2D.DrawFile(AFileName);
-  FrameViewCairo.DrawFile(AFileName);
+  FrameViewSkia.DrawFile(AFileName);
   FrameViewImage32.DrawFile(AFileName);
 end;
 
@@ -83,7 +83,8 @@ begin
     Files := TDirectory.GetFiles(FSourcePath, '*.svg');
     for LFileName in Files do
     begin
-      F := F + [ExtractFileName(LFileName)];
+      SetLength(F, Length(F)+1);
+      F[High(F)] := ExtractFileName(LFileName);
     end;
     ListBox.Items.AddStrings(F);
   end;
@@ -95,7 +96,7 @@ begin
 
   FrameViewTSVG.InitViewer('Delphi TSVG', GetPasSVGFactory);
   FrameViewerD2D.InitViewer('Native Direct2D', GetD2DSVGFactory);
-  FrameViewCairo.InitViewer('Cairo SVG', GetCairoSVGFactory);
+  FrameViewSkia.InitViewer('Skia SVG', GetSkiaSVGFactory);
   FrameViewImage32.InitViewer('Delphi Image32', GetImage32SVGFactory);
 
 end;

@@ -2,8 +2,8 @@ unit Img32.SVG.Writer;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.3                                                             *
+* Date      :  21 September 2021                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -99,18 +99,19 @@ type
   TSvgPathWriter = class(TExBaseElWriter)
   private
     fLastPt   : TPointD;
-    fSvgPaths : TSvgPaths;
+    fSvgPaths : TSvgPath;
     function GetPathCount: integer;
-    function GetCurrentPath: PSvgPath;
-    function GetNewPath: PSvgPath;
-    function GetNewOrAppendSeg(path: PSvgPath; segType: TSvgPathSegType): PSvgPathSeg;
-    procedure AddSegmentValues(seg: PSvgPathSeg;
+    function GetCurrentPath: TSvgSubPath;
+    function GetNewPath: TSvgSubPath;
+    function GetNewOrAppendSeg(path: TSvgSubPath; segType: TSvgPathSegType): TSvgSubPathSeg;
+    procedure AddSegmentValues(seg: TSvgSubPathSeg;
       const values: array of Double);
   public
     constructor Create(parent: TBaseElWriter); override;
+    destructor Destroy; override;
     function  WriteHeader: string; override;
     procedure Clear; override;
-    procedure DeleteLastSegment(path: PSvgPath);
+    procedure DeleteLastSegment(path: TSvgSubPath);
 
     procedure MoveTo(X,Y: double);
     procedure LineHTo(X: double);
@@ -516,71 +517,71 @@ end;
 constructor TSvgPathWriter.Create(parent: TBaseElWriter);
 begin
   inherited;
+  fSvgPaths := TSvgPath.Create;
   fElStr := 'path';
   fFillClr := clBlack32;
 end;
 //------------------------------------------------------------------------------
 
+destructor TSvgPathWriter.Destroy;
+begin
+  fSvgPaths.Free;
+  inherited;
+end;
+//------------------------------------------------------------------------------
+
 function TSvgPathWriter.GetPathCount: integer;
 begin
-  Result := Length(fSvgPaths);
+  Result := fSvgPaths.Count;
 end;
 //------------------------------------------------------------------------------
 
-function TSvgPathWriter.GetNewPath: PSvgPath;
-var
-  len: integer;
+function TSvgPathWriter.GetNewPath: TSvgSubPath;
 begin
   //don't get a new path if the old current path is still empty
-  len := Length(fSvgPaths);
-  if (len = 0) or (Length(fSvgPaths[len -1].segs) > 0) then
+  Result := GetCurrentPath;
+  if (Result.Count > 0) then
   begin
-    SetLength(fSvgPaths, len +1);
-    Result := @fSvgPaths[len];
-    Result.firstPt := NullPointD;
-    Result.segs := nil;
+    Result := fSvgPaths.AddPath;
     Result.firstPt := Self.fLastPt;
-  end else
-    Result := @fSvgPaths[len -1];
+  end;
 end;
 //------------------------------------------------------------------------------
 
-function TSvgPathWriter.GetCurrentPath: PSvgPath;
+function TSvgPathWriter.GetCurrentPath: TSvgSubPath;
 var
   len: integer;
 begin
-  len := Length(fSvgPaths);
-  if len = 0 then Result := GetNewPath
-  else Result := @fSvgPaths[len -1];
+  len := fSvgPaths.Count;
+  if len = 0 then
+    Result := fSvgPaths.AddPath else
+    Result := fSvgPaths[len -1];
 end;
 //------------------------------------------------------------------------------
 
-function TSvgPathWriter.GetNewOrAppendSeg(path: PSvgPath; segType: TSvgPathSegType): PSvgPathSeg;
+function TSvgPathWriter.GetNewOrAppendSeg(path: TSvgSubPath; segType: TSvgPathSegType): TSvgSubPathSeg;
 var
   len: integer;
 begin
-  len := Length(path.segs);
-  if (len > 0) and (path.segs[len -1].segType = segType) then
+  len := path.Count;
+  if (len > 0) and (path[len -1].segType = segType) then
   begin
-    Result := @path.segs[len -1]; //empty segment so safe to use
+    Result := path[len -1]; //empty segment so safe to use
   end else
   begin
-    SetLength(path.segs, len +1);
-    Result := @path.segs[len];
+    Result := path.AddSeg;
     Result.segType := segType;
   end;
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgPathWriter.AddSegmentValues(seg: PSvgPathSeg;
+procedure TSvgPathWriter.AddSegmentValues(seg: TSvgSubPathSeg;
   const values: array of double);
 var
-  i, len, len2: integer;
+  i: integer;
 begin
-  len := Length(seg.vals);
-  len2 := Length(values);
-  setLength(seg.vals, len + len2);
-  for i := 0 to len2 -1 do seg.vals[len + i] := values[i];
+  for i := 0 to High(values) do
+    seg.AddVal(values[i]);
 end;
 //------------------------------------------------------------------------------
 
@@ -590,56 +591,56 @@ var
 begin
   Result := inherited WriteHeader;
   AppendStr(Result, 'd=" ');
-  for i := 0 to High(fSvgPaths) do
+  for i := 0 to fSvgPaths.Count -1 do
   begin
-    segLen := Length(fSvgPaths[i].segs);
+    segLen := fSvgPaths[i].Count;
     if segLen = 0 then Continue;
     AppendPathSegType(Result, dsMove);
     AppendPoint(Result, fSvgPaths[i].firstPt);
     for j := 0 to segLen -1 do
-      with fSvgPaths[i].segs[j] do
+      with fSvgPaths[i][j] do
       begin
         AppendPathSegType(Result, segType);
         case segType of
           dsLine:
-            for k := 0 to High(vals) div 2 do
-              AppendPoint(Result, vals[k*2], vals[k*2 +1]);
+            for k := 0 to (Count -1) div 2 do
+              AppendPoint(Result, Val[k*2], Val[k*2 +1]);
           dsHorz:
-            for k := 0 to High(vals) do
-              AppendFloat(Result, vals[k]);
+            for k := 0 to (Count -1) do
+              AppendFloat(Result, Val[k]);
           dsVert:
-            for k := 0 to High(vals) do
-              AppendFloat(Result, vals[k]);
+            for k := 0 to (Count -1) do
+              AppendFloat(Result, Val[k]);
           dsArc:
-            for k := 0 to High(vals) div 7 do
+            for k := 0 to (Count -1) div 7 do
             begin
-              AppendPoint(Result, vals[k*7], vals[k*7 +1]);
-              AppendFloat(Result, vals[k*7 +2]);
-              AppendInt(Result, vals[k*7 +3]);
-              AppendInt(Result, vals[k*7 +4]);
-              AppendPoint(Result, vals[k*7 +5], vals[k*7 +6]);
+              AppendPoint(Result, Val[k*7], Val[k*7 +1]);
+              AppendFloat(Result, Val[k*7 +2]);
+              AppendInt(Result, Val[k*7 +3]);
+              AppendInt(Result, Val[k*7 +4]);
+              AppendPoint(Result, Val[k*7 +5], Val[k*7 +6]);
             end;
           dsQBez:
-            for k := 0 to High(vals) div 4 do
+            for k := 0 to (Count -1) div 4 do
             begin
-              AppendPoint(Result, vals[k*4], vals[k*4 +1]);
-              AppendPoint(Result, vals[k*4 +2], vals[k*4 +3]);
+              AppendPoint(Result, Val[k*4], Val[k*4 +1]);
+              AppendPoint(Result, Val[k*4 +2], Val[k*4 +3]);
             end;
           dsCBez:
-            for k := 0 to High(vals) div 6 do
+            for k := 0 to (Count -1) div 6 do
             begin
-              AppendPoint(Result, vals[k*6], vals[k*6 +1]);
-              AppendPoint(Result, vals[k*6 +2], vals[k*6 +3]);
-              AppendPoint(Result, vals[k*6 +4], vals[k*6 +5]);
+              AppendPoint(Result, Val[k*6], Val[k*6 +1]);
+              AppendPoint(Result, Val[k*6 +2], Val[k*6 +3]);
+              AppendPoint(Result, Val[k*6 +4], Val[k*6 +5]);
             end;
           dsQSpline:
-            for k := 0 to High(vals) div 2 do
-              AppendPoint(Result, vals[k*2], vals[k*2 +1]);
+            for k := 0 to (Count -1) div 2 do
+              AppendPoint(Result, Val[k*2], Val[k*2 +1]);
           dsCSpline:
-            for k := 0 to High(vals) div 4 do
+            for k := 0 to (Count -1) div 4 do
             begin
-              AppendPoint(Result, vals[k*4], vals[k*4 +1]);
-              AppendPoint(Result, vals[k*4 +2], vals[k*4 +3]);
+              AppendPoint(Result, Val[k*4], Val[k*4 +1]);
+              AppendPoint(Result, Val[k*4 +2], Val[k*4 +3]);
             end;
         end;
       end;
@@ -660,7 +661,7 @@ end;
 
 procedure TSvgPathWriter.MoveTo(X,Y: double);
 var
-  currPath: PSvgPath;
+  currPath: TSvgSubPath;
 begin
   fLastPt := PointD(X,Y);
   currPath := GetNewPath;
@@ -670,8 +671,8 @@ end;
 
 procedure TSvgPathWriter.LineHTo(X: double);
 var
-  currPath  : PSvgPath;
-  currSeg   : PSvgPathSeg;
+  currPath  : TSvgSubPath;
+  currSeg   : TSvgSubPathSeg;
 begin
   currPath := GetCurrentPath;
   currSeg  := GetNewOrAppendSeg(currPath, dsHorz);
@@ -682,8 +683,8 @@ end;
 
 procedure TSvgPathWriter.LineVTo(Y: double);
 var
-  currPath  : PSvgPath;
-  currSeg   : PSvgPathSeg;
+  currPath  : TSvgSubPath;
+  currSeg   : TSvgSubPathSeg;
 begin
   currPath := GetCurrentPath;
   currSeg  := GetNewOrAppendSeg(currPath, dsVert);
@@ -694,8 +695,8 @@ end;
 
 procedure TSvgPathWriter.LineTo(X,Y: double);
 var
-  currPath  : PSvgPath;
-  currSeg   : PSvgPathSeg;
+  currPath  : TSvgSubPath;
+  currSeg   : TSvgSubPathSeg;
 begin
   currPath := GetCurrentPath;
   currSeg  := GetNewOrAppendSeg(currPath, dsLine);
@@ -707,8 +708,8 @@ end;
 procedure TSvgPathWriter.ArcTo(const radii: TSizeD; angle: double;
   arcFlag, sweepFlag: Boolean; const endPt: TPointD);
 var
-  currPath  : PSvgPath;
-  currSeg   : PSvgPathSeg;
+  currPath  : TSvgSubPath;
+  currSeg   : TSvgSubPathSeg;
 const
   boolVal: array[Boolean] of double = (0.0, 1.0);
 begin
@@ -722,8 +723,8 @@ end;
 
 procedure TSvgPathWriter.CubicBezierTo(const ctrl1, ctrl2, endPt: TPointD);
 var
-  currPath  : PSvgPath;
-  currSeg   : PSvgPathSeg;
+  currPath  : TSvgSubPath;
+  currSeg   : TSvgSubPathSeg;
 begin
   currPath := GetCurrentPath;
   currSeg  := GetNewOrAppendSeg(currPath, dsCBez);
@@ -734,8 +735,8 @@ end;
 
 procedure TSvgPathWriter.CubicSplineTo(const ctrl2, endPt: TPointD);
 var
-  currPath  : PSvgPath;
-  currSeg   : PSvgPathSeg;
+  currPath  : TSvgSubPath;
+  currSeg   : TSvgSubPathSeg;
 begin
   currPath := GetCurrentPath;
   currSeg  := GetNewOrAppendSeg(currPath, dsCSpline);
@@ -746,8 +747,8 @@ end;
 
 procedure TSvgPathWriter.QuadBezierTo(const ctrl, endPt: TPointD);
 var
-  currPath  : PSvgPath;
-  currSeg   : PSvgPathSeg;
+  currPath  : TSvgSubPath;
+  currSeg   : TSvgSubPathSeg;
 begin
   currPath := GetCurrentPath;
   currSeg  := GetNewOrAppendSeg(currPath, dsQBez);
@@ -758,8 +759,8 @@ end;
 
 procedure TSvgPathWriter.QuadSplineTo(const endPt: TPointD);
 var
-  currPath  : PSvgPath;
-  currSeg   : PSvgPathSeg;
+  currPath  : TSvgSubPath;
+  currSeg   : TSvgSubPathSeg;
 begin
   currPath := GetCurrentPath;
   currSeg  := GetNewOrAppendSeg(currPath, dsQSpline);
@@ -770,10 +771,10 @@ end;
 
 procedure TSvgPathWriter.ClosePath;
 var
-  currPath  : PSvgPath;
+  currPath  : TSvgSubPath;
 begin
   currPath := GetCurrentPath;
-  if Length(currPath.segs) > 0 then
+  if currPath.Count > 0 then
   begin
     GetNewOrAppendSeg(currPath, dsClose);
     GetNewPath;
@@ -781,12 +782,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgPathWriter.DeleteLastSegment(path: PSvgPath);
-var
-  len: integer;
+procedure TSvgPathWriter.DeleteLastSegment(path: TSvgSubPath);
 begin
-  len := Length(path.segs);
-  if (len > 0) then SetLength(path.segs, len -1);
+  path.DeleteLastSeg;
 end;
 
 //------------------------------------------------------------------------------

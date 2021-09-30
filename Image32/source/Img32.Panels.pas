@@ -2,8 +2,8 @@ unit Img32.Panels;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.1                                                             *
-* Date      :  15 August 2021                                                    *
+* Version   :  3.3                                                             *
+* Date      :  21 September 2021                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  Component that displays images on a TPanel descendant           *
@@ -61,6 +61,7 @@ type
     fOnKeyUp        : TKeyEvent;
     fOnScrolling    : TNotifyEvent;
     fOnZooming      : TNotifyEvent;
+    fOnMouseWheel   : TMouseWheelEvent;
 {$IFDEF GESTURES}
     fLastDistance: integer;
     fLastLocation: TPoint;
@@ -75,8 +76,6 @@ type
     procedure SetScale(scale: double);
     procedure SetScaleMin(value: double);
     procedure SetScaleMax(value: double);
-    //ScaleAtPoint: zooms in or out keeping 'pt' stationary relative to display
-    procedure ScaleAtPoint(scaleDelta: double; const pt: TPoint);
     function  GetColor: TColor;
     procedure SetColor(acolor: TColor);
     procedure SetAutoCenter(value: Boolean);
@@ -116,10 +115,16 @@ type
     function ClientToImage(const clientPt: TPoint): TPoint;
     function ImageToClient(const surfacePt: TPoint): TPoint;
     function RecenterImageAt(const imagePt: TPoint): Boolean;
+    //ScaleAtPoint: zooms in or out keeping 'pt' stationary relative to display
+    procedure ScaleAtPoint(scaleDelta: double; const pt: TPoint);
 
     property InnerClientRect: TRect read GetInnerClientRect;
     property InnerMargin: integer read GetInnerMargin;
     property Offset: TPoint read GetOffset write SetOffset;
+    property ScrollbarHorz: TPanelScrollbar
+      read fScrollbarHorz write fScrollbarHorz;
+    property ScrollbarVert: TPanelScrollbar
+      read fScrollbarVert write fScrollbarVert;
   published
     //AutoCenter: centers the image when its size is less than the display size
     property AutoCenter: Boolean read fAutoCenter write SetAutoCenter;
@@ -139,6 +144,7 @@ type
     //OnKeyDown: optional event for custom keyboard actions
     property OnKeyDown: TKeyEvent read fOnKeyDown write fOnKeyDown;
     property OnKeyUp: TKeyEvent read fOnKeyUp write fOnKeyUp;
+    property OnMouseWheel: TMouseWheelEvent read FOnMouseWheel write FOnMouseWheel;
     property OnScrolling: TNotifyEvent read fOnScrolling write fOnScrolling;
     property OnZooming: TNotifyEvent read fOnZooming write fOnZooming;
   end;
@@ -244,27 +250,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-//Since record methods were only added to Delphi in version D2006,
-//the following functions provide backward compatability
-
-function RectWidth(const rec: TRect): integer;
-{$IFDEF INLINE} inline; {$ENDIF}
-begin
-  result := rec.Right - rec.Left;
-end;
-//------------------------------------------------------------------------------
-
 procedure SetRectWidth(var rec: TRect; width: integer);
 {$IFDEF INLINE} inline; {$ENDIF}
 begin
   rec.Right := rec.Left + width;
-end;
-//------------------------------------------------------------------------------
-
-function RectHeight(const rec: TRect): integer;
-{$IFDEF INLINE} inline; {$ENDIF}
-begin
-  result := rec.Bottom - rec.Top;
 end;
 //------------------------------------------------------------------------------
 
@@ -326,15 +315,11 @@ end;
 
 function MakeDarker(color: TColor; percent: integer): TColor;
 var
-  pcFrac: double;
-  r: TARGB absolute Result;
+  hsl: THsl;
 begin
-  percent := Max(0, Min(100, percent));
-  pcFrac := percent/100;
-  Result := ColorToRGB(color);
-  r.R := r.R - Round(r.R * pcFrac);
-  r.G := r.G - Round(r.G * pcFrac);
-  r.B := r.B - Round(r.B * pcFrac);
+  hsl := RgbToHsl(Color32(color));
+  hsl.lum := ClampByte(hsl.lum - (percent/100 * hsl.lum));
+  Result := HslToRgb(hsl) and $FFFFFF;
 end;
 
 //------------------------------------------------------------------------------
@@ -1068,7 +1053,11 @@ function TBaseImgPanel.DoMouseWheel(Shift: TShiftState;
 var
   isZooming: Boolean;
 begin
-  Result := inherited DoMouseWheel(Shift, WheelDelta, MousePos);
+  Result := false;
+  if Assigned(FOnMouseWheel) then
+    fOnMouseWheel(Self, Shift, WheelDelta, MousePos, Result);
+  if not Result then
+    Result := inherited DoMouseWheel(Shift, WheelDelta, MousePos);
   if Result then Exit;
 
   isZooming := (ssCtrl in Shift) and fAllowZoom;
