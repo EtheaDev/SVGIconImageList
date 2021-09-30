@@ -214,11 +214,9 @@ begin
         memOutput.Lines.Add(Format('Benchmark: Repeat %d times. Draw %svisible.', [speLoops.Value, IfThen(chkDrawVisible.Checked, '', 'in')]));
 
         memOutput.Lines.Add(LLine);
-(*
         RunBenchmark(0);
         RunBenchmark(1);
         RunBenchmark(2);
-*)
         RunBenchmark(3);
         RunBenchmark(4);
 

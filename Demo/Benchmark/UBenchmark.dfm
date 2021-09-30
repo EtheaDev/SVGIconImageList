@@ -10,6 +10,7 @@ object frmBenchmark: TfrmBenchmark
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  OldCreateOrder = True
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 15
