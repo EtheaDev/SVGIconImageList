@@ -2,8 +2,8 @@ unit Img32.Extra;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.3                                                             *
-* Date      :  21 September 2021                                               *
+* Version   :  3.5                                                             *
+* Date      :  31 October 2021                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -25,13 +25,13 @@ uses
 
 type
   TButtonShape = (bsRound, bsSquare, bsDiamond);
-  TButtonAttribute = (baShadow, ba3D);
+  TButtonAttribute = (baShadow, ba3D, baEraseBeneath);
   TButtonAttributes = set of TButtonAttribute;
 
 procedure DrawEdge(img: TImage32; const rec: TRect;
-  topLeftColor, bottomRightColor: TColor32; penWidth: double = 1.0);
-procedure DrawEdgePath(img: TImage32; const path: TPathD;
-  topLeftColor, bottomRightColor: TColor32; penWidth: double = 1.0);
+  topLeftColor, bottomRightColor: TColor32; penWidth: double = 1.0); overload;
+procedure DrawEdge(img: TImage32; const path: TPathD;
+  topLeftColor, bottomRightColor: TColor32; penWidth: double = 1.0); overload;
 
 procedure DrawShadow(img: TImage32; const polygon: TPathD;
   fillRule: TFillRule; depth: double; angleRads: double = angle45;
@@ -48,7 +48,7 @@ procedure DrawGlow(img: TImage32; const polygons: TPathsD;
 //FloodFill: If no CompareFunc is provided, FloodFill will fill whereever
 //adjoining pixels exactly match the starting pixel - Point(x,y).
 procedure FloodFill(img: TImage32; x, y: Integer; newColor: TColor32;
-  compareFunc: TCompareFunction = nil; tolerance: Integer = 0);
+  tolerance: Byte = 0; compareFunc: TCompareFunctionEx = nil);
 
 procedure FastGaussianBlur(img: TImage32;
   const rec: TRect; stdDev: integer; repeats: integer = 2);
@@ -111,15 +111,14 @@ function MakeLighter(color: TColor32; percent: cardinal): TColor32;
 function DrawButton(img: TImage32; const pt: TPointD;
   size: double; color: TColor32 = clNone32;
   buttonShape: TButtonShape = bsRound;
-  buttonAttributes: TButtonAttributes = [baShadow, ba3D]): TPathD;
+  buttonAttributes: TButtonAttributes = [baShadow, ba3D, baEraseBeneath]): TPathD;
 
 //Vectorize: convert an image into polygon vectors
 function Vectorize(img: TImage32; compareColor: TColor32;
   compareFunc: TCompareFunction; colorTolerance: Integer;
   roundingTolerance: integer = 2): TPathsD;
 
-function VectorizeMask(const mask: TArrayOfByte;
-  maskWidth: integer): TPathsD;
+function VectorizeMask(const mask: TArrayOfByte; maskWidth: integer): TPathsD;
 
 //RamerDouglasPeucker: simplifies paths, recursively removing vertices where
 //they deviate no more than 'epsilon' from their adjacent vertices.
@@ -136,8 +135,8 @@ function SmoothToBezier(const path: TPathD; closed: Boolean;
 function SmoothToBezier(const paths: TPathsD; closed: Boolean;
   tolerance: double; minSegLength: double = 2): TPathsD; overload;
 
-function GetFloodFillMask(img: TImage32; x, y: Integer;
-  compareFunc: TCompareFunction; tolerance: Integer): TArrayOfByte;
+function GetFloodFillMask(imgIn, imgMaskOut: TImage32; x, y: Integer;
+  tolerance: Byte; compareFunc: TCompareFunctionEx): Boolean;
 
 procedure SymmetricCropTransparent(img: TImage32);
 
@@ -155,8 +154,7 @@ uses
   Img32.Transform;
 
 const
-  FloodFillDefaultRGBTolerance: byte = 20;
-  FloodFillDefaultHueTolerance: byte = 1;
+  FloodFillDefaultRGBTolerance: byte = 64;
   MaxBlur = 100;
 
 type
@@ -253,9 +251,9 @@ begin
   begin
     with rec do
     begin
-      p := MakePathD([left, bottom, left, top, right, top]);
+      p := Img32.Vector.MakePathD([left, bottom, left, top, right, top]);
       DrawLine(img, p, penWidth, topLeftColor, esButt);
-      p := MakePathD([right, top, right, bottom, left, bottom]);
+      p := Img32.Vector.MakePathD([right, top, right, bottom, left, bottom]);
       DrawLine(img, p, penWidth, bottomRightColor, esButt);
     end;
   end else
@@ -263,33 +261,33 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure DrawEdgePath(img: TImage32; const path: TPathD;
+procedure DrawEdge(img: TImage32; const path: TPathD;
   topLeftColor, bottomRightColor: TColor32; penWidth: double = 1.0);
 var
-  i, len: integer;
-  angle: double;
+  i, highI, deg: integer;
+  frac: double;
   p: TPathD;
-  lp: TPointD;
   c: TColor32;
+const
+  RadToDeg = 180/PI;
 begin
-  len := Length(path);
-  if len < 3 then Exit;
+  highI := high(path);
+  if highI < 2 then Exit;
   SetLength(p, 2);
-  lp := path[len -1];
-  for i := 0 to High(path) do
+  p[0] := path[highI];
+  for i := 0 to highI do
   begin
-    angle := GetAngle(lp, path[i]);
-    if angle < -angle135 then                             //-180..-135
-      c := GradientColor(topLeftColor, bottomRightColor,
-        (-angle-angle135)/angle45)
-    else if angle <= angle0 then c := topLeftColor        //-135..0
-    else if angle < angle45 then
-      c := GradientColor(topLeftColor, bottomRightColor,  //0..45
-        angle/angle45)
-    else c := bottomRightColor;
-    p[0] := lp; p[1] := path[i];
+    deg := Round(GetAngle(p[0], path[i]) * RadToDeg);
+    case deg of
+      -180..-136: frac := (-deg-135)/45;
+      -135..0   : frac := 0;
+      1..44     : frac := deg/45;
+      else        frac := 1;
+    end;
+    c := GradientColor(topLeftColor, bottomRightColor, frac);
+    p[1] := path[i];
     DrawLine(img, p, penWidth, c, esButt);
-    lp := path[i];
+    p[0] := p[1];
   end;
 end;
 //------------------------------------------------------------------------------
@@ -431,7 +429,7 @@ begin
       for j := 0 to img.Width -1 do
       begin
         if (j + 1) mod hatchSize = 0 then hatch := not hatch;
-        pc^ := BlendToOpaque(colors[hatch], pc^);
+        pc^ := BlendToOpaque(pc^, colors[hatch]);
        inc(pc);
       end;
     end;
@@ -498,6 +496,7 @@ var
   c2: TARGB absolute color2;
 begin
   result := Abs(c1.R - c2.R) + Abs(c1.G - c2.G) + Abs(c1.B - c2.B);
+  result := (result * 341) shr 10; //divide by 3
 end;
 //------------------------------------------------------------------------------
 
@@ -769,12 +768,14 @@ var
   rec: TRectD;
   lightSize, lightAngle: double;
 begin
-  img.Clear;
   if (size < 5) then Exit;
   radius := size * 0.5;
   lightSize := radius * 0.25;
 
   rec := RectD(pt.X -radius, pt.Y -radius, pt.X +radius, pt.Y +radius);
+  if baEraseBeneath in buttonAttributes then
+    img.Clear(Rect(rec));
+
   case buttonShape of
     bsDiamond:
       begin
@@ -868,12 +869,9 @@ end;
 
 procedure PencilEffect(img: TImage32; intensity: integer);
 var
-  w,h: integer;
   img2: TImage32;
 begin
-  w := img.Width; h := img.Height;
-  if w * h = 0 then Exit;
-
+  if img.IsEmpty then Exit;
   intensity := max(1, min(10, intensity));
   img.Grayscale;
   img2 := TImage32.Create(img);
@@ -891,7 +889,7 @@ procedure TraceContours(img: TImage32; intensity: integer);
 var
   i,j, w,h: integer;
   tmp, tmp2: TArrayOfColor32;
-  s: PColor32;
+  s, s2: PColor32;
   d: PARGB;
 begin
   w := img.Width; h := img.Height;
@@ -901,10 +899,11 @@ begin
   s := img.PixelRow[0]; d := @tmp[0];
   for j := 0 to h-1 do
   begin
+    s2 := IncPColor32(s, 1);
     for i := 0 to w-2 do
     begin
-      d.A := Min($FF, ColorDifference(s^, IncPColor32(s, 1)^));
-      inc(s); inc(d);
+      d.A := ColorDifference(s^, s2^);
+      inc(s); inc(s2); inc(d);
     end;
     inc(s); inc(d);
   end;
@@ -912,10 +911,11 @@ begin
   for j := 0 to w-1 do
   begin
     s := @tmp[j]; d := @tmp2[j];
+    s2 := IncPColor32(s, w);
     for i := 0 to h-2 do
     begin
-      d.A := Min($FF, AlphaAverage(s^, IncPColor32(s, w)^));
-      inc(s, w); inc(d, w);
+      d.A := AlphaAverage(s^, s2^);
+      inc(s, w); inc(s2, w); inc(d, w);
     end;
   end;
   Move(tmp2[0], img.PixelBase^, w * h * sizeOf(TColor32));
@@ -927,7 +927,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-// FloodFill - and support functions
+// FLOODFILL - AND SUPPORT FUNCTIONS
 //------------------------------------------------------------------------------
 
 type
@@ -942,35 +942,35 @@ type
 
   TFloodFillStack = class
     first     : PFloodFillRec;
-    maxY      : Integer;
-    constructor Create(maxY: Integer);
+    maxY      : integer;
+    constructor Create(maxY: integer);
     destructor Destroy; override;
     procedure Push(xLeft, xRight,y, direction: Integer);
     procedure Pop(out xLeft, xRight,y, direction: Integer);
     function IsEmpty: Boolean;
   end;
 
-  TFloodFillMask = {$IFDEF RECORD_METHODS} record {$ELSE} object {$ENDIF}
-    mask         : TArrayOfByte;
-    width        : Integer;
-    height       : Integer;
-    tolerance    : Integer;
-    initialColor : TColor32;
-    colorsBase   : PColor32Array;
+  TFloodFillMask = class
+  private
+    img          : TImage32;
+    mask         : TImage32;
     colorsRow    : PColor32Array;
-    maskRow      : PByteArray;
-    compareFunc  : TCompareFunction;
-    procedure Reset(w, h, x, y: Integer; pixelBase: PColor32;
-      compFunc: TCompareFunction; aTolerance: Integer = 0);
+    maskRow      : PColor32Array;
+    initialColor : TColor32;
+    compareFunc  : TCompareFunctionEx;
+    tolerance    : Integer;
+  public
+    function Execute(imgIn, imgMaskOut: TImage32; x,y: integer;
+      aTolerance: Byte = 0; compFunc: TCompareFunctionEx = nil): Boolean;
     procedure SetCurrentY(y: Integer);
     function IsMatch(x: Integer): Boolean;
   end;
 
-  //----------------------------
-  // TFloodFillStack methods
-  //----------------------------
+//------------------------------------------------------------------------------
+// TFloodFillStack methods
+//------------------------------------------------------------------------------
 
-constructor TFloodFillStack.Create(maxY: Integer);
+constructor TFloodFillStack.Create(maxY: integer);
 begin
   self.maxY := maxY;
 end;
@@ -993,8 +993,8 @@ procedure TFloodFillStack.Push(xLeft, xRight, y, direction: Integer);
 var
   ffr: PFloodFillRec;
 begin
-  if ((y = 0) and (direction = -1)) or
-    ((y = maxY) and (direction = 1)) then Exit;
+  if ((y <= 0) and (direction = -1)) or
+    ((y >= maxY) and (direction = 1)) then Exit;
   new(ffr);
   ffr.xLeft  := xLeft;
   ffr.xRight := xRight;
@@ -1024,93 +1024,68 @@ begin
   result := not assigned(first);
 end;
 
-  //----------------------------
-  // TFloodFillMask methods
-  //----------------------------
-
-procedure TFloodFillMask.Reset(w, h, x, y: Integer;
-  pixelBase: PColor32; compFunc: TCompareFunction; aTolerance: Integer);
-begin
-   mask := nil; //clear a existing mask
-
-   //create a mask the size of the image
-   setLength(mask, w * h);
-   Self.width := w;
-   Self.height := h;
-   colorsBase := PColor32Array(pixelBase);
-   Self.initialColor := colorsBase[x + y * w];
-   Self.compareFunc := compFunc;
-   Self.tolerance := aTolerance;
-   //Self.colorsRow and Self.maskRow are left undefined here
-end;
+//------------------------------------------------------------------------------
+// TFloodFillMask methods
 //------------------------------------------------------------------------------
 
-procedure TFloodFillMask.SetCurrentY(y: Integer);
-begin
-  colorsRow := @colorsBase[y * width];
-  maskRow := @mask[y * width];
-end;
-//------------------------------------------------------------------------------
-
-function TFloodFillMask.IsMatch(x: Integer): Boolean;
-begin
-  result := (maskRow[x] = 0) and
-    compareFunc(initialColor, colorsRow[x], tolerance);
-  if result then maskRow[x] := 1;
-end;
-//------------------------------------------------------------------------------
-
-function GetFloodFillMask(img: TImage32; x, y: Integer;
-  compareFunc: TCompareFunction; tolerance: Integer): TArrayOfByte;
+function TFloodFillMask.Execute(imgIn, imgMaskOut: TImage32; x,y: integer;
+  aTolerance: Byte; compFunc: TCompareFunctionEx): Boolean;
 var
-  xl, xr, xr2, dirY: Integer;
-  maxX, maxY: Integer;
-  ffs: TFloodFillStack;
-  ffm: TFloodFillMask;
+  ffs          : TFloodFillStack;
+  w,h          : integer;
+  xl, xr, xr2  : Integer;
+  maxX         : Integer;
+  dirY         : Integer;
 begin
-  result := nil;
-  if (x < 0) or (x >= img.Width) or (y < 0) or (y >= img.Height) then
-    Exit;
-  maxX := img.Width -1;
-  maxY := img.Height -1;
+  Result := Assigned(imgIn) and Assigned(imgMaskOut) and
+    InRange(x,0,imgIn.Width -1) and InRange(y,0,imgIn.Height -1);
+  if not Result then Exit;
 
-  if not Assigned(compareFunc) then compareFunc := CompareRGB;
+  w := imgIn.Width; h := imgIn.Height;
+  //make sure the mask is the size of the image
+  imgMaskOut.SetSize(w,h);
 
-  ffs := TFloodFillStack.create(maxY);
+  img   := imgIn;
+  mask  := imgMaskOut;
+  compareFunc := compFunc;
+  tolerance := aTolerance;
+  maxX := w -1;
+
+  ffs := TFloodFillStack.create(h -1);
   try
-    xl := x; xr := x;
-    ffm.Reset(img.Width, img.Height, x, y,
-      img.PixelBase, compareFunc, tolerance);
-    ffm.SetCurrentY(y);
-    ffm.IsMatch(x);
+    initialColor := imgIn.Pixel[x, y];
 
-    while (xl > 0) and ffm.IsMatch(xl -1) do dec(xl);
-    while (xr < maxX) and ffm.IsMatch(xr +1) do inc(xr);
+    xl := x; xr := x;
+    SetCurrentY(y);
+    IsMatch(x);
+
+    while (xl > 0) and IsMatch(xl -1) do dec(xl);
+    while (xr < maxX) and IsMatch(xr +1) do inc(xr);
     ffs.Push(xl, xr, y, -1); //down
     ffs.Push(xl, xr, y, 1);  //up
     while not ffs.IsEmpty do
     begin
       ffs.Pop(xl, xr, y, dirY);
-      ffm.SetCurrentY(y);
+      SetCurrentY(y);
       xr2 := xl;
       //check left ...
-      if ffm.IsMatch(xl) then
+      if IsMatch(xl) then
       begin
-        while (xl > 0) and ffm.IsMatch(xl-1) do dec(xl);
+        while (xl > 0) and IsMatch(xl-1) do dec(xl);
         if xl <= xr2 -2 then
           ffs.Push(xl, xr2-2, y, -dirY);
-        while (xr2 < maxX) and ffm.IsMatch(xr2+1) do inc(xr2);
+        while (xr2 < maxX) and IsMatch(xr2+1) do inc(xr2);
         ffs.Push(xl, xr2, y, dirY);
         if xr2 >= xr +2 then
           ffs.Push(xr+2, xr2, y, -dirY);
         xl := xr2 +2;
       end;
       //check right ...
-      while (xl <= xr) and not ffm.IsMatch(xl) do inc(xl);
+      while (xl <= xr) and not IsMatch(xl) do inc(xl);
       while (xl <= xr) do
       begin
         xr2 := xl;
-        while (xr2 < maxX) and ffm.IsMatch(xr2+1) do inc(xr2);
+        while (xr2 < maxX) and IsMatch(xr2+1) do inc(xr2);
         ffs.Push(xl, xr2, y, dirY);
         if xr2 >= xr +2 then
         begin
@@ -1118,93 +1093,87 @@ begin
           break;
         end;
         inc(xl, 2);
-        while (xl <= xr) and not ffm.IsMatch(xl) do inc(xl);
+        while (xl <= xr) and not IsMatch(xl) do inc(xl);
       end;
     end;
-    result := ffm.mask;
   finally
     ffs.Free;
   end;
 end;
 //------------------------------------------------------------------------------
 
-function GetFloodFillBounds(img: TImage32; x,y: Integer;
-  const byteArray: TArrayOfByte): TRect;
-
-  function RowHasFill(i: Integer): Boolean;
-  var
-    pb, pEnd: PByte;
-  begin
-    result := true;
-    pb := @byteArray[i * img.Width];
-    pEnd := pb + img.Width;
-    while (pb < pEnd) do
-      if Ord(pb^) = 1 then Exit
-      else inc(pb);
-    result := false;
-  end;
-
-  function ColHasFill(i: Integer): Boolean;
-  var
-    pb, pEnd: PByte;
-  begin
-    result := true;
-    pb := @byteArray[i];
-    pEnd := @byteArray[length(byteArray)-1];
-    while (pb < pEnd) do
-      if Ord(pb^) > 0 then Exit
-      else inc(pb, img.Width);
-    result := false;
-  end;
-
+procedure TFloodFillMask.SetCurrentY(y: Integer);
 begin
-  Result := Types.Rect(x,y, x,y);
-  while (Result.Top > 0) and RowHasFill(Result.Top -1) do
-    dec(Result.Top);
-  while (Result.Bottom < img.Height -1) and RowHasFill(Result.Bottom) do
-    inc(Result.Bottom);
-  while (Result.Left > 0) and ColHasFill(Result.Left -1) do
-    dec(Result.Left);
-  while (Result.Right < img.Width -1) and ColHasFill(Result.Right) do
-    inc(Result.Right);
+  colorsRow := PColor32Array(img.PixelRow[y]);
+  maskRow   := PColor32Array(mask.PixelRow[y]);
+end;
+//------------------------------------------------------------------------------
+
+function TFloodFillMask.IsMatch(x: Integer): Boolean;
+var
+  b: Byte;
+begin
+  if (maskRow[x] > 0) then
+    result := false
+  else
+  begin
+    b := compareFunc(initialColor, colorsRow[x]);
+    result := b < tolerance;
+    if Result then
+      maskRow[x] := tolerance - b else
+      maskRow[x] := 1;
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function GetFloodFillMask(imgIn, imgMaskOut: TImage32; x, y: Integer;
+  tolerance: Byte; compareFunc: TCompareFunctionEx): Boolean;
+var
+  ffm: TFloodFillMask;
+begin
+  if not Assigned(compareFunc) then compareFunc := CompareRGBEx;
+  ffm := TFloodFillMask.Create;
+  try
+    Result := ffm.Execute(imgIn, imgMaskOut, x, y, tolerance, compareFunc);
+  finally
+    ffm.Free;
+  end;
 end;
 //------------------------------------------------------------------------------
 
 procedure FloodFill(img: TImage32; x, y: Integer; newColor: TColor32;
-  compareFunc: TCompareFunction; tolerance: Integer);
+  tolerance: Byte; compareFunc: TCompareFunctionEx);
 var
   i: Integer;
-  ba: TArrayOfByte;
-  pb: PByte;
-  pc: PColor32;
+  pc, pm: PColor32;
+  mask: TImage32;
 begin
   if not assigned(compareFunc) then
   begin
-    compareFunc := CompareRGB;
-    tolerance := FloodFillDefaultRGBTolerance;
+    compareFunc := CompareRGBEx;
+    if tolerance = 0 then
+      tolerance := FloodFillDefaultRGBTolerance;
   end;
 
-  if (tolerance < 0) then
-  begin
-    if Addr(compareFunc) = Addr(CompareRGB) then
-      tolerance := FloodFillDefaultRGBTolerance
-    else if Addr(compareFunc) = Addr(CompareHue) then
-      tolerance := FloodFillDefaultHueTolerance;
-  end;
+  mask := TImage32.Create;
+  try
+    if not GetFloodFillMask(img, mask, x, y, tolerance, compareFunc) then
+      Exit;
 
-  ba := GetFloodFillMask(img, x, y, compareFunc, tolerance);
-  if ba = nil then Exit;
-  pb := @ba[0];
-  pc := img.PixelBase;
-  for i := 0 to High(ba) do
-  begin
-    if Ord(pb^) > 0 then pc^ := newColor;
-    inc(pb); inc(pc);
+    pc := img.PixelBase;
+    pm := mask.PixelBase;
+    for i := 0 to img.Width * img.Height -1 do
+    begin
+      if (pm^ > 1) then pc^ := newColor;
+      inc(pm); inc(pc);
+    end;
+  finally
+    mask.free;
   end;
 end;
 
 //------------------------------------------------------------------------------
-// Emboss - and support functions
+// EMBOSS - AND SUPPORT FUNCTIONS
 //------------------------------------------------------------------------------
 
 function IncPWeightColor(pwc: PWeightedColor; cnt: Integer): PWeightedColor;
@@ -1705,8 +1674,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function VectorizeMask(const mask: TArrayOfByte;
-  maskWidth: integer): TPathsD;
+function VectorizeMask(const mask: TArrayOfByte; maskWidth: integer): TPathsD;
 var
   i,j, len, height, blockStart: integer;
   current: TPt2;
@@ -1781,13 +1749,10 @@ var
   prev: TPointD;
   tolSqrd: double;
 begin
+  Result := nil;
   highI := High(poly);
   while  (HighI >= 0) and PointsEqual(poly[highI], poly[0]) do dec(highI);
-  if highI < 1 then
-  begin
-    Result := nil;
-    Exit;
-  end;
+  if highI < 1 then Exit;
   tolSqrd := Sqr(Max(2.02, Min(16.1, tolerance + 0.01)));
   SetLength(Result, highI +1);
   prev := poly[highI];
@@ -1812,6 +1777,7 @@ begin
     TurnsLeft(result[j], Result[0], Result[1]) then
       SetLength(Result, j +1) else
       SetLength(Result, j);
+  if Abs(Area(Result)) < Length(Result) * tolerance/2 then Result := nil;
 end;
 //------------------------------------------------------------------------------
 
@@ -1819,13 +1785,18 @@ function Vectorize(img: TImage32; compareColor: TColor32;
   compareFunc: TCompareFunction; colorTolerance: Integer;
   roundingTolerance: integer): TPathsD;
 var
-  i: integer;
+  i,j: integer;
   mask: TArrayOfByte;
 begin
   mask := GetBoolMask(img, compareColor, compareFunc, colorTolerance);
   Result := VectorizeMask(mask, img.Width);
+  j := 0;
   for i := 0 to high(Result) do
-    Result[i] := Tidy(Result[i], roundingTolerance);
+  begin
+    Result[j] := Tidy(Result[i], roundingTolerance);
+    if Assigned(Result[j]) then inc(j);
+  end;
+  SetLength(Result, j);
 end;
 
 //------------------------------------------------------------------------------

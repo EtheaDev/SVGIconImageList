@@ -77,7 +77,7 @@
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_SymbolReferenceInfo>false</DCC_SymbolReferenceInfo>
         <DCC_DebugInformation>false</DCC_DebugInformation>
     </PropertyGroup>
     <ItemGroup>
@@ -126,7 +126,7 @@
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>
-                <Platform value="Win64">False</Platform>
+                <Platform value="Win64">True</Platform>
             </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>

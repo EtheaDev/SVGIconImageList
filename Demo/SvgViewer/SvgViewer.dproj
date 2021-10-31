@@ -167,11 +167,6 @@
                     <Source Name="MainSource">SvgViewer.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclISOpenOffice7_D10_4.bpl">Ethea InstantSolutions 7 LibreOffice/OpenOffice Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclISRtl7_D10_4.bpl">Ethea InstantSolutions 7 Rtl Library</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclISFLib7_D10_4.bpl">Ethea InstantSolutions 7 Framework Library</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclISVcl7_D10_4.bpl">Ethea InstantSolutions 7 Vcl Library</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp270.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclISReportBuilder6_D10_4.bpl">Ethea InstantSolutions 6 ReportBuilder Components</Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclISRtl6D10_4.bpl">Ethea InstantSolutions 6 Rtl Library</Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclISVcl6_D10_4.bpl">Ethea InstantSolutions 6 Vcl Library</Excluded_Packages>

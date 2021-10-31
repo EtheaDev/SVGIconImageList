@@ -1,8 +1,11 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{25059111-8F77-429C-A2F2-CB529411BC99}</ProjectGuid>
+        <ProjectGuid>{C11AEBB5-616E-45CE-B825-7A8F8B3DDAF9}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
+        <Projects Include="SVGImage32Package.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="SVGIconPackage.dproj">
             <Dependencies/>
         </Projects>
@@ -20,6 +23,15 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
+    <Target Name="SVGImage32Package">
+        <MSBuild Projects="SVGImage32Package.dproj"/>
+    </Target>
+    <Target Name="SVGImage32Package:Clean">
+        <MSBuild Projects="SVGImage32Package.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SVGImage32Package:Make">
+        <MSBuild Projects="SVGImage32Package.dproj" Targets="Make"/>
+    </Target>
     <Target Name="SVGIconPackage">
         <MSBuild Projects="SVGIconPackage.dproj"/>
     </Target>
@@ -48,13 +60,13 @@
         <MSBuild Projects="dclSVGIconImageList.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="SVGIconPackage;SVGIconImageList;dclSVGIconImageList"/>
+        <CallTarget Targets="SVGImage32Package;SVGIconPackage;SVGIconImageList;dclSVGIconImageList"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="SVGIconPackage:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean"/>
+        <CallTarget Targets="SVGImage32Package:Clean;SVGIconPackage:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="SVGIconPackage:Make;SVGIconImageList:Make;dclSVGIconImageList:Make"/>
+        <CallTarget Targets="SVGImage32Package:Make;SVGIconPackage:Make;SVGIconImageList:Make;dclSVGIconImageList:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

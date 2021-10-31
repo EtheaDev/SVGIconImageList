@@ -24,7 +24,7 @@ interface
 uses
   SysUtils, Classes, Types, Math,
   {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults,{$ENDIF}
-  Img32, Img32.SVG.Core, Img32.Vector, Img32.Draw,
+  Img32, Img32.SVG.Core, Img32.SVG.Path, Img32.Vector, Img32.Draw,
   Img32.Transform, Img32.Text;
 
 {$IFDEF ZEROBASEDSTR}
@@ -103,22 +103,22 @@ type
     function GetPathCount: integer;
     function GetCurrentPath: TSvgSubPath;
     function GetNewPath: TSvgSubPath;
-    function GetNewOrAppendSeg(path: TSvgSubPath; segType: TSvgPathSegType): TSvgSubPathSeg;
-    procedure AddSegmentValues(seg: TSvgSubPathSeg;
-      const values: array of Double);
+  protected
+    function  WriteHeader: string; override;
   public
     constructor Create(parent: TBaseElWriter); override;
     destructor Destroy; override;
-    function  WriteHeader: string; override;
     procedure Clear; override;
-    procedure DeleteLastSegment(path: TSvgSubPath);
+    procedure DeleteLastSegment(subPath: TSvgSubPath);
 
     procedure MoveTo(X,Y: double);
     procedure LineHTo(X: double);
     procedure LineVTo(Y: double);
     procedure LineTo(X,Y: double);
-    procedure ArcTo(const radii: TSizeD; angle: double;
-      arcFlag, sweepFlag: Boolean; const endPt: TPointD);
+    procedure ArcTo(const radii: TPointD; angle: double;
+      arcFlag, sweepFlag: Boolean; const endPt: TPointD); overload;
+    procedure ArcTo(const endPt: TPointD; const rec: TRectD;
+      angle: double; sweepFlag: Boolean); overload;
     procedure CubicBezierTo(const ctrl1, ctrl2, endPt: TPointD);
     procedure CubicSplineTo(const ctrl2, endPt: TPointD);
     procedure QuadBezierTo(const ctrl, endPt: TPointD);
@@ -278,15 +278,15 @@ var
   ch: UTF8Char;
 begin
   case segType of
-    dsMove    : ch := 'M';
-    dsLine    : ch := 'L';
-    dsHorz    : ch := 'H';
-    dsVert    : ch := 'V';
-    dsArc     : ch := 'A';
-    dsQBez    : ch := 'Q';
-    dsCBez    : ch := 'C';
-    dsQSpline : ch := 'T';
-    dsCSpline : ch := 'S';
+    stMove    : ch := 'M';
+    stLine    : ch := 'L';
+    stHorz    : ch := 'H';
+    stVert    : ch := 'V';
+    stArc     : ch := 'A';
+    stQBezier : ch := 'Q';
+    stCBezier : ch := 'C';
+    stQSpline : ch := 'T';
+    stCSpline : ch := 'S';
     else        ch := 'Z';
   end;
   s := Format('%s%s ',[s, ch]);
@@ -541,10 +541,7 @@ begin
   //don't get a new path if the old current path is still empty
   Result := GetCurrentPath;
   if (Result.Count > 0) then
-  begin
     Result := fSvgPaths.AddPath;
-    Result.firstPt := Self.fLastPt;
-  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -559,95 +556,11 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TSvgPathWriter.GetNewOrAppendSeg(path: TSvgSubPath; segType: TSvgPathSegType): TSvgSubPathSeg;
-var
-  len: integer;
-begin
-  len := path.Count;
-  if (len > 0) and (path[len -1].segType = segType) then
-  begin
-    Result := path[len -1]; //empty segment so safe to use
-  end else
-  begin
-    Result := path.AddSeg;
-    Result.segType := segType;
-  end;
-end;
-//------------------------------------------------------------------------------
-
-procedure TSvgPathWriter.AddSegmentValues(seg: TSvgSubPathSeg;
-  const values: array of double);
-var
-  i: integer;
-begin
-  for i := 0 to High(values) do
-    seg.AddVal(values[i]);
-end;
-//------------------------------------------------------------------------------
-
 function TSvgPathWriter.WriteHeader: string;
-var
-  i,j,k, segLen: integer;
 begin
   Result := inherited WriteHeader;
-  AppendStr(Result, 'd=" ');
-  for i := 0 to fSvgPaths.Count -1 do
-  begin
-    segLen := fSvgPaths[i].Count;
-    if segLen = 0 then Continue;
-    AppendPathSegType(Result, dsMove);
-    AppendPoint(Result, fSvgPaths[i].firstPt);
-    for j := 0 to segLen -1 do
-      with fSvgPaths[i][j] do
-      begin
-        AppendPathSegType(Result, segType);
-        case segType of
-          dsLine:
-            for k := 0 to (Count -1) div 2 do
-              AppendPoint(Result, Val[k*2], Val[k*2 +1]);
-          dsHorz:
-            for k := 0 to (Count -1) do
-              AppendFloat(Result, Val[k]);
-          dsVert:
-            for k := 0 to (Count -1) do
-              AppendFloat(Result, Val[k]);
-          dsArc:
-            for k := 0 to (Count -1) div 7 do
-            begin
-              AppendPoint(Result, Val[k*7], Val[k*7 +1]);
-              AppendFloat(Result, Val[k*7 +2]);
-              AppendInt(Result, Val[k*7 +3]);
-              AppendInt(Result, Val[k*7 +4]);
-              AppendPoint(Result, Val[k*7 +5], Val[k*7 +6]);
-            end;
-          dsQBez:
-            for k := 0 to (Count -1) div 4 do
-            begin
-              AppendPoint(Result, Val[k*4], Val[k*4 +1]);
-              AppendPoint(Result, Val[k*4 +2], Val[k*4 +3]);
-            end;
-          dsCBez:
-            for k := 0 to (Count -1) div 6 do
-            begin
-              AppendPoint(Result, Val[k*6], Val[k*6 +1]);
-              AppendPoint(Result, Val[k*6 +2], Val[k*6 +3]);
-              AppendPoint(Result, Val[k*6 +4], Val[k*6 +5]);
-            end;
-          dsQSpline:
-            for k := 0 to (Count -1) div 2 do
-              AppendPoint(Result, Val[k*2], Val[k*2 +1]);
-          dsCSpline:
-            for k := 0 to (Count -1) div 4 do
-            begin
-              AppendPoint(Result, Val[k*4], Val[k*4 +1]);
-              AppendPoint(Result, Val[k*4 +2], Val[k*4 +3]);
-            end;
-        end;
-      end;
-    if fSvgPaths[i].isClosed then
-      AppendPathSegType(Result, dsClose);
-  end;
-  Result := Result + '"';
+  Result := Result +
+    Format('d="%s"', [fSvgPaths.GetStringDef(true, 2)]);
 end;
 //------------------------------------------------------------------------------
 
@@ -660,23 +573,24 @@ end;
 //------------------------------------------------------------------------------
 
 procedure TSvgPathWriter.MoveTo(X,Y: double);
-var
-  currPath: TSvgSubPath;
 begin
   fLastPt := PointD(X,Y);
-  currPath := GetNewPath;
-  currPath.firstPt := fLastPt;
+  GetNewPath;
 end;
 //------------------------------------------------------------------------------
 
 procedure TSvgPathWriter.LineHTo(X: double);
 var
   currPath  : TSvgSubPath;
-  currSeg   : TSvgSubPathSeg;
+  lastSeg   : TSvgPathSeg;
+  path      : TPathD;
 begin
-  currPath := GetCurrentPath;
-  currSeg  := GetNewOrAppendSeg(currPath, dsHorz);
-  AddSegmentValues(currSeg, [X]);
+  currPath  := GetCurrentPath;
+  lastSeg   := currPath.GetLastSeg;
+  path      := MakePathD([X, fLastPt.Y]);
+  if Assigned(lastSeg) and (lastSeg is TSvgHSegment) then
+    lastSeg.ExtendSeg(path) else
+    currPath.AddHSeg(fLastPt, path);
   fLastPt.X := X;
 end;
 //------------------------------------------------------------------------------
@@ -684,11 +598,15 @@ end;
 procedure TSvgPathWriter.LineVTo(Y: double);
 var
   currPath  : TSvgSubPath;
-  currSeg   : TSvgSubPathSeg;
+  lastSeg   : TSvgPathSeg;
+  path      : TPathD;
 begin
-  currPath := GetCurrentPath;
-  currSeg  := GetNewOrAppendSeg(currPath, dsVert);
-  AddSegmentValues(currSeg, [Y]);
+  currPath  := GetCurrentPath;
+  lastSeg   := currPath.GetLastSeg;
+  path      := MakePathD([fLastPt.X, Y]);
+  if Assigned(lastSeg) and (lastSeg is TSvgVSegment) then
+    lastSeg.ExtendSeg(path) else
+    currPath.AddVSeg(fLastPt, path);
   fLastPt.Y := Y;
 end;
 //------------------------------------------------------------------------------
@@ -696,27 +614,42 @@ end;
 procedure TSvgPathWriter.LineTo(X,Y: double);
 var
   currPath  : TSvgSubPath;
-  currSeg   : TSvgSubPathSeg;
+  lastSeg   : TSvgPathSeg;
+  path      : TPathD;
 begin
-  currPath := GetCurrentPath;
-  currSeg  := GetNewOrAppendSeg(currPath, dsLine);
-  AddSegmentValues(currSeg, [X, Y]);
-  fLastPt := PointD(X,Y);
+  currPath  := GetCurrentPath;
+  lastSeg   := currPath.GetLastSeg;
+  path      := MakePathD([X, Y]);
+  if Assigned(lastSeg) and (lastSeg is TSvgLSegment) then
+    lastSeg.ExtendSeg(path) else
+    currPath.AddLSeg(fLastPt, path);
+  fLastPt := path[0];
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgPathWriter.ArcTo(const radii: TSizeD; angle: double;
+procedure TSvgPathWriter.ArcTo(const radii: TPointD; angle: double;
   arcFlag, sweepFlag: Boolean; const endPt: TPointD);
 var
   currPath  : TSvgSubPath;
-  currSeg   : TSvgSubPathSeg;
-const
-  boolVal: array[Boolean] of double = (0.0, 1.0);
+  rec       : TRectD;
 begin
+  rec := GetSvgArcInfoRect(fLastPt, endPt, radii, angle, arcFlag, sweepFlag);
+  if rec.IsEmpty then Exit;
+
   currPath := GetCurrentPath;
-  currSeg  := GetNewOrAppendSeg(currPath, dsArc);
-  AddSegmentValues(currSeg, [radii.cx, radii.cy, angle,
-    boolVal[arcFlag], boolVal[sweepFlag], endPt.X, endPt.Y]);
+  currPath.AddASeg(fLastPt, endPt, rec, angle, sweepFlag);
+  fLastPt := endPt;
+end;
+//------------------------------------------------------------------------------
+
+procedure TSvgPathWriter.ArcTo(const endPt: TPointD; const rec: TRectD;
+  angle: double; sweepFlag: Boolean);
+var
+  currPath  : TSvgSubPath;
+begin
+  if rec.IsEmpty then Exit;
+  currPath := GetCurrentPath;
+  currPath.AddASeg(fLastPt, endPt, rec, angle, sweepFlag);
   fLastPt := endPt;
 end;
 //------------------------------------------------------------------------------
@@ -724,11 +657,16 @@ end;
 procedure TSvgPathWriter.CubicBezierTo(const ctrl1, ctrl2, endPt: TPointD);
 var
   currPath  : TSvgSubPath;
-  currSeg   : TSvgSubPathSeg;
+  lastSeg   : TSvgPathSeg;
+  path      : TPathD;
 begin
-  currPath := GetCurrentPath;
-  currSeg  := GetNewOrAppendSeg(currPath, dsCBez);
-  AddSegmentValues(currSeg, [ctrl1.X,ctrl1.Y, ctrl2.X,ctrl2.Y, endPt.X,endPt.Y]);
+  currPath  := GetCurrentPath;
+  lastSeg   := currPath.GetLastSeg;
+  SetLength(path, 3);
+  path[0] := ctrl1; path[1] := ctrl2; path[2] := endPt;
+  if Assigned(lastSeg) and (lastSeg is TSvgCSegment) then
+    lastSeg.ExtendSeg(path) else
+    currPath.AddCSeg(fLastPt, path);
   fLastPt := endPt;
 end;
 //------------------------------------------------------------------------------
@@ -736,11 +674,16 @@ end;
 procedure TSvgPathWriter.CubicSplineTo(const ctrl2, endPt: TPointD);
 var
   currPath  : TSvgSubPath;
-  currSeg   : TSvgSubPathSeg;
+  lastSeg   : TSvgPathSeg;
+  path      : TPathD;
 begin
-  currPath := GetCurrentPath;
-  currSeg  := GetNewOrAppendSeg(currPath, dsCSpline);
-  AddSegmentValues(currSeg, [ctrl2.X,ctrl2.Y, endPt.X,endPt.Y]);
+  currPath  := GetCurrentPath;
+  lastSeg   := currPath.GetLastSeg;
+  SetLength(path, 2);
+  path[0] := ctrl2; path[1] := endPt;
+  if Assigned(lastSeg) and (lastSeg is TSvgSSegment) then
+    lastSeg.ExtendSeg(path) else
+    currPath.AddSSeg(fLastPt, path);
   fLastPt := endPt;
 end;
 //------------------------------------------------------------------------------
@@ -748,11 +691,16 @@ end;
 procedure TSvgPathWriter.QuadBezierTo(const ctrl, endPt: TPointD);
 var
   currPath  : TSvgSubPath;
-  currSeg   : TSvgSubPathSeg;
+  lastSeg   : TSvgPathSeg;
+  path      : TPathD;
 begin
-  currPath := GetCurrentPath;
-  currSeg  := GetNewOrAppendSeg(currPath, dsQBez);
-  AddSegmentValues(currSeg, [ctrl.X,ctrl.Y, endPt.X,endPt.Y]);
+  currPath  := GetCurrentPath;
+  lastSeg   := currPath.GetLastSeg;
+  SetLength(path, 2);
+  path[0] := ctrl; path[1] := endPt;
+  if Assigned(lastSeg) and (lastSeg is TSvgQSegment) then
+    lastSeg.ExtendSeg(path) else
+    currPath.AddQSeg(fLastPt, path);
   fLastPt := endPt;
 end;
 //------------------------------------------------------------------------------
@@ -760,11 +708,16 @@ end;
 procedure TSvgPathWriter.QuadSplineTo(const endPt: TPointD);
 var
   currPath  : TSvgSubPath;
-  currSeg   : TSvgSubPathSeg;
+  lastSeg   : TSvgPathSeg;
+  path      : TPathD;
 begin
-  currPath := GetCurrentPath;
-  currSeg  := GetNewOrAppendSeg(currPath, dsQSpline);
-  AddSegmentValues(currSeg, [endPt.X,endPt.Y]);
+  currPath  := GetCurrentPath;
+  lastSeg   := currPath.GetLastSeg;
+  SetLength(path, 1);
+  path[0] := endPt;
+  if Assigned(lastSeg) and (lastSeg is TSvgTSegment) then
+    lastSeg.ExtendSeg(path) else
+    currPath.AddTSeg(fLastPt, path);
   fLastPt := endPt;
 end;
 //------------------------------------------------------------------------------
@@ -774,17 +727,14 @@ var
   currPath  : TSvgSubPath;
 begin
   currPath := GetCurrentPath;
-  if currPath.Count > 0 then
-  begin
-    GetNewOrAppendSeg(currPath, dsClose);
-    GetNewPath;
-  end;
+  if (currPath.Count > 0) and not currPath.isClosed then
+    currPath.AddZSeg(fLastPt, currPath.GetFirstPt);
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgPathWriter.DeleteLastSegment(path: TSvgSubPath);
+procedure TSvgPathWriter.DeleteLastSegment(subPath: TSvgSubPath);
 begin
-  path.DeleteLastSeg;
+  subPath.DeleteLastSeg;
 end;
 
 //------------------------------------------------------------------------------

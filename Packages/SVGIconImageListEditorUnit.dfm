@@ -193,17 +193,17 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           end
           object ExportButton: TButton
             Left = 4
-            Top = 138
+            Top = 169
             Width = 135
             Height = 25
-            Caption = '&Export svg files...'
+            Caption = 'Export &svg files...'
             Enabled = False
             TabOrder = 4
             OnClick = ExportButtonClick
           end
           object SetCategoriesButton: TButton
             Left = 4
-            Top = 169
+            Top = 138
             Width = 135
             Height = 25
             Caption = '&Set Categories...'
@@ -219,6 +219,16 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             Enabled = False
             TabOrder = 2
             OnClick = DeleteAllButtonClick
+          end
+          object ExportPngButton: TButton
+            Left = 4
+            Top = 200
+            Width = 135
+            Height = 25
+            Caption = 'Export &png files...'
+            Enabled = False
+            TabOrder = 6
+            OnClick = ExportPngButtonClick
           end
         end
         object ImagesPanel: TPanel
@@ -437,7 +447,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         Width = 85
         Height = 25
         Caption = 'Reformat &XML'
-        TabOrder = 3
+        TabOrder = 2
         OnClick = ReformatXMLButtonClick
       end
       object DeleteButton: TButton
@@ -448,16 +458,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         Caption = '&Delete'
         TabOrder = 1
         OnClick = DeleteButtonClick
-      end
-      object ExportPngButton: TButton
-        Left = 6
-        Top = 68
-        Width = 85
-        Height = 25
-        Caption = '&Export png...'
-        Enabled = False
-        TabOrder = 2
-        OnClick = ExportPngButtonClick
       end
     end
     object ItemGroupBox: TGroupBox

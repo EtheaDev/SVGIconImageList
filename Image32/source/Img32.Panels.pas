@@ -55,7 +55,8 @@ type
     fScrollbarHorz  : TPanelScrollbar;
     fAutoCenter     : Boolean;
     fAllowZoom      : Boolean;
-    fAllowScroll    : Boolean;
+    fAllowKeyScroll : Boolean;
+    fAllowScrnScroll: Boolean;
     fShowScrollBtns : TShowScrollBtns;
     fOnKeyDown      : TKeyEvent;
     fOnKeyUp        : TKeyEvent;
@@ -139,7 +140,8 @@ type
     //ShowScrollButtons: defaults to ssbFocused (ie only when Panel has focus)
     property ShowScrollButtons : TShowScrollBtns
       read fShowScrollBtns write SetShowScrollButtons;
-    property AllowScroll: Boolean read fAllowScroll write fAllowScroll;
+    property AllowKeyScroll: Boolean read fAllowKeyScroll write fAllowKeyScroll;
+    property AllowScrnScroll: Boolean read fAllowScrnScroll write fAllowScrnScroll;
     property AllowZoom: Boolean read fAllowZoom write SetAllowZoom;
     //OnKeyDown: optional event for custom keyboard actions
     property OnKeyDown: TKeyEvent read fOnKeyDown write fOnKeyDown;
@@ -168,6 +170,8 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure  ClearImage;
+    //CopyToImage: avoids a full redraw
+    procedure  CopyToImage(srcImg: TImage32; const rec: TRect);
     function   CopyToClipboard: Boolean;
     function   PasteFromClipboard: Boolean;
 
@@ -222,6 +226,16 @@ type
   end;
 
 //------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+
+function RgbColor(rgb: TColor): TColor;
+var
+  res: TARGB absolute Result;
+begin
+  if rgb < 0 then
+    result := GetSysColor(rgb and $FFFFFF) else
+    result := rgb;
+end;
 //------------------------------------------------------------------------------
 
 function Size(cx, cy: Integer): TSize;
@@ -361,10 +375,11 @@ begin
   {$ENDIF}
 
   fShowScrollBtns := ssbFocused;
-  fAllowScroll := true;
+  fAllowScrnScroll := true;
+  fAllowKeyScroll := true;
   fAllowZoom := true;
   fAutoCenter := true;
-  fFocusedColor := clActiveCaption;
+  fFocusedColor := RgbColor(clActiveCaption);
   fUnfocusedColor := clBtnFace;
 
   fScale := 1.0;
@@ -549,7 +564,9 @@ procedure TBaseImgPanel.SetAllowZoom(value: Boolean);
 begin
   if value = fAllowZoom then Exit;
   fAllowZoom := value;
-  if value then fAllowScroll := true;
+  if not value then Exit;
+  fAllowScrnScroll := true;
+  fAllowKeyScroll := true;
 end;
 //------------------------------------------------------------------------------
 
@@ -691,9 +708,7 @@ procedure TBaseImgPanel.MouseDown(Button: TMouseButton;
 var
   rec: TRect;
 begin
-  inherited;
-
-  if fAllowScroll then
+  if fAllowScrnScroll or fAllowKeyScroll then
   begin
     fMouseDown := true;
     fScrollbarHorz.MouseDownPos := X;
@@ -703,15 +718,16 @@ begin
       (fScrollbarVert.btnSize > 0) then
     begin
       fScrollbarVert.MouseDown := true;
-      Invalidate;
     end
     else if (Y > rec.Bottom)  and (X > rec.Left) and (X < rec.Right) and
       (fScrollbarHorz.btnSize > 0) then
     begin
       fScrollbarHorz.MouseDown := true;
-      Invalidate;
     end;
   end;
+
+  if not (fScrollbarHorz.MouseDown or fScrollbarVert.MouseDown) then  
+    inherited;
 
   if TabStop and not Focused and CanFocus then
   begin
@@ -723,50 +739,57 @@ end;
 
 procedure TBaseImgPanel.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
-  marg: integer;
   rec: TRect;
-  inDrawRegion, mobH, mobV: Boolean;
+  inDrawRegion: Boolean;
 begin
-  inherited;
-  if not fAllowScroll then Exit;
-
   rec := GetInnerClientRect;
   inDrawRegion := PtInRect(rec, Point(X,Y));
 
-  if not fMouseDown then
+  if inDrawRegion and
+    not (fScrollbarHorz.MouseDown or fScrollbarVert.MouseDown) then  
   begin
-    if (BorderWidth >= MinBorderWidth) and
-      fAllowScroll and ((fShowScrollBtns = ssAlways) or
-      (focused and (fShowScrollBtns = ssbFocused))) then
+    if fScrollbarVert.MouseOver or fScrollbarHorz.MouseOver then 
     begin
-      marg := GetInnerMargin;
-      mobV := (X > ClientWidth - marg) and
-        (Y < ClientHeight - marg) and (Y > marg) and
-        (fScrollbarVert.btnSize > 0);
-      mobH := (Y > ClientHeight - marg) and
-        (X < ClientWidth - marg) and (X > marg) and
-        (fScrollbarHorz.btnSize > 0);
-      //now check for change in state ...
-      if fScrollbarVert.MouseOver <> mobV then
+      Invalidate;          
+      fScrollbarHorz.MouseOver := false;
+      fScrollbarVert.MouseOver := false;
+    end;
+    cursor := crDefault;
+    inherited;
+    Exit;
+  end;
+  
+  if not fMouseDown then
+  begin  
+    if (BorderWidth >= MinBorderWidth) and
+      ((fShowScrollBtns = ssAlways) or
+        (focused and (fShowScrollBtns = ssbFocused))) then
+    begin
+      if (X >= rec.Right) and (fScrollbarVert.btnSize > 0) then
       begin
-        fScrollbarVert.MouseOver := mobV;
-        if mobV then Cursor := crSizeNS;
-        Invalidate;
-      end;
-      if fScrollbarHorz.MouseOver <> mobH then
+        if (Y < rec.Bottom) then
+        begin
+          cursor := crSizeNS;
+          if not fScrollbarVert.MouseOver then Invalidate;          
+          fScrollbarVert.MouseOver := true;
+        end else
+          cursor := crDefault;
+      end
+      else if (Y >= rec.Bottom) and (fScrollbarHorz.btnSize > 0) then
       begin
-        fScrollbarHorz.MouseOver := mobH;
-        if mobH then Cursor := crSizeWE;
-        Invalidate;
-      end;
-      if not inDrawRegion and not mobV and not mobH then
+        Cursor := crSizeWE;
+        if not fScrollbarHorz.MouseOver then Invalidate;
+        fScrollbarHorz.MouseOver := true;
+      end else
         cursor := crDefault;
     end;
     Exit;
   end;
-
   fScrollbarHorz.MouseOver := false;
   fScrollbarVert.MouseOver := false;
+
+  if not (fAllowScrnScroll or fAllowKeyScroll) then Exit;
+
   if fScrollbarVert.MouseDown then
   begin
     //dragging vertical scrollbar
@@ -784,7 +807,7 @@ begin
       inc(srcOffset, Round((X - MouseDownPos) / btnDelta));
       MouseDownPos := X;
     end;
-  end else
+  end else if fAllowScrnScroll then
   begin
     //click and drag the drawing image
     with fScrollbarVert do if btnDelta > 0 then
@@ -797,6 +820,9 @@ begin
       dec(srcOffset, Round((X - MouseDownPos) / fScale));
       MouseDownPos := X;
     end;
+  end else 
+  begin
+    Exit; //ie exit here if NOT scrolling
   end;
   if assigned(fOnScrolling) then fOnScrolling(self);
   Invalidate;
@@ -806,13 +832,11 @@ end;
 procedure TBaseImgPanel.MouseUp(Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
+  if not fMouseDown then Exit;
   inherited;
-  if not fAllowScroll or not fMouseDown then Exit;
   fMouseDown := false;
   fScrollbarHorz.MouseDown := false;
-  fScrollbarHorz.MouseOver := false;
   fScrollbarVert.MouseDown := false;
-  fScrollbarVert.MouseOver := false;
   Invalidate;
 end;
 //------------------------------------------------------------------------------
@@ -971,8 +995,9 @@ begin
   end;
 
   if (BorderWidth >= MinBorderWidth) and
-    fAllowScroll and ((fShowScrollBtns = ssAlways) or
-    (Focused and (fShowScrollBtns = ssbFocused))) then
+    (fAllowScrnScroll or fAllowKeyScroll) and
+    ((fShowScrollBtns = ssAlways) or
+      (Focused and (fShowScrollBtns = ssbFocused))) then
   begin
     btnMin := GetMinScrollBtnSize;
 
@@ -1028,7 +1053,7 @@ begin
       end;
     igiPan:
       begin
-        if not fAllowScroll then Exit;
+        if not (fAllowScrnScroll or fAllowKeyScroll) then Exit;
         if not (gfBegin in EventInfo.Flags) then
         begin
           with fScrollbarHorz do
@@ -1061,7 +1086,7 @@ begin
   if Result then Exit;
 
   isZooming := (ssCtrl in Shift) and fAllowZoom;
-  if not isZooming and not fAllowScroll then Exit;
+  if not isZooming and not (fAllowScrnScroll or fAllowKeyScroll) then Exit;
 
   {$IFNDEF FPC}
   MousePos := ScreenToClient(MousePos);
@@ -1094,12 +1119,12 @@ end;
 function TBaseImgPanel.DoMouseHWheel(Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint): Boolean;
 begin
-  Result := focused and fAllowScroll;
+  Result := focused and (fAllowScrnScroll or fAllowKeyScroll);
   if not Result then Exit;
   {$IFNDEF FPC}
   MousePos := ScreenToClient(MousePos);
   {$ENDIF}
-  dec(fScrollbarHorz.srcOffset, Round(WheelDelta / fScale));
+  inc(fScrollbarHorz.srcOffset, Round(WheelDelta / fScale));
   Invalidate;
 end;
 //------------------------------------------------------------------------------
@@ -1120,10 +1145,8 @@ var
   shiftState: TShiftState;
 begin
   inherited;
-  if not fAllowZoom and not fAllowScroll then Exit;
-
+  if not fAllowZoom and not fAllowKeyScroll then Exit;
   shiftState := KeyDataToShiftState(Message.KeyData);
-
   if Assigned(fOnKeyDown) then
   begin
     charCode := Message.CharCode;
@@ -1147,7 +1170,7 @@ begin
           end;
         end else
         begin
-          if not fAllowScroll then Exit;
+          if not fAllowKeyScroll then Exit;
           //otherwise scroll the image with the arrow keys
           if ssShift in shiftState then
             mul := 5 else //ie scrolls 5 times faster with Shift key down
@@ -1229,7 +1252,7 @@ end;
 
 procedure TImage32Panel.ImageChanged(Sender: TObject);
 begin
-  if (fImageSize.cx <> Image.Width) or (fImageSize.cy <> Image.Height) then 
+  if (fImageSize.cx <> Image.Width) or (fImageSize.cy <> Image.Height) then
   begin
     fImageSize.cx := Image.Width;
     fImageSize.cy := Image.Height;
@@ -1250,6 +1273,27 @@ procedure TImage32Panel.ClearImage;
 begin
   fImage.Clear;
   Invalidate;
+end;
+//------------------------------------------------------------------------------
+
+procedure TImage32Panel.CopyToImage(srcImg: TImage32; const rec: TRect);
+var
+  srcRect, dstRect: TRect;
+begin
+  fImage.BlockNotify;
+  try
+    dstRect.TopLeft := ImageToClient(rec.TopLeft);
+    dstRect.BottomRight := ImageToClient(rec.BottomRight);
+    fImage.Copy(srcImg, rec, rec);
+
+    Types.IntersectRect(dstRect, dstRect, InnerClientRect);
+    srcRect.TopLeft := ClientToImage(dstRect.TopLeft);
+    srcRect.BottomRight := ClientToImage(dstRect.BottomRight);
+
+    fImage.CopyToDc(srcRect, dstRect, canvas.Handle);
+  finally
+    fImage.UnblockNotify;
+  end;
 end;
 //------------------------------------------------------------------------------
 

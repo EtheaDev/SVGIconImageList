@@ -129,9 +129,9 @@ type
     SVGErrorStaticText: TStaticText;
     AntiAliasColorLabel: TLabel;
     AntialiasColorComboBox: TColorBox;
-    ExportPngButton: TButton;
     ApplyToRootOnlyCheckBox: TCheckBox;
     ApplyToRootOnlyItemCheckBox: TCheckBox;
+    ExportPngButton: TButton;
     procedure FormCreate(Sender: TObject);
     procedure ApplyButtonClick(Sender: TObject);
     procedure ClearAllButtonClick(Sender: TObject);
@@ -934,7 +934,7 @@ end;
 
 procedure TSVGIconImageListEditor.ExportButtonClick(Sender: TObject);
 var
-  FDir: string;
+  LOutputPath: string;
 
   procedure SaveIconsToFiles(const AOutDir: string);
   var
@@ -944,6 +944,7 @@ var
   begin
     Screen.Cursor := crHourGlass;
     try
+      System.SysUtils.ForceDirectories(AOutDir);
       C := 0;
       for I := 0 to ImageView.Items.Count-1 do
       begin
@@ -966,14 +967,14 @@ var
   end;
 
 begin
-  FDir := ExtractFilePath(FOpenDialog.FileName);
+  LOutputPath := ExtractFilePath(FOpenDialog.FileName);
   if Win32MajorVersion >= 6 then
     with TFileOpenDialog.Create(nil) do
       try
         Title := SELECT_DIR;
         Options := [fdoPickFolders, fdoPathMustExist, fdoForceFileSystem];
-        DefaultFolder := FDir;
-        FileName := FDir;
+        DefaultFolder := LOutputPath;
+        FileName := LOutputPath;
         if Execute then
           SaveIconsToFiles(IncludeTrailingPathDelimiter(FileName));
       finally
@@ -981,23 +982,72 @@ begin
       end
   else
     if SelectDirectory(SELECT_DIR,
-      ExtractFileDrive(FDir), FDir,
+      ExtractFileDrive(LOutputPath), LOutputPath,
       [sdNewUI, sdNewFolder]) then
-    SaveIconsToFiles(IncludeTrailingPathDelimiter(FDir));
+    SaveIconsToFiles(IncludeTrailingPathDelimiter(LOutputPath));
 end;
 
 procedure TSVGIconImageListEditor.ExportPngButtonClick(Sender: TObject);
 var
   LOutputPath: string;
+
+  procedure SaveIconsToFiles(const AOutDir: string);
+  var
+    I, C: Integer;
+    LItem: TSVGIconItem;
+    LFileName: string;
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      if not System.SysUtils.DirectoryExists(AOutDir) then
+        System.SysUtils.ForceDirectories(AOutDir);
+      C := 0;
+      for I := 0 to ImageView.Items.Count-1 do
+      begin
+        if ImageView.Items[I].Selected then
+        begin
+          LItem := FEditingList.SVGIconItems.Items[I];
+          if LItem.IconName <> '' then
+            LFileName := AOutDir+LItem.IconName+'.png'
+          else
+            LFileName := AOutDir+IntToStr(I)+'.png';
+          LOutputPath := ExtractFilePath(LFileName);
+          if not System.SysUtils.DirectoryExists(LOutputPath) then
+            System.SysUtils.ForceDirectories(LOutputPath);
+          SVGExportToPng(ImageView.Width, ImageView.Height,
+            LItem.SVG,
+              LOutputPath, ExtractFileName(LFileName));
+
+          LItem.SVG.SaveToFile(LFileName);
+          Inc(C);
+        end;
+      end;
+      ShowMessageFmt(FILES_SAVED, [C, AOutDir]);
+
+    finally
+      Screen.Cursor := crDefault;
+    end;
+  end;
+
 begin
-  {$IFDEF DXE4+}
-  LOutputPath := IncludeTrailingPathDelimiter(TPath.GetPicturesPath);
-  {$ELSE}
-  LOutputPath := '';
-  {$ENDIF}
-  ExportToPNG(Self.ClientRect,
-    LOutputPath+SelectedIcon.IconName, SelectedIcon.SVGText,
-    True, SVGIconImageList.Size);
+  LOutputPath := ExtractFilePath(FOpenDialog.FileName);
+  if Win32MajorVersion >= 6 then
+    with TFileOpenDialog.Create(nil) do
+      try
+        Title := SELECT_DIR;
+        Options := [fdoPickFolders, fdoPathMustExist, fdoForceFileSystem];
+        DefaultFolder := LOutputPath;
+        FileName := LOutputPath;
+        if Execute then
+          SaveIconsToFiles(IncludeTrailingPathDelimiter(FileName));
+      finally
+        Free;
+      end
+  else
+    if SelectDirectory(SELECT_DIR,
+      ExtractFileDrive(LOutputPath), LOutputPath,
+      [sdNewUI, sdNewFolder]) then
+    SaveIconsToFiles(IncludeTrailingPathDelimiter(LOutputPath));
 end;
 
 procedure TSVGIconImageListEditor.FormDestroy(Sender: TObject);

@@ -19,7 +19,6 @@ uses
   FMX.Platform, FMX.Types, FMX.Surfaces, FMX.Graphics;
 
 type
-
   TImageFormat_FMX = class(TImageFormat)
   private
     fExt: string;
@@ -34,6 +33,8 @@ type
     class function PasteFromClipboard(img32: TImage32): Boolean; override;
     property Ext: string read fExt write fExt;
   end;
+
+procedure AssignImage32ToFmxBitmap(img: TImage32; bmp: TBitmap);
 
 const
   RT_BITMAP = PChar(2);
@@ -189,6 +190,25 @@ begin
   end;
 end;
 
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+
+procedure AssignImage32ToFmxBitmap(img: TImage32; bmp: TBitmap);
+var
+  src, dst: TBitmapData; //TBitmapData is a record.
+begin
+  if not Assigned(img) or not Assigned(bmp) then Exit;
+  src := TBitMapData.Create(img.Width, img.Height, TPixelFormat.BGRA);
+  src.Data := img.PixelBase;
+  src.Pitch := img.Width * 4;
+  bmp.SetSize(img.Width, img.Height);
+  if bmp.Map(TMapAccess.Write, dst) then
+  try
+    dst.Copy(src);
+  finally
+    bmp.Unmap(dst);
+  end;
+end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 

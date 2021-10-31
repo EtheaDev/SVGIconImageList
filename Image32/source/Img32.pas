@@ -2,8 +2,8 @@ unit Img32;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.3                                                             *
-* Date      :  21 September 2021                                               *
+* Version   :  3.5                                                             *
+* Date      :  31 October 2021                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -50,6 +50,8 @@ const
   clTeal32     = TColor32($FF007F7F);
   clWhite32    = TColor32($FFFFFFFF);
   clYellow32   = TColor32($FFFFFF00);
+  clBtnFace32  = TColor32($FFF0F0F0);
+
 
 {$IFDEF ZEROBASEDSTR}
   {$ZEROBASEDSTRINGS OFF}
@@ -108,6 +110,7 @@ type
     fOnChange: TNotifyEvent;
     fOnResize: TNotifyEvent;
     fUpdateCnt: integer;
+    fAntiAliased: Boolean;
     fNotifyBlocked: Boolean;
     function GetPixel(x,y: Integer): TColor32;
     procedure SetPixel(x,y: Integer; color: TColor32);
@@ -125,13 +128,14 @@ type
     function GetBounds: TRect;
     function GetMidPoint: TPointD;
   protected
-    function CopyPixels(rec: TRect): TArrayOfColor32;
+    function  RectHasTransparency(rec: TRect): Boolean;
+    function  CopyPixels(rec: TRect): TArrayOfColor32;
     //CopyInternal: Internal routine (has no scaling or bounds checking)
     procedure CopyInternal(src: TImage32;
       const srcRec, dstRec: TRect; blendFunc: TBlendFunction);
-    procedure Changed; virtual;
-    procedure Resized; virtual;
-    property UpdateCount: integer read fUpdateCnt;
+    procedure  Changed; virtual;
+    procedure  Resized; virtual;
+    property   UpdateCount: integer read fUpdateCnt;
   public
     constructor Create(width: Integer = 0; height: Integer = 0); overload;
     constructor Create(src: TImage32); overload;
@@ -154,7 +158,8 @@ type
     //ScaleToFit: The new image will be scaled to fit within 'rec'
     procedure ScaleToFit(width, height: integer);
     //ScaleToFitCentered: The new image will be scaled and also centred
-    procedure ScaleToFitCentered(width, height: integer);
+    procedure ScaleToFitCentered(width, height: integer); overload;
+    procedure ScaleToFitCentered(const rect: TRect); overload;
     procedure Scale(s: double); overload;
     procedure Scale(sx, sy: double); overload;
 
@@ -240,6 +245,7 @@ type
 
     //properties ...
 
+    property AntiAliased: Boolean read fAntiAliased write fAntiAliased;
     property Width: Integer read fWidth;
     property Height: Integer read fHeight;
     property Bounds: TRect read GetBounds;
@@ -311,37 +317,26 @@ type
   TArrayOfDouble = array of double;
   TArrayOfString = array of string;
 
-{$IFDEF RECORD_METHODS}
-  TRectD = record
+  TRectD = {$IFDEF RECORD_METHODS} record {$ELSE} object {$ENDIF}
+    {$IFNDEF RECORD_METHODS}
+    Left, Top, Right, Bottom: Double;
+    function TopLeft: TPointD;
+    function BottomRight: TPointD;
+    {$ENDIF}
     function IsEmpty: Boolean;
     function Width: double;
     function Height: double;
-    //NormalizeRect:
-    //Returns True if swapping either top & bottom or left & right
-    function NormalizeRect: Boolean;
+    //Normalize: Returns True if swapping top & bottom or left & right
+    function Normalize: Boolean;
     function Contains(const Pt: TPoint): Boolean; overload;
     function Contains(const Pt: TPointD): Boolean; overload;
     function MidPoint: TPointD;
+    {$IFDEF RECORD_METHODS}
     case Integer of
       0: (Left, Top, Right, Bottom: Double);
       1: (TopLeft, BottomRight: TPointD);
+    {$ENDIF}
   end;
-{$ELSE}
-  TRectD = object
-    Left, Top, Right, Bottom: Double;
-    function IsEmpty: Boolean;
-    function Width: double;
-    function Height: double;
-    //NormalizeRect:
-    //Returns True if swapping either top & bottom or left & right
-    function NormalizeRect: Boolean;
-    function Contains(const Pt: TPoint): Boolean; overload;
-    function Contains(const Pt: TPointD): Boolean; overload;
-    function MidPoint: TPointD;
-    function TopLeft: TPointD;
-    function BottomRight: TPointD;
-  end;
-{$ENDIF}
 
   {$IFNDEF PBYTE}
   PByte = type PChar;
@@ -380,10 +375,6 @@ type
 
   function GetByteMask(img: TImage32; reference: TColor32;
     compareFunc: TCompareFunctionEx): TArrayOfByte;
-
-  //GetWeightedPixel - bilinear interpolation:
-  //parameters x256, y256 are coords scaled up by 256.
-  //function GetWeightedPixel(img: TImage32; x256, y256: Integer): TColor32;
 
   {$IFDEF MSWINDOWS}
   //Color32: Converts a Graphics.TColor value into a TColor32 value.
@@ -485,7 +476,7 @@ var
 
   DefaultResampler: Integer = 0;
 
-  //Both MulTable and DivTable are used in blend functions<br>
+  //Both MulTable and DivTable are used in blend functions
   //MulTable[a,b] = a * b / 255
   MulTable: array [Byte,Byte] of Byte;
   //DivTable[a,b] = a * 255/b (for a &lt;= b)
@@ -518,6 +509,8 @@ implementation
 uses
   Img32.Vector, Img32.Resamplers, Img32.Transform;
 
+resourcestring
+  rsImageTooLarge = 'Image32 error: the image is too large.';
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
@@ -564,12 +557,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function FMod(const ANumerator, ADenominator: Double): Double;
+begin
+  Result := ANumerator - Trunc(ANumerator / ADenominator) * ADenominator;
+end;
+//------------------------------------------------------------------------------
+
 procedure NormalizeAngle(var angle: double; tolerance: double = Pi/360);
 var
   aa: double;
 begin
-  while angle < -angle180 do angle := angle + angle360;
-  while angle > angle180 do angle := angle - angle360;
+  angle := FMod(angle, angle360);
+  if angle < -angle180 then angle := angle + angle360
+  else if angle > angle180 then angle := angle - angle360;
 
   aa := Abs(angle);
   if aa < tolerance then angle := 0
@@ -605,7 +605,7 @@ end;
 
 function MulBytes(b1, b2: Byte) : Byte; {$IFDEF INLINE} inline; {$ENDIF}
 begin
-  Result := MulTable[b1,b2];
+  Result := MulTable[b1, b2];
 end;
 //------------------------------------------------------------------------------
 
@@ -668,14 +668,12 @@ var
   R, InvR: PByteArray;
 begin
   //(see https://en.wikipedia.org/wiki/Alpha_compositing)
-  if fg.A = 0 then Result := bgColor
-  else if fg.A = 255 then Result := fgColor
+  if (bg.A = 0) or (fg.A = 255) then Result := fgColor
+  else if fg.A = 0 then Result := bgColor
   else
   begin
     //combine alphas ...
-    //res.A := not MulTable[not fg.A, not bg.A];
-    res.A := (((fg.A xor 255) * (bg.A xor 255)) shr 8) xor 255; // ~faster
-
+    res.A := not MulTable[not fg.A, not bg.A];
     fgWeight := DivTable[fg.A, res.A]; //fgWeight = amount foreground color
                                        //contibutes to total (result) color
 
@@ -861,16 +859,9 @@ var
   curr: TARGB absolute current;
   res: Cardinal;
 begin
-  if curr.A = 0 then
-  begin
-    Result := 0;
-  end else
-  begin
-    res := Sqr(mast.R - curr.R) + Sqr(mast.G - curr.G) + Sqr(mast.B - curr.B);
-    if res >= 65025 then result := 0
-    else result := 255 - Round(Sqrt(res));
-    if curr.A < 255 then result := MulTable[result, curr.A];
-  end;
+  res := Sqr(mast.R - curr.R) + Sqr(mast.G - curr.G) + Sqr(mast.B - curr.B);
+  if res >= 65025 then result := 255
+  else result := Round(Sqrt(res));
 end;
 //------------------------------------------------------------------------------
 
@@ -879,7 +870,7 @@ var
   mast: TARGB absolute master;
   curr: TARGB absolute current;
 begin
-  Result := 255 - abs(mast.A - curr.A);
+  Result := abs(mast.A - curr.A);
 end;
 
 //------------------------------------------------------------------------------
@@ -1316,7 +1307,7 @@ end;
 //------------------------------------------------------------------------------
 {$ENDIF}
 
-function TRectD.NormalizeRect: Boolean;
+function TRectD.Normalize: Boolean;
 var
   d: double;
 begin
@@ -1378,6 +1369,7 @@ end;
 
 constructor TImage32.Create(width: Integer; height: Integer);
 begin
+  fAntiAliased := true;
   fResampler := DefaultResampler;
   fwidth := Max(0, width);
   fheight := Max(0, height);
@@ -1395,6 +1387,7 @@ constructor TImage32.Create(src: TImage32; const srcRec: TRect);
 var
   rec: TRect;
 begin
+  fAntiAliased := src.AntiAliased;
   fResampler := src.fResampler;
   types.IntersectRect(rec, src.Bounds, srcRec);
   RectWidthHeight(rec, fWidth, fHeight);
@@ -1634,6 +1627,29 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function TImage32.RectHasTransparency(rec: TRect): Boolean;
+var
+  i,j, rw: Integer;
+  c: PARGB;
+begin
+  Result := True;
+  Types.IntersectRect(rec, rec, bounds);
+  if IsEmptyRect(rec) then Exit;
+  rw := RectWidth(rec);
+  c := @Pixels[rec.Top * Width + rec.Left];
+  for i := rec.Top to rec.Bottom -1 do
+  begin
+    for j := 1 to rw do
+    begin
+      if c.A < 254 then Exit;
+      inc(c);
+    end;
+    inc(c, Width - rw);
+  end;
+  Result := False;
+end;
+//------------------------------------------------------------------------------
+
 procedure CheckBlendFill(pc: PColor32; color: TColor32);
 {$IFDEF INLINE} inline; {$ENDIF}
 begin
@@ -1748,6 +1764,9 @@ end;
 
 procedure TImage32.SetSize(newWidth, newHeight: Integer; color: TColor32);
 begin
+  //very large images are usually due to a bug
+  if (newWidth > 20000) or (newHeight > 20000) then
+    raise Exception.Create(rsImageTooLarge);
   fwidth := Max(0, newWidth);
   fheight := Max(0, newHeight);
   fPixels := nil; //forces a blank image
@@ -1883,6 +1902,12 @@ begin
   if sx <= sy then
     Scale(sx) else
     Scale(sy);
+end;
+//------------------------------------------------------------------------------
+
+procedure TImage32.ScaleToFitCentered(const rect: TRect);
+begin
+  ScaleToFitCentered(RectWidth(rect), RectHeight(rect));
 end;
 //------------------------------------------------------------------------------
 
@@ -2408,7 +2433,7 @@ begin
 
   bi := Get32bitBitmapInfoHeader(wSrc, hSrc);
 
-  isTransparent := transparent and Self.HasTransparency;
+  isTransparent := transparent and RectHasTransparency(srcRect);
   memDc := CreateCompatibleDC(0);
   try
     bm := CreateDIBSection(memDc, PBITMAPINFO(@bi)^,

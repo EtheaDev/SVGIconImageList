@@ -1,8 +1,8 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{91801225-3901-4C8C-9D06-118BDACC9754}</ProjectGuid>
+        <ProjectGuid>{C53F9138-7B89-4EF8-B75F-C7F4C633B5BF}</ProjectGuid>
         <MainSource>SVGIconPackage.dpk</MainSource>
-        <ProjectVersion>16.1</ProjectVersion>
+        <ProjectVersion>18.8</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>

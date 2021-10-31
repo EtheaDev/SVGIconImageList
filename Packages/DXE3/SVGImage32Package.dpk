@@ -9,7 +9,7 @@ package SVGImage32Package;
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
-{$LOCALSYMBOLS OFF}
+{$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
 {$OPTIMIZATION ON}
@@ -49,7 +49,7 @@ contains
   Img32.Vector in '..\..\Image32\source\Img32.Vector.pas',
   Img32.Fmt.SVG in '..\..\Image32\source\Img32.Fmt.SVG.pas',
   Img32.SVG.Core in '..\..\Image32\source\Img32.SVG.Core.pas',
-  //Img32.SVG.Writer in '..\..\Image32\source\Img32.SVG.Writer.pas',
+  Img32.SVG.Path in '..\..\Image32\source\Img32.SVG.Path.pas',
   Img32.SVG.Reader in '..\..\Image32\source\Img32.SVG.Reader.pas';
 
 end.
