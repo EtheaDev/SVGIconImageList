@@ -1130,7 +1130,8 @@ begin
     //BlendToAlpha is marginally slower than BlendToOpaque but it's used
     //here because it's universally applicable.
     //Ord() is used here because very old compilers define PByte as a PChar
-    dst^ := BlendToAlpha(dst^, ((Ord(alpha^) * fAlpha) shr 8) shl 24 or fColor);
+    if Ord(alpha^) > 1 then
+      dst^ := BlendToAlpha(dst^, ((Ord(alpha^) * fAlpha) shr 8) shl 24 or fColor);
     inc(dst); inc(alpha);
   end;
 end;
