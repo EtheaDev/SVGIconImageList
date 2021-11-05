@@ -164,7 +164,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           BevelOuter = bvNone
           TabOrder = 2
           object AddButton: TButton
-            Left = 4
+            Left = 6
             Top = 17
             Width = 135
             Height = 25
@@ -192,13 +192,13 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             OnClick = ClearAllButtonClick
           end
           object ExportButton: TButton
-            Left = 4
+            Left = 6
             Top = 169
             Width = 135
             Height = 25
             Caption = 'Export &svg files...'
             Enabled = False
-            TabOrder = 4
+            TabOrder = 5
             OnClick = ExportButtonClick
           end
           object SetCategoriesButton: TButton
@@ -207,7 +207,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             Width = 135
             Height = 25
             Caption = '&Set Categories...'
-            TabOrder = 5
+            TabOrder = 4
             OnClick = SetCategoriesButtonClick
           end
           object DeleteAllButton: TButton
@@ -220,15 +220,59 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
             TabOrder = 2
             OnClick = DeleteAllButtonClick
           end
-          object ExportPngButton: TButton
+          object PngGroupBox: TGroupBox
             Left = 4
             Top = 200
-            Width = 135
-            Height = 25
-            Caption = 'Export &png files...'
-            Enabled = False
+            Width = 137
+            Height = 108
+            Caption = 'Png export'
             TabOrder = 6
-            OnClick = ExportPngButtonClick
+            object PngHeightLabel: TLabel
+              Left = 2
+              Top = 51
+              Width = 90
+              Height = 15
+              Alignment = taRightJustify
+              AutoSize = False
+              Caption = 'Height (in pixel)'
+              Transparent = True
+            end
+            object PngWidthLabel: TLabel
+              Left = 2
+              Top = 22
+              Width = 90
+              Height = 15
+              Alignment = taRightJustify
+              AutoSize = False
+              Caption = 'Width (in pixel)'
+              Transparent = True
+            end
+            object PngWidthEdit: TEdit
+              Left = 94
+              Top = 19
+              Width = 36
+              Height = 23
+              NumbersOnly = True
+              TabOrder = 0
+            end
+            object PngHeightEdit: TEdit
+              Left = 94
+              Top = 49
+              Width = 36
+              Height = 23
+              NumbersOnly = True
+              TabOrder = 1
+            end
+            object ExportPngButton: TButton
+              Left = 5
+              Top = 77
+              Width = 125
+              Height = 25
+              Caption = 'Export &png files...'
+              Enabled = False
+              TabOrder = 2
+              OnClick = ExportPngButtonClick
+            end
           end
         end
         object ImagesPanel: TPanel

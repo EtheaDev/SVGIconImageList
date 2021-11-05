@@ -67,10 +67,6 @@ uses
   , System.Types
   , Vcl.Themes
   , SVGIconImageCOllection
-  {$IFDEF IgnoreAntiAliasedColor}
-  , Winapi.GDIPAPI
-  , Winapi.GDIPOBJ
-  {$ENDIF}
   {$IFDEF D10_3}
   , VirtualImageList
   {$ENDIF}
@@ -121,20 +117,6 @@ begin
   end;
 end;
 
-{$IFDEF IgnoreAntiAliasedColor}
-procedure MakeTransparent(DC: THandle);
-var
-  Graphics: TGPGraphics;
-begin
-  Graphics := TGPGraphics.Create(DC);
-  try
-    Graphics.Clear(aclTransparent);
-  finally
-    Graphics.Free;
-  end;
-end;
-{$ENDIF}
-
 procedure SVGExportToPng(const AWidth, AHeight: Integer;
   FSVG: ISVG; const AOutFolder: string;
   const AFileName: string = '');
@@ -142,16 +124,22 @@ var
   LImagePng: TPngImage;
   LBitmap: TBitmap;
   LFileName: string;
+  X, Y: Integer;
+  Alpha: PByte;
 begin
   LBitmap := nil;
   LImagePng := nil;
   try
     LBitmap := TBitmap.Create;
-    LBitmap.PixelFormat := pf32bit;
+    LBitmap.PixelFormat := TPixelFormat.pf32bit;   // 32bit bitmap
+    LBitmap.AlphaFormat := TAlphaFormat.afDefined; // Enable alpha channel
+
     LBitmap.SetSize(AWidth, AHeight);
-    {$IFDEF IgnoreAntiAliasedColor}
-    MakeTransparent(LBitmap.Canvas.Handle);
-    {$ENDIF}
+
+    // Fill background with transparent
+    LBitmap.Canvas.Brush.Color := clNone;
+    LBitmap.Canvas.FillRect(Rect(0, 0, AWidth, AHeight));
+
     FSVG.PaintTo(LBitmap.Canvas.Handle, TRectF.Create(0, 0, AWidth, AHeight));
 
     LImagePng := PNG4TransparentBitMap(LBitmap);

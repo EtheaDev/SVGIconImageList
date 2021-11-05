@@ -131,7 +131,12 @@ type
     AntialiasColorComboBox: TColorBox;
     ApplyToRootOnlyCheckBox: TCheckBox;
     ApplyToRootOnlyItemCheckBox: TCheckBox;
+    PngGroupBox: TGroupBox;
+    PngWidthEdit: TEdit;
+    PngHeightEdit: TEdit;
     ExportPngButton: TButton;
+    PngHeightLabel: TLabel;
+    PngWidthLabel: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure ApplyButtonClick(Sender: TObject);
     procedure ClearAllButtonClick(Sender: TObject);
@@ -360,6 +365,8 @@ begin
     SizeEdit.Text := IntToStr(FEditingList.Size);
     WidthEdit.Text := IntToStr(FEditingList.Width);
     HeightEdit.Text := IntToStr(FEditingList.Height);
+    PngWidthEdit.Text := IntToStr(FEditingList.Width);
+    PngHeightEdit.Text := IntToStr(FEditingList.Height);
     LIconPanelSize := IconPanel.Height - (IconPanel.BorderWidth * 2);
     if FEditingList.Width > FEditingList.Height then
     begin
@@ -1014,11 +1021,9 @@ var
           LOutputPath := ExtractFilePath(LFileName);
           if not System.SysUtils.DirectoryExists(LOutputPath) then
             System.SysUtils.ForceDirectories(LOutputPath);
-          SVGExportToPng(ImageView.Width, ImageView.Height,
+          SVGExportToPng(StrToInt(PngWidthEdit.Text), StrToInt(PngHeightEdit.Text),
             LItem.SVG,
               LOutputPath, ExtractFileName(LFileName));
-
-          LItem.SVG.SaveToFile(LFileName);
           Inc(C);
         end;
       end;
