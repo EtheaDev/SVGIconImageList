@@ -100,6 +100,11 @@ type
     constructor Create(AOwner: TPersistent); overload;
   end;
 
+  {$IF CompilerVersion > 34}
+  [ComponentPlatforms(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator32 or pidiOSDevice32 or pidAndroidArm32)]
+  {$ELSE}
+  [ComponentPlatforms(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator32 or pidiOSDevice32 or pidAndroid32Arm)]
+  {$ENDIF}
   TSVGIconImage = class(TImage)
   private
     FZoom: Integer;

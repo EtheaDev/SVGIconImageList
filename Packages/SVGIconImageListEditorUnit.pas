@@ -229,6 +229,12 @@ uses
   , Vcl.FileCtrl
   , Xml.XMLDoc
   , Vcl.Themes
+  //WARNING: you must define this directive to use this unit outside the IDE
+{$IFNDEF UseSVGEditorsAtRunTime}
+  , ToolsAPI
+  , BrandingAPI
+  {$IF (CompilerVersion >= 32.0)}, IDETheme.Utils{$IFEND}
+{$ENDIF}
   , Winapi.CommDlg
   , SVGIconUtils
   , dlgExportPNG;
@@ -526,7 +532,6 @@ begin
     else
     begin
       IconImage.ImageIndex := -1;
-      ItemGroupBox.Caption := '';
       NameEdit.Text := '';
       SVGText.Lines.Text := '';
       CategoryEdit.Text := '';
@@ -893,8 +898,39 @@ begin
 end;
 
 procedure TSVGIconImageListEditor.FormCreate(Sender: TObject);
+{$IFNDEF UseSVGEditorsAtRunTime}
+  {$IF (CompilerVersion >= 32.0)}
+  var
+    LStyle: TCustomStyleServices;
+  {$IFEND}
+{$ENDIF}
 begin
-  inherited;
+{$IFNDEF UseSVGEditorsAtRunTime}
+  {$IF (CompilerVersion >= 32.0)}
+    {$IF (CompilerVersion <= 34.0)}
+    if UseThemeFont then
+      Self.Font.Assign(GetThemeFont);
+    {$IFEND}
+    {$IF CompilerVersion > 34.0}
+    if TIDEThemeMetrics.Font.Enabled then
+      Self.Font.Assign(TIDEThemeMetrics.Font.GetFont);
+    {$IFEND}
+
+    if ThemeProperties <> nil then
+    begin
+      LStyle := ThemeProperties.StyleServices;
+      StyleElements := StyleElements - [seClient];
+      Color := LStyle.GetSystemColor(clWindow);
+      BottomPanel.StyleElements := BottomPanel.StyleElements - [seClient];
+      BottomPanel.ParentBackground := False;
+      BottomPanel.Color := LStyle.GetSystemColor(clBtnFace);
+      IDEThemeManager.RegisterFormClass(TSVGIconImageListEditor);
+      ThemeProperties.ApplyTheme(Self);
+    end;
+  {$IFEND}
+{$ENDIF}
+
+  FUpdating := False;
   ResetError;
   FEditingList := TSVGIconImageList.Create(Self);
   FOpenDialog := TOpenPictureDialogSvg.Create(Self);
@@ -905,7 +941,7 @@ begin
   FTotIconsLabel := ImageListGroup.Caption;
   FChanged := False;
   FModified := False;
-  SVGText.Font.Name := 'Courier New';
+  SVGText.Font.Name := 'Consolas';
   Caption := Format(Caption, [SVGIconImageListVersion]);
 end;
 

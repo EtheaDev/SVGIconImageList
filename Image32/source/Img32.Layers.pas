@@ -112,7 +112,6 @@ type
   public
     constructor Create(parent: TLayer32; const name: string = ''); virtual;
     destructor Destroy; override;
-    procedure  SetSize(width, height: integer);
 
     function   BringForwardOne: Boolean;
     function   SendBackOne: Boolean;
@@ -127,6 +126,7 @@ type
     procedure  PositionCenteredAt(const pt: TPoint); overload;
     procedure  PositionCenteredAt(const pt: TPointD); overload;
     procedure  SetBounds(const newBounds: TRect); virtual;
+    procedure  SetSize(width, height: integer);
     procedure  Invalidate(rec: TRect); virtual;
 
     function   AddChild(layerClass: TLayer32Class; const name: string = ''): TLayer32;
@@ -1433,8 +1433,8 @@ var
   mat: TMatrixD;
 begin
   m2 := Margin *2;
-  w := RectWidth(newBounds) -m2;
-  h := RectHeight(newBounds) -m2;
+  RectWidthHeight(newBounds, w, h);
+  dec(w, m2); dec(h, m2);
 
   //make sure the bounds are large enough to scale safely
   if Assigned(fPaths) and
@@ -1769,7 +1769,7 @@ procedure TRotatingGroupLayer32.Init(const rec: TRect;
   startingAngle: double; startingZeroOffset: double;
   buttonLayerClass: TButtonDesignerLayer32Class);
 var
-  i, dist: integer;
+  i, w,h, dist: integer;
   pivot, pt: TPoint;
   rec2, r: TRectD;
 begin
@@ -1780,7 +1780,9 @@ begin
 
   if buttonSize <= 0 then buttonSize := DefaultButtonSize;
   pivot := Img32.Vector.MidPoint(rec);
-  dist := Average(RectWidth(rec), RectHeight(rec)) div 2;
+  RectWidthHeight(rec, w, h);
+
+  dist := Average(w, h) div 2;
   rec2 := RectD(pivot.X -dist,pivot.Y -dist,pivot.X +dist,pivot.Y +dist);
 
   with AddChild(TDesignerLayer32) do    //Layer 0 - design layer

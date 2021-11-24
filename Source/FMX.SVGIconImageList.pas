@@ -163,6 +163,11 @@ type
   end;
 
   {TSVGIconImageList}
+  {$IF CompilerVersion > 34}
+  [ComponentPlatforms(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator32 or pidiOSDevice32 or pidAndroidArm32)]
+  {$ELSE}
+  [ComponentPlatforms(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator32 or pidiOSDevice32 or pidAndroid32Arm)]
+  {$ENDIF}
   TSVGIconImageList = class(TCustomImageList)
   private
     FWidth, FHeight: Integer;

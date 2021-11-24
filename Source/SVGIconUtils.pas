@@ -124,8 +124,6 @@ var
   LImagePng: TPngImage;
   LBitmap: TBitmap;
   LFileName: string;
-  X, Y: Integer;
-  Alpha: PByte;
 begin
   LBitmap := nil;
   LImagePng := nil;

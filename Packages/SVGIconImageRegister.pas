@@ -114,6 +114,11 @@ implementation
 
 uses
   SysUtils
+  , ToolsAPI
+  , BrandingAPI
+  , Vcl.Themes
+  , Vcl.Forms
+  , Vcl.Controls
   , System.UITypes
   , Winapi.ShellApi
   , Winapi.Windows
@@ -127,7 +132,9 @@ uses
   , SVGIconImageListEditorUnit
   , SVGTextPropertyEditorUnit;
 
+
 { TSVGIconImageListCompEditor }
+
 procedure TSVGIconImageListCompEditor.ExecuteVerb(Index: Integer);
 begin
   inherited;

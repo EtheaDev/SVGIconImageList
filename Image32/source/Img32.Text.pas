@@ -451,6 +451,8 @@ type
     function GetTextGlyphs(const rec: TRect; const text: UnicodeString;
       textAlign: TTextAlign; textAlignV: TTextVAlign;
       out nextIdx: integer; out nextPt: TPointD): TPathsD; overload;
+    function GetTextGlyphs(const rec: TRect; const text: UnicodeString;
+      textAlign: TTextAlign; textAlignV: TTextVAlign): TPathsD; overload;
     function GetAngledTextGlyphs(x, y: double; const text: UnicodeString;
       angleRadians: double; const rotatePt: TPointD;
       out nextPt: TPointD): TPathsD;
@@ -2317,6 +2319,16 @@ begin
   for i := 0 to len -1 do
     pp[i] := Rectangle(GetBoundsD(pa[i]));
   Result := GetBoundsD(pp);
+end;
+//------------------------------------------------------------------------------
+
+function TGlyphCache.GetTextGlyphs(const rec: TRect; const text: UnicodeString;
+  textAlign: TTextAlign; textAlignV: TTextVAlign): TPathsD;
+var
+  dummyIdx  : integer;
+  dummyPt   : TPointD;
+begin
+  Result := GetTextGlyphs(rec, text, textAlign, textAlignV, dummyIdx, dummyPt);
 end;
 //------------------------------------------------------------------------------
 

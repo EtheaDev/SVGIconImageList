@@ -63,6 +63,7 @@ type
     procedure SaveButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
     procedure ProportionalCheckBoxClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     procedure UpdateImage;
     procedure UpdateGUI;
@@ -83,9 +84,16 @@ uses
   Themes
   , Math
   {$IFDEF DXE3+}
-  , UITypes
+  , System.UITypes
   {$ENDIF}
   , ShellAPI
+  //WARNING: you must define this directive to use this unit outside the IDE
+  //WARNING: you must define this directive to use this unit outside the IDE
+{$IFNDEF UseSVGEditorsAtRunTime}
+  , ToolsAPI
+  , BrandingAPI
+  {$IF (CompilerVersion >= 32.0)}, IDETheme.Utils{$IFEND}
+{$ENDIF}
   , SVG;
 
 var
@@ -115,6 +123,42 @@ constructor TSVGTextPropertyEditorForm.Create(AOwner: TComponent);
 begin
   inherited;
   ;
+end;
+
+procedure TSVGTextPropertyEditorForm.FormCreate(Sender: TObject);
+{$IFNDEF UseSVGEditorsAtRunTime}
+  {$IF (CompilerVersion >= 32.0)}
+  var
+    LStyle: TCustomStyleServices;
+  {$IFEND}
+{$ENDIF}
+begin
+{$IFNDEF UseSVGEditorsAtRunTime}
+  {$IF (CompilerVersion >= 32.0)}
+    {$IF (CompilerVersion <= 34.0)}
+    if UseThemeFont then
+      Self.Font.Assign(GetThemeFont);
+    {$IFEND}
+    {$IF CompilerVersion > 34.0}
+    if TIDEThemeMetrics.Font.Enabled then
+      Self.Font.Assign(TIDEThemeMetrics.Font.GetFont);
+    {$IFEND}
+
+    if ThemeProperties <> nil then
+    begin
+      LStyle := ThemeProperties.StyleServices;
+      StyleElements := StyleElements - [seClient];
+      Color := LStyle.GetSystemColor(clWindow);
+      BottomPanel.StyleElements := BottomPanel.StyleElements - [seClient];
+      BottomPanel.ParentBackground := False;
+      BottomPanel.Color := LStyle.GetSystemColor(clBtnFace);
+      IDEThemeManager.RegisterFormClass(TSVGTextPropertyEditorForm);
+      ThemeProperties.ApplyTheme(Self);
+    end;
+  {$IFEND}
+{$ENDIF}
+
+  SVGTextMemo.Font.Name := 'Consolas';
 end;
 
 procedure TSVGTextPropertyEditorForm.FormResize(Sender: TObject);

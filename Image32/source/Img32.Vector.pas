@@ -2,8 +2,8 @@ unit Img32.Vector;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.4                                                             *
-* Date      :  21 October 2021                                                 *
+* Version   :  3.5                                                             *
+* Date      :  4 November 2021                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -326,7 +326,7 @@ type
   //a line. The function result = true when the line either touches
   //tangentially or passes through the ellipse. If the line touches
   //tangentially, the coordintates returned in pt1 and pt2 will match.
-  function GetLineEllipseIntersects(const ellipseRect: TRect;
+  function GetLineEllipseIntersects(const ellipseRec: TRect;
     var linePt1, linePt2: TPointD): Boolean;
   function GetPtOnEllipseFromAngle(const ellipseRect: TRectD; angle: double): TPointD;
   function GetPtOnRotatedEllipseFromAngle(const ellipseRect: TRectD;
@@ -1532,10 +1532,12 @@ end;
 function IsPointInEllipse(const ellipseRec: TRect; const pt: TPoint): Boolean;
 var
   rec: TRectD;
+  w,h: integer;
   x,y, y2, a,b, dx,dy: double;
 begin
-  a := RectWidth(ellipseRec) *0.5;
-  b := RectHeight(ellipseRec) *0.5;
+  RectWidthHeight(ellipseRec, w, h);
+  a := w * 0.5;
+  b := h * 0.5;
   dx := ellipseRec.Left + a;
   dy := ellipseRec.Top + b;
   rec := RectD(ellipseRec);
@@ -1553,7 +1555,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function GetLineEllipseIntersects(const ellipseRect: TRect;
+function GetLineEllipseIntersects(const ellipseRec: TRect;
   var linePt1, linePt2: TPointD): Boolean;
 var
   dx, dy, m,a,b,c,q: double;
@@ -1561,11 +1563,11 @@ var
   rec: TRectD;
   pt1, pt2: TPointD;
 begin
-  a := RectWidth(ellipseRect) *0.5;
-  b := RectHeight(ellipseRect) *0.5;
+  rec := RectD(ellipseRec);
+  a := rec.Width *0.5;
+  b := rec.Height *0.5;
   //offset ellipseRect so it's centered over the coordinate origin
-  dx := ellipseRect.Left + a; dy := ellipseRect.Top + b;
-  rec := RectD(ellipseRect);
+  dx := ellipseRec.Left + a; dy := ellipseRec.Top + b;
   offsetRect(rec, -dx, -dy);
   pt1 := OffsetPoint(linePt1, -dx, -dy);
   pt2 := OffsetPoint(linePt2, -dx, -dy);
@@ -1692,7 +1694,12 @@ begin
   Result := nil;
   if not Assigned(path) then exit;
   highI := high(path);
-  if delta < MinStrokeWidth/2 then delta := MinStrokeWidth/2;
+  if Abs(delta) < MinStrokeWidth/2 then
+  begin
+    if delta < 0 then
+      delta := -MinStrokeWidth/2 else
+      delta := MinStrokeWidth/2;
+  end;
 
   pathArea := Area(path);
   absPathArea := Abs(pathArea);
@@ -1998,7 +2005,6 @@ begin
   RotatePoint(Result, origin, angle);
 end;
 //------------------------------------------------------------------------------
-
 
 function IntersectPoint(const ln1a, ln1b, ln2a, ln2b: TPointD; out ip: TPointD): Boolean;
 var

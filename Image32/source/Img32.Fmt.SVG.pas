@@ -15,7 +15,9 @@ interface
 {$I Img32.inc}
 
 uses
-  SysUtils, Classes, Math, Img32, Img32.Vector, Img32.SVG.Reader;
+  SysUtils, Classes, Math,
+  {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults, {$ENDIF}
+  Img32, Img32.Vector, Img32.SVG.Reader;
 
 type
   TImageFormat_SVG = class(TImageFormat)
@@ -29,6 +31,38 @@ type
     class function PasteFromClipboard(img32: TImage32): Boolean; override;
   end;
 
+  TSvgListObject = class
+    xml           : string;
+    name          : string;
+  end;
+
+  TSvgImageList32 = class
+  private
+    fReader : TSvgReader;
+{$IFDEF XPLAT_GENERICS}
+    fList: TList<TSvgListObject>;
+{$ELSE}
+    fList: TList;
+{$ENDIF}
+    fDefWidth  : integer;
+    fDefHeight : integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Clear;
+    function Count: integer;
+    function Find(const aName: string): integer;
+    procedure GetImage(index: integer; image: TImage32);
+    procedure Add(const aName, xml: string);
+    procedure AddFromFile(const aName, filename: string);
+    procedure AddFromResource(const aName, resName: string; resType: PChar);
+    procedure Insert(index: integer; const name, xml: string);
+    procedure Move(currentIndex, newIndex: integer);
+    procedure Delete(index: integer);
+    property DefaultWidth: integer read fDefWidth write fDefWidth;
+    property DefaultHeight: integer read fDefHeight write fDefHeight;
+  end;
+
 var
   defaultSvgWidth: integer = 800;
   defaultSvgHeight: integer = 600;
@@ -36,7 +70,135 @@ var
 implementation
 
 //------------------------------------------------------------------------------
-// Loading (reading) PNG images from file ...
+// TSvgImageList32
+//------------------------------------------------------------------------------
+
+constructor TSvgImageList32.Create;
+begin
+  fReader := TSvgReader.Create;
+
+{$IFDEF XPLAT_GENERICS}
+  fList := TList<TSvgListObject>.Create;
+{$ELSE}
+  fList := TList.Create;
+{$ENDIF}
+end;
+//------------------------------------------------------------------------------
+
+destructor TSvgImageList32.Destroy;
+begin
+  Clear;
+  fList.Free;
+  fReader.Free;
+  inherited;
+end;
+//------------------------------------------------------------------------------
+
+function TSvgImageList32.Count: integer;
+begin
+  result := fList.Count;
+end;
+//------------------------------------------------------------------------------
+
+procedure TSvgImageList32.Clear;
+var
+  i: integer;
+begin
+  for i := 0 to fList.Count -1 do
+    TSvgListObject(fList[i]).Free;
+  fList.Clear;
+end;
+//------------------------------------------------------------------------------
+
+function TSvgImageList32.Find(const aName: string): integer;
+var
+  i: integer;
+begin
+  for i := 0 to fList.Count -1 do
+    with TSvgListObject(fList[i]) do
+      if SameText(name, aName) then
+      begin
+        Result := i;
+        Exit;
+      end;
+  Result := -1;
+end;
+//------------------------------------------------------------------------------
+
+procedure TSvgImageList32.GetImage(index: integer; image: TImage32);
+begin
+  if not Assigned(image) or (index < 0) or (index >= count) then Exit;
+  if image.IsEmpty then
+   image.SetSize(fDefWidth, fDefHeight);
+  with TSvgListObject(fList[index]) do
+    fReader.LoadFromString(xml);
+  fReader.DrawImage(image, true);
+end;
+//------------------------------------------------------------------------------
+
+procedure TSvgImageList32.Add(const aName, xml: string);
+begin
+  Insert(count, aName, xml);
+end;
+//------------------------------------------------------------------------------
+
+procedure TSvgImageList32.AddFromFile(const aName, filename: string);
+begin
+  if not FileExists(filename) then Exit;
+  with TStringList.Create do
+  try
+    LoadFromFile(filename);
+    Self.Insert(Self.Count, aName, Text);
+  finally
+    Free;
+  end;
+end;
+//------------------------------------------------------------------------------
+
+procedure TSvgImageList32.AddFromResource(const aName, resName: string; resType: PChar);
+var
+  rs: TResourceStream;
+  ansi: AnsiString;
+begin
+  rs := TResourceStream.Create(hInstance, resName, resType);
+  try
+    SetLength(ansi, rs.Size);
+    rs.Read(ansi[1], rs.Size);
+    Self.Insert(Self.Count, aName, string(ansi));
+  finally
+    rs.Free;
+  end;
+end;
+//------------------------------------------------------------------------------
+
+procedure TSvgImageList32.Insert(index: integer; const name, xml: string);
+var
+  lo: TSvgListObject;
+begin
+  if index < 0 then index := 0
+  else if index > Count then index := Count;
+
+  lo := TSvgListObject.Create;
+  lo.name := name;
+  lo.xml := xml;
+  fList.Insert(index, lo);
+end;
+//------------------------------------------------------------------------------
+
+procedure TSvgImageList32.Move(currentIndex, newIndex: integer);
+begin
+  fList.Move(currentIndex, newIndex);
+end;
+//------------------------------------------------------------------------------
+
+procedure TSvgImageList32.Delete(index: integer);
+begin
+  TSvgListObject(fList[index]).Free;
+  fList.Delete(index);
+end;
+
+//------------------------------------------------------------------------------
+// Loading (reading) SVG images from file ...
 //------------------------------------------------------------------------------
 
 function TImageFormat_SVG.LoadFromStream(stream: TStream; img32: TImage32): Boolean;

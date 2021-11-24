@@ -37,7 +37,7 @@ const
   clBlack32    = TColor32($FF000000);
   clBlue32     = TColor32($FF0000FF);
   clFuchsia32  = TColor32($FFFF00FF);
-  clGray32     = TColor32($FF7F7F7F);
+  clGray32     = TColor32($FF808080);
   clGreen32    = TColor32($FF008000);
   clLime32     = TColor32($FF00FF00);
   clMaroon32   = TColor32($FF800000);
@@ -50,8 +50,9 @@ const
   clTeal32     = TColor32($FF007F7F);
   clWhite32    = TColor32($FFFFFFFF);
   clYellow32   = TColor32($FFFFFF00);
-  clBtnFace32  = TColor32($FFF0F0F0);
 
+  clBtnFace32  = TColor32($FFF0F0F0);
+  clLtGray32   = TColor32($FFD3D3D3);
 
 {$IFDEF ZEROBASEDSTR}
   {$ZEROBASEDSTRINGS OFF}
@@ -308,6 +309,8 @@ type
   end;
   PHsl = ^THsl;
   TArrayofHSL = array of THsl;
+
+  TTriState = (tsUnknown, tsYes, tsNo);
 
   PPointD = ^TPointD;
   TPathD = array of TPointD;       //nb: watch for ambiguity with Clipper.pas

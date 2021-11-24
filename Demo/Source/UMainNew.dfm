@@ -266,6 +266,7 @@ object MainForm: TMainForm
       ImageList = VirtualImageList
       ImageIndex = 100
       Align = alBottom
+      OnDblClick = SVGIconImageDblClick
       OnMouseDown = SVGIconImageMouseDown
     end
     object DeleteButton: TButton

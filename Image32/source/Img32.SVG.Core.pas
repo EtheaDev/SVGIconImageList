@@ -28,7 +28,6 @@ uses
 {$ENDIF}
 
 type
-  TTriState = (tsUnknown, tsYes, tsNo);
   TSvgEncoding = (eUnknown, eUtf8, eUnicodeLE, eUnicodeBE);
 
   TUnitType = (utUnknown, utNumber, utPercent, utEm, utEx, utPixel,

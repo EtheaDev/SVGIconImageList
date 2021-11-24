@@ -15,11 +15,11 @@ Recent changes:
 Version 3.4.1
   Img32.Extra
     Bugfix HatchBackground function -
-      incorrectly drawn when background wasn't clear
-    DrawEdgePath renamed to DrawEdge (and overloaded)
+      failed to redraw when the image wasn't clear
+    DrawEdgePath renamed to DrawEdge (now overloaded)
   Img32.Layers
     Bugfix TLayer32 - 
-      incorrectly redraw when changing layer visibility
+      failed to hide layer when Visible set to false
     TLayeredImage32 
       default BackgroundColor changed to clBtnFace
       

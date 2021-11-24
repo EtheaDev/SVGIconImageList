@@ -31,7 +31,8 @@ type
 procedure DrawEdge(img: TImage32; const rec: TRect;
   topLeftColor, bottomRightColor: TColor32; penWidth: double = 1.0); overload;
 procedure DrawEdge(img: TImage32; const path: TPathD;
-  topLeftColor, bottomRightColor: TColor32; penWidth: double = 1.0); overload;
+  topLeftColor, bottomRightColor: TColor32;
+  penWidth: double = 1.0; closePath: Boolean = true); overload;
 
 procedure DrawShadow(img: TImage32; const polygon: TPathD;
   fillRule: TFillRule; depth: double; angleRads: double = angle45;
@@ -134,6 +135,10 @@ function SmoothToBezier(const path: TPathD; closed: Boolean;
   tolerance: double; minSegLength: double = 2): TPathD; overload;
 function SmoothToBezier(const paths: TPathsD; closed: Boolean;
   tolerance: double; minSegLength: double = 2): TPathsD; overload;
+
+//InterpolatePoints: smooths a simple line chart.
+//Points should be left to right and equidistant along the X axis
+function InterpolatePoints(const points: TPathD; tension: integer = 0): TPathD;
 
 function GetFloodFillMask(imgIn, imgMaskOut: TImage32; x, y: Integer;
   tolerance: Byte; compareFunc: TCompareFunctionEx): Boolean;
@@ -262,22 +267,28 @@ end;
 //------------------------------------------------------------------------------
 
 procedure DrawEdge(img: TImage32; const path: TPathD;
-  topLeftColor, bottomRightColor: TColor32; penWidth: double = 1.0);
+  topLeftColor, bottomRightColor: TColor32;
+  penWidth: double = 1.0; closePath: Boolean = true);
 var
   i, highI, deg: integer;
   frac: double;
-  p: TPathD;
   c: TColor32;
+  p: TPathD;
 const
   RadToDeg = 180/PI;
 begin
   highI := high(path);
   if highI < 2 then Exit;
-  SetLength(p, 2);
-  p[0] := path[highI];
-  for i := 0 to highI do
+  p := path;
+  if closePath and not PointsNearEqual(p[0], p[highI], 0.01) then
   begin
-    deg := Round(GetAngle(p[0], path[i]) * RadToDeg);
+    AppendPath(p, p[0]);
+    inc(highI);
+  end;
+
+  for i := 1 to highI do
+  begin
+    deg := Round(GetAngle(p[i-1], p[i]) * RadToDeg);
     case deg of
       -180..-136: frac := (-deg-135)/45;
       -135..0   : frac := 0;
@@ -285,9 +296,7 @@ begin
       else        frac := 1;
     end;
     c := GradientColor(topLeftColor, bottomRightColor, frac);
-    p[1] := path[i];
-    DrawLine(img, p, penWidth, c, esButt);
-    p[0] := p[1];
+    DrawLine(img, p[i-1], p[i], penWidth, c);
   end;
 end;
 //------------------------------------------------------------------------------
@@ -2522,6 +2531,71 @@ begin
     Free;
   end;
   SetLength(Result, j);
+end;
+//------------------------------------------------------------------------------
+
+function HermiteInterpolation(y1, y2, y3, y4: double;
+  mu, tension: double): double;
+var
+   m0,m1,mu2,mu3: double;
+   a0,a1,a2,a3: double;
+begin
+  //http://paulbourke.net/miscellaneous/interpolation/
+  //nb: optional bias toward left or right has been disabled.
+	mu2 := mu * mu;
+	mu3 := mu2 * mu;
+   m0  := (y2-y1)*(1-tension)/2;
+   m0 := m0  + (y3-y2)*(1-tension)/2;
+   m1 := (y3-y2)*(1-tension)/2;
+   m1 := m1 + (y4-y3)*(1-tension)/2;
+   a0 :=  2*mu3 - 3*mu2 + 1;
+   a1 :=    mu3 - 2*mu2 + mu;
+   a2 :=    mu3 -   mu2;
+   a3 := -2*mu3 + 3*mu2;
+   Result := a0*y2+a1*m0+a2*m1+a3*y3;
+end;
+//------------------------------------------------------------------------------
+
+function InterpolateY(const y1,y2,y3,y4: double;
+  dx: integer; tension: double): TArrayOfDouble;
+var
+  i: integer;
+begin
+  SetLength(Result, dx);
+  if dx = 0 then Exit;
+  Result[0] := y2;
+  for i := 1 to dx-1 do
+    Result[i] := HermiteInterpolation(y1,y2,y3,y4, i/dx, tension);
+end;
+//------------------------------------------------------------------------------
+
+function InterpolatePoints(const points: TPathD; tension: integer): TPathD;
+var
+  i, j, len, len2: integer;
+  p, p2: TPathD;
+  ys: TArrayOfDouble;
+begin
+  if tension < -1 then tension := -1
+  else if tension > 1 then tension := 1;
+
+  Result := nil;
+  len := Length(points);
+  if len < 2 then Exit;
+  SetLength(p, len +2);
+  p[0] := points[0];
+  p[len+1] := points[len -1];
+  Move(points[0],p[1], len * SizeOf(TPointD));
+  for i := 1 to len-1 do
+  begin
+    ys := InterpolateY(p[i-1].Y,p[i].Y,p[i+1].Y,p[i+2].Y,
+      Trunc(p[i+1].X - p[i].X), tension);
+    len2 := Length(ys);
+    SetLength(p2, len2);
+    for j := 0 to len2 -1 do
+      p2[j] := PointD(p[i].X +j, ys[j]);
+    AppendPath(Result, p2);
+  end;
+  AppendPoint(Result, p[len]);
 end;
 
 //------------------------------------------------------------------------------
