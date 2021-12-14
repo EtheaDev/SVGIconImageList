@@ -613,7 +613,7 @@ begin
   while (i >= 0) and (fRecipientList[i] <> Recipient) do dec(i);
   if i < 0 then Exit;
   if i < highI then
-    Move(fRecipientList[i+i], fRecipientList[i],
+    Move(fRecipientList[i+1], fRecipientList[i],
       (highI - i) * SizeOf(TNotifyRecipient));
   SetLength(fRecipientList, highI);
 end;
