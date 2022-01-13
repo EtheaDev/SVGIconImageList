@@ -93,6 +93,7 @@
         <DCCReference Include="..\..\Image32\source\Img32.Text.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.Vector.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.Fmt.SVG.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Storage.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.SVG.Core.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.SVG.Path.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.SVG.Reader.pas"/>

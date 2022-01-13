@@ -2,8 +2,8 @@ unit Img32.SVG.Path;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.4                                                             *
-* Date      :  25 October 2021                                                 *
+* Version   :  4.0                                                             *
+* Date      :  22 December 2021                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -207,7 +207,7 @@ type
     constructor Create(parent: TSvgPath);
     destructor Destroy; override;
     procedure Clear;
-    procedure Offset(dx, dy: integer);
+    procedure Offset(dx, dy: double);
     function GetFirstPt: TPointD;
     function GetLastPt: TPointD;
     function GetBounds: TRectD;
@@ -1286,7 +1286,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgSubPath.Offset(dx, dy: integer);
+procedure TSvgSubPath.Offset(dx, dy: double);
 var
   i: integer;
 begin
@@ -1596,7 +1596,7 @@ begin
 
   //watch out for straight horizontal or vertical lines
   if not IsEmptyRect(Result) then Exit;
-  p := Img32.Vector.Grow(p, nil, 1, jsSquare, 0);
+  p := Grow(p, nil, 1, jsSquare, 0);
   Result := GetBoundsD(p);
 end;
 //------------------------------------------------------------------------------

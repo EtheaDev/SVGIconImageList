@@ -2,10 +2,10 @@ unit Img32.SVG.PathDesign;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.4                                                             *
-* Date      :  25 October 2021                                                 *
+* Version   :  4.0                                                             *
+* Date      :  10 January 2022                                                 *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2021                                         *
+* Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
 * Purpose   :  Supports designing SVG paths                                    *
 *                                                                              *
@@ -43,7 +43,7 @@ type
     procedure BtnMoveCheck(const pos: TPointD); virtual;
     property  Owner: TSvgPathLayer read fOwner;
   public
-    constructor Create(parent: TLayer32;  const name: string = ''); override;
+    constructor Create(parent: TLayer32 = nil; const name: string = ''); override;
     procedure Init(seg: TSvgPathSeg); virtual;
     function  CreateBtnGroup: TButtonGroupLayer32; virtual;
     procedure UpdateBtnGroup(movedBtn: TLayer32); virtual;
@@ -68,7 +68,7 @@ type
   protected
     procedure DrawDesigner(designer: TDesignerLayer32); override;
   public
-    constructor Create(parent: TLayer32;  const name: string = ''); override;
+    constructor Create(parent: TLayer32 = nil; const name: string = ''); override;
     procedure Init(seg: TSvgPathSeg); override;
     function CreateBtnGroup: TButtonGroupLayer32; override;
     function TestUpdateBtnGroup(movedBtn: TLayer32;
@@ -146,9 +146,9 @@ type
     property Owner : TSvgPathLayer read fOwner;
   public
     procedure Init(subPath: TSvgSubPath); virtual;
-    procedure Offset(dx, dy: integer); override;
+    procedure Offset(dx, dy: double); override;
     function GetLastSegLayer: TPathSegLayer;
-    function GetStringDef(decimalPrec: integer): string;
+    function GetStringDef(getAsRelative: Boolean; decimalPrec: integer): string;
     property SubPath: TSvgSubPath read fSubPath;
     property SegLayer[index: integer]: TPathSegLayer read GetSegLayer;
   end;
@@ -167,7 +167,7 @@ type
     property StrokeColor  : TColor32 read fStrokeColor;
     property StrokeColor2 : TColor32 read fStrokeColor2;
   public
-    constructor Create(parent: TLayer32;  const name: string = ''); override;
+    constructor Create(parent: TLayer32 = nil; const name: string = ''); override;
     destructor Destroy; override;
     procedure LoadPath(const dpath: string; const destRect: TRect; scale: double = 0);
     procedure LoadPathsFromFile(const filename: string;
@@ -198,11 +198,11 @@ const
 // TPathSegLayer
 //------------------------------------------------------------------------------
 
-constructor TPathSegLayer.Create(parent: TLayer32;  const name: string = '');
+constructor TPathSegLayer.Create(parent: TLayer32; const name: string);
 begin
-  inherited;
+  inherited Create(parent, name);
   fOwner := Parent.Parent as TSvgPathLayer;
-  Margin := Max(fOwner.Margin, Ceil(DefaultButtonSize /2));
+  OuterMargin := Max(fOwner.Margin, Ceil(DefaultButtonSize /2));
 end;
 //------------------------------------------------------------------------------
 
@@ -222,13 +222,13 @@ begin
   if not Assigned(Paths) or not Assigned(Paths[0]) then Exit;
   Image.Clear; //Image.Clear($10FF0000); //debugging :)
   if Focused then c := Owner.fStrokeColor2 else c := Owner.fStrokeColor;
-  p := OffsetPath(Paths[0], -Left, -Top);
+  p := OffsetPath(Paths[0], -Left+OuterMargin, -Top+OuterMargin);
   DrawLine(Image, p, Owner.StrokeWidth, c, esRound);
 
   //UpdateHitTestMaskFromImage;
   //draw a wider stroke to define the HT region
-  HitTestRec.htImage.SetSize(Image.Width, Image.Height);
-  DrawLine(HitTestRec.htImage, p, Owner.StrokeWidth*2, clBlack32, esRound);
+  HitTest.htImage.SetSize(Image.Width, Image.Height);
+  DrawLine(HitTest.htImage, p, Owner.StrokeWidth*2, clBlack32, esRound);
 end;
 //------------------------------------------------------------------------------
 
@@ -384,9 +384,9 @@ end;
 // TSvgASegLayer
 //------------------------------------------------------------------------------
 
-constructor TSvgASegLayer.Create(parent: TLayer32;  const name: string = '');
+constructor TSvgASegLayer.Create(parent: TLayer32 = nil; const name: string = '');
 begin
-  inherited;
+  inherited Create(parent, name);
   fRectMargin := 20;
 end;
 //------------------------------------------------------------------------------
@@ -404,7 +404,7 @@ begin
   TSvgASegment(fSeg).ReverseArc;
   Paths := Img32.Vector.Paths(fSeg.FlatPath);
   DrawPath;
-  Invalidate(Bounds);
+  Invalidate;
 end;
 //------------------------------------------------------------------------------
 
@@ -767,7 +767,7 @@ begin
     Paths := Img32.Vector.Paths(fSeg.FlatPath);
     DrawPath;
   end;
-  Invalidate(Bounds);
+  Invalidate;
 
   //move the following segments
   segLayer := GetNextSegLayer;
@@ -797,7 +797,7 @@ begin
     r2 := Img32.Vector.GetBoundsD(p2);
     r := UnionRect(r, r2);
     InflateRect(r, dpiAware1, dpiAware1); //ie pen width
-    designer.SetBounds(Rect(r));
+    designer.SetInnerBounds(r);
     p := OffsetPath(p, -designer.Left, -designer.Top);
 
     SetLength(dashes, 2);
@@ -853,7 +853,7 @@ begin
   SetLength(p, 2);
   with fSeg do
   begin
-    designer.SetBounds(Rect(GetCtrlBounds));
+    designer.SetInnerBounds(GetCtrlBounds);
     pt := FirstPt;
     for i := 0 to Length(ctrlPts) div 3 -1 do
     begin
@@ -916,7 +916,7 @@ begin
   SetLength(p, 2);
   with fSeg do
   begin
-    designer.SetBounds(Rect(GetCtrlBounds));
+    designer.SetInnerBounds(GetCtrlBounds);
     pt := FirstPt;
     for i := 0 to High(ctrlPts) div 2 do
     begin
@@ -967,7 +967,7 @@ begin
   SetLength(p, 2);
   with fSeg do
   begin
-    designer.SetBounds(Rect(GetCtrlBounds));
+    designer.SetInnerBounds(GetCtrlBounds);
     for i := 0 to High(ctrlPts) div 2 do
     begin
       p[0] := ctrlPts[i*2];
@@ -1111,6 +1111,7 @@ var
 begin
   fOwner    := Parent as TSvgPathLayer;
   fSubPath  := subPath;
+  seg := nil;
   for i := 0 to subPath.Count -1 do
   begin
     case subPath[i].segType of
@@ -1130,7 +1131,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure  TSubPathLayer.Offset(dx, dy: integer);
+procedure  TSubPathLayer.Offset(dx, dy: double);
 begin
   inherited;
   //moving a segment must also involve the whole path
@@ -1138,9 +1139,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TSubPathLayer.GetStringDef(decimalPrec: integer): string;
+function TSubPathLayer.GetStringDef(getAsRelative: Boolean; decimalPrec: integer): string;
 begin
-  Result := fSubPath.GetStringDef(true, decimalPrec);
+  Result := fSubPath.GetStringDef(getAsRelative, decimalPrec);
 end;
 //------------------------------------------------------------------------------
 
@@ -1165,9 +1166,9 @@ end;
 // TSvgPathLayer
 //------------------------------------------------------------------------------
 
-constructor TSvgPathLayer.Create(parent: TLayer32;  const name: string = '');
+constructor TSvgPathLayer.Create(parent: TLayer32 = nil; const name: string = '');
 begin
-  inherited;
+  inherited Create(parent, name);
   fSvgPath := TSvgPath.Create;
   fStrokeWidth  := DPIAware(5);
   fStrokeColor  := clBlack32;
@@ -1244,7 +1245,7 @@ var
         end;
     end;
     for i := 0 to el.childs.Count -1 do
-      ParseTree(el.childs[i]);
+      ParseTree(TSvgTreeEl(el.childs[i]));
   end;
 
 var

@@ -23,11 +23,11 @@
     {$DEFINE NESTED_TYPES}               //Delphi 2005 - added nested types & nested constants
     {$IF COMPILERVERSION >= 18}
       {$DEFINE ABSTRACT_CLASSES}         //Delphi 2006 - added abstract classes
-      {$DEFINE RECORD_METHODS}           //Delphi 2006 - added records with methods
       {$DEFINE REPORTMEMORYLEAKS}        //Delphi 2006 - added ReportMemoryLeaksOnShutdown
       {$WARN SYMBOL_PLATFORM OFF}
       {$DEFINE SETSIZE}                  //Delphi 2006 - added TBitmap.SetSize
       {$IF COMPILERVERSION >= 18.5}
+        {$DEFINE RECORD_METHODS}         //Delphi 2007 - added records with methods
         {$DEFINE DELPHI_PNG}             //Delphi 2007 - added PNG support
         {$DEFINE DELPHI_GIF}             //Delphi 2007 - added GIF support
         {$DEFINE MAINFORMONTASKBAR}      //Delphi 2007 - added TApplication.MainFormOnTaskbar

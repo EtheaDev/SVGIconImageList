@@ -2,8 +2,8 @@ unit Img32.CQ;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.0                                                             *
-* Date      :  20 July 2021                                                    *
+* Version   :  4.0                                                             *
+* Date      :  22 December 2021                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  Color reduction for TImage32                                    *
@@ -498,7 +498,7 @@ var
  end;
 
 begin
-  if (color shr 24) < $80 then Exit;
+  if GetAlpha(color) < $80 then Exit;
   inc(TotalCount);
   color := color and $FFFFFF;
   AddColor(Top, 0);

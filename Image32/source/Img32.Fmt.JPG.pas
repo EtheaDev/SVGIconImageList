@@ -2,8 +2,8 @@ unit Img32.Fmt.JPG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.2                                                             *
-* Date      :  19 August 2021                                                  *
+* Version   :  4.0                                                             *
+* Date      :  22 December 2021                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  JPG/JPEG file format extension for TImage32                     *
@@ -67,8 +67,15 @@ begin
   try
     jpeg.LoadFromStream(stream);
     if jpeg.Empty then Exit;
+
     with TJpegImageHack(jpeg).Bitmap do
+    try
+      if GetCurrentThreadId <> MainThreadID then Canvas.Lock;
       img32.CopyFromDC(Canvas.Handle, Rect(0,0, Width, Height));
+    finally
+      if GetCurrentThreadId <> MainThreadID then Canvas.Unlock;
+    end;
+
     result := true;
   finally
     jpeg.Free;
@@ -84,15 +91,22 @@ var
   Jpeg: TJpegImage;
 begin
   Jpeg := TJpegImage.Create;
+  with TJpegImageHack(jpeg) do
   try
-    TJpegImageHack(jpeg).NewImage;
-    TJpegImageHack(jpeg).NewBitmap;
-    TJpegImageHack(jpeg).Bitmap.Width := img32.Width;
-    TJpegImageHack(jpeg).Bitmap.Height := img32.Height;
-    img32.CopyToDc(TJpegImageHack(jpeg).Bitmap.Canvas.Handle,0,0, false);
-    Jpeg.SaveToStream(stream);
+    NewImage;
+    NewBitmap;
+    Bitmap.Width := img32.Width;
+    Bitmap.Height := img32.Height;
+
+    if GetCurrentThreadId <> MainThreadID then Bitmap.Canvas.Lock;
+    try
+      img32.CopyToDc(Bitmap.Canvas.Handle, 0, 0, false);
+    finally
+      if GetCurrentThreadId <> MainThreadID then Bitmap.Canvas.Unlock;
+    end;
+    SaveToStream(stream);
   finally
-    Jpeg.Free;
+    Free;
   end;
 end;
 //------------------------------------------------------------------------------

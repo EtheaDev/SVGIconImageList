@@ -1,5 +1,5 @@
 const
-  ColorConsts: array[0..148] of TColorConst = (
+  ColorConsts: array[0..147] of TColorConst = (
     (ColorName: 'aliceblue'; ColorValue: $FFF0F8FF),
     (ColorName: 'antiquewhite'; ColorValue: $FFFAEBD7),
     (ColorName: 'aqua'; ColorValue: $FF00FFFF),
@@ -27,7 +27,6 @@ const
     (ColorName: 'darkgoldenrod'; ColorValue: $FFB8860B),
     (ColorName: 'darkgray'; ColorValue: $FFA9A9A9),
     (ColorName: 'darkgreen'; ColorValue: $FF006400),
-    (ColorName: 'darkgray'; ColorValue: $FFA9A9A9),
     (ColorName: 'darkgrey'; ColorValue: $FFA9A9A9),
     (ColorName: 'darkkhaki'; ColorValue: $FFBDB76B),
     (ColorName: 'darkmagenta'; ColorValue: $FF8B008B),
@@ -56,7 +55,6 @@ const
     (ColorName: 'gold'; ColorValue: $FFFFD700),
     (ColorName: 'goldenrod'; ColorValue: $FFDAA520),
     (ColorName: 'gray'; ColorValue: $FF808080),
-    (ColorName: 'grey'; ColorValue: $FF808080),
     (ColorName: 'green'; ColorValue: $FF008000),
     (ColorName: 'greenyellow'; ColorValue: $FFADFF2F),
     (ColorName: 'grey'; ColorValue: $FF808080),
@@ -75,8 +73,8 @@ const
     (ColorName: 'lightcyan'; ColorValue: $FFE0FFFF),
     (ColorName: 'lightgoldenrodyellow'; ColorValue: $FFFAFAD2),
     (ColorName: 'lightgray'; ColorValue: $FFD3D3D3),
-    (ColorName: 'lightgrey'; ColorValue: $FFD3D3D3),
     (ColorName: 'lightgreen'; ColorValue: $FF90EE90),
+    (ColorName: 'lightgrey'; ColorValue: $FFD3D3D3),
     (ColorName: 'lightpink'; ColorValue: $FFFFB6C1),
     (ColorName: 'lightsalmon'; ColorValue: $FFFFA07A),
     (ColorName: 'lightseagreen'; ColorValue: $FF20B2AA),
@@ -136,6 +134,7 @@ const
     (ColorName: 'skyblue'; ColorValue: $FF87CEEB),
     (ColorName: 'slateblue'; ColorValue: $FF6A5ACD),
     (ColorName: 'slategray'; ColorValue: $FF708090),
+    (ColorName: 'slategrey'; ColorValue: $FF708090),
     (ColorName: 'springgreen'; ColorValue: $FF00FF7F),
     (ColorName: 'steelblue'; ColorValue: $FF4682B4),
     (ColorName: 'tan'; ColorValue: $FFD2B48C),

@@ -2,8 +2,8 @@ unit Img32.Transform;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.3                                                             *
-* Date      :  21 September 2021                                               *
+* Version   :  4.0                                                             *
+* Date      :  22 December 2021                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -600,7 +600,7 @@ end;
 function ReColor(color, newColor: TColor32): TColor32;
 {$IFDEF INLINE} inline; {$ENDIF}
 begin
-  Result := Alpha(color) or newColor;
+  Result := (color and $FF000000) or newColor;
 end;
 //------------------------------------------------------------------------------
 
@@ -746,7 +746,7 @@ begin
   SetLength(tmp, (w+1) * h);
 
   prevX := topPath[0].X;
-  allowBackColoring := (backColor shr 24) > 2;
+  allowBackColoring := GetAlpha(backColor) > 2;
   backColor := backColor and $00FFFFFF;
 
   distances := GetCumulativeDistances(topPath);
@@ -815,7 +815,7 @@ begin
   SetLength(tmp, w * (h+1));
 
   prevY := leftPath[0].Y;
-  allowBackColoring := (backColor shr 24) > 2;
+  allowBackColoring := GetAlpha(backColor) > 2;
   backColor :=   backColor and $00FFFFFF;
 
   distances := GetCumulativeDistances(leftPath);

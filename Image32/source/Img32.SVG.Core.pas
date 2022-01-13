@@ -2,8 +2,8 @@ unit Img32.SVG.Core;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.4                                                             *
-* Date      :  25 October 2021                                                 *
+* Version   :  4.0                                                             *
+* Date      :  22 December 2021                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -150,13 +150,21 @@ type
     function GetAttrib(index: integer): PSvgAttrib;
     function GetAttribCount: integer;
   public
+    {$IFDEF XPLAT_GENERICS}
+    childs      : TList<TXmlEl>;
+    {$ELSE}
+    childs      : TList;
+    {$ENDIF}
     name        : UTF8String;
     owner       : TSvgParser;
+    hash        : Cardinal;
+    text        : UTF8String;
     selfClosed  : Boolean;
     constructor Create(owner: TSvgParser); virtual;
     destructor  Destroy; override;
     procedure   Clear; virtual;
     function    ParseHeader(var c: PUTF8Char; endC: PUTF8Char): Boolean; virtual;
+    function    ParseContent(var c: PUTF8Char; endC: PUTF8Char): Boolean; virtual;
     function    ParseAttribName(var c: PUTF8Char; endC: PUTF8Char; attrib: PSvgAttrib): Boolean;
     function    ParseAttribValue(var c: PUTF8Char; endC: PUTF8Char; attrib: PSvgAttrib): Boolean;
     function    ParseAttributes(var c: PUTF8Char; endC: PUTF8Char): Boolean; virtual;
@@ -175,18 +183,9 @@ type
 
   TSvgTreeEl = class(TXmlEl)
   public
-    hash        : Cardinal;
-    text        : UTF8String;
-    {$IFDEF XPLAT_GENERICS}
-    childs      : TList<TSvgTreeEl>;
-    {$ELSE}
-    childs      : TList;
-    {$ENDIF}
     constructor Create(owner: TSvgParser); override;
-    destructor  Destroy; override;
     procedure   Clear; override;
     function    ParseHeader(var c: PUTF8Char; endC: PUTF8Char): Boolean; override;
-    function    ParseContent(var c: PUTF8Char; endC: PUTF8Char): Boolean; virtual;
   end;
 
   TSvgParser = class
@@ -1094,7 +1093,7 @@ begin
 
   if (color = clInvalid) or (color = clCurrent) or (color = clNone32) then
     alpha := 255 else
-    alpha := color shr 24;
+    alpha := GetAlpha(color);
 
   if Match(c, 'rgb') then
   begin
@@ -1307,8 +1306,10 @@ constructor TXmlEl.Create(owner: TSvgParser);
 begin
 {$IFDEF XPLAT_GENERICS}
   attribs := TList<PSvgAttrib>.Create;
+  childs := TList<TXmlEl>.Create;
 {$ELSE}
   attribs := TList.Create;
+  childs := TList.Create;
 {$ENDIF}
   selfClosed := true;
   Self.owner := owner;
@@ -1319,6 +1320,7 @@ destructor TXmlEl.Destroy;
 begin
   Clear;
   attribs.Free;
+  childs.Free;
   inherited;
 end;
 //------------------------------------------------------------------------------
@@ -1330,6 +1332,10 @@ begin
   for i := 0 to attribs.Count -1 do
     Dispose(PSvgAttrib(attribs[i]));
   attribs.Clear;
+
+  for i := 0 to childs.Count -1 do
+    TXmlEl(childs[i]).free;
+  childs.Clear;
 end;
 //------------------------------------------------------------------------------
 
@@ -1512,110 +1518,9 @@ function TXmlEl.GetAttrib(index: integer): PSvgAttrib;
 begin
   Result := PSvgAttrib(attribs[index]);
 end;
-
-//------------------------------------------------------------------------------
-// TDocTypeEl
 //------------------------------------------------------------------------------
 
-procedure TDocTypeEl.SkipWord(var c, endC: PUTF8Char);
-begin
-  while (c < endC) and (c^ > space) do inc(c);
-  inc(c);
-end;
-//------------------------------------------------------------------------------
-
-function TDocTypeEl.ParseEntities(var c, endC: PUTF8Char): Boolean;
-var
-  attrib: PSvgAttrib;
-begin
-  attrib := nil;
-  inc(c); //skip opening '['
-  while (c < endC) and SkipBlanks(c, endC) do
-  begin
-    if (c^ = ']') then break
-    else if not Match(c, '<!entity') then
-    begin
-      while c^ > space do inc(c); //skip word.
-      Continue;
-    end;
-    inc(c, 8);
-    new(attrib);
-    if not ParseAttribName(c, endC, attrib) then break;
-    SkipBlanks(c, endC);
-    if not (c^ in [quote, dquote]) then break;
-    if not ParseQuotedString(c, endC, attrib.value) then break;
-    attribs.Add(attrib);
-    attrib := nil;
-    SkipBlanks(c, endC);
-    if c^ <> '>' then break;
-    inc(c); //skip entity's trailing '>'
-  end;
-  if Assigned(attrib) then Dispose(attrib);
-  Result := (c < endC) and (c^ = ']');
-  inc(c);
-end;
-//------------------------------------------------------------------------------
-
-function TDocTypeEl.ParseAttributes(var c: PUTF8Char; endC: PUTF8Char): Boolean;
-var
-  dummy : UTF8String;
-begin
-  while SkipBlanks(c, endC) do
-  begin
-    //we're currently only interested in ENTITY declarations
-    case c^ of
-      '[': ParseEntities(c, endC);
-      '"', '''': ParseQuotedString(c, endC, dummy);
-      '>': break;
-      else SkipWord(c, endC);
-    end;
-  end;
-  Result := (c < endC) and (c^ = '>');
-  inc(c);
-end;
-
-//------------------------------------------------------------------------------
-// TSvgTreeEl
-//------------------------------------------------------------------------------
-
-constructor TSvgTreeEl.Create(owner: TSvgParser);
-begin
-  inherited Create(owner);
-{$IFDEF XPLAT_GENERICS}
-  childs := TList<TSvgTreeEl>.Create;
-{$ELSE}
-  childs := TList.Create;
-{$ENDIF}
-  selfClosed := false;
-end;
-//------------------------------------------------------------------------------
-
-destructor TSvgTreeEl.Destroy;
-begin
-  inherited;
-  childs.Free;
-end;
-//------------------------------------------------------------------------------
-
-procedure TSvgTreeEl.Clear;
-var
-  i: integer;
-begin
-  for i := 0 to childs.Count -1 do
-    TSvgTreeEl(childs[i]).free;
-  childs.Clear;
-  inherited;
-end;
-//------------------------------------------------------------------------------
-
-function TSvgTreeEl.ParseHeader(var c: PUTF8Char; endC: PUTF8Char): Boolean;
-begin
-  Result := inherited ParseHeader(c, endC);
-  if Result then hash := GetHash(name);
-end;
-//------------------------------------------------------------------------------
-
-function TSvgTreeEl.ParseContent(var c: PUTF8Char; endC: PUTF8Char): Boolean;
+function TXmlEl.ParseContent(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 var
   child: TSvgTreeEl;
   entity: PSvgAttrib;
@@ -1720,7 +1625,98 @@ begin
     end;
   end;
 end;
+
 //------------------------------------------------------------------------------
+// TDocTypeEl
+//------------------------------------------------------------------------------
+
+procedure TDocTypeEl.SkipWord(var c, endC: PUTF8Char);
+begin
+  while (c < endC) and (c^ > space) do inc(c);
+  inc(c);
+end;
+//------------------------------------------------------------------------------
+
+function TDocTypeEl.ParseEntities(var c, endC: PUTF8Char): Boolean;
+var
+  attrib: PSvgAttrib;
+begin
+  attrib := nil;
+  inc(c); //skip opening '['
+  while (c < endC) and SkipBlanks(c, endC) do
+  begin
+    if (c^ = ']') then break
+    else if not Match(c, '<!entity') then
+    begin
+      while c^ > space do inc(c); //skip word.
+      Continue;
+    end;
+    inc(c, 8);
+    new(attrib);
+    if not ParseAttribName(c, endC, attrib) then break;
+    SkipBlanks(c, endC);
+    if not (c^ in [quote, dquote]) then break;
+    if not ParseQuotedString(c, endC, attrib.value) then break;
+    attribs.Add(attrib);
+    attrib := nil;
+    SkipBlanks(c, endC);
+    if c^ <> '>' then break;
+    inc(c); //skip entity's trailing '>'
+  end;
+  if Assigned(attrib) then Dispose(attrib);
+  Result := (c < endC) and (c^ = ']');
+  inc(c);
+end;
+//------------------------------------------------------------------------------
+
+function TDocTypeEl.ParseAttributes(var c: PUTF8Char; endC: PUTF8Char): Boolean;
+var
+  dummy : UTF8String;
+begin
+  while SkipBlanks(c, endC) do
+  begin
+    //we're currently only interested in ENTITY declarations
+    case c^ of
+      '[': ParseEntities(c, endC);
+      '"', '''': ParseQuotedString(c, endC, dummy);
+      '>': break;
+      else SkipWord(c, endC);
+    end;
+  end;
+  Result := (c < endC) and (c^ = '>');
+  inc(c);
+end;
+
+//------------------------------------------------------------------------------
+// TSvgTreeEl
+//------------------------------------------------------------------------------
+
+constructor TSvgTreeEl.Create(owner: TSvgParser);
+begin
+  inherited Create(owner);
+  selfClosed := false;
+end;
+//------------------------------------------------------------------------------
+
+procedure TSvgTreeEl.Clear;
+var
+  i: integer;
+begin
+  for i := 0 to childs.Count -1 do
+    TSvgTreeEl(childs[i]).free;
+  childs.Clear;
+  inherited;
+end;
+//------------------------------------------------------------------------------
+
+function TSvgTreeEl.ParseHeader(var c: PUTF8Char; endC: PUTF8Char): Boolean;
+begin
+  Result := inherited ParseHeader(c, endC);
+  if Result then hash := GetHash(name);
+end;
+//------------------------------------------------------------------------------
+
+//function TSvgTreeEl.ParseContent(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 
 constructor TSvgParser.Create;
 begin

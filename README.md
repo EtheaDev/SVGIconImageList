@@ -2,7 +2,7 @@
 
 ## Four engines to render SVG (Delphi Image32, Delphi TSVG, Direct2D wrapper or Cairo wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 3.2.0 (VCL+FMX)
+### Actual official version 3.3.0 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -56,12 +56,15 @@ As you can see, the four engines perform differently depending on the icons and 
 Related links: https://www.embarcadero.com/ - https://learndelphi.org/
 
 **Sample image of VCL version**
+
 ![Sample.jpg](./Demo/Images/Sample.jpg)
 
 **Sample image of FMX (Windows) version**
+
 ![SampleFMX.jpg](./Demo/Images/SampleFMX.jpg)
 
 **Sample image of the VCL SVGText-property editor**
+
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg)
 
 ### UTILITY
@@ -75,6 +78,11 @@ You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtension
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 ### RELEASE NOTES
+13 Jan 2022: version 3.3.0 (VCL+FMX)
+- Updated Image32 library to 4.0.0 version
+- Added a set of playing cards svg examples
+- Fixed Image32 drawing problem with "playing cards"
+
 24 Nov 2021: version 3.2.0 (VCL+FMX)
 - Component Editors uses IDE themes (light, dark...) and style
 - Fixed available components into palette when working with mobile platforms

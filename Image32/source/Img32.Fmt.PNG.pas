@@ -2,10 +2,10 @@ unit Img32.Fmt.PNG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.2                                                             *
-* Date      :  19 August 2021                                                  *
+* Version   :  4.0                                                             *
+* Date      :  10 January 2022                                                 *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2021                                         *
+* Copyright :  Angus Johnson 2019-2022                                         *
 * Purpose   :  PNG file format extension for TImage32                          *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -13,14 +13,13 @@ unit Img32.Fmt.PNG;
 interface
 
 {$I Img32.inc}
-{$IFDEF DELPHI_PNG}
 
+{$IFDEF DELPHI_PNG}
 uses
   SysUtils, Classes, Windows,
   {$IFDEF FPC} Graphics {$ELSE} Math, PngImage {$ENDIF}, Img32;
 
 type
-
   TImageFormat_PNG = class(TImageFormat)
   public
     class function IsValidImageStream(stream: TStream): Boolean; override;
@@ -35,18 +34,14 @@ type
 var
   CF_PNG: Cardinal = 0;     //Windows Clipboard
   CF_IMAGEPNG: Cardinal = 0;
+{$ENDIF} //DELPHI_PNG - undefined in old versions
 
-{$ENDIF}
 implementation
 
 {$IFDEF DELPHI_PNG}
 resourcestring
   s_cf_png_error      = 'TImage32 - PNG clipboard format error';
   s_cf_imagepng_error = 'TImage32 - image/png clipboard format error';
-
-//------------------------------------------------------------------------------
-// Loading (reading) PNG images from file ...
-//------------------------------------------------------------------------------
 
 class function TImageFormat_PNG.IsValidImageStream(stream: TStream): Boolean;
 var
@@ -61,7 +56,6 @@ begin
   result := flag = $474E5089;
 end;
 //------------------------------------------------------------------------------
-
 
 {$IFDEF FPC}
 function TImageFormat_PNG.LoadFromStream(stream: TStream; img32: TImage32): Boolean;
@@ -88,150 +82,11 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-{$ELSE}
-
-function TImageFormat_PNG.LoadFromStream(stream: TStream; img32: TImage32): Boolean;
-var
-  i,j: integer;
-  png: TPngImage;
-  BitDepth: integer;
-  pAlpha, pColor: PByte;
-  pDst: PARGB;
-  transColor: Cardinal;
-  palleteChunk: TChunkPLTE;
-begin
-  result := false;
-
-  img32.BeginUpdate;
-  png := TPngImage.Create;
-  try
-    png.LoadFromStream(stream);
-    if png.Transparent then
-      transColor := png.TransparentColor else
-      transColor := Cardinal(-1);
-    if png.Empty then Exit;
-
-    img32.SetSize(png.Header.Width, png.Header.Height);
-
-    BitDepth := png.Header.BitDepth;
-    if BitDepth <> 8 then Exit;
-    case png.Header.ColorType of
-
-      COLOR_GRAYSCALE:
-      begin
-        for i := 0 to img32.Height -1 do
-        begin
-          pColor := png.Scanline[i];
-          pDst := PARGB(img32.PixelRow[i]);
-          for j := 0 to img32.Width -1 do
-          begin
-            pDst.B := pColor^;
-            pDst.G := pColor^;
-            pDst.R := pColor^;
-            if (pDst.Color = transColor) then
-              pDst.A := 0 else
-              pDst.A := 255;
-            inc(pColor); inc(pDst);
-          end;
-        end;
-      end;
-
-      COLOR_PALETTE:
-      begin
-         palleteChunk := TChunkPLTE(png.Chunks.FindChunk(TChunkPLTE));
-         if palleteChunk = nil then Exit;
-        for i := 0 to img32.Height -1 do
-        begin
-          pColor := png.Scanline[i];
-          pDst := PARGB(img32.PixelRow[i]);
-          for j := 0 to img32.Width -1 do
-          begin
-            pDst.Color := TColor32(palleteChunk.Item[pColor^]);
-            if (pDst.Color = transColor) then
-              pDst.A := 0 else
-              pDst.A := 255;
-            inc(pColor); inc(pDst);
-          end;
-        end;
-      end;
-
-      COLOR_GRAYSCALEALPHA:
-      begin
-        for i := 0 to img32.Height -1 do
-        begin
-          pColor := png.Scanline[i];
-          pDst := PARGB(img32.PixelRow[i]);
-          pAlpha := @png.AlphaScanline[i][0];
-          for j := 0 to img32.Width -1 do
-          begin
-            pDst.A := pAlpha^; inc(pAlpha);
-            pDst.B := pColor^;
-            pDst.G := pColor^;
-            pDst.R := pColor^;  inc(pColor);
-            inc(pDst); inc(pAlpha);
-          end;
-        end;
-      end;
-
-      COLOR_RGB:
-      begin
-        for i := 0 to img32.Height -1 do
-        begin
-          pColor := png.Scanline[i];
-          pDst := PARGB(img32.PixelRow[i]);
-          for j := 0 to img32.Width -1 do
-          begin
-            pDst.B := pColor^;  inc(pColor);
-            pDst.G := pColor^;  inc(pColor);
-            pDst.R := pColor^;  inc(pColor);
-            if (pDst.Color = transColor) then
-              pDst.A := 0 else
-              pDst.A := 255;
-            inc(pDst);
-          end;
-        end;
-      end;
-
-      COLOR_RGBALPHA:
-      begin
-        for i := 0 to img32.Height -1 do
-        begin
-          pAlpha := @png.AlphaScanline[i][0];
-          pColor := PByte(png.Scanline[i]);
-          pDst   := PARGB(img32.PixelRow[i]);
-          for j := 0 to img32.Width -1 do
-          begin
-            pDst.A := pAlpha^; inc(pAlpha);
-            pDst.B := pColor^;  inc(pColor);
-            pDst.G := pColor^;  inc(pColor);
-            pDst.R := pColor^;  inc(pColor);
-            inc(pDst);
-          end;
-        end;
-      end;
-
-      else Exit; //error
-    end;
-
-    result := true;
-  finally
-    png.Free;
-    img32.EndUpdate;
-  end;
-end;
-{$ENDIF}
-
-//------------------------------------------------------------------------------
-// Saving (writing) PNG images to file ...
-//------------------------------------------------------------------------------
-
-{$IFDEF FPC}
 procedure TImageFormat_PNG.SaveToStream(stream: TStream; img32: TImage32);
 var
   png: TPortableNetworkGraphic;
 begin
   if (img32.Width * img32.Height = 0) then Exit;
-
   img32.BeginUpdate;
   png := TPortableNetworkGraphic.Create;
   try
@@ -246,12 +101,59 @@ begin
 end;
 //------------------------------------------------------------------------------
 {$ELSE}
+
+function TImageFormat_PNG.LoadFromStream(stream: TStream; img32: TImage32): Boolean;
+var
+  i,j       : integer;
+  png       : TPngImage;
+  dst       : PARGB;
+  srcAlpha  : PByte;
+  srcColor  : PByte;
+begin
+  img32.BeginUpdate;
+  png := TPngImage.Create;
+  try
+    png.LoadFromStream(stream);
+    img32.SetSize(png.Width, png.Height);
+    for i := 0 to img32.Height -1 do
+    begin
+      dst      := PARGB(img32.PixelRow[i]);
+      srcColor := png.Scanline[i];
+      if png.Transparent then
+      begin
+        srcAlpha := PByte(png.AlphaScanline[i]);
+        for j := 0 to img32.Width -1 do
+        begin
+          dst.A := srcAlpha^; inc(srcAlpha);
+          dst.B := srcColor^; inc(srcColor);
+          dst.G := srcColor^; inc(srcColor);
+          dst.R := srcColor^; inc(srcColor);
+          inc(dst);
+        end
+      end else
+        for j := 0 to img32.Width -1 do
+        begin
+          dst.A := 255;
+          dst.B := srcColor^; inc(srcColor);
+          dst.G := srcColor^; inc(srcColor);
+          dst.R := srcColor^; inc(srcColor);
+          inc(dst);
+        end;
+    end;
+  finally
+    png.Free;
+    img32.EndUpdate;
+  end;
+  result := true;
+end;
+//------------------------------------------------------------------------------
+
 procedure TImageFormat_PNG.SaveToStream(stream: TStream; img32: TImage32);
 var
   i,j: integer;
   png: TPngImage;
   srcColor: PARGB;
-  pAlpha, pCol: PByte;
+  dstAlpha, dstColor: PByte;
 begin
   png := TPngImage.CreateBlank(COLOR_RGBALPHA, 8, img32.Width, img32.Height);
   try
@@ -259,24 +161,23 @@ begin
     for i := 0 to img32.Height -1 do
     begin
       srcColor := PARGB(img32.PixelRow[i]);
-      pCol     := png.Scanline[i];
-      pAlpha   := @png.AlphaScanline[i][0];
-
+      dstColor := png.Scanline[i];
+      dstAlpha := PByte(png.AlphaScanline[i]);
       for j := 0 to img32.Width -1 do
       begin
-        pAlpha^ :=  srcColor.A;
+        dstAlpha^ :=  srcColor.A;
         if srcColor.A > 0 then
         begin
-          pCol^ := srcColor.B; inc(pCol);
-          pCol^ := srcColor.G; inc(pCol);
-          pCol^ := srcColor.R; inc(pCol);
+          dstColor^ := srcColor.B; inc(dstColor);
+          dstColor^ := srcColor.G; inc(dstColor);
+          dstColor^ := srcColor.R; inc(dstColor);
         end else
         begin
-          pCol^ := 255; inc(pCol);
-          pCol^ := 255; inc(pCol);
-          pCol^ := 255; inc(pCol);
+          dstColor^ := 255; inc(dstColor);
+          dstColor^ := 255; inc(dstColor);
+          dstColor^ := 255; inc(dstColor);
         end;
-        inc(srcColor); inc(pAlpha);
+        inc(srcColor); inc(dstAlpha);
       end;
     end;
     png.SaveToStream(stream);
@@ -301,7 +202,6 @@ var
 begin
   result := ((CF_PNG > 0) or (CF_IMAGEPNG > 0)) and OpenClipboard(0);
   if not result then Exit;
-
   ms := TMemoryStream.Create;
   try
     with TImageFormat_PNG.Create do
@@ -310,7 +210,6 @@ begin
     finally
       free;
     end;
-
     //nb: clipboard should already be open
     dataHdl := GlobalAlloc(GMEM_MOVEABLE or GMEM_SHARE, ms.Size);
     try
@@ -331,7 +230,6 @@ begin
       GlobalFree(dataHdl);
       raise;
     end;
-
   finally
     ms.free;
     CloseClipboard;
@@ -354,7 +252,6 @@ var
 begin
   Result := ((CF_PNG > 0) or (CF_IMAGEPNG > 0)) and OpenClipboard(0);
   if not Result then Exit;
-
   ms := TMemoryStream.Create;
   try
     dataHdl := 0;
@@ -362,13 +259,11 @@ begin
       dataHdl := GetClipboardData(CF_PNG);
     if (dataHdl = 0) and IsClipboardFormatAvailable(CF_IMAGEPNG) then
       dataHdl := GetClipboardData(CF_IMAGEPNG);
-
     if dataHdl = 0 then
     begin
       result := false;
       Exit;
     end;
-
     ms.SetSize(GlobalSize(dataHdl));
     dataPtr := GlobalLock(dataHdl);
     try
@@ -376,7 +271,6 @@ begin
     finally
       GlobalUnlock(dataHdl);
     end;
-
     ms.Position := 0;
     with TImageFormat_PNG.Create do
     try
@@ -384,13 +278,11 @@ begin
     finally
       free;
     end;
-
   finally
     ms.free;
     CloseClipboard;
   end;
 end;
-
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 

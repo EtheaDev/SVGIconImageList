@@ -2,8 +2,8 @@ unit Img32.Fmt.GIF;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.0                                                             *
-* Date      :  20 July 2021                                                    *
+* Version   :  4.0                                                             *
+* Date      :  22 December 2021                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  GIF file format extension for TImage32                          *
@@ -114,10 +114,16 @@ var
   gif: TGIFImage;
 begin
   gif := TGIFImage.Create;
+  with gif.Bitmap do
   try
-    gif.Bitmap.Width := img32.Width;
-    gif.Bitmap.Height := img32.Height;
-    img32.CopyToDc(gif.Bitmap.Canvas.Handle,0,0, false);
+    Width := img32.Width;
+    Height := img32.Height;
+    if GetCurrentThreadId <> MainThreadID then Canvas.Lock;
+    try
+      img32.CopyToDc(gif.Bitmap.Canvas.Handle,0,0, false);
+    finally
+      if GetCurrentThreadId <> MainThreadID then Canvas.Unlock;
+    end;
     gif.SaveToStream(stream);
   finally
     gif.Free;

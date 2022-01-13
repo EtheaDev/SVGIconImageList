@@ -2,8 +2,8 @@ unit Img32.Draw;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.4                                                             *
-* Date      :  12 October 2021                                                 *
+* Version   :  4.0                                                             *
+* Date      :  22 December 2021                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -1115,7 +1115,7 @@ end;
 procedure TColorRenderer.SetColor(value: TColor32);
 begin
   fColor := value and $FFFFFF;
-  fAlpha := value shr 24;
+  fAlpha := GetAlpha(value);
 end;
 //------------------------------------------------------------------------------
 
@@ -1149,7 +1149,8 @@ end;
 function TAliasedColorRenderer.Initialize(targetImage: TImage32): Boolean;
 begin
   //there's no point rendering if the color is fully transparent
-  result := (fColor shr 24 > 0) and inherited Initialize(targetImage);
+  result := (GetAlpha(fColor) > 0) and
+    inherited Initialize(targetImage);
 end;
 //------------------------------------------------------------------------------
 
