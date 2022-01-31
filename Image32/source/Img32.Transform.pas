@@ -23,7 +23,6 @@ uses
   Img32, Img32.Vector;
 
 type
-  PMatrixD = ^TMatrixD;
   TMatrixD = array [0..2, 0..2] of double;
 
   //Matrix functions
@@ -40,7 +39,6 @@ type
     var pt: TPointD); overload; {$IFDEF INLINE} inline; {$ENDIF}
   procedure MatrixApply(const matrix: TMatrixD; var rec: TRect); overload;
   procedure MatrixApply(const matrix: TMatrixD; var rec: TRectD); overload;
-  procedure MatrixApply(const matrix: TMatrixD; var rec: TRectWH); overload;
   procedure MatrixApply(const matrix: TMatrixD; var path: TPathD); overload;
   procedure MatrixApply(const matrix: TMatrixD; var paths: TPathsD); overload;
   function  MatrixInvert(var matrix: TMatrixD): Boolean;
@@ -226,27 +224,6 @@ begin
   path := Rectangle(rec);
   MatrixApply(matrix, path);
   rec := GetBoundsD(path);
-end;
-//------------------------------------------------------------------------------
-
-procedure MatrixApply(const matrix: TMatrixD; var rec: TRectWH);
-var
-  path: TPathD;
-  rec2: TRectD;
-begin
-  with rec do
-  begin
-    SetLength(path, 2);
-    path[0] := PointD(Left, Top);
-    path[1] := PointD(Left + Width, Top + Height);
-  end;
-  MatrixApply(matrix, path);
-  rec2 := GetBoundsD(path);
-
-  rec.Left    := rec2.Left;
-  rec.Top     := rec2.Top;
-  rec.Width   := rec2.Right - rec2.Left;
-  rec.Height  := rec2.Bottom - rec2.Top;
 end;
 //------------------------------------------------------------------------------
 

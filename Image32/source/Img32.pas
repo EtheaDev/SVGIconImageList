@@ -669,6 +669,7 @@ var
 begin
   Result := Integer(imgFmtRec1.SortOrder) - Integer(imgFmtRec2.SortOrder);
 end;
+//------------------------------------------------------------------------------
 
 function ClampByte(val: Integer): byte;
 begin
@@ -2566,7 +2567,7 @@ begin
       else if (wDest = wSrc) and (hDest = hSrc) then
         BitBlt(dstDc, x,y, wSrc, hSrc, memDc, 0,0, SRCCOPY)
       else
-        StretchBlt(dstDc, x,y, wDest,hDest, memDc, 0,0, wSrc,hSrc, SRCCOPY);
+        StretchBlt(dstDc, x,y, wDest, hDest, memDc, 0,0, wSrc,hSrc, SRCCOPY);
 
       SelectObject(memDC, oldBm);
     finally

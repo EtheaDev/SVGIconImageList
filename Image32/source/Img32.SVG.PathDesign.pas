@@ -36,8 +36,8 @@ type
   protected
     function  GetPrevSegLayer: TPathSegLayer;
     function  GetNextSegLayer: TPathSegLayer;
-    function  GetDesignerLayer(btnLayer: TLayer32): TDesignerLayer32;
-    procedure DrawDesigner(designer: TDesignerLayer32); virtual;
+    function  GetDesignerLayer(btnLayer: TLayer32): TLayer32;
+    procedure DrawDesigner(designer: TLayer32); virtual;
     procedure SetFocus(value: Boolean);
     procedure SetBtnCtrlPts(const pts: TPathD); virtual;
     procedure BtnMoveCheck(const pos: TPointD); virtual;
@@ -66,7 +66,7 @@ type
     function GetPointFromHorzBtn(btn: TLayer32): TPointD;
     function GetPointFromVertBtn(btn: TLayer32): TPointD;
   protected
-    procedure DrawDesigner(designer: TDesignerLayer32); override;
+    procedure DrawDesigner(designer: TLayer32); override;
   public
     constructor Create(parent: TLayer32 = nil; const name: string = ''); override;
     procedure Init(seg: TSvgPathSeg); override;
@@ -85,7 +85,7 @@ type
 
   TSvgCSegLayer = class(TPathSegLayer)
   protected
-    procedure DrawDesigner(designer: TDesignerLayer32); override;
+    procedure DrawDesigner(designer: TLayer32); override;
   public
     function CreateBtnGroup: TButtonGroupLayer32; override;
   end;
@@ -102,7 +102,7 @@ type
   TSvgQSegLayer = class(TPathSegLayer)
   public
     function CreateBtnGroup: TButtonGroupLayer32; override;
-    procedure DrawDesigner(designer: TDesignerLayer32); override;
+    procedure DrawDesigner(designer: TLayer32); override;
   end;
 
   TSvgSSegLayer = class(TPathSegLayer)
@@ -110,7 +110,7 @@ type
     procedure BtnMoveCheck(const pos: TPointD); override;
   public
     function CreateBtnGroup: TButtonGroupLayer32; override;
-    procedure DrawDesigner(designer: TDesignerLayer32); override;
+    procedure DrawDesigner(designer: TLayer32); override;
   end;
 
   TSvgTSegLayer = class(TPathSegLayer)
@@ -261,18 +261,18 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TPathSegLayer.GetDesignerLayer(btnLayer: TLayer32): TDesignerLayer32;
+function TPathSegLayer.GetDesignerLayer(btnLayer: TLayer32): TLayer32;
 begin
   if Assigned(btnLayer) and
     (btnLayer.Parent is TButtonGroupLayer32) and
-    (btnLayer.Parent[0] is TDesignerLayer32) then
-      Result := TDesignerLayer32(btnLayer.Parent[0])
+    (btnLayer.Parent[0] is TLayer32) then
+      Result := TLayer32(btnLayer.Parent[0])
   else
     Result := nil;
 end;
 //------------------------------------------------------------------------------
 
-procedure TPathSegLayer.DrawDesigner(designer: TDesignerLayer32);
+procedure TPathSegLayer.DrawDesigner(designer: TLayer32);
 begin
 end;
 //------------------------------------------------------------------------------
@@ -287,13 +287,13 @@ end;
 
 function TPathSegLayer.CreateBtnGroup: TButtonGroupLayer32;
 var
-  designer: TDesignerLayer32;
+  designer: TLayer32;
 begin
   Result := CreateButtonGroup(Root,
     fSeg.ctrlPts, bsRound, DefaultButtonSize, clRed32);
 
   //insert the designer layer **below** the button layers
-  designer := Result.InsertChild(TDesignerLayer32, 0) as TDesignerLayer32;
+  designer := Result.InsertChild(TLayer32, 0) as TLayer32;
   DrawDesigner(designer);
 end;
 //------------------------------------------------------------------------------
@@ -326,7 +326,7 @@ procedure TPathSegLayer.UpdateBtnGroup(movedBtn: TLayer32);
 var
   i         : integer;
   pts       : TPathD;
-  designer  : TDesignerLayer32;
+  designer  : TLayer32;
   segLayer  : TPathSegLayer;
 begin
   designer := GetDesignerLayer(movedBtn);
@@ -473,7 +473,7 @@ end;
 function TSvgASegLayer.CreateBtnGroup: TButtonGroupLayer32;
 var
   i: integer;
-  designer: TDesignerLayer32;
+  designer: TLayer32;
 begin
   Result := CreateButtonGroup(Root, fSeg.ctrlPts,
     bsRound, DefaultButtonSize, clRed32);
@@ -494,7 +494,7 @@ begin
     end;
 
   //insert the designer layer below the button layers (ie level 0)
-  designer := Result.InsertChild(TDesignerLayer32, 0) as TDesignerLayer32;
+  designer := Result.InsertChild(TLayer32, 0) as TLayer32;
   DrawDesigner(designer);
 end;
 //------------------------------------------------------------------------------
@@ -572,7 +572,7 @@ var
   sa,ea, a  : double;
   dx,dy     : double;
   mp, sp    : TPointD;
-  designer  : TDesignerLayer32;
+  designer  : TLayer32;
   segLayer  : TPathSegLayer;
   ai        : TArcInfo;
 begin
@@ -777,7 +777,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgASegLayer.DrawDesigner(designer: TDesignerLayer32);
+procedure TSvgASegLayer.DrawDesigner(designer: TLayer32);
 var
   j: integer;
   r,r2: TRectD;
@@ -840,7 +840,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgCSegLayer.DrawDesigner(designer: TDesignerLayer32);
+procedure TSvgCSegLayer.DrawDesigner(designer: TLayer32);
 var
   i,j: integer;
   pt: TPointD;
@@ -903,7 +903,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgQSegLayer.DrawDesigner(designer: TDesignerLayer32);
+procedure TSvgQSegLayer.DrawDesigner(designer: TLayer32);
 var
   i,j: integer;
   p: TPathD;
@@ -955,7 +955,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgSSegLayer.DrawDesigner(designer: TDesignerLayer32);
+procedure TSvgSSegLayer.DrawDesigner(designer: TLayer32);
 var
   i,j: integer;
   p: TPathD;
@@ -1057,7 +1057,7 @@ begin
     Paths[0], bsRound, DefaultButtonSize, clRed32);
   TButtonDesignerLayer32(Result[0]).Visible := false;
   TButtonDesignerLayer32(Result[1]).Visible := false;
-  Result.InsertChild(TDesignerLayer32, 0);
+  Result.InsertChild(TLayer32, 0);
 end;
 //------------------------------------------------------------------------------
 

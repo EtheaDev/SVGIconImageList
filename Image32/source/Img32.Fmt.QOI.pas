@@ -113,7 +113,7 @@ var
   px: TARGB;
   b1, b2: byte;
   dst: PARGB;
-  src, endSrc: PByte;
+  src: PByte;
   srcTmp: TArrayOfByte;
 begin
   Result := false;
@@ -132,8 +132,6 @@ begin
     stream.Read(srcTmp[0], size);
     src := @srcTmp[0];
   end;
-  endSrc := src;
-  inc(endSrc, size - qoi_padding_size);
 
   Move(src^, desc, SizeOf(TQOI_DESC));
   inc(src, SizeOf(TQOI_DESC));

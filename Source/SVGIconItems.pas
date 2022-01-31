@@ -205,9 +205,6 @@ begin
   else
     Result.Canvas.Brush.Color := ColorToRGB(LAntiAliasColor);
   Result.SetSize(AWidth, AHeight);
-  {$IFDEF IgnoreAntiAliasedColor}
-  MakeTransparent(Result.Canvas.Handle);
-  {$ENDIF}
   FSVG.PaintTo(Result.Canvas.Handle, TRectF.Create(0, 0, AWidth, AHeight));
 end;
 

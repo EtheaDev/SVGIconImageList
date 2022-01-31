@@ -55,9 +55,6 @@ function UpdateSVGIconListViewCaptions(const AListView: TListView;
 procedure SVGExportToPng(const AWidth, AHeight: Integer;
   FSVG: ISVG; const AOutFolder: string;
   const AFileName: string = '');
-{$IFDEF IgnoreAntiAliasedColor}
-procedure MakeTransparent(DC: THandle);
-{$ENDIF}
 function PNG4TransparentBitMap(aBitmap: TBitmap): TPNGImage;
 
 implementation

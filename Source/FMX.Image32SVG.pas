@@ -117,9 +117,9 @@ begin
   res.G := TAlphaColorRec(AlphaColor).G;
   res.B := TAlphaColorRec(AlphaColor).B;
   Result := res.Color;
-{$IFDEF ANDROID}
+{$IF Defined(ANDROID) or Defined(MACOS) or Defined(MACOSX)}
   Result := SwapRedBlue(Result);
-{$ENDIF}
+{$IFEND}
 end;
 
 procedure CopyImage32ToFmxBitmap(AImage32: TImage32; ABitmap: TBitmap);

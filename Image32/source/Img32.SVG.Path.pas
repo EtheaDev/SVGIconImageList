@@ -3,7 +3,7 @@ unit Img32.SVG.Path;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.0                                                             *
-* Date      :  22 December 2021                                                *
+* Date      :  28 December 2021                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *

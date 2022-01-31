@@ -3,7 +3,7 @@ unit Img32.Storage;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.0                                                             *
-* Date      :  10 January 2022                                                 *
+* Date      :  28 January 2022                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
