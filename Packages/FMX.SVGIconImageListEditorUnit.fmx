@@ -566,13 +566,11 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         OnChange = FixedColorItemComboBoxChange
       end
       object ReformatXMLButton: TButton
-        Anchors = [akTop, akRight]
         Cancel = True
-        ModalResult = 2
         Position.X = 12.000000000000000000
         Position.Y = 143.000000000000000000
         Size.Width = 152.000000000000000000
-        Size.Height = 22.000000000000000000
+        Size.Height = 26.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
         Text = 'Reformat XML'

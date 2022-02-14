@@ -210,7 +210,7 @@ begin
   with LEditor do
   begin
     try
-      Application.MainForm.Cursor := crHourglass;
+      //Screen.Cursor := crHourglass;
       try
         FEditingList.Assign(AImageList);
         SizeSpinBox.Value := Max(FEditingList.Width, FEditingList.Height);
@@ -224,16 +224,16 @@ begin
           ImageView.ItemIndex := 0;
 
       finally
-        Application.MainForm.Cursor := crDefault;
+        //Screen.Cursor := crDefault;
       end;
       Result := ShowModal = mrOk;
       if Result then
       begin
-        Application.MainForm.Cursor := crHourglass;
+        //Screen.Cursor := crHourglass;
         try
         AImageList.Assign(FEditingList);
         finally
-          Application.MainForm.Cursor := crDefault;
+          //Screen.Cursor := crDefault;
         end;
       end;
       SavedBounds := Bounds;
@@ -369,11 +369,11 @@ end;
 
 procedure TSVGIconImageListEditorFMX.ClearAllImages;
 begin
-  Application.MainForm.Cursor := crHourglass;
+  //Screen.Cursor := crHourglass;
   try
     FEditingList.ClearIcons;
   finally
-    Application.MainForm.Cursor := crDefault;
+    //Screen.Cursor := crDefault;
   end;
 end;
 
@@ -509,7 +509,7 @@ end;
 
 procedure TSVGIconImageListEditorFMX.FixedColorComboBoxChange(Sender: TObject);
 begin
-  Application.MainForm.Cursor := crHourGlass;
+  //Screen.Cursor := crHourGlass;
   try
     if FixedColorComboBox.ItemIndex >= 0 then begin
       FEditingList.FixedColor :=
@@ -517,7 +517,7 @@ begin
       UpdateGUI;
     end;
   finally
-    Application.MainForm.Cursor := crDefault;
+    //Screen.Cursor := crDefault;
   end;
 end;
 
@@ -560,6 +560,7 @@ begin
   ImageView.Images := nil;
      
   FreeAndNil(FEditingList);
+  //Screen.Cursors[crColorPick] := 0;
 end;
 
 procedure TSVGIconImageListEditorFMX.FormResize(Sender: TObject);
@@ -582,12 +583,12 @@ procedure TSVGIconImageListEditorFMX.AddButtonClick(Sender: TObject);
 begin
   if OpenDialog.Execute then
   begin
-    Application.MainForm.Cursor := crHourGlass;
+    //Screen.Cursor := crHourGlass;
     try
       FEditingList.LoadFromFiles(OpenDialog.Files);
     finally
       UpdateSVGIconListView(ImageView);
-      Application.MainForm.Cursor := crDefault;
+      //Screen.Cursor := crDefault;
     end;
   end;
 end;
