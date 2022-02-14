@@ -278,6 +278,8 @@ These components use the followin libraries:
   These files are included in the cairo/dlls folder of this project.
 - Image32 library by [Angus Johnson](http://www.angusj.com/delphi/image32/Docs/_Body.htm)
   These files are included in the Image32/Source and Image32/source/Image32_SVG folders
+- SKIA4Delphi Library by [the autohors](https://github.com/skia4delphi/skia4delphi)
+  These files are included in the skia4delphi/Source folder
 
 Many thanks to **Vincent Parrett** and **Kiriakos Vlahos** for their great contibution.
 
