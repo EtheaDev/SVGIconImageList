@@ -31,6 +31,7 @@ object SVGIconImageForm: TSVGIconImageForm
     Size.Width = 201.000000000000000000
     Size.Height = 182.000000000000000000
     Size.PlatformDefault = False
+    OnClick = SVGIconImageClick
     OnResize = SVGIconImageResize
   end
   object Panel1: TPanel

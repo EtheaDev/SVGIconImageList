@@ -1,0 +1,224 @@
+object SVGTextPropertyEditorFormFMX: TSVGTextPropertyEditorFormFMX
+  Left = 916
+  Top = 169
+  Caption = 
+    'SVGText Property Editor - Copyright (c) Ethea S.r.l. - Apache 2.' +
+    '0 Open Source License'
+  ClientHeight = 246
+  ClientWidth = 739
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop, iPhone, iPad]
+  FormFamily = 'Segoe UI'
+  OnCreate = FormCreate
+  OnResize = FormResize
+  OnShow = FormShow
+  Left = 916
+  Top = 169
+  DesignerMasterStyle = 0
+  object RightSplitter: TSplitter
+    Align = Right
+    Cursor = crHSplit
+    MinSize = 16.000000000000000000
+    Position.X = 550.000000000000000000
+    Size.Width = 4.000000000000000000
+    Size.Height = 213.000000000000000000
+    Size.PlatformDefault = False
+    Left = 550
+  end
+  object paBottom: TPanel
+    Align = Bottom
+    Position.Y = 213.000000000000000000
+    Size.Width = 739.000000000000000000
+    Size.Height = 33.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    Top = 223
+    object paButtons: TPanel
+      Align = Right
+      Position.X = 246.000000000000000000
+      Size.Width = 493.000000000000000000
+      Size.Height = 33.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Left = 320
+      object CancelButton: TButton
+        Align = Right
+        Cancel = True
+        ModalResult = 2
+        Margins.Left = 2.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 2.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Position.X = 338.000000000000000000
+        Position.Y = 4.000000000000000000
+        Size.Width = 75.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = '&Cancel'
+        Left = 254
+        Top = 3
+      end
+      object OKButton: TButton
+        Align = Right
+        Default = True
+        ModalResult = 1
+        Margins.Left = 2.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 2.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Position.X = 259.000000000000000000
+        Position.Y = 4.000000000000000000
+        Size.Width = 75.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        Text = '&OK'
+        Left = 173
+        Top = 3
+      end
+      object HelpButton: TButton
+        Align = Right
+        Margins.Left = 2.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 2.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Position.X = 417.000000000000000000
+        Position.Y = 4.000000000000000000
+        Size.Width = 74.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+        Text = '&Help'
+        OnClick = HelpButtonClick
+        Left = 336
+        Top = 3
+      end
+      object LoadButton: TButton
+        Align = Left
+        Margins.Left = 2.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 2.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Position.X = 2.000000000000000000
+        Position.Y = 4.000000000000000000
+        Size.Width = 74.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = '&Load...'
+        OnClick = LoadButtonClick
+        Left = 5
+        Top = 3
+      end
+      object SaveButton: TButton
+        Align = Left
+        Margins.Left = 2.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 2.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Position.X = 80.000000000000000000
+        Position.Y = 4.000000000000000000
+        Size.Width = 74.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = '&Save...'
+        OnClick = SaveButtonClick
+        Left = 85
+        Top = 3
+      end
+      object ReformatXMLButton: TButton
+        Align = Left
+        Margins.Left = 2.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 2.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Position.X = 158.000000000000000000
+        Position.Y = 4.000000000000000000
+        Size.Width = 89.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = '&Reformat XML'
+        OnClick = ReformatXMLButtonClick
+        Left = 85
+        Top = 3
+      end
+    end
+  end
+  object SVGTextMemo: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    OnChange = SVGTextMemoChange
+    Align = Client
+    Size.Width = 550.000000000000000000
+    Size.Height = 213.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    Viewport.Width = 546.000000000000000000
+    Viewport.Height = 209.000000000000000000
+  end
+  object paImage: TPanel
+    Align = Right
+    Position.X = 554.000000000000000000
+    Size.Width = 185.000000000000000000
+    Size.Height = 213.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    OnResize = paImageResize
+    Left = 554
+    object paTitle: TPanel
+      Align = Top
+      Size.Width = 185.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Left = 2
+      Top = 2
+      object SizeLabel: TLabel
+        Align = Client
+        Size.Width = 185.000000000000000000
+        Size.Height = 24.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.HorzAlign = Center
+        Text = 'SizeLabel'
+        TabOrder = 1
+      end
+    end
+    object ImagePanel: TPanel
+      Align = Client
+      Size.Width = 185.000000000000000000
+      Size.Height = 189.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Left = 2
+      Top = 26
+      object SVGIconImage: TSVGIconImage
+        MultiResBitmap = <
+          item
+          end>
+        Align = Client
+        DisableInterpolation = True
+        Size.Width = 185.000000000000000000
+        Size.Height = 189.000000000000000000
+        Size.PlatformDefault = False
+        Left = 1
+        Top = 1
+      end
+    end
+  end
+  object OpenDialog: TOpenDialog
+    Filter = 'Scalable Vector Graphics (*.svg)|*.svg'
+    Options = [ofHideReadOnly, ofAllowMultiSelect, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+    Left = 400
+    Top = 24
+  end
+  object SaveDialog: TSaveDialog
+    DefaultExt = 'svg'
+    Filter = 'SVG files (*.svg)|*.svg'
+    Left = 400
+    Top = 104
+  end
+end

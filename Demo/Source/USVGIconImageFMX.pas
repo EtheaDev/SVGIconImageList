@@ -17,6 +17,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure ButtonClick(Sender: TObject);
     procedure SVGIconImageResize(Sender: TObject);
+    procedure SVGIconImageClick(Sender: TObject);
   private
     FSVGList: TStringDynArray;
     FIndex: Integer;
@@ -32,23 +33,20 @@ implementation
 uses
   System.Math
   , System.IOUtils
-  , FMX.Consts;
+  , FMX.Consts
+  , FMX.SVGTextPropertyEditorUnit;
 
 {$R *.fmx}
 
 procedure TSVGIconImageForm.ButtonClick(Sender: TObject);
 var
   LFileName: string;
-  LItem: TSVGIconFixedBitmapItem;
 begin
   Inc(FIndex);
   if FIndex > High(FSVGList) then
     FIndex := 0;
   LFileName := FSVGList[FIndex];
-  LItem := SVGIconImage.MultiResBitmap[0] as TSVGIconFixedBitmapItem;
-  LItem.SVG.LoadFromFile(LFileName);
-//  LItem.SVG.FixedColor := TAlphaColorRec.Red;
-  LItem.DrawSVGIcon;
+  SVGIconImage.LoadFromFile(LFileName);
 end;
 
 procedure TSVGIconImageForm.FormCreate(Sender: TObject);
@@ -59,6 +57,16 @@ begin
   TDirectory.SetCurrentDirectory(LPath);
   FSVGList := TDirectory.GetFiles(LPath, '*.svg');
   FIndex := 0;
+end;
+
+procedure TSVGIconImageForm.SVGIconImageClick(Sender: TObject);
+var
+  LSVGText: string;
+begin
+  //Show the property Editor
+  LSVGText := SVGIconImage.SVGText;
+  if EditSVGTextProperty(LSVGText) then
+   SVGIconImage.SVGText := LSVGText;
 end;
 
 procedure TSVGIconImageForm.SVGIconImageResize(Sender: TObject);

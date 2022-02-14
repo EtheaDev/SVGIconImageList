@@ -83,6 +83,7 @@ type
     ImageView: TListBox;
     BottomSplitter: TSplitter;
     ApplyToRootOnlyCheckBox: TCheckBox;
+    ReformatXMLButton: TButton;
     procedure ClearAllButtonClick(Sender: TObject);
     procedure DeleteButtonClick(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
@@ -112,6 +113,7 @@ type
       const Point: TPointF);
     procedure ZoomChange(Sender: TObject);
     procedure ApplyToRootOnlyCheckBoxChange(Sender: TObject);
+    procedure ReformatXMLButtonClick(Sender: TObject);
   private
     FIconIndexLabel: string;
     FTotIconsLabel: string;
@@ -138,6 +140,7 @@ uses
   Winapi.Messages
   , Winapi.Windows
   , Winapi.shellApi
+  , Xml.XMLDoc
   , System.Math
   , Img32.SVG.Core;
 
@@ -207,7 +210,7 @@ begin
   with LEditor do
   begin
     try
-      //Screen.Cursor := crHourglass;
+      Application.MainForm.Cursor := crHourglass;
       try
         FEditingList.Assign(AImageList);
         SizeSpinBox.Value := Max(FEditingList.Width, FEditingList.Height);
@@ -221,16 +224,16 @@ begin
           ImageView.ItemIndex := 0;
 
       finally
-        //Screen.Cursor := crDefault;
+        Application.MainForm.Cursor := crDefault;
       end;
       Result := ShowModal = mrOk;
       if Result then
       begin
-        //Screen.Cursor := crHourglass;
+        Application.MainForm.Cursor := crHourglass;
         try
         AImageList.Assign(FEditingList);
         finally
-          //Screen.Cursor := crDefault;
+          Application.MainForm.Cursor := crDefault;
         end;
       end;
       SavedBounds := Bounds;
@@ -366,11 +369,11 @@ end;
 
 procedure TSVGIconImageListEditorFMX.ClearAllImages;
 begin
-  //Screen.Cursor := crHourglass;
+  Application.MainForm.Cursor := crHourglass;
   try
     FEditingList.ClearIcons;
   finally
-    //Screen.Cursor := crDefault;
+    Application.MainForm.Cursor := crDefault;
   end;
 end;
 
@@ -487,6 +490,11 @@ begin
   SetImageOpacity(OpacitySpinBox.Value);
 end;
 
+procedure TSVGIconImageListEditorFMX.ReformatXMLButtonClick(Sender: TObject);
+begin
+  SVGText.Lines.Text := Xml.XMLDoc.FormatXMLData(SVGText.Lines.Text);
+end;
+
 procedure TSVGIconImageListEditorFMX.DefaultOpacitySpinBoxChange(
   Sender: TObject);
 begin
@@ -501,7 +509,7 @@ end;
 
 procedure TSVGIconImageListEditorFMX.FixedColorComboBoxChange(Sender: TObject);
 begin
-  //Screen.Cursor := crHourGlass;
+  Application.MainForm.Cursor := crHourGlass;
   try
     if FixedColorComboBox.ItemIndex >= 0 then begin
       FEditingList.FixedColor :=
@@ -509,7 +517,7 @@ begin
       UpdateGUI;
     end;
   finally
-    //Screen.Cursor := crDefault;
+    Application.MainForm.Cursor := crDefault;
   end;
 end;
 
@@ -552,7 +560,6 @@ begin
   ImageView.Images := nil;
      
   FreeAndNil(FEditingList);
-  //Screen.Cursors[crColorPick] := 0;
 end;
 
 procedure TSVGIconImageListEditorFMX.FormResize(Sender: TObject);
@@ -575,12 +582,12 @@ procedure TSVGIconImageListEditorFMX.AddButtonClick(Sender: TObject);
 begin
   if OpenDialog.Execute then
   begin
-    //Screen.Cursor := crHourGlass;
+    Application.MainForm.Cursor := crHourGlass;
     try
       FEditingList.LoadFromFiles(OpenDialog.Files);
     finally
       UpdateSVGIconListView(ImageView);
-      //Screen.Cursor := crDefault;
+      Application.MainForm.Cursor := crDefault;
     end;
   end;
 end;

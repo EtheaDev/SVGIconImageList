@@ -9,12 +9,6 @@
 {       https://github.com/EtheaDev/SVGIconsImageList                          }
 {                                                                              }
 {******************************************************************************}
-{       Original version (c) 2005, 2008 Martin Walter with license:            }
-{       Use of this file is permitted for commercial and non-commercial        }
-{       use, as long as the author is credited.                                }
-{       home page: http://www.mwcs.de                                          }
-{       email    : martin.walter@mwcs.de                                       }
-{******************************************************************************}
 {                                                                              }
 {  Licensed under the Apache License, Version 2.0 (the "License");             }
 {  you may not use this file except in compliance with the License.            }
@@ -146,7 +140,7 @@ begin
   else if Index = 1 then
   begin
     ShellExecute(0, 'open',
-      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Home'), nil, nil,
+      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Overview-(VCL)'), nil, nil,
       SW_SHOWNORMAL)
   end;
 end;
@@ -278,7 +272,7 @@ begin
   else if Index = 1 then
   begin
     ShellExecute(0, 'open',
-      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Home'), nil, nil,
+      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Overview-(VCL)'), nil, nil,
       SW_SHOWNORMAL)
   end;
 
@@ -311,7 +305,7 @@ begin
   else if Index = 1 then
   begin
     ShellExecute(0, 'open',
-      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Home'), nil, nil,
+      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Overview-(VCL)'), nil, nil,
       SW_SHOWNORMAL)
   end;
 end;
@@ -350,7 +344,7 @@ begin
   else if Index = 1 then
   begin
     ShellExecute(0, 'open',
-      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Home'), nil, nil,
+      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Overview-(VCL)'), nil, nil,
       SW_SHOWNORMAL)
   end;
 end;

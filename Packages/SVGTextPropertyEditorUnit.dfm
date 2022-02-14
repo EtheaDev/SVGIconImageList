@@ -181,7 +181,7 @@ object SVGTextPropertyEditorForm: TSVGTextPropertyEditorForm
   end
   object SaveDialog: TSavePictureDialog
     DefaultExt = 'svg'
-    Filter = 'Bitmaps (*.bmp)|*.bmp'
+    Filter = 'SVG files (*.svg)|*.svg'
     Options = [ofOverwritePrompt, ofPathMustExist, ofEnableSizing]
     Left = 456
     Top = 24

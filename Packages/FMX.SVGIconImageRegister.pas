@@ -46,6 +46,22 @@ type
     procedure Edit; override;
   end;
 
+  TSVGIconImageCompEditorFMX = class (TComponentEditor)
+  private
+  public
+    function GetVerbCount: Integer; override;
+    function GetVerb(Index: Integer): string; override;
+    procedure ExecuteVerb(Index: Integer); override;
+    procedure Edit; override;
+  end;
+
+  TSVGTextPropertyFMX = class(TClassProperty)
+  public
+    procedure Edit; override;
+    function GetAttributes: TPropertyAttributes; override;
+    function GetValue: string; override;
+  end;
+
 procedure Register;
 
 implementation
@@ -59,6 +75,7 @@ uses
   , Winapi.ShellApi
   , Winapi.Windows
   , FMX.SVGIconImageListEditorUnit
+  , FMX.SVGTextPropertyEditorUnit
   ;
 
 { TSVGIconImageListCompEditorFMX }
@@ -78,7 +95,7 @@ begin
   end
   else
     ShellExecute(0, 'open',
-      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Home'), nil, nil,
+      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Overview-(FMX)'), nil, nil,
       SW_SHOWNORMAL)
 end;
 
@@ -96,12 +113,87 @@ begin
   Result := 2;
 end;
 
+{ TSVGIconImageCompEditorFMX }
+
+procedure TSVGIconImageCompEditorFMX.Edit;
+begin
+  inherited;
+end;
+
+procedure TSVGIconImageCompEditorFMX.ExecuteVerb(Index: Integer);
+var
+  LSVGText: string;
+  LComponent: TSVGIconImage;
+begin
+  inherited;
+  if Index = 0 then
+  begin
+    LComponent := Component as TSVGIconImage;
+    LSVGText := LComponent.SVGText;
+    if EditSVGTextProperty(LSVGText) then
+    begin
+      LComponent.SVGText := LSVGText;
+      Designer.Modified;
+    end;
+  end
+  else
+    ShellExecute(0, 'open',
+      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Overview-(FMX)'), nil, nil,
+      SW_SHOWNORMAL)
+end;
+
+function TSVGIconImageCompEditorFMX.GetVerb(Index: Integer): string;
+begin
+  Result := '';
+  case Index of
+    0: Result := 'SVG &Text Editor...';
+    1: Result := Format('Ver. %s - (c) Ethea S.r.l. - show help...',[SVGIconImageListVersion]);
+  end;
+end;
+
+function TSVGIconImageCompEditorFMX.GetVerbCount: Integer;
+begin
+  Result := 2;
+end;
+
+{ TSVGTextPropertyFMX }
+
+procedure TSVGTextPropertyFMX.Edit;
+var
+  LSVGText: string;
+  LComponent: TPersistent;
+begin
+  LComponent := GetComponent(0);
+  if LComponent is TSVGIconImage then
+    LSVGText := TSVGIconImage(LComponent).SVGText
+  else
+    Exit;
+  if EditSVGTextProperty(LSVGText) then
+  begin
+    if LComponent is TSVGIconImage then
+      TSVGIconImage(LComponent).SVGText := LSVGText;
+    Modified;
+  end;
+  inherited;
+end;
+
+function TSVGTextPropertyFMX.GetAttributes: TPropertyAttributes;
+begin
+  Result := [paDialog, paReadOnly];
+end;
+
+function TSVGTextPropertyFMX.GetValue: string;
+begin
+  Result := 'Click to edit SVG Text';
+end;
+
 procedure Register;
 begin
   {$IFDEF D10_3+}
   RegisterPropertyEditor(TypeInfo(Single), TSVGIconBitmapItem, '', TFmxFloatProperty);
   RegisterPropertyEditor(TypeInfo(Single), TSVGIconSourceItem, '', TFmxFloatProperty);
   RegisterPropertyEditor(TypeInfo(Single), TSVGIconImageList, '', TFmxFloatProperty);
+  RegisterPropertyEditor(TypeInfo(string), TSVGIconImage, 'SVGText', TSVGTextPropertyFMX);
   {$ENDIF}
 
   RegisterComponents('Ethea',
@@ -109,6 +201,7 @@ begin
    TSVGIconImageList
   ]);
   RegisterComponentEditor(TSVGIconImageList, TSVGIconImageListCompEditorFMX);
+  RegisterComponentEditor(TSVGIconImage, TSVGIconImageCompEditorFMX);
 end;
 
 end.

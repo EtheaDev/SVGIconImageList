@@ -12,6 +12,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  OldCreateOrder = True
   ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
@@ -492,7 +493,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       end
       object ReformatXMLButton: TButton
         Left = 6
-        Top = 162
+        Top = 161
         Width = 85
         Height = 25
         Caption = 'Reformat &XML'
