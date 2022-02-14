@@ -29,7 +29,7 @@ There are five implementation:
 
 - Native Delphi TSVG: the first native Delphi code, based on Martin's work which is using GDI+
 
-- Using SKIA4Delphi library, a cross-platform 2D graphics API based on Google's Skia Graphics Library
+- Using SKIA4Delphi library, a cross-platform 2D graphics API based on Google's Skia Graphics Library (incomplete support)
 
 - A wrapper to the native Windows Direct2D implementation 
 
