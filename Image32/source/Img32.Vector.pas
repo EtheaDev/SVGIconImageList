@@ -1,8 +1,8 @@
 unit Img32.Vector;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.1                                                             *
-* Date      :  28 January 2022                                                 *
+* Version   :  4.11                                                             *
+* Date      :  12 February 2022                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -1648,6 +1648,7 @@ function Grow(const path, normals: TPathD; delta: double;
   joinStyle: TJoinStyle; miterLimOrRndScale: double): TPathD;
 var
   resCnt, resCap: integer;
+
   procedure AddPoint(const pt: TPointD);
   begin
     if resCnt >= resCap then
@@ -1658,6 +1659,7 @@ var
     result[resCnt] := pt;
     inc(resCnt);
   end;
+
 var
   i,j   : cardinal;
   len   : cardinal;
@@ -1674,7 +1676,6 @@ var
   stepSin     : double;
   stepCos     : double;
   stepsPerRad : double;
-  isConcave   : Boolean;
   pt1, pt2, pt3, pt4: TPointD;
 begin
   Result := nil;
@@ -1748,12 +1749,9 @@ begin
     end;
     sinA := CrossProduct(norms[prevI], norms[i]);
     cosA := DotProduct(norms[prevI], norms[i]);
-    isConcave := (sinA < 0) = (delta > 0);
-    if DistanceSqrd(pt2, pt3) < 1 then
-    begin
-      AddPoint(MidPoint(pt2, pt3));
-    end else if isConcave then
-    begin
+
+    if (sinA < 0) = (delta > 0) then
+    begin //is concave
       if SegmentsIntersect(pt1, pt2, pt3, pt4, ip) then
         AddPoint(ip) else
       begin
@@ -3391,7 +3389,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function MakePathI(const pts: array of integer): TPathD; overload;
+function MakePathI(const pts: array of integer): TPathD;
 var
   i,j, x,y, len: Integer;
 begin
@@ -3413,7 +3411,6 @@ begin
   setlength(Result, j+1);
 end;
 //------------------------------------------------------------------------------
-
 
 function MakePathD(const pts: array of double): TPathD;
 var
