@@ -17,7 +17,7 @@ object frmBenchmark: TfrmBenchmark
   object splHorizontal: TSplitter
     Left = 0
     Top = 449
-    Width = 784
+    Width = 819
     Height = 4
     Cursor = crVSplit
     Align = alBottom
@@ -25,6 +25,7 @@ object frmBenchmark: TfrmBenchmark
     Beveled = True
     MinSize = 100
     ExplicitTop = 422
+    ExplicitWidth = 784
   end
   object SVGIconImage: TSVGIconImage
     Left = 0
@@ -52,17 +53,17 @@ object frmBenchmark: TfrmBenchmark
     TabOrder = 0
   end
   object pnlButtons: TPanel
-    Left = 634
+    Left = 669
     Top = 0
     Width = 150
-    Height = 421
+    Height = 449
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 1
     object btnClear: TButton
       AlignWithMargins = True
       Left = 10
-      Top = 386
+      Top = 417
       Width = 130
       Height = 30
       Margins.Left = 10
@@ -92,7 +93,7 @@ object frmBenchmark: TfrmBenchmark
     object btnRunBenchmark: TButton
       AlignWithMargins = True
       Left = 10
-      Top = 346
+      Top = 383
       Width = 130
       Height = 30
       Margins.Left = 10
@@ -106,8 +107,8 @@ object frmBenchmark: TfrmBenchmark
     end
     object chkGrayScale: TCheckBox
       AlignWithMargins = True
-      Left = 13
-      Top = 300
+      Left = 10
+      Top = 329
       Width = 130
       Height = 20
       Margins.Left = 10
@@ -123,7 +124,7 @@ object frmBenchmark: TfrmBenchmark
     object chkFixedColor: TCheckBox
       AlignWithMargins = True
       Left = 10
-      Top = 286
+      Top = 305
       Width = 130
       Height = 20
       Margins.Left = 10
@@ -138,7 +139,7 @@ object frmBenchmark: TfrmBenchmark
     end
     object pnlLoops: TPanel
       Left = 0
-      Top = 311
+      Top = 351
       Width = 150
       Height = 30
       Align = alBottom
@@ -147,9 +148,9 @@ object frmBenchmark: TfrmBenchmark
       object lblLoops: TLabel
         AlignWithMargins = True
         Left = 10
-        Top = 8
+        Top = 10
         Width = 32
-        Height = 15
+        Height = 18
         Margins.Left = 10
         Margins.Top = 10
         Margins.Right = 5
@@ -157,6 +158,7 @@ object frmBenchmark: TfrmBenchmark
         Align = alLeft
         Caption = '&Loops'
         FocusControl = speLoops
+        ExplicitHeight = 15
       end
       object speLoops: TSpinEdit
         AlignWithMargins = True
@@ -192,7 +194,7 @@ object frmBenchmark: TfrmBenchmark
     object chkDrawVisible: TCheckBox
       AlignWithMargins = True
       Left = 10
-      Top = 228
+      Top = 282
       Width = 130
       Height = 19
       Margins.Left = 10
@@ -208,7 +210,7 @@ object frmBenchmark: TfrmBenchmark
     object KeepAspectCheckBox: TCheckBox
       AlignWithMargins = True
       Left = 10
-      Top = 228
+      Top = 157
       Width = 130
       Height = 19
       Margins.Left = 10

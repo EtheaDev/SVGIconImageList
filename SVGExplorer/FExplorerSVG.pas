@@ -43,6 +43,16 @@ resourcestring
   LOAD_IMAGES_TIME = 'Load %d Images in %d msec.';
 
 type
+  TSVGFactory = (svgImage32, svgNativeTSVG, svgDirect2D, svgCairo, svgSkia);
+const
+  ASVGFactoryNames: Array[TSVGFactory] of string =
+    ('Native Image32',
+    'Native TSVG',
+    'Direct2D',
+    'Cairo',
+    'Skia4Delphi');
+
+type
   TfmExplorerSVG = class(TForm)
     paDir: TPanel;
     DirSelection: TDirectoryListBox;
@@ -75,6 +85,7 @@ type
     TrackBarPanel: TPanel;
     TrackBar: TTrackBar;
     Label1: TLabel;
+    grpFactory: TRadioGroup;
     procedure DirSelectionChange(Sender: TObject);
     procedure ImageViewSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
@@ -91,9 +102,10 @@ type
     procedure ActionUpdate(Sender: TObject);
     procedure ShowTextCheckBoxClick(Sender: TObject);
     procedure TrackBarChange(Sender: TObject);
-    procedure paPreviewClick(Sender: TObject);
+    procedure grpFactoryClick(Sender: TObject);
   private
     fpaPreviewSize: Integer;
+    procedure SetFactory(AFactory: TSVGFactory);
     procedure LoadFilesDir(const APath: string; const AFilter: string = '');
     procedure UpdateStatusBar(Index: Integer);
     procedure SetSVGIconImage(const AIndex: Integer);
@@ -110,13 +122,14 @@ var
 implementation
 
 uses
-  SVGIconUtils
-  {$IFDEF DEBUG}
-  , SVGIconImageListEditorUnit
-  {$ENDIF}
-  , SVGInterfaces
-  , UITypes
-  , D2DSVGFactory;
+  SVGInterfaces
+  , Image32SVGFactory
+  , CairoSVGFactory
+  , D2DSVGFactory
+  , PasSVGFactory
+  , SkiaSVGFactory
+  , SVGIconUtils
+  , UITypes;
 
 {$R *.dfm}
 
@@ -161,27 +174,33 @@ begin
 end;
 
 procedure TfmExplorerSVG.FormCreate(Sender: TObject);
-
-  function GetSVGEngineDescription: string;
-  begin
-    Result := '';
-  {$IF DEFINED(PreferNativeSvgSupport)}
-    if WinSvgSupported then
-      Result := 'Windows Direct-2D SVG-Engine'
-    else
-    {$ELSEIF DEFINED(Cairo_SVGEngine)}
-      Result := 'Cairo SVG-Engine';
-    {$ELSEIF DEFINED(Delphi_SVGEngine)}
-      Result := 'Delphi (TSVG) SVG-Engine';
-  {$ENDIF}
-  end;
-
+var
+  LFactory: TSVGFactory;
 begin
-  Caption := Application.Title + ' - ' + GetSVGEngineDescription;
   fpaPreviewSize := paPreview.Width;
 
-  //Increase performance during drawing of SVG Image
-  SvgIconImage.DoubleBuffered := True;
+  for LFactory := Low(TSVGFactory) to high(TSVGFactory) do
+    grpFactory.Items.Add(ASVGFactoryNames[LFactory]);
+  SetFactory(Low(TSVGFactory));
+end;
+
+procedure TfmExplorerSVG.SetFactory(AFactory: TSVGFactory);
+begin
+  case AFactory of
+    svgNativeTSVG:
+      SetGlobalSvgFactory(GetPasSVGFactory);
+    svgDirect2D:
+      SetGlobalSvgFactory(GetD2DSVGFactory);
+    svgCairo:
+      SetGlobalSvgFactory(GetCairoSVGFactory);
+    svgImage32:
+      SetGlobalSvgFactory(GetImage32SVGFactory);
+    svgSkia:
+      SetGlobalSvgFactory(GetSkiaSVGFactory);
+  end;
+  grpFactory.ItemIndex := Ord(AFactory);
+  Caption := Application.Title + ' - ' + ASVGFactoryNames[AFactory];
+  LoadFilesDir(DirSelection.Directory);
 end;
 
 procedure TfmExplorerSVG.FormShow(Sender: TObject);
@@ -192,6 +211,11 @@ begin
   if LPath = '' then
     LPath := ExtractFilePath(ParamStr(0))+'..\..\Demo\svg_examples';
   DirSelection.Directory := LPath;
+end;
+
+procedure TfmExplorerSVG.grpFactoryClick(Sender: TObject);
+begin
+  SetFactory(TSVGFactory(grpFactory.ItemIndex));
 end;
 
 procedure TfmExplorerSVG.ImageViewKeyDown(Sender: TObject; var Key: Word;
@@ -243,8 +267,8 @@ end;
 
 procedure TfmExplorerSVG.Loaded;
 begin
-  Font.Assign(Screen.IconFont);
   inherited;
+  Font.Assign(Screen.IconFont);
 end;
 
 procedure TfmExplorerSVG.LoadFilesDir(const APath, AFilter: string);
@@ -284,14 +308,6 @@ begin
     LFiles.Free;
     Screen.Cursor := crDefault;
   End;
-end;
-
-procedure TfmExplorerSVG.paPreviewClick(Sender: TObject);
-begin
-  {$IFDEF DEBUG}
-  //Image Editor for ImageList
-  EditSVGIconImageList(SVGIconImageList);
-  {$ENDIF}
 end;
 
 procedure TfmExplorerSVG.paPreviewResize(Sender: TObject);

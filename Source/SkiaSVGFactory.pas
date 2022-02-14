@@ -213,28 +213,19 @@ procedure TSkiaSVG.UpdateSizeInfo(defaultWidth, defaultHeight: integer);
 var
   LSize: TSizeF;
 begin
-  if Assigned(FDOM) and FDOM.ContainerSize.IsZero then
+  if Assigned(FDOM) and (FDOM.Root.Width.Value <> 0) and (FDOM.Root.Height.Value <> 0) then
   begin
     LSize.cx := defaultWidth;
     LSize.cy := defaultHeight;
-    FDOM.ContainerSize := LSize;
+    FDOM.SetContainerSize(LSize);
   end;
 end;
 
 procedure TSkiaSVG.LoadFromSource;
-var
-  LStream: TStringStream;
 begin
   if (FSource <> '') then
   begin
-    LStream := TStringStream.Create(FSource, TEncoding.UTF8);
-    try
-      LStream.Position := 0;
-      DeleteBuffers;
-      FDOM := TSkSVGDOM.Make(LStream);
-    finally
-      LStream.Free;
-    end;
+    FDOM := TSkSVGDOM.Make(FSource);
     if not Assigned(FDOM) then
       raise ESVGException.Create(SKIA_ERROR_PARSING_SVG_TEXT);
   end;
@@ -259,7 +250,8 @@ var
 begin
   if ADestRect.IsEmpty or not Assigned(ADOM) then
     Exit;
-  LSvgRect := TRectF.Create(TPointF.Create(0, 0), ADOM.ContainerSize);
+  LSvgRect.TopLeft := PointF(0, 0);
+  LSvgRect.Size := FDOM.Root.GetIntrinsicSize(TSizeF.Create(0, 0));
   if LSvgRect.IsEmpty then
     Exit;
   ACanvas.Translate(ADestRect.Left, ADestRect.Top);
@@ -277,7 +269,8 @@ var
 begin
   if ADestRect.IsEmpty or not Assigned(ADOM) then
     Exit;
-  LSvgRect := TRectF.Create(TPointF.Create(0, 0), ADOM.ContainerSize);
+  LSvgRect.TopLeft := PointF(0, 0);
+  LSvgRect.Size := FDOM.Root.GetIntrinsicSize(TSizeF.Create(0, 0));
   if LSvgRect.IsEmpty then
     Exit;
   LSurface := TSKSurface.MakeRaster(Round(ADestRect.Width), Round(ADestRect.Height));
@@ -451,7 +444,8 @@ begin
     Stream.Position := 0;
     LStream.LoadFromStream(Stream);
     DeleteBuffers;
-    FDOM := TSkSVGDOM.Make(LStream);
+    LStream.Position := 0;
+    FDOM := TSkSVGDOM.MakeFromStream(LStream);
     FSource := LStream.DataString;
   finally
     LStream.Free;
