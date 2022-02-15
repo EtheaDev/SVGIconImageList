@@ -227,7 +227,8 @@ begin
   begin
     FDOM := TSkSVGDOM.Make(FSource);
     if not Assigned(FDOM) then
-      raise ESVGException.Create(SKIA_ERROR_PARSING_SVG_TEXT);
+      FDOM := TSkSVGDOM.Make('<svg></svg>');
+    //raise ESVGException.Create(SKIA_ERROR_PARSING_SVG_TEXT);
   end;
 end;
 
@@ -451,7 +452,8 @@ begin
     LStream.Free;
   end;
   if not Assigned(FDOM) then
-    raise ESVGException.Create(SKIA_ERROR_PARSING_SVG_TEXT);
+    FDOM := TSkSVGDOM.Make('<svg></svg>');
+    //raise ESVGException.Create(SKIA_ERROR_PARSING_SVG_TEXT);
 end;
 
 { TSkiaSVGFactory }
