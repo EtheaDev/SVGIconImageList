@@ -65,9 +65,11 @@ Related links: https://www.embarcadero.com/ - https://learndelphi.org/
 
 ![SampleFMX.jpg](./Demo/Images/SampleFMX.jpg)
 
-**Sample image of the VCL SVGText-property editor**
+**Sample images of the VCL SVGText-property editor (VCL and FMX)**
 
 ![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg)
+
+![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditorFMX.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditorFMX.jpg)
 
 ### UTILITY
 
