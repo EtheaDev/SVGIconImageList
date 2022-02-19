@@ -447,7 +447,7 @@ end;
 {$IF COMPILERVERSION > 31}
 function GetCardProp(const str: string; out success: Boolean): Cardinal;
 begin
-  success := TryStrToIntU(str, Result);
+  success := TryStrToUInt(str, Result);
 end;
 {$IFEND}
 //------------------------------------------------------------------------------
