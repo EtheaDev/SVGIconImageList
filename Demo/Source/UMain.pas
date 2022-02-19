@@ -38,11 +38,8 @@ uses
   ActnList, ExtCtrls, ComCtrls, ToolWin,
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
   System.Actions,
-  {$IF COMPILERVERSION >= 28}
-  System.ImageList,
-  {$ENDIF}
   SVGIconImageListBase, SVGIconImageCollection, SVGIconVirtualImageList,
-  UDataModule;
+  UDataModule, System.ImageList;
 
 type
   TMainForm = class(TForm)

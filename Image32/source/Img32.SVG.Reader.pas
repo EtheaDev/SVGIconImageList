@@ -2892,7 +2892,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function FixSpaces(const text: string): string;
+function FixSpaces(const text: UnicodeString): UnicodeString;
 var
   i,j, len: integer;
 begin
@@ -2927,7 +2927,7 @@ procedure TSubtextElement.GetPaths(const drawDat: TDrawData);
 var
   el : TSvgElement;
   topTextEl : TTextElement;
-  s: string;
+  s: UnicodeString;
   tmpX, offsetX, scale, fontSize, bs: double;
   mat: TMatrixD;
 begin
@@ -3003,7 +3003,7 @@ var
   parentTextEl, topTextEl: TTextElement;
   el: TSvgElement;
   isFirst: Boolean;
-  s: string;
+  s: UnicodeString;
   i, len, charsThatFit: integer;
   d, fontScale, spacing: double;
   utf8: UTF8String;
@@ -3055,7 +3055,7 @@ begin
   {$IFDEF UNICODE}
   s := UTF8ToUnicodeString(HtmlDecode(utf8));
   {$ELSE}
-  s := Utf8Decode(HtmlDecode(utf8));
+  s := UnicodeString(Utf8Decode(HtmlDecode(utf8)));
   {$ENDIF}
   for i := 1 to Length(s) do
     if s[i] < #32 then s[i] := #32;

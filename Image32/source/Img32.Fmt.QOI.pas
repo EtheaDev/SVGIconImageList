@@ -96,7 +96,7 @@ end;
 
 function ReadByte(var p: PByte): Byte; {$IFDEF INLINE} inline; {$ENDIF}
 begin
-  Result := p^;
+  Result := Byte(p^); //nb: Delphi 7 compatability
   inc(p);
 end;
 
@@ -239,7 +239,7 @@ end;
 procedure qoi_write_8(var p: PByte; val: Byte);
   {$IFDEF INLINE} inline; {$ENDIF}
 begin
-  p^ := val; inc(p);
+  Byte(p^) := val; inc(p); //Delphi 7
 end;
 //------------------------------------------------------------------------------
 

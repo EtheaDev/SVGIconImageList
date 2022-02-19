@@ -57,7 +57,7 @@
         <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
         <SanitizedProjectName>SVGExplorer</SanitizedProjectName>
-        <DCC_UnitSearchPath>..\..\SVGIconImageList\Svg;..\..\SVGIconImageList\Source;..\..\SVGIconImageList\Cairo;..\..\SVGIconImageList\Packages;..\..\SVGIconImageList\Image32\source;..\..\SVGIconImageList\Image32\source\Image32_SVG;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\Svg;..\Source;..\Cairo;..\Packages;..\Image32\source;..\Skia4Delphi\Source;..\Skia4Delphi\Source\Vcl;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_Locale>1040</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=Ethea S.r.l.;FileDescription=SVG Icon Explorer;FileVersion=1.1.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=;ProductName=SVG Icon Explorer;ProductVersion=1.1;Comments=</VerInfo_Keys>
         <DCC_ExeOutput>.\Bin</DCC_ExeOutput>

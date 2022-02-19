@@ -4,7 +4,7 @@
   {$DEFINE RECORD_METHODS}
   {$DEFINE PBYTE}
   {$DEFINE UITYPES}
-  {$DEFINE NESTED_TYPES}      
+  {$DEFINE NESTED_TYPES}
   {$IFNDEF DEBUG}
     {$DEFINE INLINE}
   {$ENDIF}
@@ -39,9 +39,10 @@
           {$IF COMPILERVERSION >= 21}
             {$DEFINE GESTURES}           //Delphi 2010 - added screen gesture support
             {$IF COMPILERVERSION >= 23}
-			  {$IF declared(FireMonkeyVersion)} //defined in FMX.Types
-			    {$DEFINE FMX}
-              {$IFEND}			  
+              {$IF declared(FireMonkeyVersion)} //defined in FMX.Types
+                {$DEFINE FMX}
+              {$IFEND}        
+              {$DEFINE FORMATSETTINGS}
               {$DEFINE TROUNDINGMODE}   
               {$DEFINE UITYPES}          //DelphiXE2   - added UITypes unit
               {$DEFINE XPLAT_GENERICS}   //DelphiXE2   - reasonable cross-platform & generics support

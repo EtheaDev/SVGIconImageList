@@ -18,6 +18,7 @@ type
     procedure ButtonClick(Sender: TObject);
     procedure SVGIconImageResize(Sender: TObject);
     procedure SVGIconImageClick(Sender: TObject);
+    procedure SVGIconImageDblClick(Sender: TObject);
   private
     FSVGList: TStringDynArray;
     FIndex: Integer;
@@ -67,6 +68,17 @@ begin
   LSVGText := SVGIconImage.SVGText;
   if EditSVGTextProperty(LSVGText) then
    SVGIconImage.SVGText := LSVGText;
+end;
+
+procedure TSVGIconImageForm.SVGIconImageDblClick(Sender: TObject);
+var
+  LSVGText: string;
+begin
+  LSVGText := SVGIconImage.SVGText;
+  if EditSVGTextProperty(LSVGText) then
+  begin  
+    SVGIconImage.SVGText := LSVGText;
+  end;
 end;
 
 procedure TSVGIconImageForm.SVGIconImageResize(Sender: TObject);

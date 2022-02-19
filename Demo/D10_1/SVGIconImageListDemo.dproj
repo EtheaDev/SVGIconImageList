@@ -55,7 +55,7 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_DcuOutput>..\Dcu\D10_1\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>..\Bin</DCC_ExeOutput>
-        <DCC_UnitSearchPath>..\..\source;..\..\svg;..\..\Cairo;..\..\Image32\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\source;..\..\svg;..\..\Cairo;..\..\Image32\Source;..\..\Skia4delphi;..\..\Skia4delphi\Source;..\..\Skia4delphi\Source\Vcl;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_DependencyCheckOutputName>..\Bin\IconFontsImageListDemo.exe</DCC_DependencyCheckOutputName>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Platform>x86</DCC_Platform>
@@ -68,6 +68,7 @@
         <PostBuildEvent><![CDATA[powershell.exe Expand-Archive -Force ..\..\Cairo\Dlls\librsvg-$(PLATFORM).zip $(OUTPUTDIR)
 $(PostBuildEvent)]]></PostBuildEvent>
         <PostBuildEventCancelOnError>false</PostBuildEventCancelOnError>
+        <DCC_Define>UseSVGEditorsAtRunTime;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>

@@ -26,12 +26,12 @@ uses
   {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults,{$ENDIF}
   Img32, Img32.SVG.Core, Img32.SVG.Path, Img32.Vector, Img32.Draw,
   Img32.Transform, Img32.Text;
-
 {$IFDEF ZEROBASEDSTR}
   {$ZEROBASEDSTRINGS OFF}
 {$ENDIF}
 
 type
+
   TSvgElWriterClass = class of TBaseElWriter;
 
   TBaseElWriter = class
@@ -57,24 +57,26 @@ type
     function  AddChild(childClass: TSvgElWriterClass): TBaseElWriter;
     procedure DeleteChild(index: integer);
     procedure Clear; virtual;
-
   end;
 
   TSvgElWriter = class(TBaseElWriter)
   private
-    fwidth: integer;
-    fheight: integer;
+//    fwidth    : integer;
+//    fheight   : integer;
+    fViewbox  : TRect;
   protected
     function WriteHeader: string; override;
   public
     constructor Create(parent: TBaseElWriter); override;
-    property width: integer read fwidth write fwidth;
-    property height: integer read fheight write fheight;
+//    property width: integer read fwidth write fwidth;
+//    property height: integer read fheight write fheight;
+    property Viewbox: TRect read fViewbox write fViewbox;
   end;
 
   TExBaseElWriter = class(TBaseElWriter)
   protected
     fFillClr     : TColor32;
+    fFillRule : TFillRule;
     fStrokeClr   : TColor32;
     fStrokeWidth : double;
     fDashes     : TArrayOfDouble;
@@ -89,6 +91,7 @@ type
     property StrokeColor  : TColor32 read fStrokeClr write fStrokeClr;
     property StrokeWidth  : double read fStrokeWidth write fStrokeWidth;
     property Dashes       : TArrayOfDouble read fDashes write fDashes;
+    property FillRule     : TFillRule read fFillRule write fFillRule;
   end;
 
   TSvgGroupWriter = class(TExBaseElWriter)
@@ -110,7 +113,6 @@ type
     destructor Destroy; override;
     procedure Clear; override;
     procedure DeleteLastSegment(subPath: TSvgSubPath);
-
     procedure MoveTo(X,Y: double);
     procedure LineHTo(X: double);
     procedure LineVTo(Y: double);
@@ -164,16 +166,28 @@ type
     constructor Create(parent: TBaseElWriter); override;
   end;
 
+  TSVGFontInfo = record
+    family      : TTtfFontFamily;
+    size        : double;
+    spacing     : double;
+    textLength  : double;
+    italic      : boolean;
+    weight      : integer;
+    align       : TSvgTextAlign;
+    decoration  : TFontDecoration;
+    baseShift   : TValue;
+  end;
+
   TSvgTextWriter = class(TExBaseElWriter)
   protected
+    fPosition: TPointD;
+    fOffset: TSizeD;
+    fFontInfo: TSVGFontInfo;
     function Write: string; override;
     function WriteHeader: string; override;
   public
-    position: TPointD;
-    offset: TSizeD;
-    fontInfo: TSVGFontInfo;
     constructor Create(parent: TBaseElWriter); override;
-    procedure AddText(const text: string);
+    procedure AddText(const aText: string; X,Y: double; font: TFontCache);
   end;
 
   TSvgTSpanWriter = class(TSvgTextWriter)
@@ -199,18 +213,30 @@ type
     property Svg: TSvgElWriter read fSvgElememt;
   end;
 
+function GetFontInfo(font: TFontCache): TSVGFontInfo;
+
 implementation
 
 const
   indentSize = 2;
-
-  nullfontInfo: TSVGFontInfo = (family: ttfUnknown; size: 0;
-    spacing: 0.0; textLength: 0; italic: sfsUndefined; weight: -1;
-    align: staUndefined; decoration: fdUndefined;
-    baseShift: (rawVal: InvalidD; unitType: utUnknown));
+//  nullfontInfo: TSVGFontInfo = (family: ttfUnknown; size: 0;
+//    spacing: 0.0; textLength: 0; italic: sfsUndefined; weight: -1;
+//    align: staUndefined; decoration: fdUndefined;
+//    baseShift: (rawVal: InvalidD; unitType: utUnknown));
 
 //------------------------------------------------------------------------------
 // Miscellaneous routines
+//------------------------------------------------------------------------------
+
+function GetFontInfo(font: TFontCache): TSVGFontInfo;
+begin
+  FillChar(Result, SizeOf(Result), 0);
+  Result.family := font.FontReader.FontFamily;
+  Result.size := font.FontHeight;
+  Result.italic :=
+    msItalic in font.FontReader.FontInfo.macStyles;
+  Result.weight := font.FontReader.Weight;
+end;
 //------------------------------------------------------------------------------
 
 procedure AppendStr(var s: string; const s2: string; omitSpace: Boolean = false);
@@ -433,14 +459,17 @@ var
 begin
   Result := inherited WriteHeader;
   if fFillClr <> clInvalid then
+  begin
     AppendColorAttrib(Result, 'fill', fFillClr);
-
+    if fFillRule = frEvenOdd then
+      AppendStr(Result, 'fill-rule="evenodd"', false) else
+      AppendStr(Result, 'fill-rule="nonzero"', false);
+  end;
   if fStrokeClr <> clInvalid then
   begin
     AppendColorAttrib(Result, 'stroke', fStrokeClr);
     AppendFloatAttrib(Result, 'stroke-width', fStrokeWidth);
   end;
-
   if Assigned(fDashes) then
   begin
     AppendStr(Result, 'stroke-dasharray="', true);
@@ -448,11 +477,9 @@ begin
       AppendFloat(Result, fDashes[i]);
     AppendStr(Result, '"');
   end;
-
   if not IsIdentityMatrix(Matrix) then
   begin
     AppendStr(Result, 'transform="matrix(');
-
     for i := 0 to 1 do for j := 0 to 1 do
       AppendFloat(Result, Matrix[i][j]);
     AppendFloat(Result, Matrix[2][0]);
@@ -490,13 +517,15 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+
 function TSvgElWriter.WriteHeader: string;
 const
-  svgHeader  = 'width="%dpx" height="%dpx" viewBox="0 0 %0:d %1:d"';
+  svgHeader  = 'width="%2:dpx" height="%3:dpx" viewBox="%0:d %1:d %2:d %3:d"';
   svgHeader2 = 'version="1.1" xmlns="http://www.w3.org/2000/svg"';
 begin
   Result := '';
-  AppendStr(Result, Format(svgHeader, [width, height]));
+  with fViewbox do
+    AppendStr(Result, Format(svgHeader, [left, top, right-left, bottom -top]));
   AppendStr(Result, svgHeader2);
 end;
 
@@ -635,7 +664,6 @@ var
 begin
   rec := GetSvgArcInfoRect(fLastPt, endPt, radii, angle, arcFlag, sweepFlag);
   if rec.IsEmpty then Exit;
-
   currPath := GetCurrentPath;
   currPath.AddASeg(fLastPt, endPt, rec, angle, sweepFlag);
   fLastPt := endPt;
@@ -849,22 +877,26 @@ constructor TSvgTextWriter.Create(parent: TBaseElWriter);
 begin
   inherited;
   fElStr := 'text';
-  fontInfo := nullfontInfo;
-  offset.cx := InvalidD;
-  offset.cy := InvalidD;
+  fOffset.cx := InvalidD;
+  fOffset.cy := InvalidD;
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgTextWriter.AddText(const text: string);
+procedure TSvgTextWriter.AddText(const aText: string; X,Y: double; font: TFontCache);
 begin
-  TSvgSubTextWriter(AddChild(TSvgSubTextWriter)).text := text;
+  with AddChild(TSvgSubTextWriter) as TSvgSubTextWriter do
+  begin
+    text := atext;
+    fFontInfo := GetFontInfo(font);
+    fPosition := PointD(X,Y);
+  end;
 end;
 //------------------------------------------------------------------------------
 
 function TSvgTextWriter.WriteHeader: string;
 begin
   Result := inherited WriteHeader;
-  with fontInfo do
+  with fFontInfo do
   begin
     case family of
       ttfUnknown:;
@@ -876,10 +908,9 @@ begin
       AppendFloatAttrib(Result, 'font-size', size);
     if spacing <> 0 then
       AppendFloatAttrib(Result, 'font-spacing', spacing);
-    case italic of
-      sfsNone   : AppendStrAttrib(Result, 'font-style', 'normal');
-      sfsItalic : AppendStrAttrib(Result, 'font-style', 'italic');
-    end;
+    if italic then
+      AppendStrAttrib(Result, 'font-style', 'italic') else
+      AppendStrAttrib(Result, 'font-style', 'normal');
     if (weight >= 100) and (weight <= 900) then
       AppendFloatAttrib(Result, 'font-weight', weight);
     case decoration of
@@ -888,17 +919,14 @@ begin
       fdStrikeThrough: AppendStrAttrib(Result, 'text-decoration', 'line-through');
     end;
   end;
-
-  if position.X <> InvalidD then
-    AppendFloatAttrib(Result, 'x', position.X);
-  if position.Y <> InvalidD then
-    AppendFloatAttrib(Result, 'y', position.Y);
-
-  if offset.cx <> InvalidD then
-    AppendFloatAttrib(Result, 'dx', offset.cx);
-  if offset.cy <> InvalidD then
-    AppendFloatAttrib(Result, 'dy', offset.cy);
-
+  if fPosition.X <> InvalidD then
+    AppendFloatAttrib(Result, 'x', fPosition.X);
+  if fPosition.Y <> InvalidD then
+    AppendFloatAttrib(Result, 'y', fPosition.Y);
+  if fOffset.cx <> InvalidD then
+    AppendFloatAttrib(Result, 'dx', fOffset.cx);
+  if fOffset.cy <> InvalidD then
+    AppendFloatAttrib(Result, 'dy', fOffset.cy);
 end;
 //------------------------------------------------------------------------------
 
@@ -931,7 +959,7 @@ constructor TSvgTSpanWriter.Create(parent: TBaseElWriter);
 begin
   inherited;
   fElStr := 'tspan';
-  position := InvalidPointD;
+  fPosition := InvalidPointD;
 end;
 
 //------------------------------------------------------------------------------

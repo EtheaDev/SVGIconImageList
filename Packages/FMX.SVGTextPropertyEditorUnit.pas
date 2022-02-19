@@ -66,6 +66,7 @@ type
     procedure HelpButtonClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ReformatXMLButtonClick(Sender: TObject);
+    procedure SVGTextMemoChangeTracking(Sender: TObject);
   private
     procedure UpdateImage;
     procedure UpdateGUI;
@@ -122,6 +123,7 @@ end;
 procedure TSVGTextPropertyEditorFormFMX.FormCreate(Sender: TObject);
 begin
   SVGTextMemo.Font.Family := 'Consolas';
+  Caption := Format(Caption, [SVGIconImageListVersion]);
 end;
 
 procedure TSVGTextPropertyEditorFormFMX.FormResize(Sender: TObject);
@@ -185,6 +187,12 @@ begin
 end;
 
 procedure TSVGTextPropertyEditorFormFMX.SVGTextMemoChange(Sender: TObject);
+begin
+  UpdateImage;
+end;
+
+procedure TSVGTextPropertyEditorFormFMX.SVGTextMemoChangeTracking(
+  Sender: TObject);
 begin
   UpdateImage;
 end;

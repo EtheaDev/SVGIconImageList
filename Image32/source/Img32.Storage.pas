@@ -130,7 +130,9 @@ type
   end;
   function GetIntProp(const str: string; out success: Boolean): integer;
   function GetBoolProp(const str: string; out success: Boolean): Boolean;
+  {$IF COMPILERVERSION > 31}
   function GetCardProp(const str: string; out success: Boolean): Cardinal;
+  {$IFEND}
   function GetDoubleProp(const str: string; out success: Boolean): Double;
   function GetStringProp(const str: string; out success: Boolean): string;
   function GetStorageProp(const str: string; out success: Boolean): TStorage;
@@ -442,10 +444,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+{$IF COMPILERVERSION > 31}
 function GetCardProp(const str: string; out success: Boolean): Cardinal;
 begin
-  success := TryStrToUInt(str, Result);
+  success := TryStrToIntU(str, Result);
 end;
+{$IFEND}
 //------------------------------------------------------------------------------
 
 function GetDoubleProp(const str: string; out success: Boolean): Double;
@@ -479,7 +483,11 @@ begin
   begin
     success := ConvertColorConst(str, Result);
   end else
+  {$IF COMPILERVERSION > 31}
     success := TryStrToUInt('$'+str, Cardinal(Result));
+  {$ELSE}
+    success := TryStrToInt('$'+str, Integer(Result));
+  {$IFEND}
 end;
 //------------------------------------------------------------------------------
 
@@ -783,11 +791,11 @@ var
 
 begin
   if not Assigned(storeManager) or (utf8 = '') then Exit;
-  savedDecSep := FormatSettings.DecimalSeparator;
+  savedDecSep := {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator;
   loadingPtrProps := TList.Create;
   loadingObjectsList := TList.Create;
   try
-    FormatSettings.DecimalSeparator := '.';
+    {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator := '.';
     xmlCurr := PUTF8Char(utf8);
     xmlEnd := xmlCurr;
     inc(xmlEnd, Length(utf8));
@@ -895,7 +903,7 @@ begin
   finally
     loadingObjectsList.Free;
     loadingPtrProps.Free;
-    FormatSettings.DecimalSeparator := savedDecSep;
+    {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator := savedDecSep;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -936,8 +944,8 @@ var
 begin
   if not Assigned(storageManager) then Exit;
 
-  savedDecSep := FormatSettings.DecimalSeparator;
-  FormatSettings.DecimalSeparator := '.';
+  savedDecSep := {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator;
+  {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator := '.';
   storageManager.fCurrLevel := 0;
   objId := startIdx;
   objIdList := TList.Create;
@@ -954,7 +962,7 @@ begin
             WriteStorageContent(objId);
   finally
     objIdList.Free;
-    FormatSettings.DecimalSeparator := savedDecSep;
+    {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator := savedDecSep;
   end;
 end;
 //------------------------------------------------------------------------------

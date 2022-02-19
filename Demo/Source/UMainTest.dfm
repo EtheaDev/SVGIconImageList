@@ -82,7 +82,6 @@ object MainForm: TMainForm
     Caption = 'ToolBar1'
     Images = SVGIconImageList1
     TabOrder = 1
-    ExplicitWidth = 502
     object ToolButton1: TToolButton
       Left = 0
       Top = 0
@@ -130,7 +129,6 @@ object MainForm: TMainForm
           ' fill="yellow"'#13#10'         transform="translate(50,50)" />'#13#10'</svg>' +
           #13#10
       end>
-    Scaled = True
     Left = 384
     Top = 160
   end

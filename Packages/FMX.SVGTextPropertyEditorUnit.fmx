@@ -2,8 +2,8 @@ object SVGTextPropertyEditorFormFMX: TSVGTextPropertyEditorFormFMX
   Left = 916
   Top = 169
   Caption = 
-    'SVGText Property Editor - Copyright (c) Ethea S.r.l. - Apache 2.' +
-    '0 Open Source License'
+    'SVGText Property Editor %s - Copyright (c) Ethea S.r.l. - Apache' +
+    ' 2.0 Open Source License'
   ClientHeight = 246
   ClientWidth = 739
   FormFactor.Width = 320
@@ -152,6 +152,7 @@ object SVGTextPropertyEditorFormFMX: TSVGTextPropertyEditorFormFMX
     Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
     DataDetectorTypes = []
     OnChange = SVGTextMemoChange
+    OnChangeTracking = SVGTextMemoChangeTracking
     Align = Client
     Size.Width = 550.000000000000000000
     Size.Height = 213.000000000000000000
@@ -204,6 +205,8 @@ object SVGTextPropertyEditorFormFMX: TSVGTextPropertyEditorFormFMX
         Size.Width = 185.000000000000000000
         Size.Height = 189.000000000000000000
         Size.PlatformDefault = False
+        FixedColor = claNull
+        GrayScale = False
         Left = 1
         Top = 1
       end

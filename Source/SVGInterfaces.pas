@@ -108,7 +108,7 @@ Uses
   {$MESSAGE HINT 'Use Cairo "wrapper" SVG-Engine for SVGIconImageList'}
   CairoSVGFactory
 {$ELSEIF DEFINED(Skia_SVGEngine)}
-  {$MESSAGE HINT 'Use Skia "wrapper" SVG-Engine for SVGIconImageList'}
+  {$MESSAGE HINT 'Use Skia4Delphi "wrapper" SVG-Engine for SVGIconImageList'}
   SkiaSVGFactory
 {$ENDIF}
 {$IFDEF PreferNativeSvgSupport}

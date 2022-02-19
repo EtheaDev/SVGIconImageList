@@ -761,7 +761,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-
 function IntersectRect(const rec1, rec2: TRectD): TRectD;
 begin
   result.Left := Max(rec1.Left, rec2.Left);

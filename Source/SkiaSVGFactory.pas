@@ -9,7 +9,8 @@ unit SkiaSVGFactory;
 interface
 
 Uses
-  SVGInterfaces;
+  SVGInterfaces
+  , Skia.Vcl;
 
 // Factory Methods
 function GetSkiaSVGFactory: ISVGFactory;
@@ -23,6 +24,7 @@ Uses
   Winapi.Windows,
   Winapi.Messages,
   Winapi.GDIPAPI,
+  SVGCommon,
   System.Types,
   System.UIConsts,
   System.UITypes,
@@ -35,13 +37,12 @@ Uses
 type
   TSkiaSVG = class(TInterfacedObject, ISVG)
   private
-    FDOM: ISKSVGDOM;
+    FSvg: TSkSvgBrush;
     FDrawCached: Boolean;
     FDrawBuffer: HBITMAP;
     FDrawBufferData: Pointer;
     FDrawBufferStride: Integer;
     FDrawCacheEnabled: Boolean;
-    FSource: String;
     FWidth: Integer;
     FHeight: Integer;
     FFixedColor: TColor;
@@ -70,17 +71,10 @@ type
     procedure LoadFromFile(const FileName: string);
     procedure PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean = True);
     procedure LoadFromSource;
-    procedure SourceFromStream(Stream: TStream);
-    procedure UpdateSizeInfo(defaultWidth, defaultHeight: integer);
     procedure DeleteBuffers;
     procedure CreateBuffer(const AWidth, AHeight: Integer;
       const AMemDC: HDC; out ABuffer: HBITMAP;
       out AData: Pointer; out AStride: Integer);
-    procedure DrawWithDefaultColor(const ACanvas: ISKCanvas;
-      const ADOM: ISKSVGDOM; const ADestRect: TRectF);
-    procedure DrawWithFixedColor(const ACanvas: ISKCanvas;
-      const ADOM: ISKSVGDOM; const ADestRect: TRectF;
-      const AColor: TAlphaColor);
   public
     constructor Create;
     destructor Destroy; override;
@@ -103,12 +97,14 @@ begin
   inherited;
   FFixedColor := TColors.SysDefault; // clDefault
   FOpacity := 1.0;
+  FSvg := TSkSvgBrush.Create;
 end;
 
 destructor TSkiaSVG.Destroy;
 begin
-  inherited;
+  FSvg.Free;
   DeleteBuffers;
+  inherited;
 end;
 
 procedure TSkiaSVG.CreateBuffer(
@@ -196,7 +192,7 @@ end;
 
 function TSkiaSVG.GetSource: string;
 begin
-  Result := FSource;
+  Result := FSvg.Source;
 end;
 
 function TSkiaSVG.GetWidth: Single;
@@ -206,84 +202,12 @@ end;
 
 function TSkiaSVG.IsEmpty: Boolean;
 begin
-  Result := FSource = '';
-end;
-
-procedure TSkiaSVG.UpdateSizeInfo(defaultWidth, defaultHeight: integer);
-var
-  LSize: TSizeF;
-begin
-  if Assigned(FDOM) and (FDOM.Root.Width.Value <> 0) and (FDOM.Root.Height.Value <> 0) then
-  begin
-    LSize.cx := defaultWidth;
-    LSize.cy := defaultHeight;
-    FDOM.SetContainerSize(LSize);
-  end;
+  Result := (FSvg.Source = '') or (FSvg.DOM = nil);
 end;
 
 procedure TSkiaSVG.LoadFromSource;
 begin
-  if (FSource <> '') then
-  begin
-    FDOM := TSkSVGDOM.Make(FSource);
-    if not Assigned(FDOM) then
-      FDOM := TSkSVGDOM.Make('<svg></svg>');
-    //raise ESVGException.Create(SKIA_ERROR_PARSING_SVG_TEXT);
-  end;
-end;
-
-procedure TSkiaSVG.LoadFromStream(Stream: TStream);
-Var
-  OldPos : Int64;
-begin
-  // read and save the Source
-  OldPos := Stream.Position;
-  SourceFromStream(Stream);
-  // Restore Position
-  Stream.Position := OldPos;
-  DeleteBuffers;
-end;
-
-procedure TSkiaSVG.DrawWithDefaultColor(const ACanvas: ISKCanvas; const ADOM: ISKSVGDOM;
-  const ADestRect: TRectF);
-var
-  LSvgRect: TRectF;
-begin
-  if ADestRect.IsEmpty or not Assigned(ADOM) then
-    Exit;
-  LSvgRect.TopLeft := PointF(0, 0);
-  LSvgRect.Size := FDOM.Root.GetIntrinsicSize(TSizeF.Create(0, 0));
-  if LSvgRect.IsEmpty then
-    Exit;
-  ACanvas.Translate(ADestRect.Left, ADestRect.Top);
-  ACanvas.Scale(ADestRect.Width / LSvgRect.Width, ADestRect.Height / LSvgRect.Height);
-  ADOM.Render(ACanvas);
-end;
-
-procedure TSkiaSVG.DrawWithFixedColor(const ACanvas: ISKCanvas; const ADOM: ISKSVGDOM;
-  const ADestRect: TRectF; const AColor: TAlphaColor);
-var
-  LSurface: ISKSurface;
-  LImage: ISKImage;
-  LPaint: ISKPaint;
-  LSvgRect: TRectF;
-begin
-  if ADestRect.IsEmpty or not Assigned(ADOM) then
-    Exit;
-  LSvgRect.TopLeft := PointF(0, 0);
-  LSvgRect.Size := FDOM.Root.GetIntrinsicSize(TSizeF.Create(0, 0));
-  if LSvgRect.IsEmpty then
-    Exit;
-  LSurface := TSKSurface.MakeRaster(Round(ADestRect.Width), Round(ADestRect.Height));
-  LSurface.Canvas.Clear(TAlphaColors.Null);
-  LSurface.Canvas.Scale(ADestRect.Width / LSvgRect.Width, ADestRect.Height / LSvgRect.Height);
-  ADOM.Render(LSurface.Canvas);
-  LImage := LSurface.MakeImageSnapshot;
-  LPaint := TSKPaint.Create;
-  //if FFillKind = TSvgBrushKind.Solid then
-    LPaint.ColorFilter := TSKColorFilter.MakeBlend(AColor, TSkBlendMode.SrcIn);
-  LPaint.Style := TSKPaintStyle.Fill;
-  ACanvas.DrawImage(LImage, ADestRect.Left, ADestRect.Top, LPaint);
+  fsvg.DOM;
 end;
 
 procedure TSkiaSVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
@@ -301,7 +225,7 @@ var
     ARec: TAlphaColorRec;
   begin
     CRec.Color := Value;
-    ARec.A := CRec.A;
+    ARec.A := 255;
     ARec.B := CRec.B;
     ARec.G := CRec.G;
     ARec.R := CRec.R;
@@ -313,30 +237,31 @@ var
     LSurface: ISkSurface;
     LDestRect: TRectF;
   begin
-    LSurface := TSkSurface.MakeRasterDirect(TSkImageInfo.Create(FWidth, FHeight),
-      FDrawBufferData, FDrawBufferStride);
+    LSurface := TSkSurface.MakeRasterDirect(TSkImageInfo.Create(FWidth, FHeight), FDrawBufferData, FDrawBufferStride);
     LSurface.Canvas.Clear(TAlphaColors.Null);
     LScaleFactor := 1;
     LSurface.Canvas.Concat(TMatrix.CreateScaling(LScaleFactor, LScaleFactor));
-    LDestRect := TRectF.Create(0, 0, FWidth / LScaleFactor, FHeight / LScaleFactor);
+    LDestRect := RectF(0, 0, FWidth / LScaleFactor, FHeight / LScaleFactor);
 
-    if not FGrayScale and
-      (FFixedColor <> TColors.SysDefault) and
+    //FixedColor
+    FSvg.GrayScale := FGrayScale;
+    if not FGrayScale and (FFixedColor <> TColors.SysDefault) and
       (FFixedColor <> TColors.SysNone) then
-      DrawWithFixedColor(LSurface.Canvas, FDOM, R, ColorToAlphaColor(FFixedColor))
+      FSvg.OverrideColor := ColorToAlphaColor(FFixedColor)
     else
-      DrawWithDefaultColor(LSurface.Canvas, FDOM, R);
+      FSvg.OverrideColor := Default(TAlphaColor);
+
+    //Render SVG
+    FSvg.Render(LSurface.Canvas, LDestRect, FOpacity);
     FDrawCached := True;
   end;
 
 begin
-  if (Round(R.Width) <> FWidth) or (Round(R.Height) <> FHeight) then
-  begin
-    FWidth := Round(R.Width);
-    FHeight := Round(R.Height);
-    DeleteBuffers;
-  end;
-  UpdateSizeInfo(FWidth, FHeight);
+  FWidth := Round(R.Width);
+  FHeight := Round(R.Height);
+  DeleteBuffers;
+  if (FWidth <= 0) or (FHeight <= 0) then
+    Exit;
 
   LDrawBufferDC := CreateCompatibleDC(0);
   if LDrawBufferDC <> 0 then
@@ -351,7 +276,7 @@ begin
             InternalDraw;
           LBlendFunction := BlendFunction;
           LBlendFunction.SourceConstantAlpha := Round(FOpacity * 255);
-          AlphaBlend(DC, 0, 0, FWidth, FHeight, LDrawBufferDC, 0, 0, FWidth, FHeight, LBlendFunction);
+          AlphaBlend(DC, Round(R.Left), Round(R.Top), FWidth, FHeight, LDrawBufferDC, 0, 0, FWidth, FHeight, LBlendFunction);
         finally
           if LOldObj <> 0 then
             SelectObject(LDrawBufferDC, LOldObj);
@@ -378,7 +303,7 @@ procedure TSkiaSVG.SaveToStream(Stream: TStream);
 var
   Buffer: TBytes;
 begin
-  Buffer := TEncoding.UTF8.GetBytes(FSource);
+  Buffer := TEncoding.UTF8.GetBytes(FSvg.Source);
   Stream.WriteBuffer(Buffer, Length(Buffer))
 end;
 
@@ -429,31 +354,33 @@ end;
 
 procedure TSkiaSVG.SetSource(const ASource: string);
 begin
-  if FSource <> ASource then
+  if FSvg.Source <> ASource then
   begin
-    FSource := ASource;
+    FSvg.Source := ASource;
     LoadFromSource;
   end;
 end;
 
-procedure TSkiaSVG.SourceFromStream(Stream: TStream);
+procedure TSkiaSVG.LoadFromStream(Stream: TStream);
 var
   LStream: TStringStream;
+  OldPos : Int64;
 begin
+  // read and save the Source
+  OldPos := Stream.Position;
   LStream := TStringStream.Create('', TEncoding.UTF8);
   try
     Stream.Position := 0;
     LStream.LoadFromStream(Stream);
     DeleteBuffers;
     LStream.Position := 0;
-    FDOM := TSkSVGDOM.MakeFromStream(LStream);
-    FSource := LStream.DataString;
+    FSvg.Source := LStream.DataString;
   finally
     LStream.Free;
+    // Restore Position
+    Stream.Position := OldPos;
+    DeleteBuffers;
   end;
-  if not Assigned(FDOM) then
-    FDOM := TSkSVGDOM.Make('<svg></svg>');
-    //raise ESVGException.Create(SKIA_ERROR_PARSING_SVG_TEXT);
 end;
 
 { TSkiaSVGFactory }

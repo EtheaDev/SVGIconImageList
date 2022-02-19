@@ -753,6 +753,7 @@ begin
     Ceil(fHeight + fOuterMargin *2));
   Image.UnBlockNotify;
   PositionAt(newBounds.Left, newBounds.Top);
+  Invalidate;
 end;
 //------------------------------------------------------------------------------
 
@@ -1216,7 +1217,7 @@ begin
     with childLayer do
     begin
       if not Visible or
-        not IntersectRect(Rect(outerbounds) , updateRect) or
+        not RectsIntersect(Rect(outerbounds) , updateRect) or
         (hideDesigners and IsDesignerLayer) then
           Continue;
 

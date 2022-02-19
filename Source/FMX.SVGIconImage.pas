@@ -129,8 +129,8 @@ type
     function GetFixedBitmap: TSVGIconFixedBitmapItem;
   published
     property BitmapZoom: Integer read FZoom write SetBitmapZoom default ZOOM_DEFAULT;
-    property FixedColor: TAlphaColor read GetFixedColor write SetFixedColor;
-    property GrayScale: Boolean read GetGrayScale write SetGrayScale;
+    property FixedColor: TAlphaColor read GetFixedColor write SetFixedColor default TAlphaColorRec.Null;
+    property GrayScale: Boolean read GetGrayScale write SetGrayScale default False;
     property SVGText: string read GetSVGText write SetSVGText;
   end;
 

@@ -2,8 +2,8 @@ object SVGTextPropertyEditorForm: TSVGTextPropertyEditorForm
   Left = 916
   Top = 169
   Caption = 
-    'SVGText Property Editor - Copyright (c) Ethea S.r.l. - Apache 2.' +
-    '0 Open Source License'
+    'SVGText Property Editor %s - Copyright (c) Ethea S.r.l. - Apache' +
+    ' 2.0 Open Source License'
   ClientHeight = 256
   ClientWidth = 739
   Color = clBtnFace
@@ -14,6 +14,7 @@ object SVGTextPropertyEditorForm: TSVGTextPropertyEditorForm
   Font.Height = -11
   Font.Name = 'Segoe UI'
   Font.Style = []
+  OldCreateOrder = True
   ShowHint = True
   OnCreate = FormCreate
   OnResize = FormResize
@@ -40,40 +41,40 @@ object SVGTextPropertyEditorForm: TSVGTextPropertyEditorForm
     BevelOuter = bvNone
     TabOrder = 1
     object paButtons: TPanel
-      Left = 320
+      Left = 223
       Top = 0
-      Width = 419
+      Width = 516
       Height = 33
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 0
       object CancelButton: TButton
-        Left = 254
+        Left = 356
         Top = 3
         Width = 75
         Height = 25
         Cancel = True
         Caption = '&Cancel'
         ModalResult = 2
-        TabOrder = 3
+        TabOrder = 4
       end
       object OKButton: TButton
-        Left = 173
+        Left = 275
         Top = 3
         Width = 75
         Height = 25
         Caption = '&OK'
         Default = True
         ModalResult = 1
-        TabOrder = 2
+        TabOrder = 3
       end
       object HelpButton: TButton
-        Left = 336
+        Left = 438
         Top = 3
         Width = 74
         Height = 25
         Caption = '&Help'
-        TabOrder = 4
+        TabOrder = 5
         OnClick = HelpButtonClick
       end
       object LoadButton: TButton
@@ -93,6 +94,15 @@ object SVGTextPropertyEditorForm: TSVGTextPropertyEditorForm
         Caption = '&Save...'
         TabOrder = 1
         OnClick = SaveButtonClick
+      end
+      object ReformatXMLButton: TButton
+        Left = 164
+        Top = 3
+        Width = 95
+        Height = 25
+        Caption = 'Reformat &XML'
+        TabOrder = 2
+        OnClick = ReformatXMLButtonClick
       end
     end
   end

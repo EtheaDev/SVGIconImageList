@@ -55,6 +55,7 @@ type
     SVGIconImage: TSVGIconImage;
     BottomPanel: TPanel;
     ProportionalCheckBox: TCheckBox;
+    ReformatXMLButton: TButton;
     procedure FormResize(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure paImageResize(Sender: TObject);
@@ -64,6 +65,7 @@ type
     procedure HelpButtonClick(Sender: TObject);
     procedure ProportionalCheckBoxClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure ReformatXMLButtonClick(Sender: TObject);
   private
     procedure UpdateImage;
     procedure UpdateGUI;
@@ -86,7 +88,10 @@ uses
   {$IFDEF DXE3+}
   , System.UITypes
   {$ENDIF}
+  , SVGIconImageListBase
+  , SVGInterfaces
   , ShellAPI
+  , Xml.XMLDoc
   //WARNING: you must define this directive to use this unit outside the IDE
   //WARNING: you must define this directive to use this unit outside the IDE
 {$IFNDEF UseSVGEditorsAtRunTime}
@@ -157,8 +162,8 @@ begin
     end;
   {$IFEND}
 {$ENDIF}
-
   SVGTextMemo.Font.Name := 'Consolas';
+  Caption := Format(Caption, [SVGIconImageListVersion]);
 end;
 
 procedure TSVGTextPropertyEditorForm.FormResize(Sender: TObject);
@@ -209,6 +214,11 @@ begin
   SVGIconImage.Proportional := ProportionalCheckBox.Checked;
 end;
 
+procedure TSVGTextPropertyEditorForm.ReformatXMLButtonClick(Sender: TObject);
+begin
+  SVGTextMemo.Lines.Text := Xml.XMLDoc.FormatXMLData(SVGTextMemo.Lines.Text);
+end;
+
 procedure TSVGTextPropertyEditorForm.SaveButtonClick(Sender: TObject);
 begin
   if SaveDialog.Execute then
@@ -233,8 +243,18 @@ end;
 
 procedure TSVGTextPropertyEditorForm.UpdateImage;
 begin
-  SVGIconImage.SVGText := SVGTextMemo.Lines.Text;
-  SVGIconImage.Repaint;
+  try
+    SVGIconImage.SVGText := SVGTextMemo.Lines.Text;
+    SVGIconImage.Repaint;
+  except
+    On ESVGException do
+    begin
+      SVGIconImage.SVGText := '';
+      SVGIconImage.Repaint;
+    end
+    else
+      raise;
+  end;
 end;
 
 end.

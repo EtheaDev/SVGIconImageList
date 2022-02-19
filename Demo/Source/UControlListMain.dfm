@@ -92,7 +92,6 @@ object ControlListMainForm: TControlListMainForm
       Align = alRight
       Images = VirtualImageList
       ImageIndex = 0
-      ImageName = 'about'
       LinkHotColor = clHighlight
       Style = clbkToolButton
       ExplicitTop = 6
@@ -110,7 +109,6 @@ object ControlListMainForm: TControlListMainForm
       Align = alRight
       Images = VirtualImageList
       ImageIndex = 1
-      ImageName = 'ok'
       LinkHotColor = clHighlight
       Style = clbkToolButton
       ExplicitLeft = 651
