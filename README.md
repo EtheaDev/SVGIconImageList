@@ -1,6 +1,6 @@
 ﻿# SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## Four engines to render SVG (Delphi Image32, Delphi TSVG, Direct2D wrapper or Cairo wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
+## Five engines to render SVG (Delphi Image32, Delphi TSVG, SKIA4Delphi, Direct2D wrapper or Cairo wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
 ### Actual official version 3.5.0 (VCL+FMX)
 
