@@ -43,7 +43,7 @@ uses
   , FMX.Types
   , FMX.Graphics
   , FMX.Objects
-  , FMX.Image32SVG
+  , FMX.ImageSVG
   ;
 
 const
@@ -60,7 +60,7 @@ type
     FOpacity: Single;
     FOwnerCollection: TSVGIconFixedMultiResBitmap;
     FIconName: string;
-    FSVG: TFmxImage32SVG;
+    FSVG: TFmxImageSVG;
     function StoreOpacity: Boolean;
     procedure SetBitmap(const AValue: TBitmapOfItem);
     function GetBitmap: TBitmapOfItem;
@@ -78,12 +78,12 @@ type
     constructor Create(Collection: TCollection); override;
     procedure Assign(Source: TPersistent); override;
     destructor Destroy; override;
-    property SVG: TFmxImage32SVG read FSVG;
+    property SVG: TFmxImageSVG read FSVG;
   published
     property Bitmap: TBitmapOfItem read GetBitmap write SetBitmap stored False;
     property Opacity: Single read FOpacity write SetOpacity stored StoreOpacity;
     property IconName: string read FIconName write SetIconName;
-    property SVGText: string read GetSVGText write SetSVGText;
+    property SVGText: string read GetSVGText write SetSVGText stored False;
   end;
 
   TSVGIconFixedBitmapItemClass = class of TSVGIconFixedBitmapItem;
@@ -138,6 +138,12 @@ implementation
 
 uses
   System.Math
+  {$IFDEF Image32_SVGEngine}
+  , FMX.Image32SVG
+  {$ENDIF}
+  {$IFDEF Skia_SVGEngine}
+  , FMX.ImageSkiaSVG
+  {$ENDIF}
   , FMX.SVGIconImageList
   , System.RTLConsts
   , System.SysUtils
@@ -210,7 +216,12 @@ begin
     FOwnerCollection := Collection as TSVGIconFixedMultiResBitmap;
   FZoom := ZOOM_DEFAULT;
   FOpacity := 1;
+  {$IFDEF Image32_SVGEngine}
   FSVG := TFmxImage32SVG.Create;
+  {$ENDIF}
+  {$IFDEF Skia_SVGEngine}
+  FSVG := TFmxImageSKIASVG.Create;
+  {$ENDIF}
 end;
 
 destructor TSVGIconFixedBitmapItem.Destroy;

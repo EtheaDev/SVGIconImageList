@@ -40,71 +40,31 @@ Uses
   , FMX.Types
   , FMX.Graphics
   , FMX.Objects
+  , FMX.ImageSVG
   , Img32             //Warning: from version 2.3 the default rendering engine is Image32
   , Img32.SVG.Core    //because is the best engine available with SVGIconImageList.
-  , Img32.SVG.Reader  //If you don't want to use it change SVGIconImageList.inc
-  , Img32.Text        //Otherwise you must add this search path:
+  , Img32.SVG.Reader
+  , Img32.Text        //You must add this search path:
   , Img32.Vector;     //- SVGIconImageList\Image32\Source
 
-resourcestring
-  SVG_ERROR_PARSING_SVG_TEXT = 'Error parsing SVG Text: %s';
-  SVG_ERROR_TAG_SVG = 'Error: Tag "svg" not found.';
-
 type
-  TFmxImage32SVG = class(TObject)
+  TFmxImage32SVG = class(TFmxImageSVG)
   private
     fSvgReader: TSvgReader;
-    FSource: String;
-    FWidth: Single;
-    FHeight: Single;
-    FFixedColor: TColor32;
-    FApplyFixedColorToRootOnly: Boolean;
-    FGrayScale: Boolean;
-    FOpacity: Single;
     FImage32: TImage32;
-    // property access methods
-    function GetWidth: Single;
-    function GetHeight: Single;
-    function GetOpacity: Single;
-    procedure SetOpacity(const Opacity: Single);
-    function GetGrayScale: Boolean;
-    procedure SetGrayScale(const IsGrayScale: Boolean);
-    function GetFixedColor: TAlphaColor;
-    procedure SetFixedColor(const AAlphaColor: TAlphaColor);
-    function GetApplyFixedColorToRootOnly: Boolean;
-    procedure SetApplyFixedColorToRootOnly(Value:Boolean);
-    function GetSource: string;
-    procedure SetSource(const ASource: string);
-    // procedures and functions
-    procedure Clear;
-    procedure LoadFromSource;
-    procedure SourceFromStream(Stream: TStream);
-    procedure SetHeight(const Value: Single);
-    procedure SetWidth(const Value: Single);
-    {$IFDEF CheckForUnsupportedSvg}
-    procedure CheckForUnsupportedSvg;
-    {$ENDIF}
+  protected
+    //Abstract methods
+    procedure LoadFromSource; override;
+    procedure LoadFromStream(Stream: TStream); override;
   public
-    function IsEmpty: Boolean;
-    constructor Create;
-    destructor Destroy; override;
-    procedure SaveToStream(Stream: TStream);
-    procedure SaveToFile(const FileName: string);
-    procedure LoadFromStream(Stream: TStream);
-    procedure LoadFromFile(const FileName: string);
-    procedure LoadFromText(const ASVGText: string);
+    //Abstract methods
+    function IsEmpty: Boolean; override;
     procedure PaintToBitmap(ABitmap: TBitmap;
-      const AZoom: Integer = 100; const KeepAspectRatio: Boolean = True);
-    property Opacity: Single read GetOpacity write SetOpacity;
-    property FixedColor: TAlphaColor read GetFixedColor write SetFixedColor;
-    property GrayScale: Boolean read GetGrayScale write SetGrayScale;
-    property Width: Single read GetWidth write SetWidth;
-    property Height: Single read GetHeight write SetHeight;
-    property Source: string read GetSource;
-    property ApplyFixedColorToRootOnly: Boolean read GetApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly;
-  end;
+      const AZoom: Integer = 100; const KeepAspectRatio: Boolean = True); override;
 
-procedure CopyImage32ToFmxBitmap(AImage32: TImage32; ABitmap: TBitmap);
+    constructor Create; override;
+    destructor Destroy; override;
+  end;
 
 implementation
 
@@ -122,39 +82,13 @@ begin
 {$IFEND}
 end;
 
-procedure CopyImage32ToFmxBitmap(AImage32: TImage32; ABitmap: TBitmap);
-var
-  LSource, LDest: TBitmapData;
-begin
-  if not Assigned(AImage32) or not Assigned(ABitmap) then Exit;
-  LSource := TBitMapData.Create(AImage32.Width, AImage32.Height, TPixelFormat.BGRA);
-  LSource.Data := AImage32.PixelBase;
-  LSource.Pitch := AImage32.Width * 4;
-  ABitmap.SetSize(AImage32.Width, AImage32.Height);
-  if ABitmap.Map(TMapAccess.Write, LDest) then
-  try
-    LDest.Copy(LSource);
-  finally
-    ABitmap.Unmap(LDest);
-  end;
-end;
-
 { TFmxImage32SVG }
-procedure TFmxImage32SVG.Clear;
-Const
-  EmptySvg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
-begin
-  SetSource(EmptySvg);
-end;
-
 constructor TFmxImage32SVG.Create;
 begin
-  inherited;
+  inherited Create;
   fSvgReader := TSvgReader.Create;
   FImage32 := TImage32.Create;
   FImage32.Resampler := rBicubicResampler;
-  FFixedColor := clNone32;
-  FOpacity := 1.0;
 end;
 
 destructor TFmxImage32SVG.Destroy;
@@ -164,53 +98,6 @@ begin
   inherited;
 end;
 
-procedure TFmxImage32SVG.LoadFromFile(const FileName: string);
-Var
-  FileStream: TFileStream;
-begin
-  FileStream := TFileStream.Create(FileName, fmOpenRead);
-  try
-    LoadFromStream(FileStream);
-  finally
-    FileStream.Free;
-  end;
-end;
-
-function TFmxImage32SVG.GetApplyFixedColorToRootOnly: Boolean;
-begin
-  Result := FApplyFixedColorToRootOnly;
-end;
-
-function TFmxImage32SVG.GetFixedColor: TAlphaColor;
-begin
-  Result := FFixedColor;
-end;
-
-function TFmxImage32SVG.GetGrayScale: Boolean;
-begin
-  Result := FGrayScale;
-end;
-
-function TFmxImage32SVG.GetHeight: Single;
-begin
-  Result := FHeight;
-end;
-
-function TFmxImage32SVG.GetOpacity: Single;
-begin
-  Result := FOpacity;
-end;
-
-function TFmxImage32SVG.GetSource: string;
-begin
-  Result := FSource;
-end;
-
-function TFmxImage32SVG.GetWidth: Single;
-begin
-  Result := FWidth;
-end;
-
 function TFmxImage32SVG.IsEmpty: Boolean;
 begin
   Result := fSvgReader.IsEmpty;
@@ -218,39 +105,29 @@ end;
 
 procedure TFmxImage32SVG.LoadFromSource;
 begin
-  fSvgReader.LoadFromString(FSource);
+  fSvgReader.LoadFromString(Source);
 end;
 
 procedure TFmxImage32SVG.LoadFromStream(Stream: TStream);
 Var
   OldPos : Int64;
+  LStream: TStringStream;
 begin
   // read and save the Source
   OldPos := Stream.Position;
-  SourceFromStream(Stream);
+  fSvgReader.LoadFromStream(Stream);
+  LStream := TStringStream.Create('', TEncoding.UTF8);
+  try
+    Stream.Position := 0;
+    LStream.LoadFromStream(Stream);
+    SetSource(LStream.DataString);
+  finally
+    LStream.Free;
+  end;
   // Restore Position
   Stream.Position := OldPos;
   // Now create the SVG
   FImage32.LoadFromStream(Stream);
-end;
-
-procedure TFmxImage32SVG.LoadFromText(const ASVGText: string);
-var
-  LOldText: string;
-begin
-  LOldText := FSource;
-  Clear;
-  if ASVGText = '' then Exit;
-  try
-    FSource := ASVGText;
-    LoadFromSource;
-  except
-    on E: Exception do
-    begin
-      FSource := LOldText;
-      raise Exception.CreateFmt(SVG_ERROR_PARSING_SVG_TEXT, [E.Message]);
-    end;
-  end;
 end;
 
 procedure TFmxImage32SVG.PaintToBitmap(ABitmap: TBitmap;
@@ -258,6 +135,7 @@ procedure TFmxImage32SVG.PaintToBitmap(ABitmap: TBitmap;
 var
   LColor: TColor32;
   LWidth, LHeight: Integer;
+  LSource, LDest: TBitmapData;
 begin
   Assert(Assigned(FImage32));
   Assert(Assigned(ABitmap));
@@ -269,9 +147,9 @@ begin
   FImage32.SetSize(LWidth, LHeight);
 
   //Update FsvgReader BEFORE calling FsvgReader.DrawImage
-  if FApplyFixedColorToRootOnly and not FGrayScale and
-    (FFixedColor <> clNone32) then
-      LColor := AlphaToColor32(FFixedColor)
+  if ApplyFixedColorToRootOnly and not GrayScale and
+    (AlphaToColor32(FixedColor) <> clNone32) then
+      LColor := AlphaToColor32(FixedColor)
   else
     LColor := clNone32;
 
@@ -284,116 +162,26 @@ begin
   FsvgReader.DrawImage(FImage32, True);
 
   //Apply GrayScale and FixedColor to Image32
-  if FGrayScale then
+  if GrayScale then
     FImage32.Grayscale
-  else if (FFixedColor <> clNone32) and
-    not FApplyFixedColorToRootOnly then
-      FImage32.SetRGB(FFixedColor);
+  else if (AlphaToColor32(FixedColor) <> clNone32) and
+    not ApplyFixedColorToRootOnly then
+      FImage32.SetRGB(AlphaToColor32(FixedColor));
 
   //Opacity applyed to Image32
-  if FOpacity <> 1.0 then
-    FImage32.ReduceOpacity(Round(FOpacity * 255));
+  if Opacity <> 1.0 then
+    FImage32.ReduceOpacity(Round(Opacity * 255));
 
   //Copy Image to Bitmap
-  CopyImage32ToFmxBitmap(FImage32, ABitmap);
-end;
-
-procedure TFmxImage32SVG.SaveToFile(const FileName: string);
-Var
-  FileStream: TFileStream;
-begin
-  FileStream := TFileStream.Create(FileName, fmCreate or fmOpenWrite);
+  LSource := TBitMapData.Create(FImage32.Width, FImage32.Height, TPixelFormat.BGRA);
+  LSource.Data := FImage32.PixelBase;
+  LSource.Pitch := FImage32.Width * 4;
+  ABitmap.SetSize(FImage32.Width, FImage32.Height);
+  if ABitmap.Map(TMapAccess.Write, LDest) then
   try
-    SaveToStream(FileStream);
+    LDest.Copy(LSource);
   finally
-    FileStream.Free;
-  end;
-end;
-
-procedure TFmxImage32SVG.SaveToStream(Stream: TStream);
-var
-  Buffer: TBytes;
-begin
-  Buffer := TEncoding.UTF8.GetBytes(FSource);
-  Stream.WriteBuffer(Buffer, Length(Buffer))
-end;
-
-procedure TFmxImage32SVG.SetApplyFixedColorToRootOnly(Value: Boolean);
-var
-  Color: TColor;
-begin
-  if FApplyFixedColorToRootOnly <> Value then
-  begin
-    FApplyFixedColorToRootOnly := Value;
-    if FFixedColor <> clNone32 then
-    begin
-       Color := FFixedColor;
-       FFixedColor := clNone32;
-       LoadFromSource;
-       SetFixedColor(Color);
-    end;
-  end;
-end;
-
-procedure TFmxImage32SVG.SetFixedColor(const AAlphaColor: TAlphaColor);
-var
-  LColor: TColor32;
-begin
-  LColor := AlphaToColor32(AAlphaColor);
-  if LColor = FFixedColor then Exit;
-  if (FGrayScale and (LColor <> clNone32)) or
-    ((FFixedColor <> clNone32) and (LColor = clNone32))
-  then
-    LoadFromSource;
-  FFixedColor := LColor;
-  FGrayScale := False;
-end;
-
-procedure TFmxImage32SVG.SetGrayScale(const IsGrayScale: Boolean);
-begin
-  if IsGrayScale = FGrayScale then Exit;
-  if FGrayScale or (FFixedColor <> clNone32) then
-    LoadFromSource;
-  FGrayScale := IsGrayScale;
-  FFixedColor := clNone32;
-end;
-
-procedure TFmxImage32SVG.SetHeight(const Value: Single);
-begin
-  FHeight := Value;
-end;
-
-procedure TFmxImage32SVG.SetOpacity(const Opacity: Single);
-begin
-  FOpacity := Opacity;
-end;
-
-procedure TFmxImage32SVG.SetSource(const ASource: string);
-begin
-  if FSource <> ASource then
-  begin
-    FSource := ASource;
-    LoadFromSource;
-  end;
-end;
-
-procedure TFmxImage32SVG.SetWidth(const Value: Single);
-begin
-  FWidth := Value;
-end;
-
-procedure TFmxImage32SVG.SourceFromStream(Stream: TStream);
-var
-  LStream: TStringStream;
-begin
-  fSvgReader.LoadFromStream(Stream);
-  LStream := TStringStream.Create('', TEncoding.UTF8);
-  try
-    Stream.Position := 0;
-    LStream.LoadFromStream(Stream);
-    FSource := LStream.DataString;
-  finally
-    LStream.Free;
+    ABitmap.Unmap(LDest);
   end;
 end;
 

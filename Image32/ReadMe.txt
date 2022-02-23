@@ -1,7 +1,7 @@
 
 Image32 - 2D graphics library for Delphi Pascal
-Latest version: 4.0
-Released: 20 January 2022
+Latest version: 4.11
+Released: 17 February 2022
 
 Copyright © 2019-2022 Angus Johnson
 Freeware released under Boost Software License
@@ -11,6 +11,14 @@ Documentation : http://www.angusj.com/delphi/image32/Docs/
 Download      : https://sourceforge.net/projects/image32/files/
 
 Recent changes:
+
+Version 4.11
+  Fixed compatibility issues with older versions of Delphi.
+  Updated Img32.Clipper to latest version of Clipper 
+
+Version 4.1
+Img32.Vector
+  Fixed bug in Grow function (affecting line drawing)
 
 Version 4.0
 Img32.Layers

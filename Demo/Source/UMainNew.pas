@@ -126,7 +126,13 @@ implementation
 {$R *.dfm}
 
 uses
-  Themes
+  PasSVGFactory
+  , Image32SVGFactory
+  , CairoSVGFactory
+  , SkiaSVGFactory
+  , D2DSVGFactory
+
+  , Themes
   {$IFDEF DXE3+}
   , UITypes
   {$ENDIF}

@@ -142,9 +142,10 @@
         <DCCReference Include="fmx.dcp"/>
         <DCCReference Include="SVGImage32Package.dcp"/>
         <DCCReference Include="SVGIconPackage.dcp"/>
+        <DCCReference Include="..\..\Source\FMX.ImageSVG.pas"/>
+        <DCCReference Include="..\..\Source\FMX.Image32SVG.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImageList.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImage.pas"/>
-        <DCCReference Include="..\..\Source\FMX.Image32SVG.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

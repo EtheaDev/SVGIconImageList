@@ -36,6 +36,7 @@ requires
   SVGIconPackage;
 
 contains
+  FMX.ImageSVG in '..\..\Source\FMX.ImageSVG.pas',
   FMX.Image32SVG in '..\..\Source\FMX.Image32SVG.pas',
   FMX.SVGIconImageList in '..\..\Source\FMX.SVGIconImageList.pas',
   FMX.SVGIconImage in '..\..\Source\FMX.SVGIconImage.pas';

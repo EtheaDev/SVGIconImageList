@@ -88,8 +88,7 @@ uses
   , Winapi.Windows
   , Winapi.shellApi
   , System.Math
-  , Xml.XMLDoc
-  , Img32.SVG.Core;
+  , Xml.XMLDoc;
 
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);

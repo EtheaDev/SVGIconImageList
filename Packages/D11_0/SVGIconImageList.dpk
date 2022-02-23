@@ -47,7 +47,6 @@ contains
   SVGIconImageListBase in '..\..\Source\SVGIconImageListBase.pas',
   D2DSVGFactory in '..\..\Source\D2DSVGFactory.pas',
   Winapi.D2DMissing in '..\..\Source\Winapi.D2DMissing.pas',
-  PasSVGFactory in '..\..\Source\PasSVGFactory.pas',
   Image32SVGFactory in '..\..\Source\Image32SVGFactory.pas',
   SVGInterfaces in '..\..\Source\SVGInterfaces.pas',
   dlgExportPNG in '..\..\Source\dlgExportPNG.pas' {ExportToPNGDialog};

@@ -205,8 +205,6 @@ object SVGTextPropertyEditorFormFMX: TSVGTextPropertyEditorFormFMX
         Size.Width = 185.000000000000000000
         Size.Height = 189.000000000000000000
         Size.PlatformDefault = False
-        FixedColor = claNull
-        GrayScale = False
         Left = 1
         Top = 1
       end

@@ -107,7 +107,6 @@
         <DCCReference Include="..\..\Source\SVGIconImageListBase.pas"/>
         <DCCReference Include="..\..\Source\D2DSVGFactory.pas"/>
         <DCCReference Include="..\..\Source\Winapi.D2DMissing.pas"/>
-        <DCCReference Include="..\..\Source\PasSVGFactory.pas"/>
         <DCCReference Include="..\..\Source\Image32SVGFactory.pas"/>
         <DCCReference Include="..\..\Source\SVGInterfaces.pas"/>
         <DCCReference Include="..\..\Source\dlgExportPNG.pas">

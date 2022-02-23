@@ -207,7 +207,7 @@ end;
 
 procedure TSkiaSVG.LoadFromSource;
 begin
-  fsvg.DOM;
+  FSvg.DOM;
 end;
 
 procedure TSkiaSVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
@@ -243,7 +243,7 @@ var
     LSurface.Canvas.Concat(TMatrix.CreateScaling(LScaleFactor, LScaleFactor));
     LDestRect := RectF(0, 0, FWidth / LScaleFactor, FHeight / LScaleFactor);
 
-    //FixedColor
+    //GrayScale and FixedColor
     FSvg.GrayScale := FGrayScale;
     if not FGrayScale and (FFixedColor <> TColors.SysDefault) and
       (FFixedColor <> TColors.SysNone) then
