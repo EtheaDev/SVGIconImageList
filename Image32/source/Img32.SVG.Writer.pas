@@ -219,10 +219,6 @@ implementation
 
 const
   indentSize = 2;
-//  nullfontInfo: TSVGFontInfo = (family: ttfUnknown; size: 0;
-//    spacing: 0.0; textLength: 0; italic: sfsUndefined; weight: -1;
-//    align: staUndefined; decoration: fdUndefined;
-//    baseShift: (rawVal: InvalidD; unitType: utUnknown));
 
 //------------------------------------------------------------------------------
 // Miscellaneous routines
@@ -616,7 +612,7 @@ var
 begin
   currPath  := GetCurrentPath;
   lastSeg   := currPath.GetLastSeg;
-  path      := MakePathD([X, fLastPt.Y]);
+  path      := MakePath([X, fLastPt.Y]);
   if Assigned(lastSeg) and (lastSeg is TSvgHSegment) then
     lastSeg.ExtendSeg(path) else
     currPath.AddHSeg(fLastPt, path);
@@ -632,7 +628,7 @@ var
 begin
   currPath  := GetCurrentPath;
   lastSeg   := currPath.GetLastSeg;
-  path      := MakePathD([fLastPt.X, Y]);
+  path      := MakePath([fLastPt.X, Y]);
   if Assigned(lastSeg) and (lastSeg is TSvgVSegment) then
     lastSeg.ExtendSeg(path) else
     currPath.AddVSeg(fLastPt, path);
@@ -648,7 +644,7 @@ var
 begin
   currPath  := GetCurrentPath;
   lastSeg   := currPath.GetLastSeg;
-  path      := MakePathD([X, Y]);
+  path      := MakePath([X, Y]);
   if Assigned(lastSeg) and (lastSeg is TSvgLSegment) then
     lastSeg.ExtendSeg(path) else
     currPath.AddLSeg(fLastPt, path);

@@ -199,7 +199,7 @@ var
   src, dst: TBitmapData; //TBitmapData is a record.
 begin
   if not Assigned(img) or not Assigned(bmp) then Exit;
-  src := TBitMapData.Create(img.Width, img.Height, TPixelFormat.BGRA);
+  src := TBitmapData.Create(img.Width, img.Height, TPixelFormat.BGRA);
   src.Data := img.PixelBase;
   src.Pitch := img.Width * 4;
   bmp.SetSize(img.Width, img.Height);

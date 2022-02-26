@@ -13,7 +13,7 @@ unit Img32.Clipper;
 interface
 
 uses
-  Clipper.Core, Clipper.Engine, Clipper.Offset,
+  Clipper, Clipper.Core, Clipper.Engine, Clipper.Offset,
   Img32, Img32.Draw, Img32.Vector;
 
 //nb: InflatePath assumes that there's consistent winding where
@@ -84,9 +84,8 @@ begin
     esRound: et := etRound;
     else et := etPolygon;
   end;
-  Result := TPathsD(Clipper.Offset.InflatePaths(
-    Clipper.Core.TPathsD(paths), delta,
-    jt, et, miterLimit, arcTolerance, minEdgeLength));
+  Result := Img32.TPathsD(Clipper.InflatePaths(
+    Clipper.Core.TPathsD(paths), delta, jt, et));
 end;
 //------------------------------------------------------------------------------
 
@@ -94,7 +93,7 @@ function UnionPolygon(const polygon: TPathD; fillRule: TFillRule): TPathsD;
 begin
   with TClipperD.Create do
   try
-    AddPath(Clipper.Core.TPathD(polygon));
+    AddSubject(Clipper.Core.TPathD(polygon));
     Execute(ctUnion,
       Clipper.Core.TFillRule(fillRule), Clipper.Core.TPathsD(result));
   finally
@@ -108,7 +107,7 @@ function UnionPolygons(const polygons: TPathsD;
 begin
   with TClipperD.Create do
   try
-    AddPaths(Clipper.Core.TPathsD(polygons));
+    AddSubject(Clipper.Core.TPathsD(polygons));
     Execute(ctUnion,
       Clipper.Core.TFillRule(fillRule), Clipper.Core.TPathsD(result));
   finally
@@ -122,8 +121,8 @@ function UnionPolygons(const polygon1, polygon2: TPathD;
 begin
   with TClipperD.Create do
   try
-    AddPath(Clipper.Core.TPathD(polygon1), ptSubject);
-    AddPath(Clipper.Core.TPathD(polygon2), ptClip);
+    AddSubject(Clipper.Core.TPathD(polygon1));
+    AddClip(Clipper.Core.TPathD(polygon2));
     Execute(ctUnion,
       Clipper.Core.TFillRule(fillRule), Clipper.Core.TPathsD(result));
   finally
@@ -137,8 +136,8 @@ function UnionPolygons(const polygons1, polygons2: TPathsD;
 begin
   with TClipperD.Create do
   try
-    AddPaths(Clipper.Core.TPathsD(polygons1), ptSubject);
-    AddPaths(Clipper.Core.TPathsD(polygons2), ptClip);
+    AddSubject(Clipper.Core.TPathsD(polygons1));
+    AddClip(Clipper.Core.TPathsD(polygons2));
     Execute(ctUnion,
       Clipper.Core.TFillRule(fillRule), Clipper.Core.TPathsD(result));
   finally
@@ -152,8 +151,8 @@ function IntersectPolygons(const polygons1, polygons2: TPathsD;
 begin
   with TClipperD.Create do
   try
-    AddPaths(Clipper.Core.TPathsD(polygons1), ptSubject);
-    AddPaths(Clipper.Core.TPathsD(polygons2), ptClip);
+    AddSubject(Clipper.Core.TPathsD(polygons1));
+    AddClip(Clipper.Core.TPathsD(polygons2));
     Execute(ctIntersection,
       Clipper.Core.TFillRule(fillRule), Clipper.Core.TPathsD(result));
   finally
@@ -167,8 +166,8 @@ function DifferencePolygons(const polygons1, polygons2: TPathsD;
 begin
   with TClipperD.Create do
   try
-    AddPaths(Clipper.Core.TPathsD(polygons1), ptSubject);
-    AddPaths(Clipper.Core.TPathsD(polygons2), ptClip);
+    AddSubject(Clipper.Core.TPathsD(polygons1));
+    AddClip(Clipper.Core.TPathsD(polygons2));
     Execute(ctDifference,
       Clipper.Core.TFillRule(fillRule), Clipper.Core.TPathsD(result));
   finally

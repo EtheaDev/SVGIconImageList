@@ -130,9 +130,7 @@ type
   end;
   function GetIntProp(const str: string; out success: Boolean): integer;
   function GetBoolProp(const str: string; out success: Boolean): Boolean;
-  {$IF COMPILERVERSION > 31}
   function GetCardProp(const str: string; out success: Boolean): Cardinal;
-  {$IFEND}
   function GetDoubleProp(const str: string; out success: Boolean): Double;
   function GetStringProp(const str: string; out success: Boolean): string;
   function GetStorageProp(const str: string; out success: Boolean): TStorage;
@@ -173,7 +171,7 @@ const
   tab     = #9;
   spacesPerLevel = 2;
 
-{$IF COMPILERVERSION < 18}
+{.$IF COMPILERVERSION < 18}
 function UIntToStr(value: Cardinal): string;
 begin
   Result := Format('%d', [value]);
@@ -198,7 +196,7 @@ begin
   Val(S, Value, E);
   Result := E = 0;
 end;
-{$IFEND}
+{.$IFEND}
 
 //------------------------------------------------------------------------------
 // Read from XML string functions
@@ -444,12 +442,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-{$IF COMPILERVERSION > 31}
 function GetCardProp(const str: string; out success: Boolean): Cardinal;
 begin
   success := TryStrToUInt(str, Result);
 end;
-{$IFEND}
 //------------------------------------------------------------------------------
 
 function GetDoubleProp(const str: string; out success: Boolean): Double;
@@ -483,11 +479,7 @@ begin
   begin
     success := ConvertColorConst(str, Result);
   end else
-  {$IF COMPILERVERSION > 31}
     success := TryStrToUInt('$'+str, Cardinal(Result));
-  {$ELSE}
-    success := TryStrToInt('$'+str, Integer(Result));
-  {$IFEND}
 end;
 //------------------------------------------------------------------------------
 

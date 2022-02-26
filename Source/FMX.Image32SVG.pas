@@ -44,6 +44,7 @@ Uses
   , Img32             //Warning: from version 2.3 the default rendering engine is Image32
   , Img32.SVG.Core    //because is the best engine available with SVGIconImageList.
   , Img32.SVG.Reader
+  , Img32.FMX
   , Img32.Text        //You must add this search path:
   , Img32.Vector;     //- SVGIconImageList\Image32\Source
 
@@ -88,7 +89,6 @@ begin
   inherited Create;
   fSvgReader := TSvgReader.Create;
   FImage32 := TImage32.Create;
-  FImage32.Resampler := rBicubicResampler;
 end;
 
 destructor TFmxImage32SVG.Destroy;
@@ -135,7 +135,21 @@ procedure TFmxImage32SVG.PaintToBitmap(ABitmap: TBitmap;
 var
   LColor: TColor32;
   LWidth, LHeight: Integer;
-  LSource, LDest: TBitmapData;
+
+  procedure Image32ToFmxBitmap(const ASource: TImage32; const ATarget: FMX.Graphics.TBitmap);
+  var
+    LStream: TMemoryStream;
+  begin
+    LStream := TMemoryStream.Create;
+    try
+        ASource.SaveToStream(LStream, 'BMP');
+        LStream.Position := 0;
+        ATarget.LoadFromStream(LStream);
+    finally
+      LStream.Free;
+    end;
+  end;
+
 begin
   Assert(Assigned(FImage32));
   Assert(Assigned(ABitmap));
@@ -172,17 +186,10 @@ begin
   if Opacity <> 1.0 then
     FImage32.ReduceOpacity(Round(Opacity * 255));
 
-  //Copy Image to Bitmap
-  LSource := TBitMapData.Create(FImage32.Width, FImage32.Height, TPixelFormat.BGRA);
-  LSource.Data := FImage32.PixelBase;
-  LSource.Pitch := FImage32.Width * 4;
-  ABitmap.SetSize(FImage32.Width, FImage32.Height);
-  if ABitmap.Map(TMapAccess.Write, LDest) then
-  try
-    LDest.Copy(LSource);
-  finally
-    ABitmap.Unmap(LDest);
-  end;
+  //Copy Image32 to Bitmap
+  Image32ToFmxBitmap(FImage32, ABitmap);
+
+  //AssignImage32ToFmxBitmap(FImage32, ABitmap);
 end;
 
 initialization

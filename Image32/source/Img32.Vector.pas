@@ -175,8 +175,8 @@ type
     const focalPoint: TPointD; angleRads: double): TPathD; overload;
   function RotatePath(const paths: TPathsD;
     const focalPoint: TPointD; angleRads: double): TPathsD; overload;
-  function MakePathI(const pts: array of integer): TPathD;
-  function MakePathD(const pts: array of double): TPathD;
+  function MakePath(const pts: array of integer): TPathD; overload;
+  function MakePath(const pts: array of double): TPathD; overload;
   function GetBounds(const path: TPathD): TRect; overload;
   function GetBounds(const paths: TPathsD): TRect; overload;
   function GetBoundsD(const path: TPathD): TRectD; overload;
@@ -3388,7 +3388,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function MakePathI(const pts: array of integer): TPathD;
+function MakePath(const pts: array of integer): TPathD;
 var
   i,j, x,y, len: Integer;
 begin
@@ -3411,7 +3411,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function MakePathD(const pts: array of double): TPathD;
+function MakePath(const pts: array of double): TPathD;
 var
   i, j, len: Integer;
   x,y: double;

@@ -1217,7 +1217,7 @@ function TSvgSubPath.GetSimplePath: TPathD;
 var
   i: integer;
 begin
-  Result := MakePathD([GetFirstPt.X, GetFirstPt.Y]);
+  Result := MakePath([GetFirstPt.X, GetFirstPt.Y]);
   for i := 0 to High(fSegs) do
     AppendPath(Result, fSegs[i].GetOnPathCtrlPts);
 end;

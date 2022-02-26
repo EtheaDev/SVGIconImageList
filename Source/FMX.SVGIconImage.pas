@@ -163,7 +163,7 @@ end;
 procedure TSVGIconFixedMultiResBitmap.OnDrawImage(Sender: TObject);
 begin
   if Assigned(FOwnerImage) then
-    FOwnerImage.Repaint;
+    FOwnerImage.InvalidateRect(FOwnerImage.BoundsRect);
 end;
 
 constructor TSVGIconFixedMultiResBitmap.Create(AOwner: TPersistent; ItemClass: TSVGIconFixedBitmapItemClass);
