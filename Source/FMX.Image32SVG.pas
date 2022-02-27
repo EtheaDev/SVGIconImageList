@@ -135,21 +135,7 @@ procedure TFmxImage32SVG.PaintToBitmap(ABitmap: TBitmap;
 var
   LColor: TColor32;
   LWidth, LHeight: Integer;
-
-  procedure Image32ToFmxBitmap(const ASource: TImage32; const ATarget: FMX.Graphics.TBitmap);
-  var
-    LStream: TMemoryStream;
-  begin
-    LStream := TMemoryStream.Create;
-    try
-        ASource.SaveToStream(LStream, 'BMP');
-        LStream.Position := 0;
-        ATarget.LoadFromStream(LStream);
-    finally
-      LStream.Free;
-    end;
-  end;
-
+  LSource, LDest: TBitMapData;
 begin
   Assert(Assigned(FImage32));
   Assert(Assigned(ABitmap));
@@ -160,7 +146,7 @@ begin
   //Define Image32 output size
   FImage32.SetSize(LWidth, LHeight);
 
-  //Update FsvgReader BEFORE calling FsvgReader.DrawImage
+  //Update FsvgReader before calling FsvgReader.DrawImage
   if ApplyFixedColorToRootOnly and not GrayScale and
     (AlphaToColor32(FixedColor) <> clNone32) then
       LColor := AlphaToColor32(FixedColor)
@@ -187,9 +173,17 @@ begin
     FImage32.ReduceOpacity(Round(Opacity * 255));
 
   //Copy Image32 to Bitmap
-  Image32ToFmxBitmap(FImage32, ABitmap);
-
-  //AssignImage32ToFmxBitmap(FImage32, ABitmap);
+  FImage32.PreMultiply;
+  LSource := TBitMapData.Create(FImage32.Width, FImage32.Height, TPixelFormat.BGRA);
+  LSource.Data := FImage32.PixelBase;
+  LSource.Pitch := FImage32.Width * 4;
+  ABitmap.SetSize(FImage32.Width, FImage32.Height);
+  if ABitmap.Map(TMapAccess.Write, LDest) then
+  try
+    LDest.Copy(LSource);
+  finally
+    ABitmap.Unmap(LDest);
+  end;
 end;
 
 initialization

@@ -238,9 +238,6 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('Image32 Panels',
-    [TImage32Panel]);
-
   RegisterComponents('Ethea',
     [TSVGIconImage,
      TSVGIconImageList,
