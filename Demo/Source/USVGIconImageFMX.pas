@@ -14,6 +14,7 @@ type
     SVGIconImage: TSVGIconImage;
     Button: TButton;
     Panel1: TPanel;
+    StyleBook1: TStyleBook;
     procedure FormCreate(Sender: TObject);
     procedure ButtonClick(Sender: TObject);
     procedure SVGIconImageResize(Sender: TObject);

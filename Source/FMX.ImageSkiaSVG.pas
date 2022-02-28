@@ -106,7 +106,7 @@ end;
 
 procedure TFmxImageSkiaSVG.LoadFromSource;
 begin
-  FSvg.DOM;
+  FSvg.Source := Source;
 end;
 
 procedure TFmxImageSkiaSVG.LoadFromStream(Stream: TStream);
@@ -149,10 +149,9 @@ begin
       LAbsoluteScale: TPointF;
       LDestRect: TRectF;
     begin
-      ACanvas.Clear(TAlphaColors.Null);
       LDestRect := RectF(0, 0, LWidth, LHeight);
       Draw(ACanvas, LDestRect, Opacity);
-    end, False);
+    end);
 end;
 
 end.
