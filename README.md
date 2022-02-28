@@ -82,6 +82,10 @@ You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtension
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 ### RELEASE NOTES
+28 Feb 2022:
+- ver.3.6.0
+- Support for SKIA4Delphi also in FMX platforms
+
 26 Feb 2022: version 3.5.2 (VCL+FMX)
 - Fixed rendering with FMX-Image32
 
