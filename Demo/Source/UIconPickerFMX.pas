@@ -32,7 +32,7 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
   System.ImageList, FMX.ImgList, FMX.StdCtrls, FMX.Layouts, FMX.ExtCtrls,
   FMX.Colors, FMX.Controls.Presentation, FMX.Edit, FMX.ListBox, FMX.Objects,
-  FMX.ScrollBox, FMX.Memo, SVG;
+  FMX.ScrollBox, FMX.Memo, SVG, FMX.Memo.Types;
 
 type
   TIconPicker = class(TForm)
