@@ -74,29 +74,21 @@ implementation
 {$INCLUDE SVGIconImageList.inc}
 
 Uses
-// If you want to use the Cairo Engine, you have to unpack and copy the corresponding 
-// librsvg dlls from Cairo/Dlls into the executable folder of your application.
-
-{$IF NOT DEFINED(Cairo_SVGEngine) and NOT DEFINED(Delphi_SVGEngine) and NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine)}
-  {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine or Cairo_SVGEngine) into SVGIconImageList.inc)'}
+{$IF NOT DEFINED(Delphi_SVGEngine) and NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine)}
+  {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine) into SVGIconImageList.inc)'}
 {$ENDIF}
 
-{$IF DEFINED(Image32_SVGEngine) and (DEFINED(Cairo_SVGEngine) or DEFINED(Delphi_SVGEngine) or  DEFINED(Skia_SVGEngine))}
-  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine or Cairo_SVGEngine) into SVGIconImageList.inc)'}
+{$IF DEFINED(Image32_SVGEngine) and (DEFINED(Delphi_SVGEngine) or  DEFINED(Skia_SVGEngine))}
+  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine) into SVGIconImageList.inc)'}
 {$ENDIF}
 
-{$IF DEFINED(Delphi_SVGEngine) and (DEFINED(Cairo_SVGEngine) or DEFINED(Image32_SVGEngine) or  DEFINED(Skia_SVGEngine))}
-  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine or Cairo_SVGEngine) into SVGIconImageList.inc)'}
+{$IF DEFINED(Delphi_SVGEngine) and (DEFINED(Image32_SVGEngine) or  DEFINED(Skia_SVGEngine))}
+  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine) into SVGIconImageList.inc)'}
 {$ENDIF}
 
-{$IF DEFINED(Skia_SVGEngine) and (DEFINED(Cairo_SVGEngine) or DEFINED(Image32_SVGEngine) or DEFINED(Delphi_SVGEngine))}
-  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine or Cairo_SVGEngine) into SVGIconImageList.inc)'}
+{$IF DEFINED(Skia_SVGEngine) and (DEFINED(Image32_SVGEngine) or DEFINED(Delphi_SVGEngine))}
+  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine) into SVGIconImageList.inc)'}
 {$ENDIF}
-
-{$IF DEFINED(Cairo_SVGEngine) and (DEFINED(Delphi_SVGEngine) or DEFINED(Image32_SVGEngine) or DEFINED(Skia_SVGEngine))}
-  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine or Cairo_SVGEngine) into SVGIconImageList.inc)'}
-{$ENDIF}
-
 
 {$IF DEFINED(Delphi_SVGEngine)}
   {$MESSAGE HINT 'Use Delphi native (TSVG) SVG-Engine for SVGIconImageList'}
@@ -104,9 +96,6 @@ Uses
 {$ELSEIF DEFINED(Image32_SVGEngine)}
   {$MESSAGE HINT 'Use Delphi native Image32 SVG-Engine for SVGIconImageList'}
   Image32SVGFactory
-{$ELSEIF DEFINED(Cairo_SVGEngine)}
-  {$MESSAGE HINT 'Use Cairo "wrapper" SVG-Engine for SVGIconImageList'}
-  CairoSVGFactory
 {$ELSEIF DEFINED(Skia_SVGEngine)}
   {$MESSAGE HINT 'Use Skia4Delphi "wrapper" SVG-Engine for SVGIconImageList'}
   SkiaSVGFactory
@@ -133,8 +122,6 @@ begin
       FGlobalSVGFactory := GetPasSVGFactory;
     {$ELSEIF DEFINED(Image32_SVGEngine)}
       FGlobalSVGFactory := GetImage32SVGFactory;
-    {$ELSEIF DEFINED(Cairo_SVGEngine)}
-      FGlobalSVGFactory := GetCairoSVGFactory;
     {$ELSEIF DEFINED(Skia_SVGEngine)}
       FGlobalSVGFactory := GetSkiaSVGFactory;
     {$ENDIF}
@@ -158,8 +145,6 @@ begin
     Result := 'Delphi TSVG Engine'
   {$ELSEIF DEFINED(Image32_SVGEngine)}
     Result := 'Delphi Image32 Engine'
-  {$ELSEIF DEFINED(Cairo_SVGEngine)}
-    Result := 'Cairo Engine'
   {$ENDIF}
 end;
 

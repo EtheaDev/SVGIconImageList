@@ -128,7 +128,6 @@ implementation
 uses
   PasSVGFactory
   , Image32SVGFactory
-  , CairoSVGFactory
   , SkiaSVGFactory
   , D2DSVGFactory
 

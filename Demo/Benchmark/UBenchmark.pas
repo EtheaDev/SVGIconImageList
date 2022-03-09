@@ -14,17 +14,17 @@ uses
   System.ImageList, //if you are compiling with older version than XE7 remove this line
   Vcl.ImgList,
   SVGIconImageCollection, SVGIconImage, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  SVGIconImageListBase, SVGIconVirtualImageList, Vcl.BaseImageCollection;
+  SVGIconImageListBase, SVGIconVirtualImageList, Vcl.BaseImageCollection,
+  Vcl.ComCtrls;
 
 type
-  TSVGFactory = (svgImage32, svgNativeTSVG, svgDirect2D, svgCairo, svgSkia);
+  TSVGFactory = (svgNativeTSVG, svgImage32, svgSkia, svgDirect2D);
+  //TSVGFactory = (svgSkia, svgImage32);
+
 const
   ASVGFactoryNames: Array[TSVGFactory] of string =
-    ('Native Image32',
-    'Native TSVG',
-    'Direct2D',
-    'Cairo',
-    'Skia4Delphi');
+    ('Native TSVG','Native Image32','Skia4Delphi','Direct2D');
+    //('Skia4Delphi','Native Image32');
 
 type
   TfrmBenchmark = class(TForm)
@@ -46,19 +46,26 @@ type
     chkDrawVisible: TCheckBox;
     SVGIconVirtualImageList: TSVGIconVirtualImageList;
     KeepAspectCheckBox: TCheckBox;
+    Panel1: TPanel;
+    BtnSelDir: TButton;
+    FilesListBox: TListBox;
     procedure btnClearClick(Sender: TObject);
     procedure btnLoadClick(Sender: TObject);
     procedure btnRunBenchmarkClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure grpFactoryClick(Sender: TObject);
     procedure KeepAspectCheckBoxClick(Sender: TObject);
+    procedure BtnSelDirClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     FSvgSource  : string;
     FStartTick  : Int64;
     FLastTick   : Int64;
     FLine       : string;
     FInBenchmark: boolean;
+    FFiles      : TStringList;
 
+    procedure LoadFilesDir(const APath, AFilter: string);
     function GetFactoryName: string;
     procedure SetFactory(AFactory: TSVGFactory);
 
@@ -79,9 +86,9 @@ var
 implementation
 
 uses
+  FileCtrl,
   SVGInterfaces,
   Image32SVGFactory,
-  CairoSVGFactory,
   D2DSVGFactory,
   PasSVGFactory,
   SkiaSVGFactory,
@@ -131,9 +138,7 @@ begin
     begin
       LBitmap := TBitmap.Create;
       try
-        LBitmap.Height := SvgIconImage.Height;
-        LBitmap.Width := SvgIconImage.Width;
-
+        LBitmap.SetSize(SvgIconImage.Width, SvgIconImage.Height);
         DrawOnCanvas(LBitmap.Canvas);
       finally
         LBitmap.Free;
@@ -236,15 +241,57 @@ begin
     end;
 end;
 
+procedure TfrmBenchmark.LoadFilesDir(const APath, AFilter: string);
+var
+  SR: TSearchRec;
+  LFilter: string;
+  LErrors: string;
+begin
+  Screen.Cursor := crHourGlass;
+  Try
+    FFiles.Clear;
+    LErrors := '';
+    LFilter := Format('%s*%s*.svg', [IncludeTrailingPathDelimiter(APath), AFilter]);
+    if FindFirst(LFilter, faArchive, SR) = 0 then
+    begin
+      repeat
+        FFiles.Add(SR.Name); //Fill the list
+      until FindNext(SR) <> 0;
+      FindClose(SR);
+    end;
+    FilesListBox.Items.Assign(FFiles);
+  Finally
+    Screen.Cursor := crDefault;
+  End;
+end;
+
+procedure TfrmBenchmark.BtnSelDirClick(Sender: TObject);
+var
+  LDir: string;
+begin
+  LDir := ExtractFilePath(Application.ExeName)+'..\svg_examples';
+  if FileCtrl.SelectDirectory(LDir, [sdAllowCreate, sdPerformCreate, sdPrompt], 0) then
+  begin
+    LoadFilesDir(LDir, '');
+  end;
+end;
+
 procedure TfrmBenchmark.FormCreate(Sender: TObject);
 var
   LFactory: TSVGFactory;
 begin
+  FFiles := TStringList.Create;
   Caption := Application.Title;
   FInBenchmark := false;
   for LFactory := Low(TSVGFactory) to high(TSVGFactory) do
     grpFactory.Items.Add(ASVGFactoryNames[LFactory]);
   SetFactory(Low(TSVGFactory));
+end;
+
+procedure TfrmBenchmark.FormDestroy(Sender: TObject);
+begin
+  FFiles.Free;
+  inherited;
 end;
 
 function TfrmBenchmark.GetFactoryName: string;
@@ -297,7 +344,7 @@ var
 begin
   if FSvgSource <> '' then
     begin
-      PrepareBenchmark('Factory    |  Load  |  Draw  | Total');
+      PrepareBenchmark('Factory         |  Load  |  Draw  | Total');
 
       LSvg := GlobalSvgFactory.NewSvg;
       LSvg.Source := FSvgSource;
@@ -353,8 +400,6 @@ begin
       SetGlobalSvgFactory(GetPasSVGFactory);
     svgDirect2D:
       SetGlobalSvgFactory(GetD2DSVGFactory);
-    svgCairo:
-      SetGlobalSvgFactory(GetCairoSVGFactory);
     svgImage32:
       SetGlobalSvgFactory(GetImage32SVGFactory);
     svgSkia:
@@ -362,5 +407,10 @@ begin
   end;
   grpFactory.ItemIndex := Ord(AFactory);
 end;
+
+initialization
+  {$IFDEF DEBUG}
+  ReportMemoryLeaksOnShutdown := True;
+  {$ENDIF}
 
 end.

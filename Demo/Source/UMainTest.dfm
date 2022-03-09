@@ -129,6 +129,7 @@ object MainForm: TMainForm
           ' fill="yellow"'#13#10'         transform="translate(50,50)" />'#13#10'</svg>' +
           #13#10
       end>
+    Scaled = True
     Left = 384
     Top = 160
   end

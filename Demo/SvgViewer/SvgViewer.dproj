@@ -59,7 +59,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <VerInfo_Locale>1049</VerInfo_Locale>
-        <DCC_UnitSearchPath>..\..\svg;..\..\source;..\..\Image32\Source;..\..\Cairo;..\..\Skia4Delphi\Source;..\..\Skia4Delphi\Source\Vcl;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\svg;..\..\source;..\..\Image32\Source;..\..\Skia4Delphi\Source;..\..\Skia4Delphi\Source\Vcl;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <SanitizedProjectName>SvgViewer</SanitizedProjectName>

@@ -43,14 +43,12 @@ resourcestring
   LOAD_IMAGES_TIME = 'Load %d Images in %d msec.';
 
 type
-  TSVGFactory = (svgImage32, svgNativeTSVG, svgDirect2D, svgCairo, svgSkia);
+  TSVGFactory = (svgImage32, svgSkia, svgNativeTSVG, svgDirect2D);
+  //TSVGFactory = (svgImage32, svgSkia);
 const
   ASVGFactoryNames: Array[TSVGFactory] of string =
-    ('Native Image32',
-    'Native TSVG',
-    'Direct2D',
-    'Cairo',
-    'Skia4Delphi');
+    //('Native Image32', 'Skia4Delphi');
+    ('Native Image32', 'Skia4Delphi', 'Native TSVG', 'Direct2D');
 
 type
   TfmExplorerSVG = class(TForm)
@@ -124,7 +122,6 @@ implementation
 uses
   SVGInterfaces
   , Image32SVGFactory
-  , CairoSVGFactory
   , D2DSVGFactory
   , PasSVGFactory
   , SkiaSVGFactory
@@ -191,8 +188,6 @@ begin
       SetGlobalSvgFactory(GetPasSVGFactory);
     svgDirect2D:
       SetGlobalSvgFactory(GetD2DSVGFactory);
-    svgCairo:
-      SetGlobalSvgFactory(GetCairoSVGFactory);
     svgImage32:
       SetGlobalSvgFactory(GetImage32SVGFactory);
     svgSkia:

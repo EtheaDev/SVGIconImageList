@@ -12,6 +12,7 @@ object frmBenchmark: TfrmBenchmark
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 15
   object splHorizontal: TSplitter
@@ -28,9 +29,9 @@ object frmBenchmark: TfrmBenchmark
     ExplicitWidth = 784
   end
   object SVGIconImage: TSVGIconImage
-    Left = 0
+    Left = 150
     Top = 0
-    Width = 669
+    Width = 519
     Height = 449
     AutoSize = False
     ImageList = SVGIconVirtualImageList
@@ -223,6 +224,41 @@ object frmBenchmark: TfrmBenchmark
       State = cbChecked
       TabOrder = 8
       OnClick = KeepAspectCheckBoxClick
+    end
+  end
+  object Panel1: TPanel
+    Left = 0
+    Top = 0
+    Width = 150
+    Height = 449
+    Align = alLeft
+    BevelOuter = bvNone
+    TabOrder = 2
+    Visible = False
+    object BtnSelDir: TButton
+      AlignWithMargins = True
+      Left = 10
+      Top = 5
+      Width = 130
+      Height = 30
+      Margins.Left = 10
+      Margins.Top = 5
+      Margins.Right = 10
+      Margins.Bottom = 5
+      Align = alTop
+      Caption = 'Select &Folder'
+      TabOrder = 0
+      OnClick = BtnSelDirClick
+    end
+    object FilesListBox: TListBox
+      Left = 0
+      Top = 40
+      Width = 150
+      Height = 409
+      Align = alClient
+      ItemHeight = 15
+      TabOrder = 1
+      ExplicitTop = 43
     end
   end
   object SVGIconImageCollection: TSVGIconImageCollection
