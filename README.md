@@ -296,10 +296,6 @@ These components use the followin libraries:
   Use of this file is permitted for commercial and non-commercial. Use, as long as the author is credited.  
   home page: <http://www.mwcs.de>  email: martin.walter@mwcs.de  
   This library is included in the svg folder of this project.
-- Cairo Delphi headers by [Henri Gourvest](https://github.com/kobi1970/delphignomevectorgraphic)
-  These files are included in the cairo folder of this project.
-- Cairo librsvg dlls by [DJMaster](http://www.djmaster.com/)
-  These files are included in the cairo/dlls folder of this project.
 - Image32 library by [Angus Johnson](http://www.angusj.com/delphi/image32/Docs/_Body.htm)
   These files are included in the Image32/Source and Image32/source/Image32_SVG folders
 - SKIA4Delphi Library by [the autohors](https://github.com/skia4delphi/skia4delphi)
