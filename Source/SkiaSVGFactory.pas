@@ -35,9 +35,24 @@ Uses
   Skia;
 
 type
+  { TSkSvgBrushEx }
+  TSkSvgBrushEx = class(TSkSvgBrush)
+  strict private
+    FOverrideRootColor: TAlphaColor;
+    procedure SetOverrideRootColor(const AValue: TAlphaColor);
+  strict protected
+    procedure DoAssign(ASource: TSkSvgBrush); override;
+    function MakeDOM: ISkSVGDOM; override;
+  public
+    function Equals(AObject: TObject): Boolean; override;
+  published
+    property OverrideRootColor: TAlphaColor read FOverrideRootColor write SetOverrideRootColor default TAlphaColors.Null;
+  end;
+
+  { TSkiaSVG }
   TSkiaSVG = class(TInterfacedObject, ISVG)
   private
-    FSvg: TSkSvgBrush;
+    FSvg: TSkSvgBrushEx;
     FDrawCached: Boolean;
     FDrawBuffer: HBITMAP;
     FDrawBufferData: Pointer;
@@ -84,6 +99,47 @@ type
     function NewSvg: ISVG;
   end;
 
+{ TSkSvgBrushEx }
+procedure TSkSvgBrushEx.DoAssign(ASource: TSkSvgBrush);
+begin
+  if ASource is TSkSvgBrushEx then
+    FOverrideRootColor := TSkSvgBrushEx(ASource).FOverrideRootColor
+  else
+    FOverrideRootColor := TAlphaColors.Null;
+  inherited;
+end;
+
+function TSkSvgBrushEx.Equals(AObject: TObject): Boolean;
+begin
+  Result := (AObject is TSkSvgBrushEx) and (FOverrideRootColor = TSkSvgBrushEx(AObject).FOverrideRootColor) and inherited;
+end;
+
+function TSkSvgBrushEx.MakeDOM: ISkSVGDOM;
+var
+  LAlphaColorRec: TAlphaColorRec;
+  LNewColor: string;
+begin
+  Result := inherited;
+  if FOverrideRootColor <> TAlphaColors.Null then
+  begin
+    LAlphaColorRec := TAlphaColorRec(FOverrideRootColor);
+    LNewColor := Format('rgb(%d,%d,%d)', [LAlphaColorRec.R, LAlphaColorRec.G, LAlphaColorRec.B]);
+    if Result.Root.TrySetAttribute('fill', LNewColor) and Result.Root.TrySetAttribute('color', LNewColor) and (LAlphaColorRec.A <> High(LAlphaColorRec.A)) then
+      Result.Root.TrySetAttribute('opacity', FloatToStr(LAlphaColorRec.A / High(LAlphaColorRec.A), TFormatSettings.Invariant));
+  end;
+end;
+
+procedure TSkSvgBrushEx.SetOverrideRootColor(const AValue: TAlphaColor);
+begin
+  if FOverrideRootColor <> AValue then
+  begin
+    FOverrideRootColor := AValue;
+    RecreateDOM;
+    if HasContent then
+      DoChanged;
+  end;
+end;
+
 { TSkiaSVG }
 procedure TSkiaSVG.Clear;
 Const
@@ -97,7 +153,7 @@ begin
   inherited;
   FFixedColor := TColors.SysDefault; // clDefault
   FOpacity := 1.0;
-  FSvg := TSkSvgBrush.Create;
+  FSvg := TSkSvgBrushEx.Create;
 end;
 
 destructor TSkiaSVG.Destroy;
@@ -207,7 +263,7 @@ end;
 
 procedure TSkiaSVG.LoadFromSource;
 begin
-  FSvg.DOM;
+  //FSvg.DOM;
 end;
 
 procedure TSkiaSVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
@@ -247,9 +303,23 @@ var
     FSvg.GrayScale := FGrayScale;
     if not FGrayScale and (FFixedColor <> TColors.SysDefault) and
       (FFixedColor <> TColors.SysNone) then
-      FSvg.OverrideColor := ColorToAlphaColor(FFixedColor)
+    begin
+      if FApplyFixedColorToRootOnly then
+      begin
+        FSvg.OverrideColor := Default(TAlphaColor);
+        FSvg.OverrideRootColor := ColorToAlphaColor(FFixedColor);
+      end
+      else
+      begin
+        FSvg.OverrideRootColor := Default(TAlphaColor);
+        FSvg.OverrideColor := ColorToAlphaColor(FFixedColor);
+      end;
+    end
     else
+    begin
+      FSvg.OverrideRootColor := ColorToAlphaColor(FFixedColor);
       FSvg.OverrideColor := Default(TAlphaColor);
+    end;
 
     //Render SVG
     FSvg.Render(LSurface.Canvas, LDestRect, FOpacity);

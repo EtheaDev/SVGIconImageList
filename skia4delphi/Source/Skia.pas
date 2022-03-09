@@ -33,7 +33,7 @@ uses
 {$ENDIF}
 
 const
-  SkVersion = '3.1.0';
+  SkVersion = '3.2.0';
 
 type
   ESkException = class(Exception);
@@ -6321,11 +6321,11 @@ end;
 class function TSkEncodedImageFormatHelper.FromExtension(
   const AExtension: string): TSkEncodedImageFormat;
 begin
-  if (string.Compare('.jpg', AExtension) = 0) or (string.Compare('.jpeg', AExtension) = 0) then
+  if (string.Compare('.jpg', AExtension, [TCompareOption.coIgnoreCase]) = 0) or (string.Compare('.jpeg', AExtension, [TCompareOption.coIgnoreCase]) = 0) then
     Result := TSkEncodedImageFormat.JPEG
-  else if string.Compare('.webp', AExtension) = 0 then
+  else if string.Compare('.webp', AExtension, [TCompareOption.coIgnoreCase]) = 0 then
     Result := TSkEncodedImageFormat.WEBP
-  else if string.Compare('.png', AExtension) = 0 then
+  else if string.Compare('.png', AExtension, [TCompareOption.coIgnoreCase]) = 0 then
     Result := TSkEncodedImageFormat.PNG
   else
     raise ESkArgumentException.Create(SInvalidExtension);
