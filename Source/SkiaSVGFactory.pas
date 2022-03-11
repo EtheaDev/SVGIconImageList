@@ -120,7 +120,7 @@ var
   LNewColor: string;
 begin
   Result := inherited;
-  if FOverrideRootColor <> TAlphaColors.Null then
+  if Assigned(Result) and (FOverrideRootColor <> TAlphaColors.Null) then
   begin
     LAlphaColorRec := TAlphaColorRec(FOverrideRootColor);
     LNewColor := Format('rgb(%d,%d,%d)', [LAlphaColorRec.R, LAlphaColorRec.G, LAlphaColorRec.B]);
