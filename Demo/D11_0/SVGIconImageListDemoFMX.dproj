@@ -103,7 +103,7 @@
         <AUP_READ_EXTERNAL_STORAGE>true</AUP_READ_EXTERNAL_STORAGE>
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
         <SanitizedProjectName>SVGIconImageListDemoFMX</SanitizedProjectName>
-        <DCC_DcuOutput>..\Dcu\D11_0\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>..\Dcu\D11\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>..\Bin\</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>

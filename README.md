@@ -2,7 +2,7 @@
 
 ## Four engines to render SVG (Delphi Image32, Delphi TSVG, SKIA4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 3.7.0 (VCL+FMX)
+### Actual official version 3.8.0 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -50,7 +50,7 @@ As you can see, the four engines perform differently depending on the icons and 
 
 <sup>(1)</sup>Notice that Image32 and SKIA4Delphi are the only engines capable of rendering blur effect (that is always slow to calculate): this is the reason of "slow" performance to render Papirus icons that contains blur effect.
 
-### Available from Delphi XE3 to Delphi 11.0 (32bit and 64bit platforms)
+### Available from Delphi XE3 to Delphi 11.1 (32bit and 64bit platforms)
 
 ![Delphi 11.0 Sydney Support](/Demo/Images/SupportingDelphi.jpg)
 
@@ -81,14 +81,16 @@ You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtension
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 ### RELEASE NOTES
-09 Mar 2022:
-- ver.3.7.0
+17 Mar 2022: version 3.8.0 (VCL+FMX)
+- Support for Delphi 11.1
+- Updated Library suffix for Delphi 10.4 and 11 to (auto)
+
+09 Mar 2022: version 3.7.0 (VCL+FMX)
 - Support for SKIA4Delphi 3.2.0 completed
 - Removed support for Cairo Engine
 - Fixed rendering with Image32
 
-28 Feb 2022:
-- ver.3.6.0
+28 Feb 2022: version 3.6.0 (VCL + FMX)
 - Support for SKIA4Delphi also in FMX platforms
 
 26 Feb 2022: version 3.5.2 (VCL+FMX)

@@ -428,7 +428,7 @@ begin
       System.Messaging.TMessageManager.DefaultManager.SendMessage(nil,
         TImageCollectionChangedMessage.Create(TSVGIconImageCollection(Owner),
           Item.Index, TSVGIconItem(Item).IconName
-          {$IFDEF D11_0+}, TSVGIconItem(Item).IconName{$ENDIF}));
+          {$IFDEF D11+}, TSVGIconItem(Item).IconName{$ENDIF}));
   end;
   {$ENDIF}
 end;

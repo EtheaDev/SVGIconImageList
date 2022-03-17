@@ -1,13 +1,13 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{25E26330-84BF-43AE-9134-128B686CE513}</ProjectGuid>
-        <MainSource>SVGIconPackage.dpk</MainSource>
-        <ProjectVersion>19.3</ProjectVersion>
+        <ProjectGuid>{550F715C-084C-4ABA-9738-75BC4322C0B6}</ProjectGuid>
+        <MainSource>SVGIconImageList.dpk</MainSource>
+        <ProjectVersion>19.4</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <TargetedPlatforms>1</TargetedPlatforms>
+        <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Package</AppType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -40,8 +40,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_UNSUPPORTED_CONSTRUCT>false</DCC_UNSUPPORTED_CONSTRUCT>
-        <DCC_DcuOutput>..\..\Lib\D11_0\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>..\..\Lib\D11\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
@@ -50,16 +49,21 @@
         <DCC_K>false</DCC_K>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
-        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;System;Xml;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
-        <SanitizedProjectName>SVGIconPackage</SanitizedProjectName>
-        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
-        <DCC_UnitSearchPath>..\..\svg;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
+        <SanitizedProjectName>SVGIconImageList</SanitizedProjectName>
         <DCC_Description>Ethea SVGIconImageList VCL components</DCC_Description>
-        <DllSuffix>_D11_0</DllSuffix>
+        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
+        <DllSuffix>$(Auto)</DllSuffix>
+        <DCC_UnitSearchPath>..\..\svg;..\..\Image32\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -83,30 +87,34 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="xmlrtl.dcp"/>
         <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="..\..\svg\SVG.pas"/>
-        <DCCReference Include="..\..\Svg\SVGColor.pas"/>
-        <DCCReference Include="..\..\Svg\SVGCommon.pas"/>
-        <DCCReference Include="..\..\Svg\SVGPaint.pas"/>
-        <DCCReference Include="..\..\Svg\SVGParse.pas"/>
-        <DCCReference Include="..\..\Svg\SVGPath.pas"/>
-        <DCCReference Include="..\..\Svg\XmlLite.pas"/>
-        <DCCReference Include="..\..\Svg\SVGStyle.pas"/>
-        <DCCReference Include="..\..\Svg\SVGTypes.pas"/>
-        <DCCReference Include="..\..\Svg\GDIPKerning.pas"/>
-        <DCCReference Include="..\..\Svg\GDIPOBJ2.pas"/>
-        <DCCReference Include="..\..\Svg\GDIPPathText.pas"/>
-        <BuildConfiguration Include="Release">
-            <Key>Cfg_2</Key>
-            <CfgParent>Base</CfgParent>
-        </BuildConfiguration>
+        <DCCReference Include="VclSmp.dcp"/>
+        <DCCReference Include="SVGIconPackage.dcp"/>
+        <DCCReference Include="SVGImage32Package.dcp"/>
+        <DCCReference Include="vclwinx.dcp"/>
+        <DCCReference Include="..\..\Source\SVGIconImage.pas"/>
+        <DCCReference Include="..\..\Source\SVGIconImageList.pas"/>
+        <DCCReference Include="..\..\Source\SVGIconUtils.pas"/>
+        <DCCReference Include="..\..\Source\SVGIconImageCollection.pas"/>
+        <DCCReference Include="..\..\Source\SVGIconItems.pas"/>
+        <DCCReference Include="..\..\Source\SVGIconVirtualImageList.pas"/>
+        <DCCReference Include="..\..\Source\SVGIconImageListBase.pas"/>
+        <DCCReference Include="..\..\Source\D2DSVGFactory.pas"/>
+        <DCCReference Include="..\..\Source\Winapi.D2DMissing.pas"/>
+        <DCCReference Include="..\..\Source\Image32SVGFactory.pas"/>
+        <DCCReference Include="..\..\Source\SVGInterfaces.pas"/>
+        <DCCReference Include="..\..\Source\dlgExportPNG.pas">
+            <Form>ExportToPNGDialog</Form>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
@@ -116,7 +124,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">SVGIconPackage.dpk</Source>
+                    <Source Name="MainSource">SVGIconImageList.dpk</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>
