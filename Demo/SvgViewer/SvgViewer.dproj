@@ -139,7 +139,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="SvgViewerUnit.pas">
-            <Form>Form1</Form>
+            <Form>SVGViewerForm</Form>
         </DCCReference>
         <DCCReference Include="FrameViewer.pas">
             <Form>FrameView</Form>

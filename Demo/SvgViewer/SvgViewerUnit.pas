@@ -9,7 +9,7 @@ uses
   SVGInterfaces, FrameViewer;
 
 type
-  TForm1 = class(TForm)
+  TSVGViewerForm = class(TForm)
     OpenDialog1: TOpenDialog;
     RightPanel: TPanel;
     ListBox: TListBox;
@@ -22,14 +22,26 @@ type
     FrameViewImage32: TFrameView;
     FrameViewerD2D: TFrameView;
     SetPathButton: TButton;
+    ColorGroupBox: TGroupBox;
+    FixedColorComboBox: TColorBox;
+    ApplyToRootOnlyCheckBox: TCheckBox;
+    AspectGroupBox: TGroupBox;
+    KeepCheckBox: TCheckBox;
+    OpacityGroupBox: TGroupBox;
+    OpacityTrackBar: TTrackBar;
+    GrayScaleCheckBox: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure OpenButtonClick(Sender: TObject);
     procedure ListBoxClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure SetPathButtonClick(Sender: TObject);
+    procedure OpacityTrackBarChange(Sender: TObject);
+    procedure FixedColorComboBoxChange(Sender: TObject);
+    procedure GrayScaleCheckBoxClick(Sender: TObject);
+    procedure ApplyToRootOnlyCheckBoxClick(Sender: TObject);
+    procedure KeepCheckBoxClick(Sender: TObject);
   private
     FSourcePath: string;
-    { Private declarations }
     procedure DrawImage(const AFileName: string);
     procedure SetSourcePath(const Value: string);
   public
@@ -37,7 +49,7 @@ type
   end;
 
 var
-  Form1: TForm1;
+  SVGViewerForm: TSVGViewerForm;
 
 implementation
 
@@ -47,7 +59,15 @@ uses
   Winapi.GDIPAPI, System.IOUtils, System.Types, SVGColor, FileCtrl,
   PasSVGFactory, Image32SVGFactory, D2DSVGFactory, SkiaSVGFactory;
 
-procedure TForm1.DrawImage(const AFileName: string);
+procedure TSVGViewerForm.ApplyToRootOnlyCheckBoxClick(Sender: TObject);
+begin
+  FrameViewTSVG.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
+  FrameViewerD2D.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
+  FrameViewSkia.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
+  FrameViewImage32.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
+end;
+
+procedure TSVGViewerForm.DrawImage(const AFileName: string);
 begin
   FrameViewTSVG.DrawFile(AFileName);
   FrameViewerD2D.DrawFile(AFileName);
@@ -55,13 +75,21 @@ begin
   FrameViewImage32.DrawFile(AFileName);
 end;
 
-procedure TForm1.OpenButtonClick(Sender: TObject);
+procedure TSVGViewerForm.OpacityTrackBarChange(Sender: TObject);
+begin
+  FrameViewTSVG.Opacity := OpacityTrackBar.position / 100;
+  FrameViewerD2D.Opacity := OpacityTrackBar.position / 100;
+  FrameViewSkia.Opacity := OpacityTrackBar.position / 100;
+  FrameViewImage32.Opacity := OpacityTrackBar.position / 100;
+end;
+
+procedure TSVGViewerForm.OpenButtonClick(Sender: TObject);
 begin
   if OpenDialog1.Execute(Handle) then
     DrawImage(OpenDialog1.FileName);
 end;
 
-procedure TForm1.SetPathButtonClick(Sender: TObject);
+procedure TSVGViewerForm.SetPathButtonClick(Sender: TObject);
 var
   LPath: string;
 begin
@@ -70,7 +98,7 @@ begin
     SourcePath := LPath;
 end;
 
-procedure TForm1.SetSourcePath(const Value: string);
+procedure TSVGViewerForm.SetSourcePath(const Value: string);
 var
   Files: TStringDynArray;
   F: TArray<string>;
@@ -90,7 +118,15 @@ begin
   end;
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TSVGViewerForm.FixedColorComboBoxChange(Sender: TObject);
+begin
+  FrameViewTSVG.FixedColor := FixedColorComboBox.Selected;
+  FrameViewerD2D.FixedColor := FixedColorComboBox.Selected;
+  FrameViewSkia.FixedColor := FixedColorComboBox.Selected;
+  FrameViewImage32.FixedColor := FixedColorComboBox.Selected;
+end;
+
+procedure TSVGViewerForm.FormCreate(Sender: TObject);
 begin
   SourcePath := ExtractFilePath(Application.ExeName)+'..\svg_examples';
 
@@ -101,7 +137,7 @@ begin
 
 end;
 
-procedure TForm1.FormResize(Sender: TObject);
+procedure TSVGViewerForm.FormResize(Sender: TObject);
 var
   LHeight, LWidth: Integer;
 begin
@@ -112,7 +148,23 @@ begin
   LeftPanel.Width := LWidth;
 end;
 
-procedure TForm1.ListBoxClick(Sender: TObject);
+procedure TSVGViewerForm.GrayScaleCheckBoxClick(Sender: TObject);
+begin
+  FrameViewTSVG.GrayScale := GrayScaleCheckBox.Checked;
+  FrameViewerD2D.GrayScale := GrayScaleCheckBox.Checked;
+  FrameViewSkia.GrayScale := GrayScaleCheckBox.Checked;
+  FrameViewImage32.GrayScale := GrayScaleCheckBox.Checked;
+end;
+
+procedure TSVGViewerForm.KeepCheckBoxClick(Sender: TObject);
+begin
+  FrameViewTSVG.KeepAspectRatio := KeepCheckBox.Checked;
+  FrameViewerD2D.KeepAspectRatio := KeepCheckBox.Checked;
+  FrameViewSkia.KeepAspectRatio := KeepCheckBox.Checked;
+  FrameViewImage32.KeepAspectRatio := KeepCheckBox.Checked;
+end;
+
+procedure TSVGViewerForm.ListBoxClick(Sender: TObject);
 begin
   DrawImage(TPath.Combine(FSourcePath,
     ListBox.Items[ListBox.ItemIndex]));

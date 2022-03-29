@@ -4,7 +4,7 @@ program SvgViewer;
 
 uses
   Vcl.Forms,
-  SvgViewerUnit in 'SvgViewerUnit.pas' {Form1},
+  SvgViewerUnit in 'SvgViewerUnit.pas' {SVGViewerForm},
   FrameViewer in 'FrameViewer.pas' {FrameView: TFrame};
 
 {$R *.res}
@@ -12,6 +12,6 @@ uses
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TSVGViewerForm, SVGViewerForm);
   Application.Run;
 end.

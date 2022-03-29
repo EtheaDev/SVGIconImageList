@@ -24,7 +24,6 @@ object SVGIconImageForm: TSVGIconImageForm
     Size.Width = 413.000000000000000000
     Size.Height = 403.000000000000000000
     Size.PlatformDefault = False
-    OnClick = SVGIconImageClick
     OnDblClick = SVGIconImageDblClick
     OnResize = SVGIconImageResize
     SVGText = 

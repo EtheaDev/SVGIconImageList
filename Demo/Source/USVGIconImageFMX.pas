@@ -18,7 +18,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure ButtonClick(Sender: TObject);
     procedure SVGIconImageResize(Sender: TObject);
-    procedure SVGIconImageClick(Sender: TObject);
     procedure SVGIconImageDblClick(Sender: TObject);
   private
     FSVGList: TStringDynArray;
@@ -35,8 +34,10 @@ implementation
 uses
   System.Math
   , System.IOUtils
-  , FMX.Consts
-  , FMX.SVGTextPropertyEditorUnit;
+  {$IFDEF MSWINDOWS}
+  , FMX.SVGTextPropertyEditorUnit
+  {$ENDIF}
+  , FMX.Consts;
 
 {$R *.fmx}
 
@@ -61,25 +62,17 @@ begin
   FIndex := 0;
 end;
 
-procedure TSVGIconImageForm.SVGIconImageClick(Sender: TObject);
-var
-  LSVGText: string;
-begin
-  //Show the property Editor
-  LSVGText := SVGIconImage.SVGText;
-  if EditSVGTextProperty(LSVGText) then
-   SVGIconImage.SVGText := LSVGText;
-end;
-
 procedure TSVGIconImageForm.SVGIconImageDblClick(Sender: TObject);
+{$IFDEF MSWINDOWS}
 var
   LSVGText: string;
+  {$ENDIF}
 begin
+  {$IFDEF MSWINDOWS}
   LSVGText := SVGIconImage.SVGText;
   if EditSVGTextProperty(LSVGText) then
-  begin  
     SVGIconImage.SVGText := LSVGText;
-  end;
+  {$ENDIF}
 end;
 
 procedure TSVGIconImageForm.SVGIconImageResize(Sender: TObject);
