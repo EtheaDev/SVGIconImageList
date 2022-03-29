@@ -47,7 +47,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '3.8.0';
+  SVGIconImageListVersion = '3.8.1';
   DEFAULT_SIZE = 32;
   ZOOM_DEFAULT = 100;
   SVG_INHERIT_COLOR = TAlphaColors.Null;
@@ -280,15 +280,17 @@ procedure TSVGIconBitmapItem.DrawSVGIcon;
 var
   LBitmap: TBitmap;
   LBitmapWidth, LBitmapHeight: Integer;
+  LSVG: TFmxImageSVG;
 begin
   LBitmap := inherited Bitmap;
   LBitmapWidth := Round(FWidth * Scale);
   LBitmapHeight := Round(FHeight * Scale);
   LBitmap.SetSize(LBitmapWidth, LBitmapHeight);
-  SVG.Opacity := Opacity;
-  SVG.FixedColor := FixedColor;
-  SVG.Grayscale := GrayScale;
-  PaintToBitmap(LBitmap, SVG, FZoom);
+  LSVG := SVG;
+  LSVG.Opacity := Opacity;
+  LSVG.FixedColor := FixedColor;
+  LSVG.Grayscale := GrayScale;
+  PaintToBitmap(LBitmap, LSVG, FZoom);
 end;
 
 function TSVGIconBitmapItem.GetBitmap: TBitmapOfItem;

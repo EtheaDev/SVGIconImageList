@@ -23,6 +23,7 @@ uses
   System.Types,
   System.UITypes,
   System.Classes,
+  System.Messaging,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.ExtCtrls,
@@ -573,6 +574,7 @@ type
   strict protected
     const
       DefaultFontColor = TAlphaColors.Black;
+      DefaultHeightMultiplier = 0;
       DefaultHorzAlign = TSkTextHorzAlign.Leading;
       DefaultMaxLines = 1;
       DefaultTrimming = TSkTextTrimming.Word;
@@ -581,6 +583,7 @@ type
     FDecorations: TDecorations;
     FFont: TSkFontComponent;
     FFontColor: TAlphaColor;
+    FHeightMultiplier: Single;
     FHorzAlign: TSkTextHorzAlign;
     FMaxLines: NativeUInt;
     [unsafe] FOwner: TPersistent;
@@ -588,9 +591,11 @@ type
     FVertAlign: TSkTextVertAlign;
     procedure DecorationsChange(ASender: TObject);
     procedure FontChanged(ASender: TObject);
+    function IsHeightMultiplierStored: Boolean;
     procedure SetDecorations(const AValue: TDecorations);
     procedure SetFont(const AValue: TSkFontComponent);
     procedure SetFontColor(const AValue: TAlphaColor);
+    procedure SetHeightMultiplier(const AValue: Single);
     procedure SetHorzAlign(const AValue: TSkTextHorzAlign);
     procedure SetMaxLines(const AValue: NativeUInt);
     procedure SetTrimming(const AValue: TSkTextTrimming);
@@ -610,6 +615,7 @@ type
     property Decorations: TDecorations read FDecorations write SetDecorations;
     property Font: TSkFontComponent read FFont write SetFont;
     property FontColor: TAlphaColor read FFontColor write SetFontColor default DefaultFontColor;
+    property HeightMultiplier: Single read FHeightMultiplier write SetHeightMultiplier stored IsHeightMultiplierStored;
     property HorzAlign: TSkTextHorzAlign read FHorzAlign write SetHorzAlign default DefaultHorzAlign;
     property MaxLines: NativeUInt read FMaxLines write SetMaxLines default DefaultMaxLines;
     property Trimming: TSkTextTrimming read FTrimming write SetTrimming default DefaultTrimming;
@@ -702,6 +708,7 @@ type
           DefaultCaption = '';
           DefaultCursor = crDefault;
           DefaultFontColor = TAlphaColors.Black;
+          DefaultHeightMultiplier = 0;
           DefaultName = 'Item 0';
       strict private
         FBackgroundColor: TAlphaColor;
@@ -711,6 +718,10 @@ type
         FIgnoringAllChanges: Boolean;
         FName: string;
         FOnClick: TNotifyEvent;
+        FTag: NativeInt;
+        FTagFloat: Single;
+        [Weak] FTagObject: TObject;
+        FTagString: string;
         FTextSettingsInfo: TSkTextSettingsInfo;
         FUpdatingCount: Integer;
         [unsafe] FWords: TWordsCollection;
@@ -718,9 +729,11 @@ type
         function GetDecorations: TSkTextSettings.TDecorations;
         function GetFont: TSkFontComponent;
         function GetFontColor: TAlphaColor;
+        function GetHeightMultiplier: Single;
         function GetStyledSettings: TSkStyledSettings;
         function IsCaptionStored: Boolean;
         function IsFontColorStored: Boolean;
+        function IsHeightMultiplierStored: Boolean;
         function IsNameStored: Boolean;
         function IsStyledSettingsStored: Boolean;
         procedure TextSettingsChange(ASender: TObject);
@@ -730,6 +743,7 @@ type
         procedure SetDecorations(const AValue: TSkTextSettings.TDecorations);
         procedure SetFont(const AValue: TSkFontComponent);
         procedure SetFontColor(const AValue: TAlphaColor);
+        procedure SetHeightMultiplier(const AValue: Single);
         procedure SetName(const AValue: string);
         procedure SetStyledSettings(const AValue: TSkStyledSettings);
         function UniqueName(const AName: string; const ACollection: TCollection): string;
@@ -752,9 +766,14 @@ type
         property Decorations: TSkTextSettings.TDecorations read GetDecorations write SetDecorations;
         property Font: TSkFontComponent read GetFont write SetFont;
         property FontColor: TAlphaColor read GetFontColor write SetFontColor stored IsFontColorStored;
+        property HeightMultiplier: Single read GetHeightMultiplier write SetHeightMultiplier stored IsHeightMultiplierStored;
         /// <summary> The case-insensitive name of the item in the collection. This field cannot be empty and must be unique for his collection </summary>
         property Name: string read FName write SetName stored IsNameStored;
         property StyledSettings: TSkStyledSettings read GetStyledSettings write SetStyledSettings stored IsStyledSettingsStored;
+        property Tag: NativeInt read FTag write FTag default 0;
+        property TagFloat: Single read FTagFloat write FTagFloat;
+        property TagObject: TObject read FTagObject write FTagObject;
+        property TagString: string read FTagString write FTagString;
         property Words: TWordsCollection read FWords;
         property OnClick: TNotifyEvent read FOnClick write FOnClick;
       end;
@@ -806,18 +825,26 @@ type
         property Decorations;
         property Font;
         property FontColor;
+        property HeightMultiplier;
         property Name;
         property StyledSettings;
+        property TagString;
         property OnClick;
       end;
+
+      { TItemClickedMessage }
+
+      TItemClickedMessage = class(TMessage<TCustomWordsItem>);
   strict private
     FBackgroundPicture: ISkPicture;
+    FClickedPosition: TPoint;
     FHasCustomBackground: Boolean;
     FHasCustomCursor: Boolean;
     FIsMouseOver: Boolean;
     FParagraph: ISkParagraph;
     FParagraphBounds: TRectF;
     FParagraphLayoutWidth: Single;
+    FPressedPosition: TPoint;
     FTextSettingsInfo: TSkTextSettingsInfo;
     FWords: TWordsCollection;
     FWordsMouseOver: TCustomWordsItem;
@@ -837,6 +864,7 @@ type
     procedure SetWords(const AValue: TWordsCollection);
     procedure SetWordsMouseOver(const AValue: TCustomWordsItem);
     procedure TextSettingsChanged(AValue: TObject);
+    procedure WMLButtonUp(var AMessage: TWMLButtonUp); message WM_LBUTTONUP;
     procedure WMMouseMove(var AMessage: TWMMouseMove); message WM_MOUSEMOVE;
     procedure WordsChange(ASender: TObject);
   strict private
@@ -850,7 +878,9 @@ type
     procedure Click; override;
     procedure Draw(const ACanvas: ISkCanvas; const ADest: TRectF; const AOpacity: Single); override;
     function GetTextSettingsClass: TSkTextSettingsInfo.TCustomTextSettingsClass; virtual;
+    function GetWordsItemAtPosition(const AX, AY: Integer): TCustomWordsItem;
     procedure Loaded; override;
+    procedure MouseDown(AButton: TMouseButton; AShift: TShiftState; AX, AY: Integer); override;
     procedure SetName(const AValue: TComponentName); override;
     property IsMouseOver: Boolean read FIsMouseOver;
     property Paragraph: ISkParagraph read GetParagraph;
@@ -3261,23 +3291,25 @@ var
 begin
   if ASource = nil then
   begin
-    Decorations := nil;
-    Font        := nil;
-    FontColor   := DefaultFontColor;
-    HorzAlign   := DefaultHorzAlign;
-    MaxLines    := DefaultMaxLines;
-    Trimming    := DefaultTrimming;
-    VertAlign   := DefaultVertAlign;
+    Decorations      := nil;
+    Font             := nil;
+    FontColor        := DefaultFontColor;
+    HeightMultiplier := DefaultHeightMultiplier;
+    HorzAlign        := DefaultHorzAlign;
+    MaxLines         := DefaultMaxLines;
+    Trimming         := DefaultTrimming;
+    VertAlign        := DefaultVertAlign;
   end
   else if ASource is TSkTextSettings then
   begin
-    Decorations := LSourceTextSettings.Decorations;
-    Font        := LSourceTextSettings.Font;
-    FontColor   := LSourceTextSettings.FontColor;
-    HorzAlign   := LSourceTextSettings.HorzAlign;
-    MaxLines    := LSourceTextSettings.MaxLines;
-    Trimming    := LSourceTextSettings.Trimming;
-    VertAlign   := LSourceTextSettings.VertAlign;
+    Decorations      := LSourceTextSettings.Decorations;
+    Font             := LSourceTextSettings.Font;
+    FontColor        := LSourceTextSettings.FontColor;
+    HeightMultiplier := LSourceTextSettings.HeightMultiplier;
+    HorzAlign        := LSourceTextSettings.HorzAlign;
+    MaxLines         := LSourceTextSettings.MaxLines;
+    Trimming         := LSourceTextSettings.Trimming;
+    VertAlign        := LSourceTextSettings.VertAlign;
   end
   else
     inherited;
@@ -3294,9 +3326,9 @@ begin
       Font.Size := ATextSettings.Font.Size;
     if not (TSkStyledSetting.Style in AStyledSettings) then
     begin
-      Font.Slant := ATextSettings.Font.Slant;
+      Font.Slant   := ATextSettings.Font.Slant;
       Font.Stretch := ATextSettings.Font.Stretch;
-      Font.Weight := ATextSettings.Font.Weight;
+      Font.Weight  := ATextSettings.Font.Weight;
     end;
   finally
     Font.EndUpdate;
@@ -3305,11 +3337,12 @@ begin
     FontColor := ATextSettings.FontColor;
   if not (TSkStyledSetting.Other in AStyledSettings) then
   begin
-    Decorations := ATextSettings.Decorations;
-    HorzAlign := ATextSettings.HorzAlign;
-    VertAlign := ATextSettings.VertAlign;
-    MaxLines := ATextSettings.MaxLines;
-    Trimming := ATextSettings.Trimming;
+    Decorations      := ATextSettings.Decorations;
+    HeightMultiplier := ATextSettings.HeightMultiplier;
+    HorzAlign        := ATextSettings.HorzAlign;
+    VertAlign        := ATextSettings.VertAlign;
+    MaxLines         := ATextSettings.MaxLines;
+    Trimming         := ATextSettings.Trimming;
   end;
 end;
 
@@ -3320,16 +3353,22 @@ begin
   Result := (AObject is TSkTextSettings) and
     FDecorations.Equals(LTextSettings.Decorations) and
     FFont.Equals(LTextSettings.Font) and
-    (FFontColor = LTextSettings.FontColor) and
-    (FHorzAlign = LTextSettings.HorzAlign) and
-    (FMaxLines  = LTextSettings.MaxLines) and
-    (FTrimming  = LTextSettings.Trimming) and
-    (FVertAlign = LTextSettings.VertAlign);
+    (FFontColor        = LTextSettings.FontColor) and
+    (FHeightMultiplier = LTextSettings.HeightMultiplier) and
+    (FHorzAlign        = LTextSettings.HorzAlign) and
+    (FMaxLines         = LTextSettings.MaxLines) and
+    (FTrimming         = LTextSettings.Trimming) and
+    (FVertAlign        = LTextSettings.VertAlign);
 end;
 
 procedure TSkTextSettings.FontChanged(ASender: TObject);
 begin
   Change;
+end;
+
+function TSkTextSettings.IsHeightMultiplierStored: Boolean;
+begin
+  Result := not SameValue(FHeightMultiplier, DefaultHeightMultiplier, TEpsilon.Position);
 end;
 
 procedure TSkTextSettings.SetDecorations(const AValue: TDecorations);
@@ -3345,6 +3384,11 @@ end;
 procedure TSkTextSettings.SetFontColor(const AValue: TAlphaColor);
 begin
   SetValue<TAlphaColor>(FFontColor, AValue);
+end;
+
+procedure TSkTextSettings.SetHeightMultiplier(const AValue: Single);
+begin
+  SetValue(FHeightMultiplier, AValue, TEpsilon.Position);
 end;
 
 procedure TSkTextSettings.SetHorzAlign(const AValue: TSkTextHorzAlign);
@@ -3396,9 +3440,11 @@ begin
     Exclude(AStyledSettings, TSkStyledSetting.FontColor);
 
   if ((not AOldTextSettings.Decorations.Equals(Decorations)) or
+    (AOldTextSettings.HeightMultiplier <> HeightMultiplier) or
     (AOldTextSettings.HorzAlign <> HorzAlign) or (AOldTextSettings.VertAlign <> VertAlign) or
     (AOldTextSettings.Trimming <> Trimming) or (AOldTextSettings.MaxLines <> MaxLines)) and
     ((not ADefaultTextSettings.Decorations.Equals(Decorations)) or
+    (ADefaultTextSettings.HeightMultiplier <> HeightMultiplier) or
     (ADefaultTextSettings.HorzAlign <> HorzAlign) or (ADefaultTextSettings.VertAlign <> VertAlign) or
     (ADefaultTextSettings.Trimming <> Trimming) or (ADefaultTextSettings.MaxLines <> MaxLines)) then
   begin
@@ -3623,25 +3669,27 @@ var
 begin
   if ASource = nil then
   begin
-    BackgroundColor := DefaultBackgroundColor;
-    Caption         := DefaultCaption;
-    Cursor          := DefaultCursor;
-    Font            := nil;
-    FontColor       := DefaultFontColor;
-    Name            := UniqueName(DefaultName, Collection);
-    StyledSettings  := DefaultStyledSettings;
-    OnClick         := nil;
+    BackgroundColor  := DefaultBackgroundColor;
+    Caption          := DefaultCaption;
+    Cursor           := DefaultCursor;
+    Font             := nil;
+    FontColor        := DefaultFontColor;
+    HeightMultiplier := DefaultHeightMultiplier;
+    Name             := UniqueName(DefaultName, Collection);
+    StyledSettings   := DefaultStyledSettings;
+    OnClick          := nil;
   end
   else if ASource is TCustomWordsItem then
   begin
-    BackgroundColor := LSourceItem.BackgroundColor;
-    Caption         := LSourceItem.Caption;
-    Cursor          := LSourceItem.Cursor;
-    Font            := LSourceItem.Font;
-    FontColor       := LSourceItem.FontColor;
-    Name            := UniqueName(LSourceItem.Name, Collection);
-    StyledSettings  := LSourceItem.StyledSettings;
-    OnClick         := LSourceItem.OnClick;
+    BackgroundColor  := LSourceItem.BackgroundColor;
+    Caption          := LSourceItem.Caption;
+    Cursor           := LSourceItem.Cursor;
+    Font             := LSourceItem.Font;
+    FontColor        := LSourceItem.FontColor;
+    HeightMultiplier := LSourceItem.HeightMultiplier;
+    Name             := UniqueName(LSourceItem.Name, Collection);
+    StyledSettings   := LSourceItem.StyledSettings;
+    OnClick          := LSourceItem.OnClick;
   end
   else
     inherited Assign(ASource);
@@ -3700,6 +3748,11 @@ begin
   Result := FTextSettingsInfo.TextSettings.FontColor;
 end;
 
+function TSkLabel.TCustomWordsItem.GetHeightMultiplier: Single;
+begin
+  Result := FTextSettingsInfo.TextSettings.HeightMultiplier;
+end;
+
 function TSkLabel.TCustomWordsItem.GetStyledSettings: TSkStyledSettings;
 begin
   Result := FTextSettingsInfo.StyledSettings;
@@ -3713,6 +3766,11 @@ end;
 function TSkLabel.TCustomWordsItem.IsFontColorStored: Boolean;
 begin
   Result := (FontColor <> DefaultFontColor) or not (TSkStyledSetting.FontColor in StyledSettings);
+end;
+
+function TSkLabel.TCustomWordsItem.IsHeightMultiplierStored: Boolean;
+begin
+  Result := (not SameValue(HeightMultiplier, DefaultHeightMultiplier, TEpsilon.Position)) or not (TSkStyledSetting.Other in StyledSettings);
 end;
 
 function TSkLabel.TCustomWordsItem.IsNameStored: Boolean;
@@ -3781,6 +3839,11 @@ end;
 procedure TSkLabel.TCustomWordsItem.SetFontColor(const AValue: TAlphaColor);
 begin
   FTextSettingsInfo.TextSettings.FontColor := AValue;
+end;
+
+procedure TSkLabel.TCustomWordsItem.SetHeightMultiplier(const AValue: Single);
+begin
+  FTextSettingsInfo.TextSettings.HeightMultiplier := AValue;
 end;
 
 procedure TSkLabel.TCustomWordsItem.SetName(const AValue: string);
@@ -3995,9 +4058,18 @@ begin
 end;
 
 procedure TSkLabel.Click;
+var
+  LClickedItem: TCustomWordsItem;
 begin
-  if Assigned(FWordsMouseOver) and Assigned(FWordsMouseOver.OnClick) then
-    FWordsMouseOver.OnClick(FWordsMouseOver)
+  LClickedItem := GetWordsItemAtPosition(FClickedPosition.X, FClickedPosition.Y);
+  if Assigned(LClickedItem) and (LClickedItem = GetWordsItemAtPosition(FPressedPosition.X, FPressedPosition.Y)) then
+  begin
+    TMessageManager.DefaultManager.SendMessage(Self, TItemClickedMessage.Create(LClickedItem));
+    if Assigned(LClickedItem.OnClick) then
+      LClickedItem.OnClick(FWordsMouseOver)
+    else
+      inherited;
+  end
   else
     inherited;
 end;
@@ -4072,7 +4144,9 @@ procedure TSkLabel.Draw(const ACanvas: ISkCanvas; const ADest: TRectF;
     LTextEndIndex: Integer;
     LTextBox: TSkTextBox;
     LRects: TArray<TRectF>;
+    LRectsColor: TArray<TAlphaColor>;
     LLastRect: TRectF;
+    LLastColor: TAlphaColor;
   begin
     LPictureRecorder := TSkPictureRecorder.Create;
     LCanvas := LPictureRecorder.BeginRecording(ADest);
@@ -4085,16 +4159,18 @@ procedure TSkLabel.Draw(const ACanvas: ISkCanvas; const ADest: TRectF;
       Inc(LTextEndIndex, FWords[I].Caption.Length);
       if TAlphaColorRec(FWords[I].BackgroundColor).A = 0 then
         Continue;
-      LPaint.Color := FWords[I].BackgroundColor;
       for LTextBox in AParagraph.GetRectsForRange(LTextEndIndex - FWords[I].Caption.Length, LTextEndIndex, TSkRectHeightStyle.Tight, TSkRectWidthStyle.Tight) do
       begin
         if LRects = nil then
         begin
           LRects := [LTextBox.Rect];
+          LRectsColor := [FWords[I].BackgroundColor];
           Continue;
         end;
         LLastRect := LRects[High(LRects)];
-        if SameValue(LLastRect.Top, LTextBox.Rect.Top, TEpsilon.Position) and
+        LLastColor := LRectsColor[High(LRectsColor)];
+        if (LLastColor = FWords[I].BackgroundColor) and
+          SameValue(LLastRect.Top, LTextBox.Rect.Top, TEpsilon.Position) and
           SameValue(LLastRect.Bottom, LTextBox.Rect.Bottom, TEpsilon.Position) and
           SameValue(LLastRect.Right, LTextBox.Rect.Left, 1) then
         begin
@@ -4102,11 +4178,17 @@ procedure TSkLabel.Draw(const ACanvas: ISkCanvas; const ADest: TRectF;
           LRects[High(LRects)] := LLastRect;
         end
         else
+        begin
           LRects := LRects + [LTextBox.Rect];
+          LRectsColor := LRectsColor + [FWords[I].BackgroundColor];
+        end;
       end;
     end;
     for I := 0 to Length(LRects) - 1 do
+    begin
+      LPaint.Color := LRectsColor[I];
       LCanvas.DrawRoundRect(TRectF.Create(LRects[I].Round), 2 * ScaleFactor, 2 * ScaleFactor, LPaint);
+    end;
     Result := LPictureRecorder.FinishRecording;
   end;
 
@@ -4245,9 +4327,15 @@ const
     else
       Result.FontStyle := TSkFontStyle.Create(SkFontWeightValue[AWordsItem.Font.Weight], SkFontWidthValue[AWordsItem.Font.Stretch], SkFontSlant[AWordsItem.Font.Slant]);
     if TSkStyledSetting.Other in AWordsItem.StyledSettings then
-      SetTextStyleDecorations(Result, ResultingTextSettings.Decorations)
+    begin
+      Result.HeightMultiplier := ADefaultTextStyle.HeightMultiplier;
+      SetTextStyleDecorations(Result, ResultingTextSettings.Decorations);
+    end
     else
+    begin
+      Result.HeightMultiplier := AWordsItem.HeightMultiplier;
       SetTextStyleDecorations(Result, AWordsItem.Decorations);
+    end;
   end;
 
   function CreateDefaultTextStyle: ISkTextStyle;
@@ -4257,6 +4345,7 @@ const
     Result.FontFamilies := GetFontFamilies(ResultingTextSettings.Font.Families);
     Result.FontSize := ResultingTextSettings.Font.Size;
     Result.FontStyle := TSkFontStyle.Create(SkFontWeightValue[ResultingTextSettings.Font.Weight], SkFontWidthValue[ResultingTextSettings.Font.Stretch], SkFontSlant[ResultingTextSettings.Font.Slant]);
+    Result.HeightMultiplier := ResultingTextSettings.HeightMultiplier;
     SetTextStyleDecorations(Result, ResultingTextSettings.Decorations);
   end;
 
@@ -4346,6 +4435,68 @@ begin
   Result := TSkTextSettingsInfo.TCustomTextSettings;
 end;
 
+function TSkLabel.GetWordsItemAtPosition(const AX,
+  AY: Integer): TCustomWordsItem;
+
+  // Remove inconsistencies such as area after a line break
+  function IsInsideValidArea(const AParagraph: ISkParagraph; const ATextArea: TRectF; const APoint: TPointF): Boolean;
+  var
+    LGlyphTextBoxes: TArray<TSkTextBox>;
+    LGlyphPosition: TSkPositionAffinity;
+  begin
+    LGlyphPosition := AParagraph.GetGlyphPositionAtCoordinate(APoint.X, APoint.Y);
+    if LGlyphPosition.Affinity = TSkAffinity.Downstream then
+      Result := True
+    else if LGlyphPosition.Position >= 0 then
+    begin
+      LGlyphTextBoxes := AParagraph.GetRectsForRange(LGlyphPosition.Position, LGlyphPosition.Position + 1, TSkRectHeightStyle.Max, TSkRectWidthStyle.Tight);
+      Result := (LGlyphTextBoxes <> nil) and
+        ((LGlyphTextBoxes[0].Rect.CenterPoint.Distance(APoint) < (LGlyphTextBoxes[0].Rect.Width + LGlyphTextBoxes[0].Rect.Height) / 2) or
+        ATextArea.Contains(LGlyphTextBoxes[0].Rect.CenterPoint));
+    end
+    else
+      Result := False;
+  end;
+
+var
+  I, J: Integer;
+  LTextIndex: Integer;
+  LTextBoxes: TArray<TSkTextBox>;
+  LParagraph: ISkParagraph;
+  LParagraphPoint: TPointF;
+begin
+  Result := nil;
+  LParagraph := Paragraph;
+  if Assigned(LParagraph) then
+  begin
+    case ResultingTextSettings.VertAlign of
+      TSkTextVertAlign.Center: LParagraphPoint := PointF(AX, AY - (Height - ParagraphBounds.Height) / 2);
+      TSkTextVertAlign.Trailing: LParagraphPoint := PointF(AX, AY - Height - ParagraphBounds.Height);
+    else
+      LParagraphPoint := PointF(AX, AY);
+    end;
+    LTextIndex := 0;
+    for I := 0 to FWords.Count - 1 do
+    begin
+      if FWords[I].Caption.Length = 0 then
+        Continue;
+      LTextBoxes := LParagraph.GetRectsForRange(LTextIndex, LTextIndex + FWords[I].Caption.Length, TSkRectHeightStyle.Max, TSkRectWidthStyle.Tight);
+      for J := 0 to Length(LTextBoxes) - 1 do
+      begin
+        if LTextBoxes[J].Rect.Contains(LParagraphPoint) then
+        begin
+          if IsInsideValidArea(LParagraph, LTextBoxes[J].Rect, LParagraphPoint) then
+            Result := FWords[I];
+          Break;
+        end;
+      end;
+      if Assigned(Result) then
+        Break;
+      Inc(LTextIndex, FWords[I].Caption.Length);
+    end;
+  end;
+end;
+
 function TSkLabel.HasFitSizeChanged: Boolean;
 var
   LNewWidth: Single;
@@ -4362,6 +4513,13 @@ begin
   inherited;
   if AutoSize and HasFitSizeChanged then
     SetBounds(Left, Top, Width, Height);
+end;
+
+procedure TSkLabel.MouseDown(AButton: TMouseButton; AShift: TShiftState; AX,
+  AY: Integer);
+begin
+  FPressedPosition := Point(AX, AY);
+  inherited;
 end;
 
 procedure TSkLabel.ParagraphLayout(const AWidth: Single);
@@ -4433,7 +4591,11 @@ begin
       else
         Cursor := crDefault;
     end;
-  end;
+  end
+  else if Assigned(FWordsMouseOver) and (FWordsMouseOver.Cursor <> crDefault) then
+    Cursor := FWordsMouseOver.Cursor
+  else
+    Cursor := crDefault;
 end;
 
 procedure TSkLabel.TextSettingsChanged(AValue: TObject);
@@ -4470,48 +4632,16 @@ begin
   Result := SysLocale.MiddleEast and (GetParentedBiDiMode = bdRightToLeft);
 end;
 
+procedure TSkLabel.WMLButtonUp(var AMessage: TWMLButtonUp);
+begin
+  FPressedPosition := Point(AMessage.XPos, AMessage.YPos);
+  inherited;
+end;
+
 procedure TSkLabel.WMMouseMove(var AMessage: TWMMouseMove);
-var
-  I, J: Integer;
-  LTextIndex: Integer;
-  LTextBoxes: TArray<TSkTextBox>;
-  LNewWordsMouseOver: TCustomWordsItem;
-  LParagraph: ISkParagraph;
-  LParagraphPoint: TPointF;
 begin
   if FHasCustomCursor then
-  begin
-    LParagraph := Paragraph;
-    if Assigned(LParagraph) then
-    begin
-      case ResultingTextSettings.VertAlign of
-        TSkTextVertAlign.Center: LParagraphPoint := PointF(AMessage.XPos, AMessage.YPos - (Height - ParagraphBounds.Height) / 2);
-        TSkTextVertAlign.Trailing: LParagraphPoint := PointF(AMessage.XPos, AMessage.YPos - Height - ParagraphBounds.Height);
-      else
-        LParagraphPoint := PointF(AMessage.XPos, AMessage.YPos);
-      end;
-      LNewWordsMouseOver := nil;
-      LTextIndex := 0;
-      for I := 0 to FWords.Count - 1 do
-      begin
-        if FWords[I].Caption.Length = 0 then
-          Continue;
-        LTextBoxes := LParagraph.GetRectsForRange(LTextIndex, LTextIndex + FWords[I].Caption.Length, TSkRectHeightStyle.Max, TSkRectWidthStyle.Tight);
-        for J := 0 to Length(LTextBoxes) - 1 do
-        begin
-          if LTextBoxes[J].Rect.Contains(LParagraphPoint) then
-          begin
-            LNewWordsMouseOver := FWords[I];
-            Break;
-          end;
-        end;
-        if Assigned(LNewWordsMouseOver) then
-          Break;
-        LTextIndex := LTextIndex + FWords[I].Caption.Length;
-      end;
-      SetWordsMouseOver(LNewWordsMouseOver);
-    end;
-  end;
+    SetWordsMouseOver(GetWordsItemAtPosition(AMessage.XPos, AMessage.YPos));
   inherited;
 end;
 
