@@ -52,18 +52,19 @@ type
     fFixedColor: TColor;
     fApplyFixedColorToRootOnly: Boolean;
     fGrayScale: Boolean;
+    fOpacity: Single;
     fSvgDoc: ID2D1SvgDocument;
     // property access methods
     function GetWidth: Single;
     function GetHeight: Single;
     function GetOpacity: Single;
-    procedure SetOpacity(const Opacity: Single);
+    procedure SetOpacity(const AOpacity: Single);
     function GetGrayScale: Boolean;
     procedure SetGrayScale(const IsGrayScale: Boolean);
     function GetFixedColor: TColor;
     procedure SetFixedColor(const Color: TColor);
     function GetApplyFixedColorToRootOnly: Boolean;
-    procedure SetApplyFixedColorToRootOnly(Value:Boolean);
+    procedure SetApplyFixedColorToRootOnly(AValue: Boolean);
     function GetSource: string;
     procedure SetSource(const ASource: string);
     // procedures and functions
@@ -93,6 +94,94 @@ type
     class function RT: ID2D1DCRenderTarget; static;
   end;
 
+type
+  TSvgElementProc = reference to procedure(const Element: ID2D1SvgElement);
+
+procedure TransformSvgElement(const Element: ID2D1SvgElement; Proc: TSvgElementProc);
+Var
+  Child, NextChild: ID2D1SvgElement;
+begin
+  Proc(Element);
+  Element.GetFirstChild(Child);
+  while Assigned(Child) do
+  begin
+    // Recursively recolor the subtree starting with this child node.
+    TransformSvgElement(Child, Proc);
+    Element.GetNextChild(Child, NextChild);
+    Child := NextChild;
+  end;
+end;
+
+procedure RecolorAttribute(const Element: ID2D1SvgElement; Attr: PWideChar; NewColor: TD2D1ColorF);
+Var
+  IsInherited: Bool;
+  TextValue: string;
+  Count: UINT32;
+begin
+  if Element.IsAttributeSpecified(Attr, @IsInherited) and not IsInherited then
+  begin
+    if not Succeeded(Element.GetAttributeValueLength(Attr, D2D1_SVG_ATTRIBUTE_STRING_TYPE_SVG, Count)) then Exit;
+    SetLength(TextValue, Count);
+    if not Succeeded(Element.GetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_STRING_TYPE_SVG, PWideChar(TextValue), Count+1)) then Exit;
+    if (TextValue = 'none') or TextValue.StartsWith('url') then
+      Exit;
+    Element.SetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
+        @NewColor, SizeOf(NewColor));
+  end;
+end;
+
+// Converts any color to grayscale
+function GrayScaleColor(Color : TD2D1ColorF) : TD2D1ColorF;
+var
+  LGray : Single;
+begin
+  // get the luminance according to https://www.w3.org/TR/AERT/#color-contrast
+  LGray  := 0.299 * Color.R + 0.587 * Color.G + 0.114 * Color.B;
+  // set the result to the new grayscale color including the alpha info
+  Result := D2D1ColorF(LGray, LGray, LGray, Color.A);
+end;
+
+procedure RecolorSubtree(const Element: ID2D1SvgElement; NewColor: TD2D1ColorF);
+begin
+  TransformSvgElement(Element,
+    procedure(const Element: ID2D1SvgElement)
+    begin
+      RecolorAttribute(Element, 'fill', NewColor);
+      RecolorAttribute(Element, 'stroke', NewColor);
+      RecolorAttribute(Element, 'stop-color', NewColor);
+    end);
+end;
+
+procedure GrayScaleSubtree(const Element: ID2D1SvgElement);
+begin
+  TransformSvgElement(Element,
+    procedure(const Element: ID2D1SvgElement)
+    Var
+      OldColor: TD2D1ColorF;
+      NewColor: TD2D1ColorF;
+      procedure GrayScaleAttribute(Attr: PWideChar);
+      Var
+        IsInherited: Bool;
+      begin
+        if Element.IsAttributeSpecified(Attr, @IsInherited)  and not IsInherited then
+        begin
+          if Succeeded(Element.GetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
+            @OldColor, SizeOf(OldColor)))
+          then
+          begin
+            NewColor := GrayScaleColor(OldColor);
+            Assert(Succeeded(Element.SetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
+              @NewColor, SizeOf(NewColor))));
+          end;
+        end;
+      end;
+    begin
+      GrayScaleAttribute('fill');
+      GrayScaleAttribute('stroke');
+      GrayScaleAttribute('stop-color');
+    end);
+end;
+
 { TD2DSVG }
 {$IFDEF CheckForUnsupportedSvg}
 procedure TD2DSVG.CheckForUnsupportedSvg;
@@ -115,6 +204,8 @@ constructor TD2DSVG.Create;
 begin
   inherited;
   fFixedColor:= TColors.SysDefault; // clDefault
+  fGrayScale := False;
+  FOpacity := 1.0;
 end;
 
 procedure TD2DSVG.SvgFromStream(Stream: TStream);
@@ -265,6 +356,8 @@ var
   SvgRect : TRectF;
   RT: ID2D1DCRenderTarget;
   Ratio: Single;
+  Root: ID2D1SvgElement;
+  NewColor: TD2D1ColorF;
 begin
   if not Assigned(fSvgDoc) then Exit;
   SvgRect:= R;
@@ -276,8 +369,35 @@ begin
       Matrix := TD2DMatrix3X2F.Scale(1/Ratio, 1/Ratio, Point(0, 0));
     end
     else
+    begin
        Matrix := TD2DMatrix3X2F.Scale(R.Width/fWidth,
         R.Height/fHeight, Point(0, 0));
+    end;
+  end;
+  //GrayScale
+  if fGrayScale then
+  begin
+    fSvgDoc.GetRoot(Root);
+    GrayScaleSubtree(Root);
+  end;
+  if FOpacity <> 1.0 then
+  begin
+    if Assigned(Root) then
+      Root.SetAttributeValue('opacity', D2D1_SVG_ATTRIBUTE_POD_TYPE_FLOAT,
+        @fOpacity, SizeOf(fOpacity));
+  end;
+  //FixedColor
+  if (FFixedColor <> TColors.SysDefault) and Assigned(fSvgDoc) then
+  begin
+    fSvgDoc.GetRoot(Root);
+    with TColors(fFixedColor) do
+      NewColor :=  D2D1ColorF(r/255, g/255, b/255, 1);
+    Root.SetAttributeValue('fill', D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
+              @NewColor, SizeOf(NewColor));
+    if not fApplyFixedColorToRootOnly then
+      RecolorSubtree(Root, NewColor)
+    else
+      RecolorAttribute(Root, 'stroke', NewColor);
   end;
   RT := RenderTarget;
   RT.BindDC(DC, SvgRect.Round);
@@ -311,74 +431,22 @@ begin
   Stream.WriteBuffer(Buffer, Length(Buffer))
 end;
 
-type
-  TSvgElementProc = reference to procedure(const Element: ID2D1SvgElement);
-
-procedure TransformSvgElement(const Element: ID2D1SvgElement; Proc: TSvgElementProc);
-Var
-  Child, NextChild: ID2D1SvgElement;
-begin
-  Proc(Element);
-  Element.GetFirstChild(Child);
-  while Assigned(Child) do
-  begin
-    // Recursively recolor the subtree starting with this child node.
-    TransformSvgElement(Child, Proc);
-    Element.GetNextChild(Child, NextChild);
-    Child := NextChild;
-  end;
-end;
-
-procedure RecolorAttribute(const Element: ID2D1SvgElement; Attr: PWideChar; NewColor: TD2D1ColorF);
-Var
-  IsInherited: Bool;
-  TextValue: string;
-  Count: UINT32;
-begin
-  if Element.IsAttributeSpecified(Attr, @IsInherited) and not IsInherited then
-  begin
-    if not Succeeded(Element.GetAttributeValueLength(Attr, D2D1_SVG_ATTRIBUTE_STRING_TYPE_SVG, Count)) then Exit;
-    SetLength(TextValue, Count);
-    if not Succeeded(Element.GetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_STRING_TYPE_SVG, PWideChar(TextValue), Count+1)) then Exit;
-    if (TextValue = 'none') or TextValue.StartsWith('url') then
-      Exit;
-    Element.SetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
-        @NewColor, SizeOf(NewColor));
-  end;
-end;
-
-procedure RecolorSubtree(const Element: ID2D1SvgElement; NewColor: TD2D1ColorF);
-begin
-  TransformSvgElement(Element,
-    procedure(const Element: ID2D1SvgElement)
-    begin
-      RecolorAttribute(Element, 'fill', NewColor);
-      RecolorAttribute(Element, 'stroke', NewColor);
-      RecolorAttribute(Element, 'stop-color', NewColor);
-    end);
-end;
-
-procedure TD2DSVG.SetApplyFixedColorToRootOnly(Value: Boolean);
+procedure TD2DSVG.SetApplyFixedColorToRootOnly(AValue: Boolean);
 var
   Color: TColor;
 begin
-  if fApplyFixedColorToRootOnly <> Value then
+  if fApplyFixedColorToRootOnly = AValue then Exit;
+  fApplyFixedColorToRootOnly := AValue;
+  if fFixedColor <> TColors.SysDefault then
   begin
-    fApplyFixedColorToRootOnly := Value;
-    if fFixedColor <> TColors.SysDefault then
-    begin
-       Color := fFixedColor;
-       fFixedColor := TColors.SysDefault;
-       LoadFromSource;
-       SetFixedColor(Color);
-    end;
+     Color := fFixedColor;
+     fFixedColor := TColors.SysDefault;
+     LoadFromSource;
+     SetFixedColor(Color);
   end;
 end;
 
 procedure TD2DSVG.SetFixedColor(const Color: TColor);
-Var
-  Root: ID2D1SvgElement;
-  NewColor: TD2D1ColorF;
 begin
   if Color = fFixedColor then Exit;
   if (fGrayScale and (Color <> TColors.SysDefault)) or
@@ -390,85 +458,39 @@ begin
   else
     fFixedColor := Color;
   fGrayScale := False;
-  if (FFixedColor <> TColors.SysDefault) and Assigned(fSvgDoc) then
-  begin
-    fSvgDoc.GetRoot(Root);
-    with TColors(fFixedColor) do
-      NewColor :=  D2D1ColorF(r/255, g/255, b/255, 1);
-    Root.SetAttributeValue('fill', D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
-              @NewColor, SizeOf(NewColor));
-    if not fApplyFixedColorToRootOnly then
-      RecolorSubtree(Root, NewColor)
-    else
-      RecolorAttribute(Root, 'stroke', NewColor);
-  end;
-end;
-
-// Converts any color to grayscale
-function GrayScaleColor(Color : TD2D1ColorF) : TD2D1ColorF;
-var
-  LGray : Single;
-begin
-  // get the luminance according to https://www.w3.org/TR/AERT/#color-contrast
-  LGray  := 0.299 * Color.R + 0.587 * Color.G + 0.114 * Color.B;
-  // set the result to the new grayscale color including the alpha info
-  Result := D2D1ColorF(LGray, LGray, LGray, Color.A);
-end;
-procedure GrayScaleSubtree(const Element: ID2D1SvgElement);
-begin
-  TransformSvgElement(Element,
-    procedure(const Element: ID2D1SvgElement)
-    Var
-      OldColor: TD2D1ColorF;
-      NewColor: TD2D1ColorF;
-      procedure GrayScaleAttribute(Attr: PWideChar);
-      Var
-        IsInherited: Bool;
-      begin
-        if Element.IsAttributeSpecified(Attr, @IsInherited)  and not IsInherited then
-        begin
-          if Succeeded(Element.GetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
-            @OldColor, SizeOf(OldColor)))
-          then
-          begin
-            NewColor := GrayScaleColor(OldColor);
-            Assert(Succeeded(Element.SetAttributeValue(Attr, D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
-              @NewColor, SizeOf(NewColor))));
-          end;
-        end;
-      end;
-    begin
-      GrayScaleAttribute('fill');
-      GrayScaleAttribute('stroke');
-      GrayScaleAttribute('stop-color');
-    end);
 end;
 
 procedure TD2DSVG.SetGrayScale(const IsGrayScale: Boolean);
 Var
   Root: ID2D1SvgElement;
 begin
-  if IsGrayScale = fGrayScale then Exit;
+  if IsGrayScale = fGrayScale then
+    Exit
+  else
+  fGrayScale := IsGrayScale;
   if fGrayScale or (fFixedColor <> TColors.SysDefault) then
     LoadFromSource;
-  fGrayScale := IsGrayScale;
   fFixedColor := TColors.SysDefault;
-  if fGrayScale then
+  if fGrayScale and Assigned(fSvgDoc) then
   begin
     fSvgDoc.GetRoot(Root);
     GrayScaleSubtree(Root);
   end;
 end;
 
-procedure TD2DSVG.SetOpacity(const Opacity: Single);
+procedure TD2DSVG.SetOpacity(const AOpacity: Single);
 Var
   Root: ID2D1SvgElement;
 begin
-  if Assigned(fSvgDoc) then begin
+  if AOpacity = fOpacity then Exit
+  else
+    fOpacity := AOpacity;
+  if Assigned(fSvgDoc) then
+  begin
     fSvgDoc.GetRoot(Root);
     if Assigned(Root) then
       Root.SetAttributeValue('opacity', D2D1_SVG_ATTRIBUTE_POD_TYPE_FLOAT,
-        @Opacity, SizeOf(Opacity));
+        @fOpacity, SizeOf(fOpacity));
   end;
 end;
 

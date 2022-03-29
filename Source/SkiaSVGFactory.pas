@@ -329,6 +329,12 @@ var
 begin
   FWidth := Round(R.Width);
   FHeight := Round(R.Height);
+
+  if not KeepAspectRatio then
+    FSvg.WrapMode := TSkSvgWrapMode.Stretch
+  else
+    FSvg.WrapMode := TSkSvgWrapMode.Fit;
+
   DeleteBuffers;
   if (FWidth <= 0) or (FHeight <= 0) then
     Exit;
