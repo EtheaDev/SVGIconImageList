@@ -162,13 +162,22 @@ procedure TSVGTextPropertyFMX.Edit;
 var
   LSVGText: string;
   LComponent: TPersistent;
+  LCanEdit: Boolean;
 begin
   LComponent := GetComponent(0);
   if LComponent is TSVGIconImage then
-    LSVGText := TSVGIconImage(LComponent).SVGText
+  begin
+    LSVGText := TSVGIconImage(LComponent).SVGText;
+    LCanEdit := True;
+  end
+  else if LComponent is TSVGIconSourceItem then
+  begin
+    LSVGText := TSVGIconSourceItem(LComponent).SVGText;
+    LCanEdit := False;
+  end
   else
     Exit;
-  if EditSVGTextProperty(LSVGText) then
+  if EditSVGTextProperty(LSVGText, LCanEdit) then
   begin
     if LComponent is TSVGIconImage then
       TSVGIconImage(LComponent).SVGText := LSVGText;
@@ -184,7 +193,7 @@ end;
 
 function TSVGTextPropertyFMX.GetValue: string;
 begin
-  Result := 'Click to edit SVG Text';
+  Result := 'Click on [...] to edit SVG Text';
 end;
 
 procedure Register;
@@ -194,6 +203,7 @@ begin
   RegisterPropertyEditor(TypeInfo(Single), TSVGIconSourceItem, '', TFmxFloatProperty);
   RegisterPropertyEditor(TypeInfo(Single), TSVGIconImageList, '', TFmxFloatProperty);
   RegisterPropertyEditor(TypeInfo(string), TSVGIconImage, 'SVGText', TSVGTextPropertyFMX);
+  RegisterPropertyEditor(TypeInfo(string), TSVGIconSourceItem, 'SVGText', TSVGTextPropertyFMX);
   {$ENDIF}
 
   RegisterComponents('Ethea',

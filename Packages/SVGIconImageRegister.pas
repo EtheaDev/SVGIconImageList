@@ -233,7 +233,7 @@ end;
 
 function TSVGTextProperty.GetValue: string;
 begin
-  Result := 'Click to edit SVG Text';
+  Result := 'Click on [...] to edit SVG Text';
 end;
 
 procedure Register;

@@ -77,7 +77,8 @@ type
     property SVGText: string read GetSVGText write SetSVGText;
   end;
 
-function EditSVGTextProperty(var ASVGText: string): boolean;
+function EditSVGTextProperty(var ASVGText: string;
+  const ACanEdit: Boolean = True): boolean;
 
 implementation
 
@@ -94,7 +95,8 @@ var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
 
 
-function EditSVGTextProperty(var ASVGText: string): boolean;
+function EditSVGTextProperty(var ASVGText: string;
+  const ACanEdit: Boolean = True): boolean;
 var
   LForm: TSVGTextPropertyEditorFormFMX;
 begin
@@ -102,6 +104,10 @@ begin
   LForm := TSVGTextPropertyEditorFormFMX.Create(nil);
   try
     LForm.SVGText := ASVGText;
+    LForm.SVGTextMemo.ReadOnly := not ACanEdit;
+    LForm.LoadButton.Visible := ACanEdit;
+    LForm.CancelButton.Visible := ACanEdit;
+    LForm.ReformatXMLButton.Visible := ACanEdit;
     if LForm.ShowModal = mrOk then
     begin
       Result := True;
