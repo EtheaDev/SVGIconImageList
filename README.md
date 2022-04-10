@@ -2,7 +2,7 @@
 
 ## Four engines to render SVG (Delphi Image32, Delphi TSVG, SKIA4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 3.8.1 (VCL+FMX)
+### Actual official version 3.8.2 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -81,11 +81,15 @@ You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtension
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 ### RELEASE NOTES
+10 Apr 2022: version 3.8.2 (VCL+FMX)
+- Updated to Skia4Delphi 3.3.1 llibrary
+- Updated to Image32 4.11 library
+
 29 Mar 2022: version 3.8.1 (VCL+FMX)
 - Fixed Aspect-Ratio for Skia engine
 - Updated SVGViewer
 - Updated Demos
-- Alignment to latest Skia4Delphi verion
+- Alignment to latest Skia4Delphi version
 
 17 Mar 2022: version 3.8.0 (VCL+FMX)
 - Support for Delphi 11.1

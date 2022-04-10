@@ -4364,10 +4364,18 @@ const
     Result.TextStyle := ADefaultTextStyle;
   end;
 
+  // Temporary solution to fix an issue with Skia: https://bugs.chromium.org/p/skia/issues/detail?id=13117
+  // SkParagraph has several issues with the #13 line break, so the best thing to do is replace it with #10 or a zero-widh character (#8203)
+  function NormalizeParagraphText(const AText: string): string;
+  begin
+    Result := AText.Replace(#13#10, #8203#10).Replace(#13, #10);
+  end;
+
   function CreateParagraph: ISkParagraph;
   var
     LBuilder: ISkParagraphBuilder;
     LDefaultTextStyle: ISkTextStyle;
+    LText: string;
     I: Integer;
   begin
     LDefaultTextStyle := CreateDefaultTextStyle;
@@ -4381,9 +4389,13 @@ const
         LBuilder.AddText(FWords[I].Caption)
       else
       begin
-        LBuilder.PushStyle(CreateTextStyle(FWords[I], LDefaultTextStyle));
-        LBuilder.AddText(FWords[I].Caption);
-        LBuilder.Pop;
+        LText := NormalizeParagraphText(FWords[I].Caption);
+        if not LText.IsEmpty then
+        begin
+          LBuilder.PushStyle(CreateTextStyle(FWords[I], LDefaultTextStyle));
+          LBuilder.AddText(LText);
+          LBuilder.Pop;
+        end;
       end;
       FHasCustomBackground := FHasCustomBackground or (FWords[I].BackgroundColor <> TAlphaColors.Null);
     end;
@@ -4518,7 +4530,8 @@ end;
 procedure TSkLabel.MouseDown(AButton: TMouseButton; AShift: TShiftState; AX,
   AY: Integer);
 begin
-  FPressedPosition := Point(AX, AY);
+  if AButton = TMouseButton.mbLeft then
+    FPressedPosition := Point(AX, AY);
   inherited;
 end;
 
@@ -4634,7 +4647,7 @@ end;
 
 procedure TSkLabel.WMLButtonUp(var AMessage: TWMLButtonUp);
 begin
-  FPressedPosition := Point(AMessage.XPos, AMessage.YPos);
+  FClickedPosition := Point(AMessage.XPos, AMessage.YPos);
   inherited;
 end;
 

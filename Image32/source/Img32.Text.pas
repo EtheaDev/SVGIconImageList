@@ -394,7 +394,7 @@ type
 
   TWordInfo = class
     index         : integer;
-    word          : UnicodeString;
+    aWord         : UnicodeString;
     width         : double;
     length        : integer;
     paths         : TArrayOfPathsD;
@@ -413,15 +413,14 @@ type
 {$ELSE}
     fList         : TList;
 {$ENDIF}
-    fFontScale    : double;
     fSingleLine   : Boolean;
     //fListUpdates: accommodates many calls to UpdateWordList
     //by occasionally refreshing glyph outlines.
-    fListUpdates: integer;
+    //fListUpdates: integer;
     fUpdateCount: integer;
     fOnChanged  : TNotifyEvent;
     function  GetWord(index: integer): TWordInfo;
-    function GetText: string;
+    function GetText: UnicodeString;
   protected
     procedure Changed; Virtual;
   public
@@ -429,6 +428,7 @@ type
     destructor Destroy; override;
     procedure BeginUpdate;
     procedure EndUpdate;
+    procedure ApplyNewFont(font: TFontCache);
     procedure Clear;
     function  Count: integer;
     procedure Edit(font: TFontCache; index: Integer; const newWord: string);
@@ -444,9 +444,11 @@ type
     procedure InsertSpace(spaceWidth: double; index: integer); overload;
     procedure InsertWord(font: TFontCache; index: integer;
       const word: UnicodeString; underlineIdx: integer = 0);
+    procedure SetText(const text: UnicodeString;
+      font: TFontCache; underlineIdx: integer = 0);
     property ForceSingleLine: Boolean read fSingleLine write fSingleLine;
     property WordInfo[index: integer]: TWordInfo read GetWord; default;
-    property Text: string read GetText;
+    property Text: UnicodeString read GetText;
     property OnChanged: TNotifyEvent read fOnChanged write fOnChanged;
   end;
 
@@ -534,14 +536,6 @@ type
     property StrikeOut: Boolean read fStrikeOut write fStrikeOut;
   end;
 
-  //Using the supplied text and font, create a list
-  //of every word in 'text' together with its pixel width.
-  procedure FillWordList(const text: UnicodeString;
-    wordList: TWordInfoList; font: TFontCache; underlineIdx: integer = 0);
-
-  //UpdateWordList: updates wordList with the new font
-  procedure UpdateWordList(wordList: TWordInfoList; font: TFontCache);
-
   //Given a wordList and a specified maximum line width (in pixels),
   //get both the line count and the offsets to the words in wordlist
   //that will start each line.
@@ -550,7 +544,9 @@ type
 
   function DrawText(image: TImage32; x, y: double;
     const text: UnicodeString; font: TFontCache;
-    textColor: TColor32 = clBlack32): double; overload;
+    textColor: TColor32 = clBlack32;
+    useClearType: Boolean = false;
+    clearTypeBgColor: TColor32 = clWhite32): double; overload;
 
   function DrawText(image: TImage32; x, y: double;
     const text: UnicodeString; font: TFontCache;
@@ -560,7 +556,8 @@ type
     const text: UnicodeString;
     textAlign: TTextAlign; textAlignV: TTextVAlign;
     font: TFontCache; textColor: TColor32 = clBlack32;
-    useClearType: Boolean = false); overload;
+    useClearType: Boolean = false;
+    clearTypeBgColor: TColor32 = clWhite32); overload;
 
   function DrawAngledText(image: TImage32;
   x, y: double; angleRadians: double;
@@ -2390,7 +2387,7 @@ begin
     //ingore trailing spaces
     while (b >= a) do
       with wordList.GetWord(b) do
-        if Word <= #32 then
+        if aWord <= #32 then
           dec(b) else
           break;
 
@@ -2402,7 +2399,7 @@ begin
 
     for j := a to b do
       with wordList.GetWord(j) do
-        if word > #32 then
+        if aWord > #32 then
         begin
           app := OffsetPath(paths, x, y + Ascent);
           pp := MergePathsArray(app);
@@ -2428,7 +2425,7 @@ begin
 
   wl := TWordInfoList.Create;
   try
-    FillWordList(text, wl, Self, underlineIdx);
+    wl.SetText(text, Self, underlineIdx);
     tpm := GetPageMetrics(RectWidth(rec), wl);
     Result := GetTextOutline(rec, wl, tpm, textAlign, 0, -1);
 
@@ -2769,14 +2766,20 @@ end;
 //------------------------------------------------------------------------------
 
 function DrawText(image: TImage32; x, y: double; const text: UnicodeString;
-  font: TFontCache; textColor: TColor32 = clBlack32): double;
+  font: TFontCache; textColor: TColor32 = clBlack32;
+    useClearType: Boolean = false;
+    clearTypeBgColor: TColor32 = clWhite32): double;
 var
   glyphs: TPathsD;
 begin
   Result := 0;
   if (text = '') or not assigned(font) or not font.IsValidFont then Exit;
   glyphs := font.GetTextOutline(x,y, text, Result);
-  DrawPolygon(image, glyphs, frNonZero, textColor);
+  if useClearType then
+    DrawPolygon_ClearType(image, glyphs,
+      frNonZero, textColor, clearTypeBgColor)
+  else
+    DrawPolygon(image, glyphs, frNonZero, textColor);
 end;
 //------------------------------------------------------------------------------
 
@@ -2795,7 +2798,8 @@ end;
 
 procedure DrawText(image: TImage32; const rec: TRect; const text: UnicodeString;
   textAlign: TTextAlign; textAlignV: TTextVAlign; font: TFontCache;
-  textColor: TColor32 = clBlack32; useClearType: Boolean = false);
+  textColor: TColor32 = clBlack32; useClearType: Boolean = false;
+  clearTypeBgColor: TColor32 = clWhite32);
 var
   glyphs: TPathsD;
 begin
@@ -2803,7 +2807,8 @@ begin
     not font.IsValidFont then Exit;
   glyphs := font.GetTextOutline(rec, text, textAlign, textAlignV);
   if useClearType then
-    DrawPolygon_ClearType(image, glyphs, frNonZero, textColor) else
+    DrawPolygon_ClearType(image, glyphs, frNonZero, textColor, clearTypeBgColor)
+  else
     DrawPolygon(image, glyphs, frNonZero, textColor);
 end;
 //------------------------------------------------------------------------------
@@ -2988,36 +2993,33 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-// TFFWordList
+// TWordInfoList
 //------------------------------------------------------------------------------
 
-procedure FillWordList(const text: UnicodeString;
-  wordList: TWordInfoList; font: TFontCache; underlineIdx: integer);
+procedure TWordInfoList.SetText(const text: UnicodeString;
+  font: TFontCache; underlineIdx: integer);
 var
   len: integer;
   spaceW: double;
   p, p2, pEnd: PWideChar;
   s: UnicodeString;
 begin
-  if not Assigned(wordList) or not Assigned(font) then Exit;
+  if not Assigned(font) then Exit;
 
-  wordList.BeginUpdate;
+  BeginUpdate;
   try
-    wordList.fFontScale := font.Scale;
+    Clear;
     spaceW := font.GetSpaceWidth;
     p := PWideChar(text);
     pEnd := p;
     Inc(pEnd, Length(text));
-    wordList.Clear;
-
     while p < pEnd do
     begin
       if (p^ <= #32) then
       begin
-        if (p^ = #32) then
-          wordList.AddSpace(spaceW)
-        else if (p^ = #10) then
-          wordList.AddNewline;
+        if (p^ = #32) then AddSpace(spaceW)
+        else if (p^ = #10) then AddNewline;
+
         inc(p);
         dec(underlineIdx);
       end else
@@ -3028,70 +3030,41 @@ begin
         len := p - p2;
         SetLength(s, len);
         Move(p2^, s[1], len * SizeOf(Char));
-        wordList.AddWord(font, s, underlineIdx);
+        AddWord(font, s, underlineIdx);
         dec(underlineIdx, len);
       end;
     end;
   finally
-    wordList.EndUpdate;
+    EndUpdate;
   end;
 end;
 //------------------------------------------------------------------------------
 
-procedure UpdateWordList(wordList: TWordInfoList; font: TFontCache);
+procedure TWordInfoList.ApplyNewFont(font: TFontCache);
 var
-  i,j: integer;
-  spaceW, scaleDelta, dummy: double;
+  i: integer;
+  spaceW, dummy: double;
   wi: TWordInfo;
 begin
-  if not Assigned(wordList) or not Assigned(font) then Exit;
-
-  if wordList.fFontScale = 0 then
-   wordList.fFontScale := 1;
-  scaleDelta := font.Scale/wordList.fFontScale;
-  wordList.fFontScale := font.Scale;
+  if not Assigned(font) then Exit;
   spaceW := font.GetSpaceWidth;
-
-  wordList.BeginUpdate;
+  BeginUpdate;
   try
-    if wordList.fListUpdates > 10 then
+    for i := 0 to Count -1 do
     begin
-      wordList.fListUpdates := 0;
-      //this is about twice as slow as below but will
-      //maintain the quality of the glyph outlines
-      for i := 0 to wordList.Count -1 do
+      wi := GetWord(i);
+      if wi.aWord <= #32 then
       begin
-        wi := wordList.GetWord(i);
-        if wi.word <= #32 then
-        begin
-          if wi.word = #32 then wi.width := spaceW
-          else wi.width := 0;
-        end else
-        begin
-          font.GetTextOutlineInternal(0,0, wi.word, wi.paths, dummy);
-          wi.width := font.GetTextWidth(wi.word);
-        end;
-      end;
-    end else
-    begin
-      inc(wordList.fListUpdates);
-      for i := 0 to wordList.Count -1 do
+        if wi.aWord = #32 then wi.width := spaceW
+        else wi.width := 0;
+      end else
       begin
-        wi := wordList.GetWord(i);
-        if wi.word <= #32 then
-        begin
-          if wi.word = #32 then wi.width := spaceW
-          else wi.width := 0;
-        end else
-        begin
-          wi.width := wi.width * scaleDelta;
-          for j := 0 to High(wi.paths) do
-            wi.paths[j] := ScalePath(wi.paths[j], scaleDelta);
-        end;
+        font.GetTextOutlineInternal(0,0, wi.aWord, wi.paths, dummy);
+        wi.width := font.GetTextWidth(wi.aWord);
       end;
     end;
   finally
-    wordList.EndUpdate;
+    EndUpdate;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -3124,13 +3097,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TWordInfoList.GetText: string;
+function TWordInfoList.GetText: UnicodeString;
 var
   i: integer;
 begin
   Result := '';
   for i := 0 to Count -1 do
-    Result := Result + TWordInfo(fList.Items[i]).word;
+    Result := Result + TWordInfo(fList.Items[i]).aWord;
 end;
 //------------------------------------------------------------------------------
 
@@ -3169,7 +3142,7 @@ begin
   else if (index < 0) then index := 0;
 
   newWord := TWordInfo.Create(self, index);
-  newWord.word  := #10;
+  newWord.aWord  := #10;
   newWord.width := 0;
   newWord.length := 1;
   newWord.paths := nil;
@@ -3203,7 +3176,7 @@ begin
   else if (index < 0) then index := 0;
 
   newWord := TWordInfo.Create(self, index);
-  newWord.word  := #32;
+  newWord.aWord  := #32;
   newWord.width := spaceWidth;
   newWord.length := 1;
   newWord.paths := nil;
@@ -3233,7 +3206,7 @@ begin
   else if (index < 0) then index := 0;
 
   newWord := TWordInfo.Create(self, index);
-  newWord.word  := word;
+  newWord.aWord  := word;
   newWord.width := width;
   newWord.length := Length(word);
   newWord.paths := ap;
@@ -3326,14 +3299,13 @@ begin
   else if Assigned(font) then
     with TWordInfo(fList.Items[index]) do
     begin
-      word := newWord;
+      aWord := newWord;
       length := 1;
-      while (length < len) and (word[length+1] > #32) do
+      while (length < len) and (aWord[length+1] > #32) do
         inc(length);
-      if length < len then SetLength(word, length);
-      width := font.GetTextWidth(word);
-      System.Length(word);
-      font.GetTextOutlineInternal(0,0,word, paths, dummy);
+      if length < len then SetLength(aWord, length);
+      width := font.GetTextWidth(aWord);
+      font.GetTextOutlineInternal(0,0,aWord, paths, dummy);
       if Assigned(fOnChanged) then fOnChanged(Self);
     end;
 end;
@@ -3352,10 +3324,10 @@ var
     j := Result.wordListOffsets[idx] -1;
     if j < 0 then Exit;
 
-    forceLeftAlign := wordList.GetWord(j).word = #10;
+    forceLeftAlign := wordList.GetWord(j).aWord = #10;
     i := Result.wordListOffsets[idx -1];
 
-    while (j > i) and (wordList.GetWord(j).word = #32) do
+    while (j > i) and (wordList.GetWord(j).aWord = #32) do
       dec(j);
 
     spcCnt := 0;
@@ -3363,7 +3335,7 @@ var
     for k := i to j do
       with wordList.GetWord(k) do
       begin
-        if word = #32 then inc(spcCnt);
+        if aWord = #32 then inc(spcCnt);
         x := x + width;
       end;
     Result.lineWidths[idx-1] := x;
@@ -3406,12 +3378,12 @@ begin
   while (i < cnt) do
   begin
     wi := wordList.GetWord(i);
-    if (i = j) and (wi.word = #32) then
+    if (i = j) and (wi.aWord = #32) then
     begin
       inc(i); inc(j); Continue;
     end;
 
-    if (wi.word = #10) then
+    if (wi.aWord = #10) then
     begin
       AddLine(j);
       inc(i); j := i; x := 0;

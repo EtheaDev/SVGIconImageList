@@ -629,33 +629,17 @@ begin
       thisElement.fReader.currentColor := currentColor;
     drawDat.fillRule := fillRule;
     if (fillColor = clCurrent) then
-      {$IF Defined(MACOS) or Defined(MACOSX)}
-      drawDat.fillColor := SwapRedBlue(thisElement.fReader.currentColor)
-      {$ELSE}
       drawDat.fillColor := thisElement.fReader.currentColor
-      {$IFEND}
     else if (fillColor <> clInvalid) then
-      {$IF Defined(MACOS) or Defined(MACOSX)}
-      drawDat.fillColor := SwapRedBlue(fillColor);
-      {$ELSE}
       drawDat.fillColor := fillColor;
-      {$IFEND}
     if fillOpacity <> InvalidD then
       drawDat.fillOpacity := fillOpacity;
     if (fillEl <> '') then
       drawDat.fillEl := fillEl;
     if (strokeColor = clCurrent) then
-      {$IF Defined(MACOS) or Defined(MACOSX)}
-      drawDat.strokeColor := SwapRedBlue(thisElement.fReader.currentColor)
-      {$ELSE}
       drawDat.strokeColor := thisElement.fReader.currentColor
-      {$IFEND}
     else if strokeColor <> clInvalid then
-      {$IF Defined(MACOS) or Defined(MACOSX)}
-      drawDat.strokeColor := SwapRedBlue(strokeColor);
-      {$ELSE}
       drawDat.strokeColor := strokeColor;
-      {$IFEND}
     if strokeOpacity <> InvalidD then
       drawDat.strokeOpacity := strokeOpacity;
     if strokeWidth.IsValid then

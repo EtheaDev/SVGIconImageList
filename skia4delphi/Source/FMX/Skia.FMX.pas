@@ -461,7 +461,6 @@ type
   TSkFontComponent = class(TSkPersistentData)
   strict protected
     const
-      DefaultFamilies = '';
       DefaultSize = 14;
       DefaultSlant = TFontSlant.Regular;
       DefaultStretch = TFontStretch.Regular;
@@ -479,6 +478,7 @@ type
     procedure SetWeight(const AValue: TFontWeight);
   strict protected
     procedure AssignTo(ADest: TPersistent); override;
+    function DefaultFamilies: string; virtual;
     procedure DoAssign(ASource: TPersistent); override;
     function IsFamiliesStored: Boolean; virtual;
     function IsSizeStored: Boolean; virtual;
@@ -560,6 +560,7 @@ type
     procedure SetTrimming(const AValue: TTextTrimming);
     procedure SetVertAlign(const AValue: TTextAlign);
   strict protected
+    function CreateFont: TSkFontComponent; virtual;
     procedure DoAssign(ASource: TPersistent); override;
     procedure DoAssignNotStyled(const ATextSettings: TSkTextSettings; const AStyledSettings: TStyledSettings); virtual;
   public
@@ -664,9 +665,9 @@ type
     property TextSettings: TSkTextSettings read GetTextSettings write SetTextSettings;
   end;
 
-  { TSkStyleTextObject }
+  { TSkCustomStyleTextObject }
 
-  TSkStyleTextObject = class(TFmxObject, ISkStyleTextObject, IObjectState)
+  TSkCustomStyleTextObject = class(TFmxObject, ISkStyleTextObject, IObjectState)
   strict private
     FOnChange: TNotifyEvent;
     FTextSettings: TSkTextSettings;
@@ -677,13 +678,20 @@ type
     procedure SetTextSettings(const AValue: TSkTextSettings);
     procedure TextSettingsChange(ASender: TObject);
   strict protected
+    function CreateTextSettings: TSkTextSettings; virtual;
     procedure SetName(const ANewName: TComponentName); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
-  published
     property TextSettings: TSkTextSettings read FTextSettings write SetTextSettings;
+  end;
+
+  { TSkStyleTextObject }
+
+  TSkStyleTextObject = class(TSkCustomStyleTextObject)
+  published
+    property TextSettings;
   end;
 
   { TSkLabel }
@@ -840,6 +848,9 @@ type
     FParagraph: ISkParagraph;
     FParagraphBounds: TRectF;
     FParagraphLayoutWidth: Single;
+    {$IF CompilerVersion < 30}
+    FPressedPosition: TPointF;
+    {$ENDIF}
     FStyleText: ISkStyleTextObject;
     FTextSettingsInfo: TSkTextSettingsInfo;
     FWords: TWordsCollection;
@@ -885,16 +896,23 @@ type
     function IsStyledSettingsStored: Boolean; virtual;
     procedure Loaded; override;
     procedure MouseClick(AButton: TMouseButton; AShift: TShiftState; AX, AY: Single); override;
+    {$IF CompilerVersion < 30}
+    procedure MouseDown(AButton: TMouseButton; AShift: TShiftState; AX, AY: Single); override;
+    {$ENDIF}
     procedure MouseMove(AShift: TShiftState; AX, AY: Single); override;
     function NeedsRedraw: Boolean; override;
     procedure SetAlign(const AValue: TAlignLayout); override;
     procedure SetName(const AValue: TComponentName); override;
     property Paragraph: ISkParagraph read GetParagraph;
     property ParagraphBounds: TRectF read GetParagraphBounds;
+    property StyleText: ISkStyleTextObject read FStyleText;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     property DefaultTextSettings: TSkTextSettings read GetDefaultTextSettings;
+    {$IF CompilerVersion < 30}
+    property PressedPosition: TPointF read FPressedPosition write FPressedPosition;
+    {$ENDIF}
     property ResultingTextSettings: TSkTextSettings read GetResultingTextSettings;
   published
     property Align;
@@ -969,13 +987,13 @@ type
 const
   SkFmxColorType: array[TPixelFormat] of TSkColorType = (
     { None     } TSkColorType.Unknown,
-    { RGB      } TSkColorType.Unknown,
+    { RGB      } TSkColorType.RGB888X,
     { RGBA     } TSkColorType.RGBA8888,
     { BGR      } TSkColorType.Unknown,
     { BGRA     } TSkColorType.BGRA8888,
     { RGBA16   } TSkColorType.RGBA16161616,
-    { BGR_565  } TSkColorType.RGB565,
-    { BGRA4    } TSkColorType.ARGB4444,
+    { BGR_565  } TSkColorType.Unknown,
+    { BGRA4    } TSkColorType.Unknown,
     { BGR4     } TSkColorType.Unknown,
     { BGR5_A1  } TSkColorType.Unknown,
     { BGR5     } TSkColorType.Unknown,
@@ -994,14 +1012,13 @@ const
     { RGBA32F  } TSkColorType.RGBAF32
   );
 
-
   SkFmxPixelFormat: array[TSkColorType] of TPixelFormat = (
     { Unknown        } TPixelFormat.None,
     { Alpha8         } TPixelFormat.A,
-    { RGB565         } TPixelFormat.BGR_565,
-    { ARGB4444       } TPixelFormat.BGRA4,
+    { RGB565         } TPixelFormat.None,
+    { ARGB4444       } TPixelFormat.None,
     { RGBA8888       } TPixelFormat.RGBA,
-    { RGB888X        } TPixelFormat.None,
+    { RGB888X        } TPixelFormat.RGB,
     { BGRA8888       } TPixelFormat.BGRA,
     { RGBA1010102    } TPixelFormat.RGB10_A2,
     { BGRA1010102    } TPixelFormat.BGR10_A2,
@@ -1021,8 +1038,11 @@ const
   );
 
 var
+  /// <summary> Allows use of Skia Canvas for UI rendering, replacing FMX's default Canvas </summary>
   GlobalUseSkia: Boolean;
-  GlobalUseSkiaRasterWhenAvailable: Boolean;
+  /// <summary> Allows the UI rendering in Skia Canvas to use the CPU instead of the GPU (only takes effect on Windows currently) </summary>
+  GlobalUseSkiaRasterWhenAvailable: Boolean = True;
+  /// <summary> Disables registration of Skia image codecs </summary>
   GlobalDisableSkiaCodecsReplacement: Boolean;
 
 procedure Register;
@@ -3005,6 +3025,11 @@ begin
   Assign(nil);
 end;
 
+function TSkFontComponent.DefaultFamilies: string;
+begin
+  Result := '';
+end;
+
 procedure TSkFontComponent.DoAssign(ASource: TPersistent);
 var
   LSourceFont: TSkFontComponent absolute ASource;
@@ -3221,11 +3246,16 @@ constructor TSkTextSettings.Create(const AOwner: TPersistent);
 begin
   inherited Create;
   FOwner := AOwner;
-  FFont := TSkFontComponent.Create;
+  FFont := CreateFont;
   FFont.OnChange := FontChanged;
   FDecorations := TDecorations.Create;
   FDecorations.OnChange := DecorationsChange;
   Assign(nil);
+end;
+
+function TSkTextSettings.CreateFont: TSkFontComponent;
+begin
+  Result := TSkFontComponent.Create;
 end;
 
 procedure TSkTextSettings.DecorationsChange(ASender: TObject);
@@ -3552,28 +3582,33 @@ begin
   FTextSettings.Assign(AValue);
 end;
 
-{ TSkStyleTextObject }
+{ TSkCustomStyleTextObject }
 
-constructor TSkStyleTextObject.Create(AOwner: TComponent);
+constructor TSkCustomStyleTextObject.Create(AOwner: TComponent);
 begin
   inherited;
-  FTextSettings := TSkTextSettings.Create(Self);
+  FTextSettings := CreateTextSettings;
   FTextSettings.OnChange := TextSettingsChange;
 end;
 
-destructor TSkStyleTextObject.Destroy;
+function TSkCustomStyleTextObject.CreateTextSettings: TSkTextSettings;
+begin
+  Result := TSkTextSettings.Create(Self);
+end;
+
+destructor TSkCustomStyleTextObject.Destroy;
 begin
   FTextSettings.Free;
   FSavedTextSettings.Free;
   inherited;
 end;
 
-function TSkStyleTextObject.GetTextSettings: TSkTextSettings;
+function TSkCustomStyleTextObject.GetTextSettings: TSkTextSettings;
 begin
   Result := FTextSettings;
 end;
 
-function TSkStyleTextObject.RestoreState: Boolean;
+function TSkCustomStyleTextObject.RestoreState: Boolean;
 begin
   Result := False;
   if (FSavedTextSettings <> nil) and (FTextSettings <> nil) then
@@ -3584,7 +3619,7 @@ begin
   end;
 end;
 
-function TSkStyleTextObject.SaveState: Boolean;
+function TSkCustomStyleTextObject.SaveState: Boolean;
 begin
   Result := False;
   if FTextSettings <> nil then
@@ -3596,19 +3631,19 @@ begin
   end;
 end;
 
-procedure TSkStyleTextObject.SetName(const ANewName: TComponentName);
+procedure TSkCustomStyleTextObject.SetName(const ANewName: TComponentName);
 begin
   inherited;
   if FStyleName = '' then
     FStyleName := Name;
 end;
 
-procedure TSkStyleTextObject.SetTextSettings(const AValue: TSkTextSettings);
+procedure TSkCustomStyleTextObject.SetTextSettings(const AValue: TSkTextSettings);
 begin
   FTextSettings.Assign(AValue);
 end;
 
-procedure TSkStyleTextObject.TextSettingsChange(ASender: TObject);
+procedure TSkCustomStyleTextObject.TextSettingsChange(ASender: TObject);
 begin
   if Assigned(FOnChange) then
     FOnChange(Self);
@@ -4459,6 +4494,7 @@ var
       if Assigned(LFontBehavior) then
       begin
         SetLength(Result, 1);
+        Result[0] := '';
         LFontBehavior.GetDefaultFontFamily(Scene.GetObject, Result[0]);
         if Result[0].IsEmpty then
           Result := [];
@@ -4559,10 +4595,18 @@ var
     Result.TextStyle := ADefaultTextStyle;
   end;
 
+  // Temporary solution to fix an issue with Skia: https://bugs.chromium.org/p/skia/issues/detail?id=13117
+  // SkParagraph has several issues with the #13 line break, so the best thing to do is replace it with #10 or a zero-widh character (#8203)
+  function NormalizeParagraphText(const AText: string): string;
+  begin
+    Result := AText.Replace(#13#10, #8203#10).Replace(#13, #10);
+  end;
+
   function CreateParagraph: ISkParagraph;
   var
     LBuilder: ISkParagraphBuilder;
     LDefaultTextStyle: ISkTextStyle;
+    LText: string;
     I: Integer;
   begin
     LFontBehavior := nil;
@@ -4576,9 +4620,13 @@ var
         LBuilder.AddText(FWords[I].Text)
       else
       begin
-        LBuilder.PushStyle(CreateTextStyle(FWords[I], LDefaultTextStyle));
-        LBuilder.AddText(FWords[I].Text);
-        LBuilder.Pop;
+        LText := NormalizeParagraphText(FWords[I].Text);
+        if not LText.IsEmpty then
+        begin
+          LBuilder.PushStyle(CreateTextStyle(FWords[I], LDefaultTextStyle));
+          LBuilder.AddText(LText);
+          LBuilder.Pop;
+        end;
       end;
       FHasCustomBackground := FHasCustomBackground or (FWords[I].BackgroundColor <> TAlphaColors.Null);
     end;
@@ -4736,6 +4784,15 @@ begin
   FClickedPosition := PointF(AX, AY);
   inherited;
 end;
+
+{$IF CompilerVersion < 30}
+procedure TSkLabel.MouseDown(AButton: TMouseButton; AShift: TShiftState; AX, AY: Single);
+begin
+  inherited;
+  if AButton = TMouseButton.mbLeft then
+    FPressedPosition := TPointF.Create(AX, AY);
+end;
+{$ENDIF}
 
 procedure TSkLabel.MouseMove(AShift: TShiftState; AX, AY: Single);
 begin
@@ -4914,7 +4971,7 @@ end;
 
 initialization
   RegisterFMXClasses([TSkAnimatedImage, TSkAnimatedPaintBox, TSkCustomControl, TSkLabel, TSkPaintBox,
-    TSkStyledControl, TSkStyleTextObject, TSkSvgBrush, TSkSvg]);
+    TSkStyledControl, TSkCustomStyleTextObject, TSkStyleTextObject, TSkSvgBrush, TSkSvg]);
   RegisterFMXClasses([TSkFontComponent, TSkTextSettings, TSkTextSettingsInfo, TSkTextSettings.TDecorations,
     TSkLabel.TCustomWordsItem, TSkLabel.TWordsCollection]);
   TSkAnimatedImage.RegisterCodec(TSkLottieAnimationCodec);

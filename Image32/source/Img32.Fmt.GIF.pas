@@ -2,10 +2,10 @@ unit Img32.Fmt.GIF;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.0                                                             *
-* Date      :  22 December 2021                                                *
+* Version   :  4.1                                                             *
+* Date      :  17 March 2022                                                   *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2021                                         *
+* Copyright :  Angus Johnson 2019-2022                                         *
 * Purpose   :  GIF file format extension for TImage32                          *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -19,7 +19,8 @@ implementation
 {$ELSE}
 
 uses
-  SysUtils, Classes, Windows, Math, Img32, Graphics,
+  SysUtils, Classes, Windows, Math,
+  Img32, Graphics,
   {$IFDEF DELPHI_GIF} GifImg {$ELSE} GifImage {$ENDIF};
 
 type
@@ -112,21 +113,24 @@ end;
 procedure TImageFormat_GIF.SaveToStream(stream: TStream; img32: TImage32);
 var
   gif: TGIFImage;
+  bmp: TBitmap;
 begin
+  bmp := TBitmap.Create;
   gif := TGIFImage.Create;
-  with gif.Bitmap do
   try
-    Width := img32.Width;
-    Height := img32.Height;
-    if GetCurrentThreadId <> MainThreadID then Canvas.Lock;
-    try
-      img32.CopyToDc(gif.Bitmap.Canvas.Handle,0,0, false);
-    finally
-      if GetCurrentThreadId <> MainThreadID then Canvas.Unlock;
-    end;
+    //copy to the new TBitmap
+    bmp.PixelFormat := pf32bit;
+    bmp.SetSize(img32.Width, img32.Height);
+    bmp.AlphaFormat := afDefined;
+    SetBitmapBits(bmp.Handle,
+      img32.Width * img32.Height * 4, img32.PixelBase);
+    //next copy from the bitmap to the new TGifImage
+    gif.Add(bmp);
+    //and now save
     gif.SaveToStream(stream);
   finally
     gif.Free;
+    bmp.Free;
   end;
 end;
 //------------------------------------------------------------------------------

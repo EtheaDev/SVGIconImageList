@@ -21,10 +21,11 @@ interface
 
 uses
   { Delphi }
-
   {$IFDEF IOS}
+  iOSapi.CoreGraphics,
   FMX.Platform.iOS,
   {$ELSE}
+  Macapi.CocoaTypes,
   FMX.Platform.Mac,
   {$ENDIF}
   Macapi.Metal,
@@ -51,8 +52,8 @@ type
     procedure FinalizeContext; override;
     procedure Flush; override;
     function InitializeContext: Boolean; override;
-    class procedure Finalize; override;
-    class procedure Initialize; override;
+    class procedure DoFinalize; override;
+    class function DoInitialize: Boolean; override;
   end;
 
 implementation
@@ -78,10 +79,15 @@ begin
   Result        := TSkSurface.MakeFromRenderTarget(Context, LRenderTarget, TGrSurfaceOrigin.TopLeft, TSkColorType.BGRA8888);
 end;
 
-class procedure TGrCanvasMetal.Finalize;
+class procedure TGrCanvasMetal.DoFinalize;
 begin
-  inherited;
   FSharedDevice.release;
+end;
+
+class function TGrCanvasMetal.DoInitialize: Boolean;
+begin
+  FSharedDevice := TMTLDevice.Wrap(MTLCreateSystemDefaultDevice);
+  Result        := FSharedDevice <> nil;
 end;
 
 procedure TGrCanvasMetal.FinalizeContext;
@@ -99,15 +105,9 @@ begin
   LCommandBuffer.commit;
 end;
 
-class procedure TGrCanvasMetal.Initialize;
-begin
-  FSharedDevice := TMTLDevice.Wrap(MTLCreateSystemDefaultDevice);
-  if FSharedDevice = nil then
-    RaiseLastOSError;
-  inherited;
-end;
-
 function TGrCanvasMetal.InitializeContext: Boolean;
+var
+  LSize: CGSize;
 begin
   {$IFDEF IOS}
   if (not (Parent is TiOSWindowHandle)) or (TiOSWindowHandle(Parent).View = nil) or (not Supports(TiOSWindowHandle(Parent).View, MTKView, FView)) then
@@ -119,6 +119,9 @@ begin
   FCommandQueue := FSharedDevice.newCommandQueue;
   FView.retain;
   FView.setDevice(FSharedDevice);
+  LSize.width  := Width  * Scale;
+  LSize.height := Height * Scale;
+  FView.setDrawableSize(LSize);
   Result := True;
 end;
 

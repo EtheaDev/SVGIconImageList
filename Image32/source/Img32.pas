@@ -2,8 +2,8 @@ unit Img32;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.0                                                             *
-* Date      :  10 January 2022                                                 *
+* Version   :  4.2                                                             *
+* Date      :  11 March 2022                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -113,7 +113,17 @@ type
   public
     function  _AddRef: Integer; stdcall;
     function  _Release: Integer; stdcall;
+  {$IFDEF FPC}
+    function QueryInterface(
+      {$IFDEF FPC_HAS_CONSTREF}constref
+      {$ELSE}const
+      {$ENDIF} iid : tguid;out obj) : longint;
+      {$IFNDEF WINDOWS}cdecl
+      {$ELSE}stdcall
+      {$ENDIF};
+  {$ELSE}
     function  QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+  {$ENDIF}
   end;
 
   TImage32 = class;
@@ -300,6 +310,7 @@ type
     property Bounds: TRect read GetBounds;
     property IsBlank: Boolean read GetIsBlank;
     property IsEmpty: Boolean read GetIsEmpty;
+    property IsPreMultiplied: Boolean read fIsPremultiplied;
     property MidPoint: TPointD read GetMidPoint;
     property Pixel[x,y: Integer]: TColor32 read GetPixel write SetPixel;
     property Pixels: TArrayOfColor32 read fPixels;
@@ -492,8 +503,7 @@ type
   procedure GetResamplerList(stringList: TStringList);
 
 const
-  angle180 = Pi;
-  angle360 = Pi *2;
+  TwoPi = Pi *2;
   angle0   = 0;
   angle1   = Pi/180;
   angle15  = Pi /12;
@@ -502,22 +512,24 @@ const
   angle60  = angle15 *4;
   angle75  = angle15 *5;
   angle90  = Pi /2;
-  angle105 = angle180 - angle75;
-  angle120 = angle180 - angle60;
-  angle135 = angle180 - angle45;
-  angle150 = angle180 - angle30;
-  angle165 = angle180 - angle15;
-  angle195 = angle180 + angle15;
-  angle210 = angle180 + angle30;
-  angle225 = angle180 + angle45;
-  angle240 = angle180 + angle60;
-  angle255 = angle180 + angle75;
-  angle270 = angle360 - angle90;
-  angle285 = angle360 - angle75;
-  angle300 = angle360 - angle60;
-  angle315 = angle360 - angle45;
-  angle330 = angle360 - angle30;
-  angle345 = angle360 - angle15;
+  angle105 = Pi - angle75;
+  angle120 = Pi - angle60;
+  angle135 = Pi - angle45;
+  angle150 = Pi - angle30;
+  angle165 = Pi - angle15;
+  angle180 = Pi;
+  angle195 = Pi + angle15;
+  angle210 = Pi + angle30;
+  angle225 = Pi + angle45;
+  angle240 = Pi + angle60;
+  angle255 = Pi + angle75;
+  angle270 = TwoPi - angle90;
+  angle285 = TwoPi - angle75;
+  angle300 = TwoPi - angle60;
+  angle315 = TwoPi - angle45;
+  angle330 = TwoPi - angle30;
+  angle345 = TwoPi - angle15;
+  angle360 = TwoPi;
 
 var
   ClockwiseRotationIsAnglePositive: Boolean = true;
@@ -621,7 +633,7 @@ var
   aa: double;
 begin
   angle := FMod(angle, angle360);
-  if angle < -angle180 then angle := angle + angle360
+  if angle < -Angle180 then angle := angle + angle360
   else if angle > angle180 then angle := angle - angle360;
 
   aa := Abs(angle);
@@ -994,7 +1006,7 @@ end;
 
 function GetAlpha(color: TColor32): Byte;
 begin
-  Result := color shr 24;
+  Result := Byte(color shr 24);
 end;
 //------------------------------------------------------------------------------
 
@@ -2157,7 +2169,7 @@ begin
     for i := 0 to Width * Height -1 do
     begin
       //ignore colors with signifcant transparency
-      if GetAlpha(c^) > $80 then
+      if GetAlpha(c^)  > $80 then
         allColors[c^ and $FFFFFF] := 1;
       inc(c);
     end;
@@ -2777,14 +2789,13 @@ begin
   c := PARGB(PixelBase);
   for i := 0 to Width * Height -1 do
   begin
-    if c.A > 0 then
+    if (c.A = 0) then c.Color := 0
+    else if (c.A < 255) then
     begin
       c.R  := MulTable[c.R, c.A];
       c.G  := MulTable[c.G, c.A];
       c.B  := MulTable[c.B, c.A];
-    end
-    else
-      c.Color := 0;
+    end;
     inc(c);
   end;
   //nb: no OnChange notify event here
@@ -3300,7 +3311,11 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TInterfacedObj.QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
+{$IFDEF FPC}
+function TInterfacedObj.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} iid : tguid;out obj) : longint;
+{$ELSE}
+function TInterfacedObj.QueryInterface(const IID: TGUID; out Obj): HResult;
+{$ENDIF}
 begin
   if GetInterface(IID, Obj) then Result := 0
   else Result := E_NOINTERFACE;
