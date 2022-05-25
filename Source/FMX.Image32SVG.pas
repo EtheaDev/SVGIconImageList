@@ -174,7 +174,7 @@ begin
 
   //Copy Image32 to Bitmap
   FImage32.PreMultiply;
-  LSource := TBitMapData.Create(FImage32.Width, FImage32.Height, TPixelFormat.BGRA);
+  LSource := TBitMapData.Create(FImage32.Width, FImage32.Height, TPixelFormat.{$IF Defined(ANDROID) or Defined(MACOS) or Defined(MACOSX)}RGBA{$ELSE}BGRA{$ENDIF});
   LSource.Data := FImage32.PixelBase;
   LSource.Pitch := FImage32.Width * 4;
   ABitmap.SetSize(FImage32.Width, FImage32.Height);
