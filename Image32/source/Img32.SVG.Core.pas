@@ -1187,9 +1187,11 @@ begin
   //and in case the opacity has been set before the color
   if (alpha < 255) then
     color := (color and $FFFFFF) or alpha shl 24;
-{$IFDEF ANDROID}
+
+{$IF Defined(ANDROID) or Defined(MACOS) or Defined(MACOSX)}
   color := SwapRedBlue(color);
-{$ENDIF}
+{$IFEND}
+
   Result := true;
 end;
 //------------------------------------------------------------------------------
