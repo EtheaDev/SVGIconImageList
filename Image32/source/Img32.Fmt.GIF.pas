@@ -2,8 +2,8 @@ unit Img32.Fmt.GIF;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.1                                                             *
-* Date      :  17 March 2022                                                   *
+* Version   :  4.2                                                             *
+* Date      :  30 May 2022                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 * Purpose   :  GIF file format extension for TImage32                          *

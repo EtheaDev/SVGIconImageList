@@ -2,13 +2,11 @@ unit Img32.Storage;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.0                                                             *
-* Date      :  28 January 2022                                                 *
+* Version   :  4.2                                                             *
+* Date      :  30 May 2022                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
-*                                                                              *
 * Purpose   :  Object persistence                                              *
-*                                                                              *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
 
@@ -24,19 +22,23 @@ type
 
   TStorage = class;
   TStorageClass = class of TStorage;
+{$IFNDEF NO_STORAGE}
   TStorageManager = class;
+{$ENDIF}
 
   TStorage = class(TInterfacedObj)
   private
     fParent   : TStorage;
+{$IFNDEF NO_STORAGE}
     fManager  : TStorageManager;
+{$ENDIF}
     fChilds   : TList;
     fIndex    : integer;
     fName     : string;
     fStgState : TStorageState;
     fStgId    : integer;
     function  GetChildCount: integer;
-    function GetHasChildren: Boolean;
+    function  GetHasChildren: Boolean;
   protected
     procedure SetName(const aName: string); virtual;
     function  GetChild(index: integer): TStorage;
@@ -44,9 +46,9 @@ type
     procedure ReindexChilds(startFrom: integer);
     procedure CheckChildIndex(index: integer); virtual;
     function  RemoveChildFromList(index: integer): TStorage; virtual;
+{$IFNDEF NO_STORAGE}
     procedure BeginRead; virtual;
     function  ReadProperty(const propName, propVal: string): Boolean; virtual;
-    //procedure EndReadProperties; virtual;
     procedure EndRead; virtual;
     procedure WriteProperties; virtual;
     procedure WriteStorageHeader(var objId: integer);
@@ -64,6 +66,7 @@ type
     procedure WriteExternalProp(const propName: string; propVal: TObject);
     procedure WriteEventProp(const propName: string; propVal: TNotifyEvent);
     procedure WriteStrProp(const propName, propVal: string);
+{$ENDIF}
   public
     constructor Create(parent:  TStorage = nil; const name: string = ''); virtual;
     destructor  Destroy; override;
@@ -74,11 +77,13 @@ type
     procedure DeleteChild(index: integer);
     function  IsOwnedBy(obj: TStorage): Boolean; overload;
     function  IsOwnedBy(objClass: TStorageClass): Boolean; overload;
+{$IFNDEF NO_STORAGE}
     function  FindByName(const objName: string): TStorage;
     function  FindById(const objId: integer): TStorage;
     function  FindByClass(stgClass: TStorageClass): TStorage;
     function  FindByClassAndName(stgClass: TStorageClass;
       const objName: string): TStorage;
+{$ENDIF}
     property  Child[index: integer]: TStorage read GetChild;
     property  Childs: TList read fChilds;
     property  ChildCount: integer read GetChildCount;
@@ -87,10 +92,13 @@ type
     property  LoadId : integer read fStgId;
     property  Name   : string read fName write SetName;
     property  Parent : TStorage read fParent write SetParent;
+{$IFNDEF NO_STORAGE}
     property  StorageManager: TStorageManager read fManager;
+{$ENDIF}
     property  StorageState : TStorageState read fStgState;
   end;
 
+{$IFNDEF NO_STORAGE}
   TStorageManager = class(TStorage)
   private
     fDesignScreenRes  : double;
@@ -137,6 +145,7 @@ type
   function GetColorProp(const str: string; out success: Boolean): TColor32;
   function GetPointDProp(const str: string; out success: Boolean): TPointD;
   procedure RegisterStorageClass(storageClass: TStorageClass);
+{$ENDIF}
 
 implementation
 
@@ -159,6 +168,7 @@ type
 
 var
   classList       : TStringList;
+{$IFNDEF NO_STORAGE}
   objIdList       : TList;
 
 const
@@ -994,6 +1004,7 @@ begin
     ms.Free;
   end;
 end;
+{$ENDIF}
 
 //------------------------------------------------------------------------------
 // TStorage
@@ -1007,6 +1018,7 @@ begin
   begin
     fIndex := parent.fChilds.Add(self);
     fParent := parent;
+{$IFNDEF NO_STORAGE}
     if Assigned(parent.fManager) then
     begin
       fManager := parent.fManager;
@@ -1014,6 +1026,9 @@ begin
     end;
   end;
   if fStgState = ssLoading then BeginRead;
+{$ELSE}
+  end;
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
@@ -1077,6 +1092,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+{$IFNDEF NO_STORAGE}
 function TStorage.FindByName(const objName: string): TStorage;
 var
   i: integer;
@@ -1300,6 +1316,7 @@ begin
   if Name <> '' then WriteStrProp('Name', Name);
 end;
 //------------------------------------------------------------------------------
+{$ENDIF}
 
 function TStorage.GetHasChildren: Boolean;
 begin
@@ -1382,8 +1399,9 @@ begin
   //may need to notify parents of properties before destruction
   TStorage(fChilds[index]).Free;
 end;
-//------------------------------------------------------------------------------
 
+{$IFNDEF NO_STORAGE}
+//------------------------------------------------------------------------------
 // TStorageManager
 //------------------------------------------------------------------------------
 
@@ -1623,6 +1641,7 @@ begin
   WriteDoubleProp('DesignScale', StorageManager.fDesignFormScale);
   StorageManager.WriteCustomProperties;
 end;
+{$ENDIF}
 
 //------------------------------------------------------------------------------
 // Storage class registration
@@ -1652,8 +1671,11 @@ end;
 
 initialization
   InitStorageClassRegister;
+{$IFNDEF NO_STORAGE}
   RegisterStorageClass(TStorageInfo);
+{$ENDIF}
 
 finalization
   EndStorageClassRegister;
+
 end.

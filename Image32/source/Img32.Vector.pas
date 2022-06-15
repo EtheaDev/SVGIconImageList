@@ -1,8 +1,8 @@
 unit Img32.Vector;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.12                                                            *
-* Date      :  4 March 2022                                                    *
+* Version   :  4.2                                                             *
+* Date      :  30 May 2022                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -23,6 +23,7 @@ type
   TPathEnd    = (peStart, peEnd, peBothEnds);
   TSplineType = (stQuadratic, stCubic);
   TFillRule = (frEvenOdd, frNonZero, frPositive, frNegative);
+  TImg32FillRule = TFillRule; //useful whenever there's ambiguity with Clipper
   TSizeD = {$IFDEF RECORD_METHODS} record {$ELSE} object {$ENDIF}
     cx  : double;
     cy  : double;
@@ -178,7 +179,7 @@ type
     const focalPoint: TPointD; angleRads: double): TPathD; overload;
   function RotatePath(const paths: TPathsD;
     const focalPoint: TPointD; angleRads: double): TPathsD; overload;
-  function MakePath(const pts: array of integer): TPathD; overload;
+  //function MakePath(const pts: array of integer): TPathD; overload;
   function MakePath(const pts: array of double): TPathD; overload;
   function GetBounds(const path: TPathD): TRect; overload;
   function GetBounds(const paths: TPathsD): TRect; overload;
@@ -253,6 +254,8 @@ type
   function GetUnitVector(const pt1, pt2: TPointD): TPointD;
   //GetUnitNormal: Used internally
   function GetUnitNormal(const pt1, pt2: TPointD): TPointD;
+  function GetAvgUnitVector(const vec1, vec2: TPointD): TPointD;
+  {$IFDEF INLINING} inline; {$ENDIF}
   //GetVectors: Used internally
   function GetVectors(const path: TPathD): TPathD;
   //GetNormals: Used internally
@@ -933,8 +936,7 @@ var
 begin
   if PointsNearEqual(pt1, pt2, 0.001) then
   begin
-    Result.X := 0;
-    Result.Y := 0;
+    Result := NullPointD;
     Exit;
   end;
   dx := (pt2.X - pt1.X);
@@ -944,6 +946,23 @@ begin
   dy := dy * inverseHypot;
   Result.X := dy;
   Result.Y := -dx
+end;
+//------------------------------------------------------------------------------
+
+function GetAvgUnitVector(const vec1, vec2: TPointD): TPointD;
+var
+  h, inverseHypot: Double;
+begin
+  Result := PointD((vec1.X + vec2.X) * 0.5, (vec1.Y + vec2.Y) * 0.5);
+  h := Hypot(Result.X, Result.Y);
+  if ValueAlmostZero(h, 0.001) then
+  begin
+    Result := NullPointD;
+    Exit;
+  end;
+  inverseHypot := 1 / h;
+  Result.X := Result.X * inverseHypot;
+  Result.Y := Result.Y * inverseHypot;
 end;
 //------------------------------------------------------------------------------
 
@@ -1476,8 +1495,8 @@ begin
     begin
       if q < 0 then q := 0 else if q > 1 then q := 1;
     end;
-    Result.X := round((1-q)*linePt1.X + q*linePt2.X);
-    Result.Y := round((1-q)*linePt1.Y + q*linePt2.Y);
+    Result.X := (1-q)*linePt1.X + q*linePt2.X;
+    Result.Y := (1-q)*linePt1.Y + q*linePt2.Y;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -3500,29 +3519,6 @@ begin
     pt2 := ReflectPoint(pt2, pt1);
   end;
   SetLength(result,resultCnt);
-end;
-//------------------------------------------------------------------------------
-
-function MakePath(const pts: array of integer): TPathD;
-var
-  i,j, x,y, len: Integer;
-begin
-  Result := nil;
-  len := length(pts) div 2;
-  if len < 1 then Exit;
-  setlength(Result, len);
-  Result[0].X := pts[0];
-  Result[0].Y := pts[1];
-  j := 0;
-  for i := 1 to len -1 do
-  begin
-    x := pts[i*2];
-    y := pts[i*2 +1];
-    inc(j);
-    Result[j].X := x;
-    Result[j].Y := y;
-  end;
-  setlength(Result, j+1);
 end;
 //------------------------------------------------------------------------------
 

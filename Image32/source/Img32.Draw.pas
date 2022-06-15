@@ -2,8 +2,8 @@ unit Img32.Draw;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.0                                                             *
-* Date      :  22 December 2021                                                *
+* Version   :  4.2                                                             *
+* Date      :  30 May 2022                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -21,8 +21,7 @@ interface
 {.$DEFINE MemCheck} //for debugging only (adds a minimal cost to performance)
 
 uses
-  SysUtils, Classes, Types, Math, Img32, Img32.Vector,
-  Img32.Transform; //experimental;
+  SysUtils, Classes, Types, Math, Img32, Img32.Vector;
 
 type
   TFillRule = Img32.Vector.TFillRule;
@@ -1028,13 +1027,23 @@ begin
           end;
         frPositive:
           begin
+{$IFDEF REVERSE_ORIENTATION}
+            if accum < -0.002 then
+              byteBuffer[j] := Min(255, Round(-accum * 318));
+{$ELSE}
             if accum > 0.002 then
               byteBuffer[j] := Min(255, Round(accum * 318));
+{$ENDIF}
           end;
         frNegative:
           begin
+{$IFDEF REVERSE_ORIENTATION}
+            if accum > 0.002 then
+              byteBuffer[j] := Min(255, Round(accum * 318));
+{$ELSE}
             if accum < -0.002 then
               byteBuffer[j] := Min(255, Round(-accum * 318));
+{$ENDIF}
           end;
       end;
     end;

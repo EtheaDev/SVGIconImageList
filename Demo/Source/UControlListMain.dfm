@@ -4186,19 +4186,15 @@ object ControlListMainForm: TControlListMainForm
     Top = 232
   end
   object VirtualImageList: TVirtualImageList
-    DisabledGrayscale = False
-    DisabledSuffix = '_Disabled'
     Images = <
       item
         CollectionIndex = 0
         CollectionName = 'about'
-        Disabled = False
         Name = 'about'
       end
       item
         CollectionIndex = 1
         CollectionName = 'ok'
-        Disabled = False
         Name = 'ok'
       end>
     ImageCollection = SVGIconImageButtons
