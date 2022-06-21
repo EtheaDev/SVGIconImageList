@@ -31,7 +31,7 @@ interface
 
 uses
   System.SysUtils, System.Classes,
-  SVGIconImageCollection, Vcl.BaseImageCollection;
+  SVGIconImageCollection;
 
 type
   TImageDataModule = class(TDataModule)
