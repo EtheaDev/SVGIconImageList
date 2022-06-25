@@ -2,8 +2,8 @@ unit Img32.Layers;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.01                                                             *
-* Date      :  28 January 2022                                                 *
+* Version   :  4.2                                                             *
+* Date      :  30 May 2022                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -77,7 +77,9 @@ type
     fBlendFunc      : TBlendFunction; //defaults to BlendToAlpha
     fLayeredImage   : TLayeredImage32;
     fClipPath       : TPathsD;  //used in conjunction with fClipImage
+{$IFNDEF NO_STORAGE}
     fStreamingRec   : TRectWH;
+{$ENDIF}
     fDesignerLayer  : Boolean;
     function  GetMidPoint: TPointD;
     procedure SetVisible(value: Boolean);
@@ -106,10 +108,12 @@ type
     function  GetInnerRectD: TRectD;
     function  GetInnerBounds: TRectD;
     function  GetOuterBounds: TRectD;
+{$IFNDEF NO_STORAGE}
     procedure BeginRead; override;
     function  ReadProperty(const propName, propVal: string): Boolean; override;
     procedure WriteProperties; override;
     procedure EndRead; override;
+{$ENDIF}
     procedure SetOpacity(value: Byte); virtual;
     procedure ImageChanged(Sender: TImage32); virtual;
     procedure UpdateLayeredImage(newLayeredImage: TLayeredImage32);
@@ -214,8 +218,10 @@ type
     procedure SetAngle(newAngle: double);
   protected
     procedure SetPivotPt(const pivot: TPointD); virtual;
+{$IFNDEF NO_STORAGE}
     function  ReadProperty(const propName, propVal: string): Boolean; override;
     procedure WriteProperties; override;
+{$ENDIF}
   public
     constructor Create(parent: TLayer32 = nil; const name: string = ''); override;
     function    Rotate(angleDelta: double): Boolean; virtual;
@@ -375,8 +381,10 @@ type
     procedure SetResampler(newSamplerId: integer);
     function GetRepaintNeeded: Boolean;
   protected
+{$IFNDEF NO_STORAGE}
     function  ReadProperty(const propName, propVal: string): Boolean; override;
     procedure WriteProperties; override;
+{$ENDIF}
     property  InvalidRect: TRectD read fInvalidRect;
   public
     constructor Create(parent: TStorage = nil; const name: string = ''); overload; override;
@@ -848,6 +856,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+{$IFNDEF NO_STORAGE}
 procedure TLayer32.BeginRead;
 var
   stgParent: TStorage;
@@ -906,6 +915,7 @@ begin
   if not Visible then WriteBoolProp('Visible', false);
 end;
 //------------------------------------------------------------------------------
+{$ENDIF}
 
 procedure TLayer32.SetOpacity(value: Byte);
 begin
@@ -1593,6 +1603,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+{$IFNDEF NO_STORAGE}
 function TRotLayer32.ReadProperty(const propName, propVal: string): Boolean;
 begin
   Result := inherited ReadProperty(propName, propVal);
@@ -1614,6 +1625,7 @@ begin
   WritePointDProp('PivotPt', PivotPt);
   WriteBoolProp('AutoPivot', AutoPivot)
 end;
+{$ENDIF}
 
 //------------------------------------------------------------------------------
 // TVectorLayer32 class
@@ -2151,6 +2163,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+{$IFNDEF NO_STORAGE}
 function  TLayeredImage32.ReadProperty(const propName, propVal: string): Boolean;
 begin
   if propName = 'Resampler' then
@@ -2175,6 +2188,7 @@ begin
   WriteIntProp('Height', Height);
 end;
 //------------------------------------------------------------------------------
+{$ENDIF}
 
 procedure TLayeredImage32.SetSize(width, height: integer);
 begin
@@ -2727,8 +2741,10 @@ initialization
   InitDashes;
   DefaultButtonSize := dpiAware1*10;
 
+{$IFNDEF NO_STORAGE}
   RegisterStorageClass(TLayeredImage32);
   RegisterStorageClass(TLayer32);
   RegisterStorageClass(TGroupLayer32);
+{$ENDIF}
 
 end.

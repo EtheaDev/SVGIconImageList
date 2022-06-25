@@ -1,6 +1,8 @@
-package SVGIconImageListFMX;
+package dclSVGIconImageList;
 
 {$R *.res}
+{$R '..\SVGIconImageList.dcr'}
+{$R '..\..\Image32\Source\Img32.Panels.dcr'}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -25,21 +27,18 @@ package SVGIconImageListFMX;
 {$IMAGEBASE $400000}
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'Ethea SVGIconImageList FMX components'}
-{$LIBSUFFIX '_D10_3'}
-{$RUNONLY}
+{$DESCRIPTION 'Ethea SVGIconImageList VCL components'}
+{$LIBSUFFIX '_D10'}
+{$DESIGNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
-  fmx,
-  SVGImage32Package,
-  SVGIconPackage;
+  DesignIDE,
+  SVGIconImageList;
 
 contains
-  Img32.FMX in '..\..\Image32\Source\Img32.FMX.pas',
-  FMX.ImageSVG in '..\..\Source\FMX.ImageSVG.pas',
-  FMX.Image32SVG in '..\..\Source\FMX.Image32SVG.pas',
-  FMX.SVGIconImageList in '..\..\Source\FMX.SVGIconImageList.pas',
-  FMX.SVGIconImage in '..\..\Source\FMX.SVGIconImage.pas';
+  SVGIconImageListEditorUnit in '..\SVGIconImageListEditorUnit.pas' {SVGIconImageListEditor},
+  SVGIconImageRegister in '..\SVGIconImageRegister.pas',
+  SVGTextPropertyEditorUnit in '..\SVGTextPropertyEditorUnit.pas' {SVGTextPropertyEditorForm};
 
 end.

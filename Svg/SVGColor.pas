@@ -291,7 +291,7 @@ Var
   M: TMethod;
 begin
   SVGColorList := TStringList.Create;
-{$IF CompilerVersion > 29}
+{$IF CompilerVersion > 30}
   SVGColorList.Options := SVGColorList.Options - [soUseLocale];
 {$IFEND}
   SVGColorList.CaseSensitive := False;

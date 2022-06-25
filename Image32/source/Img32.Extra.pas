@@ -2,8 +2,8 @@ unit Img32.Extra;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.0                                                             *
-* Date      :  22 December 2021                                                *
+* Version   :  4.2                                                             *
+* Date      :  30 May 2022                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -149,6 +149,13 @@ function SmoothToBezier(const path: TPathD; closed: Boolean;
   tolerance: double; minSegLength: double = 2): TPathD; overload;
 function SmoothToBezier(const paths: TPathsD; closed: Boolean;
   tolerance: double; minSegLength: double = 2): TPathsD; overload;
+
+//GetSmoothPath - uses cubic bezier interpolation and produces
+//a series of cubic bezier control points.
+//nb: This is very different to the above function which could
+//be better named (ie should be renamed)
+function GetSmoothPath(const path: TPathD; pathIsClosed: Boolean;
+  percentOffset, maxCtrlOffset: double; symmetric: Boolean): TPathD;
 
 //InterpolatePoints: smooths a simple line chart.
 //Points should be left to right and equidistant along the X axis
@@ -2063,7 +2070,7 @@ end;
 //------------------------------------------------------------------------------
 
 procedure RDP(const path: TPathD; startIdx, endIdx: integer;
-  epsilonSqrd: double; const flags: TArrayOfInteger);
+  epsilonSqrd: double; var flags: TArrayOfInteger);
 var
   i, idx: integer;
   d, maxD: double;
@@ -2819,6 +2826,81 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure MakeSymmetric(var val1, val2: double);
+begin
+  val1 := (val1 + val2) * 0.5;
+  val2 := val1;
+end;
+//------------------------------------------------------------------------------
+
+function GetSmoothPath(const path: TPathD; pathIsClosed: Boolean;
+  percentOffset, maxCtrlOffset: double;
+  symmetric: Boolean): TPathD;
+var
+  i, len, prev: integer;
+  vec: TPointD;
+  pl: TArrayOfDouble;
+  unitVecs: TPathD;
+  d, d1,d2: double;
+begin
+// GetSmoothPath - returns cubic bezier control points
+//   parameters: 1. path for smoothing
+//               2. whether or not the smoothed path will closed
+//               3. percent smoothness (0..100)
+//               4. maximum dist control pts from path pts (0 = no limit)
+//               5. symmetric vs asymmmetric control pts
+
+  Result := nil;
+  len := Length(path);
+  if len < 3 then Exit;
+  d :=  Max(0, Min(100, percentOffset))/200;
+  if maxCtrlOffset <= 0 then maxCtrlOffset := MaxDouble;
+
+  SetLength(Result, len *3 +1);
+  prev := len-1;
+  SetLength(pl, len);
+  SetLength(unitVecs, len);
+  for i := 0 to len -1 do
+  begin
+    pl[i] := Distance(path[prev], path[i]);
+    unitVecs[i] := GetUnitVector(path[prev], path[i]);
+    prev := i;
+  end;
+
+  Result[len*3] := path[0];
+  for i := 0 to len -1 do
+  begin
+    if i = len -1 then
+    begin
+      vec := GetAvgUnitVector(unitVecs[i], unitVecs[0]);
+      d2 := pl[0]*d;
+    end else
+    begin
+      vec := GetAvgUnitVector(unitVecs[i], unitVecs[i+1]);
+      d2 := pl[i+1]*d;
+    end;
+    d1 := pl[i]*d;
+    if symmetric then MakeSymmetric(d1, d2);
+    if i = 0 then
+      Result[len*3-1] := OffsetPoint(path[i],
+        -vec.X * Min(maxCtrlOffset, d1), -vec.Y * Min(maxCtrlOffset, d1))
+    else
+      Result[i*3-1] := OffsetPoint(path[i],
+        -vec.X * Min(maxCtrlOffset, d1), -vec.Y * Min(maxCtrlOffset, d1));
+    Result[i*3] := path[i];
+    Result[i*3+1] := OffsetPoint(path[i],
+      vec.X * Min(maxCtrlOffset, d2), vec.Y * Min(maxCtrlOffset, d2));
+  end;
+  if not pathIsClosed then
+  begin
+    Result[1] := Result[0];
+    dec(len);
+    Result[len*3-1] := Result[len*3];
+    SetLength(Result, Len*3 +1);
+  end;
+end;
+//------------------------------------------------------------------------------
+
 function InterpolatePoints(const points: TPathD; tension: integer): TPathD;
 var
   i, j, len, len2: integer;
@@ -2847,6 +2929,7 @@ begin
   end;
   AppendPoint(Result, p[len]);
 end;
+
 
 //------------------------------------------------------------------------------
 // GaussianBlur

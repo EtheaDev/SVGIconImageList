@@ -2,8 +2,8 @@ unit Img32.FMX;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.0                                                             *
-* Date      :  10 January 2022                                                 *
+* Version   :  4.2                                                             *
+* Date      :  30 May 2022                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 * Purpose   :  Image file format support for TImage32 and FMX                  *
@@ -88,7 +88,6 @@ begin
        (surf.PixelFormat = TPixelFormat.RGBA) then
           fPixelFormat := surf.PixelFormat
     else Exit;
-
     img32.SetSize(surf.Width, surf.Height);
     Move(surf.Scanline[0]^, img32.PixelBase^, surf.Width * surf.Height * 4);
     result := true;
@@ -199,6 +198,7 @@ var
   src, dst: TBitmapData; //TBitmapData is a record.
 begin
   if not Assigned(img) or not Assigned(bmp) then Exit;
+
   src := TBitmapData.Create(img.Width, img.Height, TPixelFormat.BGRA);
   src.Data := img.PixelBase;
   src.Pitch := img.Width * 4;

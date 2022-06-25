@@ -1,3 +1,6 @@
+{$DEFINE NO_STORAGE}
+{$DEFINE REVERSE_ORIENTATION}
+
 {$IFDEF FPC}
   {$MODE DELPHI}
   {$DEFINE ABSTRACT_CLASSES}
@@ -14,43 +17,44 @@
     Your version of Delphi is not supported (Image32 requires Delphi version 7 or above)
   {$IFEND}  
   {$IFDEF CPUX86}
-      {$DEFINE ASM_X86}                  //nb: do not define in FPC 
+      {$DEFINE ASM_X86}                         //caution: do not define in FPC 
   {$ENDIF}  
-  {$IF COMPILERVERSION >= 17}
+  {$IF COMPILERVERSION >= 17}                   //Delphi 2005
     {$IFNDEF DEBUG}
-      {$DEFINE INLINE}                   //Delphi 2005 - added inlining
+      {$DEFINE INLINE}                            //added inlining
     {$ENDIF}
-    {$DEFINE NESTED_TYPES}               //Delphi 2005 - added nested types & nested constants
-    {$IF COMPILERVERSION >= 18}
-      {$DEFINE ABSTRACT_CLASSES}         //Delphi 2006 - added abstract classes
-      {$DEFINE REPORTMEMORYLEAKS}        //Delphi 2006 - added ReportMemoryLeaksOnShutdown
+    {$DEFINE NESTED_TYPES}                        //added nested types & nested constants
+    {$IF COMPILERVERSION >= 18}                 //Delphi 2006
+      {$DEFINE ABSTRACT_CLASSES}                  //added abstract classes
+      {$DEFINE REPORTMEMORYLEAKS}                 //added ReportMemoryLeaksOnShutdown
       {$WARN SYMBOL_PLATFORM OFF}
-      {$DEFINE SETSIZE}                  //Delphi 2006 - added TBitmap.SetSize
-      {$IF COMPILERVERSION >= 18.5}
-        {$DEFINE RECORD_METHODS}         //Delphi 2007 - added records with methods
-        {$DEFINE DELPHI_PNG}             //Delphi 2007 - added PNG support
-        {$DEFINE DELPHI_GIF}             //Delphi 2007 - added GIF support
-        {$DEFINE MAINFORMONTASKBAR}      //Delphi 2007 - added TApplication.MainFormOnTaskbar
-        {$if CompilerVersion >= 20}
-          {$DEFINE PBYTE}                //Delphi 2009 - added PByte
-          {$DEFINE CHARINSET}            //Delphi 2009 - added CharInSet function
-          {$DEFINE EXIT_PARAM}           //Delphi 2009 - added Exit(value)
-          {$DEFINE ALPHAFORMAT}          //Delphi 2009 - added TBitmap.AlphaFormat property
-          {$IF COMPILERVERSION >= 21}
-            {$DEFINE GESTURES}           //Delphi 2010 - added screen gesture support
-            {$IF COMPILERVERSION >= 23}
-              {$IF declared(FireMonkeyVersion)} //defined in FMX.Types
+      {$DEFINE SETSIZE}                           //added TBitmap.SetSize
+      {$IF COMPILERVERSION >= 18.5}             //Delphi 2007
+        {$DEFINE RECORD_METHODS}                  //added records with methods
+        {$DEFINE DELPHI_PNG}                      //added PNG support
+        {$DEFINE DELPHI_GIF}                      //added GIF support
+        {$DEFINE MAINFORMONTASKBAR}               //added TApplication.MainFormOnTaskbar
+        {$if CompilerVersion >= 20}             //Delphi 2009
+          {$DEFINE PBYTE}                         //added PByte
+          {$DEFINE CHARINSET}                     //added CharInSet function
+          {$DEFINE EXIT_PARAM}                    //added Exit(value)
+          {$DEFINE ALPHAFORMAT}                   //added TBitmap.AlphaFormat property
+          {$IF COMPILERVERSION >= 21}           //Delphi 2010
+            {$DEFINE GESTURES}                    //added screen gesture support
+            {$IF COMPILERVERSION >= 23}         //DelphiXE2
+              {$IF declared(FireMonkeyVersion)}   //defined in FMX.Types
                 {$DEFINE FMX}
               {$IFEND}        
               {$DEFINE FORMATSETTINGS}
               {$DEFINE TROUNDINGMODE}   
-              {$DEFINE UITYPES}          //DelphiXE2   - added UITypes unit
-              {$DEFINE XPLAT_GENERICS}   //DelphiXE2   - reasonable cross-platform & generics support
-              {$DEFINE STYLESERVICES}    //DelphiXE2   - added StyleServices unit
-              {$IF COMPILERVERSION >= 24}
-                {$DEFINE ZEROBASEDSTR}   //DelphiXE3
-                {$IF COMPILERVERSION >= 25}
-                  {$LEGACYIFEND ON}      //DelphiXE4   - avoids compiler warning
+              {$DEFINE UITYPES}                   //added UITypes unit
+              {$DEFINE XPLAT_GENERICS}            //reasonable cross-platform & generics support
+              {$DEFINE STYLESERVICES}             //added StyleServices unit
+              {$IF COMPILERVERSION >= 24}       //DelphiXE3
+                {$LEGACYIFEND ON}
+                {$DEFINE ZEROBASEDSTR}
+                {$IF COMPILERVERSION >= 25}     //DelphiXE4
+                  {$LEGACYIFEND ON}               //avoids compiler warning
                 {$IFEND}
               {$IFEND}
             {$IFEND}

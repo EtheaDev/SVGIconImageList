@@ -75,7 +75,7 @@ type
   D2D1_MATRIX_4X4_F = D2D_MATRIX_4X4_F;
   {$EXTERNALSYM D2D1_MATRIX_4X4_F}
 
-  {$IF CompilerVersion < 30}
+  {$IF CompilerVersion < 31}
   DXGI_COLOR_SPACE_TYPE = WORD;
   {$IFEND}
 

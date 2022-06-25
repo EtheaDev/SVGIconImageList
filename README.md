@@ -2,7 +2,7 @@
 
 ## Four engines to render SVG (Delphi Image32, Delphi TSVG, SKIA4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 3.8.3 (VCL+FMX)
+### Actual official version 3.9.1 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -72,6 +72,8 @@ Related links: https://www.embarcadero.com/ - https://learndelphi.org/
 
 ### UTILITY
 
+The [SVG Viewer Demo](https://github.com/EtheaDev/SVGIconImageList/wiki/SVG-Viewer-(VCL)) is useful to check the rendering quality of the engines available.
+
 The [SVG Icon Explorer](https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIconExplorer) utility is useful to explore and preview your svg image collections.
 
 You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtensions) if you want to see your icons directly into Windows Explorer or you want to edit them using a powerful SVG Text Editor.
@@ -81,6 +83,10 @@ You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtension
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 ### RELEASE NOTES
+
+21 Jun 2022: version 3.9.1 (VCL+FMX)
+- Added support for other Delphi versions (VCL): **D10 Seattle**
+
 08 May 2022: version 3.8.3 (VCL+FMX)
 - Updated to Skia4Delphi 3.4.0 llibrary
 - SVGExplorer example moved under "Demo" folder

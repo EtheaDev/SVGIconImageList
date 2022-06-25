@@ -3,7 +3,7 @@ unit Img32;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.2                                                             *
-* Date      :  11 March 2022                                                   *
+* Date      :  30 May 2022                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -1225,9 +1225,9 @@ var
 begin
   //https://en.wikipedia.org/wiki/HSL_and_HSV and
   //http://en.wikipedia.org/wiki/HSL_color_space
-{$IFDEF ANDROID}
+{$IF DEFINED(ANDROID) OR DEFINED(MACOS) OR DEFINED(MACOSX)}
   color := SwapRedBlue(color);
-{$ENDIF}
+{$IFEND}
 
   r := rgba.R; g := rgba.G; b := rgba.B;
   maxRGB := Max(r, Max(g, b));
@@ -1288,9 +1288,9 @@ begin
     4: begin rgba.R := x + m; rgba.G := 0 + m; rgba.B := c + m; end;
     5: begin rgba.R := c + m; rgba.G := 0 + m; rgba.B := x + m; end;
   end;
-{$IFDEF ANDROID}
+{$IF DEFINED(ANDROID) OR DEFINED(MACOS) OR DEFINED(MACOSX)}
   Result := SwapRedBlue(Result);
-{$ENDIF}
+{$IFEND}
 end;
 //------------------------------------------------------------------------------
 
@@ -3444,6 +3444,7 @@ end;
 initialization
   CreateImageFormatList;
   MakeBlendTables;
+
 {$IFDEF MSWINDOWS}
   GetScreenScale;
 {$ENDIF}
