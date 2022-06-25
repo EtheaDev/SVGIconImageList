@@ -78,7 +78,7 @@ begin
   res.G := TAlphaColorRec(AlphaColor).G;
   res.B := TAlphaColorRec(AlphaColor).B;
   Result := res.Color;
-{$IF Defined(ANDROID) or Defined(MACOS) or Defined(MACOSX)}
+{$IF Defined(ANDROID)}
   Result := SwapRedBlue(Result);
 {$IFEND}
 end;
@@ -187,9 +187,9 @@ begin
 end;
 
 initialization
-{$IFDEF MSWINDOWS}
+{$IF Defined(MSWINDOWS)}
   FontManager.Load('Arial');
   FontManager.Load('Times New Roman');
-{$ENDIF}
+{$IFEND}
 
 end.
