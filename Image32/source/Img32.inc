@@ -1,5 +1,12 @@
-{$DEFINE NO_STORAGE}
-{$DEFINE REVERSE_ORIENTATION}
+//NO_STORAGE is experimental 
+//Allows file system storage of layered objects etc 
+//Must be disabled to compile the experimental 'CtrlDemo' in Examples
+{$DEFINE NO_STORAGE}   
+
+//USING_VCL_LCL - using either Delphi or Lazarus Component Libraries
+//Adds a few extra library features (eg copying to and from TBitmap objects)
+//Enabled is recommended unless you're compiling console applications.
+{.$DEFINE USING_VCL_LCL}
 
 {$IFDEF FPC}
   {$MODE DELPHI}
@@ -12,12 +19,15 @@
     {$DEFINE INLINE}
   {$ENDIF}
   {$DEFINE DELPHI_PNG}
+  {$IFDEF WINDOWS}
+    {$DEFINE MSWINDOWS}
+  {$ENDIF}
 {$ELSE}
   {$IF COMPILERVERSION < 15}
     Your version of Delphi is not supported (Image32 requires Delphi version 7 or above)
   {$IFEND}  
   {$IFDEF CPUX86}
-      {$DEFINE ASM_X86}                         //caution: do not define in FPC 
+      {$DEFINE ASM_X86}                         //caution: do not define in FPC
   {$ENDIF}  
   {$IF COMPILERVERSION >= 17}                   //Delphi 2005
     {$IFNDEF DEBUG}

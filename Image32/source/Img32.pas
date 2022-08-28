@@ -3,7 +3,7 @@ unit Img32;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.2                                                             *
-* Date      :  30 May 2022                                                     *
+* Date      :  30 July 2022                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -17,13 +17,11 @@ unit Img32;
 interface
 
 {$I Img32.inc}
-{.$DEFINE USING_VCL}
 
 uses
   Types, SysUtils, Classes,
-  {$IFDEF MSWINDOWS} Windows, {$IFDEF USING_VCL} Graphics,{$ENDIF}{$ENDIF}
+  {$IFDEF MSWINDOWS} Windows,{$ENDIF} {$IFDEF USING_VCL_LCL} Graphics, Forms,{$ENDIF}
   {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults, Character,{$ENDIF}
-  {$IFDEF USING_FMX} FMX.Types, FMX.Graphics,{$ENDIF}
   {$IFDEF UITYPES} UITypes,{$ENDIF} Math;
 
 type
@@ -111,17 +109,18 @@ type
 
   TInterfacedObj = class(TObject, IInterface)
   public
+  {$IFDEF FPC}
+    function  _AddRef: Integer;
+      {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+    function  _Release: Integer;
+      {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+    function QueryInterface(
+      {$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} iid : tguid;
+      out obj) : longint;
+      {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+  {$ELSE}
     function  _AddRef: Integer; stdcall;
     function  _Release: Integer; stdcall;
-  {$IFDEF FPC}
-    function QueryInterface(
-      {$IFDEF FPC_HAS_CONSTREF}constref
-      {$ELSE}const
-      {$ENDIF} iid : tguid;out obj) : longint;
-      {$IFNDEF WINDOWS}cdecl
-      {$ELSE}stdcall
-      {$ENDIF};
-  {$ELSE}
     function  QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
   {$ENDIF}
   end;
@@ -239,10 +238,10 @@ type
       x: Integer = 0; y: Integer = 0; transparent: Boolean = true); overload;
     procedure CopyToDc(const srcRect, dstRect: TRect; dstDc: HDC;
       transparent: Boolean = true); overload;
-  {$IFDEF USING_VCL}
+{$ENDIF}
+{$IFDEF USING_VCL_LCL}
     procedure CopyFromBitmap(bmp: TBitmap);
     procedure CopyToBitmap(bmp: TBitmap);
-  {$ENDIF}
 {$ENDIF}
     function CopyToClipBoard: Boolean;
     class function CanPasteFromClipBoard: Boolean;
@@ -369,7 +368,7 @@ type
   PHsl = ^THsl;
   TArrayofHSL = array of THsl;
 
-  TTriState = (tsUnknown, tsYes, tsChecked = 1, tsNo, tsUnchecked = 2);
+  TTriState = (tsUnknown = 0, tsYes = 1, tsChecked = 1, tsNo = 2, tsUnchecked = 2);
 
   PPointD = ^TPointD;
   TPathD = array of TPointD;       //nb: watch for ambiguity with Clipper.pas
@@ -474,8 +473,6 @@ type
   procedure NormalizeAngle(var angle: double; tolerance: double = Pi/360);
   function GrayScale(color: TColor32): TColor32;
 
-  {$IFDEF MSWINDOWS}
-
   //DPIAware: Useful for DPIAware sizing of images and their container controls.
   //It scales values relative to the display's resolution (PixelsPerInch).
   //See https://docs.microsoft.com/en-us/windows/desktop/hidpi/high-DPIAware-desktop-application-development-on-windows
@@ -486,13 +483,13 @@ type
   function DPIAware(const rec: TRect): TRect; overload;
   function DPIAware(const rec: TRectD): TRectD; overload;
 
+{$IFDEF MSWINDOWS}
   {$IFDEF FPC}
   function AlphaBlend(DC: HDC; p2, p3, p4, p5: Integer;
     DC6: HDC; p7, p8, p9, p10: Integer; p11: Windows.TBlendFunction): BOOL;
     stdcall; external 'msimg32.dll' name 'AlphaBlend';
   {$ENDIF}
-
-  {$ENDIF}
+{$ENDIF}
 
   //CreateResourceStream: handles both numeric and string names and types
   function CreateResourceStream(const resName: string;
@@ -1052,10 +1049,11 @@ begin
   Result.biCompression := BI_RGB;
 end;
 //------------------------------------------------------------------------------
+{$ENDIF}
 
 function DPIAware(val: Integer): Integer;
 begin
-  result := Round( val * DpiAwareOne);
+  result := Round(val * DpiAwareOne);
 end;
 //------------------------------------------------------------------------------
 
@@ -1096,7 +1094,6 @@ begin
   result.Bottom := rec.Bottom * DpiAwareOne;
 end;
 //------------------------------------------------------------------------------
-{$ENDIF}
 
 function GrayScale(color: TColor32): TColor32;
 var
@@ -1225,7 +1222,7 @@ var
 begin
   //https://en.wikipedia.org/wiki/HSL_and_HSV and
   //http://en.wikipedia.org/wiki/HSL_color_space
-{$IF DEFINED(ANDROID) OR DEFINED(MACOS) OR DEFINED(MACOSX)}
+{$IF DEFINED(ANDROID)}
   color := SwapRedBlue(color);
 {$IFEND}
 
@@ -1273,11 +1270,12 @@ function HslToRgb(hslColor: THsl): TColor32;
 var
   rgba: TARGB absolute result;
   hsl: THsl absolute hslColor;
-  c, x, m: Integer;
+  c, x, m, a: Integer;
 begin
   //formula from https://www.rapidtables.com/convert/color/hsl-to-rgb.html
   c := (255 - abs(2 * hsl.lum - 255)) * hsl.sat div 255;
-  x := c * (255 - abs((hsl.hue mod 85) * 6 - 255)) div 255;
+  a := (hsl.hue mod 85) * 6 - 255;
+  x := c * (255 - abs(a)) div 255;
   m := hsl.lum - c div 2;
   rgba.A := hsl.alpha;
   case (hsl.hue * 6) shr 8 of
@@ -1288,7 +1286,7 @@ begin
     4: begin rgba.R := x + m; rgba.G := 0 + m; rgba.B := c + m; end;
     5: begin rgba.R := c + m; rgba.G := 0 + m; rgba.B := x + m; end;
   end;
-{$IF DEFINED(ANDROID) OR DEFINED(MACOS) OR DEFINED(MACOSX)}
+{$IF DEFINED(ANDROID)}
   Result := SwapRedBlue(Result);
 {$IFEND}
 end;
@@ -2325,15 +2323,21 @@ end;
 procedure TImage32.CopyInternal(src: TImage32;
   const srcRec, dstRec: TRect; blendFunc: TBlendFunction);
 var
-  i, j, srcRecWidth: Integer;
+  i, j, srcRecWidth, srcRecHeight: Integer;
   s, d: PColor32;
 begin
-  srcRecWidth := srcRec.Right - srcRec.Left;
+  // occasionally, due to rounding, srcRec and dstRec
+  // don't have exactly the same widths and heights, so ...
+  srcRecWidth :=
+    Min(srcRec.Right - srcRec.Left, dstRec.Right - dstRec.Left);
+  srcRecHeight :=
+    Min(srcRec.Bottom - srcRec.Top, dstRec.Bottom - dstRec.Top);
+
   s := @src.Pixels[srcRec.Top * src.Width + srcRec.Left];
   d := @Pixels[dstRec.top * Width + dstRec.Left];
 
   if assigned(blendFunc) then
-    for i := srcRec.Top to srcRec.Bottom -1 do
+    for i := srcRec.Top to srcRec.Top + srcRecHeight -1 do
     begin
       for j := 1 to srcRecWidth do
       begin
@@ -2345,7 +2349,7 @@ begin
     end
   else
     //simply overwrite src with dst (ie without blending)
-    for i := srcRec.Top to srcRec.Bottom -1 do
+    for i := srcRec.Top to srcRec.Top + srcRecHeight -1 do
     begin
       move(s^, d^, srcRecWidth * SizeOf(TColor32));
       inc(s, src.Width);
@@ -2376,8 +2380,14 @@ begin
   //dstRec might be adjusted due to clipping ...
   RectWidthHeight(dstRec, dstW, dstH);
   RectWidthHeight(srcRec, srcW, srcH);
-  scaleX := dstW / srcW;
-  scaleY := dstH / srcH;
+
+  //watching out for insignificant scaling
+  if Abs(dstW - srcW) < 2 then
+     scaleX := 1 else
+     scaleX := dstW / srcW;
+  if Abs(dstH - srcH) < 2 then
+     scaleY := 1 else
+     scaleY := dstH / srcH;
 
   //check if the source rec has been clipped ...
   if not RectsEqual(srcRecClipped, srcRec) then
@@ -2590,32 +2600,7 @@ begin
   end;
 end;
 //------------------------------------------------------------------------------
-
-{$IFDEF USING_VCL}
-procedure TImage32.CopyFromBitmap(bmp: TBitmap);
-var
-  savedPF: TPixelFormat;
-begin
-  if not Assigned(bmp) then Exit;
-  savedPF := bmp.PixelFormat;
-  bmp.PixelFormat := pf32bit;
-  SetSize(bmp.Width, bmp.Height);
-  GetBitmapBits(bmp.Handle, Width * Height * 4, PixelBase);
-  bmp.PixelFormat := savedPF;
-end;
-//------------------------------------------------------------------------------
-
-procedure TImage32.CopyToBitmap(bmp: TBitmap);
-begin
-  if not Assigned(bmp) then Exit;
-  bmp.PixelFormat := pf32bit;
-  bmp.SetSize(Width, Height);
-  bmp.AlphaFormat := afDefined;
-  SetBitmapBits(bmp.Handle, Width * Height * 4, PixelBase);
-end;
 {$ENDIF}
-{$ENDIF}
-//------------------------------------------------------------------------------
 
 function TImage32.CopyToClipBoard: Boolean;
 var
@@ -2685,6 +2670,60 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+{$IFDEF USING_VCL_LCL}
+procedure TImage32.CopyFromBitmap(bmp: TBitmap);
+var
+  savedPF: TPixelFormat;
+{$IFNDEF MSWINDOWS}
+  i: integer;
+  pxDst, pxSrc: PColor32;
+{$ENDIF}
+begin
+  if not Assigned(bmp) then Exit;
+  savedPF := bmp.PixelFormat;
+  bmp.PixelFormat := pf32bit;
+  SetSize(bmp.Width, bmp.Height);
+{$IFDEF MSWINDOWS}
+  GetBitmapBits(bmp.Handle, Width * Height * 4, PixelBase);
+{$ELSE}
+  for i := 0 to bmp.Height -1 do
+  begin
+    pxSrc := bmp.ScanLine[i];
+    pxDst := PixelRow[i];
+    Move(pxSrc^, pxDst^, bmp.Width * SizeOf(TColor32));
+  end;
+{$ENDIF}
+  bmp.PixelFormat := savedPF;
+end;
+//------------------------------------------------------------------------------
+
+procedure TImage32.CopyToBitmap(bmp: TBitmap);
+{$IFNDEF MSWINDOWS}
+var
+  i: integer;
+  pxDst, pxSrc: PColor32;
+{$ENDIF}
+begin
+  if not Assigned(bmp) then Exit;
+  bmp.PixelFormat := pf32bit;
+  bmp.SetSize(Width, Height);
+{$IFDEF MSWINDOWS}
+  {$IFNDEF FPC}
+  bmp.AlphaFormat := afDefined;
+  {$ENDIF}
+  SetBitmapBits(bmp.Handle, Width * Height * 4, PixelBase);
+{$ELSE}
+  for i := 0 to bmp.Height -1 do
+  begin
+    pxDst := bmp.ScanLine[i];
+    pxSrc := PixelRow[i];
+    Move(pxSrc^, pxDst^, bmp.Width * SizeOf(TColor32));
+  end;
+{$ENDIF}
+end;
+//------------------------------------------------------------------------------
+{$ENDIF}
+
 procedure TImage32.ConvertToBoolMask(reference: TColor32; tolerance: integer;
   colorFunc: TCompareFunction; maskBg: TColor32; maskFg: TColor32);
 var
@@ -2699,11 +2738,11 @@ begin
   b := @mask[0];
   for i := 0 to Width * Height -1 do
   begin
-    {$IFDEF PBYTE}
+  {$IFDEF PBYTE}
     if b^ = 0 then c^ := maskBg else c^ := maskFg;
-    {$ELSE}
+  {$ELSE}
     if b^ = #0 then c^ := maskBg else c^ := maskFg;
-    {$ENDIF}
+  {$ENDIF}
     inc(c); inc(b);
   end;
   Changed;
@@ -2724,11 +2763,11 @@ begin
   b := @mask[0];
   for i := 0 to Width * Height -1 do
   begin
-    {$IFDEF PBYTE}
+  {$IFDEF PBYTE}
     c^ := b^ shl 24;
-    {$ELSE}
+  {$ELSE}
     c^ := Ord(b^) shl 24;
-    {$ENDIF}
+  {$ENDIF}
     inc(c); inc(b);
   end;
   Changed;
@@ -3299,6 +3338,31 @@ end;
 // TInterfacedObj
 //------------------------------------------------------------------------------
 
+{$IFDEF FPC}
+function TInterfacedObj._AddRef: Integer;
+  {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+begin
+  Result := -1;
+end;
+//------------------------------------------------------------------------------
+
+function TInterfacedObj._Release: Integer;
+  {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+begin
+  Result := -1;
+end;
+//------------------------------------------------------------------------------
+
+function TInterfacedObj.QueryInterface(
+  {$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} iid : tguid;
+  out obj) : longint;
+begin
+  if GetInterface(IID, Obj) then Result := 0
+  else Result := E_NOINTERFACE;
+end;
+
+{$ELSE}
+
 function TInterfacedObj._AddRef: Integer; stdcall;
 begin
   Result := -1;
@@ -3311,15 +3375,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-{$IFDEF FPC}
-function TInterfacedObj.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} iid : tguid;out obj) : longint;
-{$ELSE}
-function TInterfacedObj.QueryInterface(const IID: TGUID; out Obj): HResult;
-{$ENDIF}
+function TInterfacedObj.QueryInterface(const IID: TGUID;
+  out Obj): HResult;
 begin
   if GetInterface(IID, Obj) then Result := 0
   else Result := E_NOINTERFACE;
 end;
+{$ENDIF}
 
 //------------------------------------------------------------------------------
 // Initialization and Finalization functions
@@ -3357,6 +3419,15 @@ begin
   finally
     ReleaseDC(0, dc);
   end;
+  dpiAware1   := Round(DpiAwareOne);
+end;
+{$ENDIF}
+//------------------------------------------------------------------------------
+
+{$IFDEF USING_VCL_LCL}
+procedure GetScreenScale2;
+begin
+  DpiAwareOne := Screen.PixelsPerInch / 96;
   dpiAware1   := Round(DpiAwareOne);
 end;
 {$ENDIF}
@@ -3447,6 +3518,10 @@ initialization
 
 {$IFDEF MSWINDOWS}
   GetScreenScale;
+{$ELSE}
+  {$IFDEF USING_VCL_LCL}
+  GetScreenScale2;
+  {$ENDIF}
 {$ENDIF}
 
 finalization

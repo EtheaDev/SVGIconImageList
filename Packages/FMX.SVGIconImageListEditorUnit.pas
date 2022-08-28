@@ -213,6 +213,7 @@ begin
       //Screen.Cursor := crHourglass;
       try
         FEditingList.Assign(AImageList);
+        FEditingList.RefreshAllIcons;
         SizeSpinBox.Value := Max(FEditingList.Width, FEditingList.Height);
         WidthSpinBox.Value := FEditingList.Width;
         HeightSpinBox.Value := FEditingList.Height;

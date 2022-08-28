@@ -3,7 +3,7 @@ unit Img32.SVG.Core;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.2                                                             *
-* Date      :  30 May 2022                                                     *
+* Date      :  2 July 2022                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -266,13 +266,6 @@ var
 
 implementation
 
-uses
-  Img32.SVG.Path;
-
-resourcestring
-  rsSvgPathRangeError = 'TSvgPath.GetPath range error';
-  rsSvgSubPathRangeError = 'TSvgSubPath.GetSeg range error';
-  rsSvgSegmentRangeError = 'TSvgSegment.GetVal range error';
 
 type
   TColorConst = record
@@ -1187,6 +1180,9 @@ begin
   //and in case the opacity has been set before the color
   if (alpha < 255) then
     color := (color and $FFFFFF) or alpha shl 24;
+{$IF DEFINED(ANDROID)}
+  color := SwapRedBlue(color);
+{$IFEND}
   Result := true;
 end;
 //------------------------------------------------------------------------------

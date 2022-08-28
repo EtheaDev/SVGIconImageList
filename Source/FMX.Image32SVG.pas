@@ -184,9 +184,9 @@ begin
 end;
 
 initialization
-{$IF Defined(MSWINDOWS)}
+{$IFDEF MSWINDOWS}
   FontManager.Load('Arial');
   FontManager.Load('Times New Roman');
-{$IFEND}
+{$ENDIF}
 
 end.

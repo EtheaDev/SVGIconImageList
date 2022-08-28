@@ -3,7 +3,7 @@ unit Img32.Layers;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.2                                                             *
-* Date      :  30 May 2022                                                     *
+* Date      :  28 July 2022                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -466,7 +466,11 @@ const
 
 implementation
 
-{$IFNDEF MSWINDOWS} uses Img32.FMX;{$ENDIF}
+  {$IFNDEF MSWINDOWS}
+  {$IFNDEF FPC}
+  uses Img32.FMX;
+  {$ENDIF}
+  {$ENDIF}
 
 resourcestring
   rsRoot                   = 'root';
