@@ -47,7 +47,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '3.9.1';
+  SVGIconImageListVersion = '3.9.2';
   DEFAULT_SIZE = 32;
   ZOOM_DEFAULT = 100;
   SVG_INHERIT_COLOR = TAlphaColors.Null;
@@ -124,7 +124,7 @@ type
     FFixedColor: TAlphaColor;
     FApplyFixedColorToRootOnly: Boolean;
     FGrayScale: Boolean;
-    procedure UpdateAllItems;
+    procedure RefreshAllIcons;
     function GetSVGText: string;
     procedure SetFixedColor(const Value: TAlphaColor);
     procedure SetGrayScale(const Value: Boolean);
@@ -179,7 +179,6 @@ type
     function StoreOpacity: Boolean;
     procedure SetAutoSizeBitmaps(const Value: Boolean);
     procedure SetFixedColor(const Value: TAlphaColor);
-    procedure UpdateSourceItems;
     procedure UpdateDestination(ASize: TSize; const Index: Integer);
     procedure SetGrayScale(const Value: Boolean);
     procedure SetOpacity(const Value: single);
@@ -210,6 +209,7 @@ type
     function LoadFromFiles(const AFileNames: TStrings;
       const AAppend: Boolean = True): Integer;
     procedure ClearIcons; virtual;
+    procedure RefreshAllIcons;
     procedure UpdateIconAttributes(const ASize: Integer; const AOpacity: Single); overload;
   published
     //Publishing properties of standard ImageList
@@ -485,7 +485,7 @@ begin
   FOpacity := -1;
   FixedColor := SVG_INHERIT_COLOR;
   FGrayScale := False;
-  UpdateAllItems;
+  RefreshAllIcons;
 end;
 
 function TSVGIconSourceItem.CreateMultiResBitmap: TMultiResBitmap;
@@ -558,7 +558,7 @@ begin
   if FApplyFixedColorToRootOnly <> Value then
   begin
     FApplyFixedColorToRootOnly := Value;
-    UpdateAllItems;
+    RefreshAllIcons;
   end;
 end;
 
@@ -567,7 +567,7 @@ begin
   if FFixedColor <> Value then
   begin
     FFixedColor := Value;
-    UpdateAllItems;
+    RefreshAllIcons;
   end;
 end;
 
@@ -576,7 +576,7 @@ begin
   if FGrayScale <> Value then
   begin
     FGrayScale := Value;
-    UpdateAllItems;
+    RefreshAllIcons;
   end;
 end;
 
@@ -601,7 +601,7 @@ begin
   end
   else
     FOpacity := AValue;
-  UpdateAllItems;
+  RefreshAllIcons;
 end;
 
 procedure TSVGIconSourceItem.SetSVG(const Value: TFmxImageSVG);
@@ -609,14 +609,14 @@ begin
   if not SameText(FSVG.Source, Value.Source) then
   begin
     FSVG.LoadFromText(Value.Source);
-    UpdateAllItems;
+    RefreshAllIcons;
   end;
 end;
 
 procedure TSVGIconSourceItem.SetSVGText(const Value: string);
 begin
   FSVG.LoadFromText(Value);
-  UpdateAllItems;
+  RefreshAllIcons;
 end;
 
 function TSVGIconSourceItem.StoreOpacity: Boolean;
@@ -634,12 +634,13 @@ begin
   FApplyFixedColorToRootOnly := ApplyToRootOnly;
 end;
 
-procedure TSVGIconSourceItem.UpdateAllItems;
+procedure TSVGIconSourceItem.RefreshAllIcons;
 var
   I: Integer;
   LItem: TSVGIconBitmapItem;
   LSize: TSize;
 begin
+  //Update all Source and Destination Items/Icons
   for I := 0 to MultiResBitmap.Count -1 do
   begin
     LItem := MultiResBitmap.Items[I] as TSVGIconBitmapItem;
@@ -667,12 +668,11 @@ begin
   LItem.MultiResBitmap.Add;
   LItem.SVGText := ASVGText;
   LDest := Self.Destination.Insert(AIndex);
-  try
-    if AIconName <> '' then
-      LItem.Name := AIconName;
-  finally
+  if AIconName <> '' then
+  begin
+    LItem.Name := AIconName;
     with LDest.Layers.Add do
-      Name := LItem.Name;
+      Name := AIconName;
   end;
 end;
 
@@ -691,10 +691,7 @@ begin
   Result.FixedColor := LItem.FixedColor;
   Result.GrayScale := LItem.GrayScale;
   Result.SVG.LoadFromText(LItem.SVG.Source);
-
-  // Result.Assign(Self.Destination.Items[AIndex]);
-
-  UpdateSourceItems;
+  RefreshAllIcons;
 end;
 
 function TSVGIconImageList.LoadFromFiles(const AFileNames: TStrings;
@@ -786,6 +783,12 @@ begin
   while Index > Destination.Count-1 do
     Destination.Add;
   LDestItem := Destination.Items[Index] as TDestinationItem;
+  if LDestItem.Layers.Count = 0 then
+  begin
+    LSourceItem := Source.Items[Index] as TSVGIconSourceItem;
+    with LDestItem.Layers.Add do
+      Name := LSourceItem.IconName;
+  end;
   if LDestItem.Layers.Count > 0 then
   begin
     LIndex := Source.indexOf(LDestItem.Layers[0].Name);
@@ -896,21 +899,25 @@ end;
 procedure TSVGIconImageList.Loaded;
 begin
   inherited;
-  UpdateSourceItems;
+  RefreshAllIcons;
 end;
 
 procedure TSVGIconImageList.SetAutoSizeBitmaps(const Value: Boolean);
 begin
   FAutoSizeBitmaps := Value;
   if (Count > 0) then
-    UpdateSourceItems;
+    RefreshAllIcons;
 end;
 
-procedure TSVGIconImageList.UpdateSourceItems;
+procedure TSVGIconImageList.RefreshAllIcons;
 var
   I: Integer;
   LSourceItem: TSVGIconSourceItem;
 begin
+  //Delete destination items more than source items
+  while Destination.Count > Source.Count do
+    Destination.Delete(Destination.Count-1);
+  //Update all Source and Destination Items/Icons
   for I := 0 to Source.Count -1 do
   begin
     LSourceItem := Source[I] as TSVGIconSourceItem;
@@ -920,7 +927,7 @@ begin
       LSourceItem.GrayScale := FGrayScale;
     if LSourceItem.FixedColor = SVG_INHERIT_COLOR then
       LSourceItem.FixedColor := FFixedColor;
-    LSourceItem.UpdateAllItems;
+    LSourceItem.RefreshAllIcons;
   end;
 end;
 
@@ -929,7 +936,7 @@ begin
   if FFixedColor <> Value then
   begin
     FFixedColor := Value;
-    UpdateSourceItems;
+    RefreshAllIcons;
   end;
 end;
 
@@ -938,7 +945,7 @@ begin
   if FApplyFixedColorToRootOnly <> Value then
   begin
     FApplyFixedColorToRootOnly := Value;
-    UpdateSourceItems;
+    RefreshAllIcons;
   end;
 end;
 
@@ -947,7 +954,7 @@ begin
   if FGrayScale <> Value then
   begin
     FGrayScale := Value;
-    UpdateSourceItems;
+    RefreshAllIcons;
   end;
 end;
 
@@ -956,7 +963,7 @@ begin
   if FHeight <> AValue then
   begin
     FHeight := AValue;
-    UpdateSourceItems;
+    RefreshAllIcons;
   end;
 end;
 
@@ -967,7 +974,7 @@ begin
   begin
     FWidth := AWidth;
     FHeight := AHeight;
-    UpdateSourceItems;
+    RefreshAllIcons;
   end;
 end;
 
@@ -976,7 +983,7 @@ begin
   if FOpacity <> Value then
   begin
     FOpacity := Value;
-    UpdateSourceItems;
+    RefreshAllIcons;
   end;
 end;
 
@@ -996,7 +1003,7 @@ begin
   if FWidth <> AValue then
   begin
     FWidth := AValue;
-    UpdateSourceItems;
+    RefreshAllIcons;
   end;
 end;
 
@@ -1005,7 +1012,7 @@ begin
   if (FZoom <> AValue) and (AValue <= 100) and (AValue >= 10) then
   begin
     FZoom := AValue;
-    UpdateSourceItems;
+    RefreshAllIcons;
   end;
 end;
 

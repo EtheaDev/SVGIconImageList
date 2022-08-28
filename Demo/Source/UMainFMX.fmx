@@ -3808,9 +3808,6 @@ object SVGIconImageListForm: TSVGIconImageListForm
             SourceRect.Right = 64.000000000000000000
             SourceRect.Bottom = 64.000000000000000000
           end>
-      end
-      item
-        Layers = <>
       end>
     Size = 64
     Left = 104

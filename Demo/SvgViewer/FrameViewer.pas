@@ -40,7 +40,8 @@ implementation
 {$R *.dfm}
 
 uses
-  System.Types;
+  System.Types,
+  System.UITypes;
 
 { TFrameView }
 
