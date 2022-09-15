@@ -6,7 +6,7 @@
         <MainSource>SVGIconImageListDemoFMX.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Android64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>32771</TargetedPlatforms>
         <AppType>Application</AppType>
     </PropertyGroup>

@@ -2,14 +2,14 @@
 
 ## Four engines to render SVG (Delphi Image32, Delphi TSVG, SKIA4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 3.9.2 (VCL+FMX)
+### Actual official version 3.9.3 (VCL+FMX)
 
 | Component | Description |
 | - | - |
-| ![SVGIconImageCollectionComponentIcon.png](/Packages/SVGIconImageCollectionComponentIcon.png) | **TSVGIconImageCollection** is collection of SVG Images for Delphi to provide a centralized list of images for SVGIconVirtualImageLists (only for VCL) |
-| ![SVGIconVirtualImageListComponentIcon.png](/Packages/SVGIconVirtualImageListComponentIcon.png) | **TSVGIconVirtualImageList** is a special "virtual" ImageList for Delphi linked to an SVGIconImageCollection (only for VCL) to simplify use of SVG Icons (resize, opacity, grayscale and more...) |
-| ![SVGIconImageComponentIcon.png](/Packages/SVGIconImageComponentIcon.png) | **TSVGIconImage** is an extended Image component for Delphi (VCL+FMX) to show any SVG image directly or included into a an SVGIconImageList with all functionality (stretch, opacity, grayscale and more...) |
-| ![SVGIconImageListComponentIcon.png](/Packages/SVGIconImageListComponentIcon.png) | **TSVGIconImageList** is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection: **the VCL component is deprecated**, we recommend to use SVGIconImageCollection + SVGIconVirtualImageList also for older Delphi versions! |
+| ![SVGIconImageCollectionComponentIcon.png](./Packages/SVGIconImageCollectionComponentIcon.png) | **TSVGIconImageCollection** is collection of SVG Images for Delphi to provide a centralized list of images for SVGIconVirtualImageLists (only for VCL) |
+| ![SVGIconVirtualImageListComponentIcon.png](./Packages/SVGIconVirtualImageListComponentIcon.png) | **TSVGIconVirtualImageList** is a special "virtual" ImageList for Delphi linked to an SVGIconImageCollection (only for VCL) to simplify use of SVG Icons (resize, opacity, grayscale and more...) |
+| ![SVGIconImageComponentIcon.png](./Packages/SVGIconImageComponentIcon.png) | **TSVGIconImage** is an extended Image component for Delphi (VCL+FMX) to show any SVG image directly or included into a an SVGIconImageList with all functionality (stretch, opacity, grayscale and more...) |
+| ![SVGIconImageListComponentIcon.png](./Packages/SVGIconImageListComponentIcon.png) | **TSVGIconImageList** is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection: **the VCL component is deprecated**, we recommend to use SVGIconImageCollection + SVGIconVirtualImageList also for older Delphi versions! |
 
 ## Very important notice
 
@@ -33,7 +33,6 @@ There are four implementation:
 
 - A wrapper to the native Windows Direct2D implementation 
 
-
 You can read more details [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories)
 
 ## Performance comparison
@@ -52,9 +51,9 @@ As you can see, the four engines perform differently depending on the icons and 
 
 ### Available from Delphi XE3 to Delphi 11 (32bit and 64bit platforms)
 
-![Delphi 11 Sydney Support](/Demo/Images/SupportingDelphi.jpg)
+![Delphi 11 Sydney Support](./Demo/Images/SupportingDelphi.jpg)
 
-Related links: https://www.embarcadero.com/ - https://learndelphi.org/
+Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
 **Sample image of VCL version**
 
@@ -66,9 +65,9 @@ Related links: https://www.embarcadero.com/ - https://learndelphi.org/
 
 **Sample images of the VCL SVGText-property editor (VCL and FMX)**
 
-![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditor.jpg)
+![SVGTextPropertyEditor.jpg](./Demo/Images/SVGTextPropertyEditor.jpg)
 
-![https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditorFMX.jpg](https://github.com/EtheaDev/SVGIconImageList/blob/master/Demo/Images/SVGTextPropertyEditorFMX.jpg)
+![SVGTextPropertyEditorFMX.jpg](./Demo/Images/SVGTextPropertyEditorFMX.jpg)
 
 ### UTILITY
 
@@ -83,6 +82,10 @@ You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtension
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 ### RELEASE NOTES
+
+15 Sep 2022: version 3.9.3 (VCL+FMX)
+- Removed W11 Styles from Demo (available in Delphi only by Get-it)
+- Updated D11 packages to Delphi 11.2
 
 28 Aug 2022: version 3.9.2 (VCL+FMX)
 - Fixed #240 TSVGGraphic.Assign

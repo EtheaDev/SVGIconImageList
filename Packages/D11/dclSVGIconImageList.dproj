@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{FD48BF02-0EB9-408F-94C2-E78BB003A7D1}</ProjectGuid>
         <MainSource>dclSVGIconImageList.dpk</MainSource>
-        <ProjectVersion>19.4</ProjectVersion>
+        <ProjectVersion>19.5</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
