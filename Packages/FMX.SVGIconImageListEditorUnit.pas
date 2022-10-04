@@ -526,9 +526,9 @@ procedure TSVGIconImageListEditorFMX.FixedColorItemComboBoxChange(
   Sender: TObject);
 begin
   if FUpdating then Exit;
-  if FixedColorComboBox.ItemIndex >= 0 then begin
+  if FixedColorItemComboBox.ItemIndex >= 0 then begin
     SelectedSVGIcon.FixedColor :=
-      TColor(FixedColorComboBox.Items.Objects[FixedColorComboBox.ItemIndex]);
+      TColor(FixedColorItemComboBox.Items.Objects[FixedColorItemComboBox.ItemIndex]);
     UpdateGUI;
   end;
 end;
