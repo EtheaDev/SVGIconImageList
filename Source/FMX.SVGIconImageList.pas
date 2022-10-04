@@ -463,11 +463,11 @@ begin
   if AColor[1] = '#' then LClearColorCode := Copy(AColor, 2)
   else LClearColorCode := AColor;
 
-  B := StrToInt('$' + Copy(LClearColorCode, 1, 2));
+  R := StrToInt('$' + Copy(LClearColorCode, 1, 2));
   G := StrToInt('$' + Copy(LClearColorCode, 3, 2));
-  R := StrToInt('$' + Copy(LClearColorCode, 5, 2));
+  B := StrToInt('$' + Copy(LClearColorCode, 5, 2));
 
-  Result := TAlphaColorF.Create(R, G, B).ToAlphaColor;
+  Result := TAlphaColorF.Create(R / 255, G / 255, B / 255, 1).ToAlphaColor;
 end;
 
 procedure TSVGIconSourceItem.Assign(Source: TPersistent);
