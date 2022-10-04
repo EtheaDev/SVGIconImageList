@@ -329,9 +329,16 @@ begin
       SVGText.Lines.Text := LIconItem.SVGText;
       OpacitySpinBox.Value := LIconItem.Opacity * 100;
       IconImage.ImageIndex := LIconItem.Index;
+      GrayScaleItemCheckBox.IsChecked := LIconItem.GrayScale;
+
       FixedColorItemComboBox.ItemIndex :=
         FixedColorItemComboBox.Items.IndexOfObject(TObject(LIconItem.FixedColor));
-      GrayScaleItemCheckBox.IsChecked := LIconItem.GrayScale;
+      if (FixedColorItemComboBox.ItemIndex < 0) then begin
+        if LIconItem.FixedColor <> SVG_INHERIT_COLOR then
+          FixedColorItemComboBox.Text := Copy(IntToHex(LIconItem.FixedColor, 8), 3)
+        else FixedColorItemComboBox.Text := '';
+      end;
+
       IconImage.Repaint;
     end
     else
