@@ -5,7 +5,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
   Caption = 
     'FireMonkey SVG Icons ImageList Editor %s - Copyright Ethea S.r.l' +
     '.'
-  ClientHeight = 624
+  ClientHeight = 623
   ClientWidth = 800
   FormFactor.Width = 320
   FormFactor.Height = 480
@@ -167,7 +167,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
   end
   object BottomPanel: TPanel
     Align = Bottom
-    Position.Y = 592.000000000000000000
+    Position.Y = 591.000000000000000000
     Size.Width = 800.000000000000000000
     Size.Height = 32.000000000000000000
     Size.PlatformDefault = False
@@ -211,14 +211,14 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
   object TopPanel: TPanel
     Align = Client
     Size.Width = 800.000000000000000000
-    Size.Height = 409.000000000000000000
+    Size.Height = 408.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
     object ButtonsPanel: TPanel
       Align = Right
       Position.X = 688.000000000000000000
       Size.Width = 112.000000000000000000
-      Size.Height = 409.000000000000000000
+      Size.Height = 408.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 2
       object AddButton: TButton
@@ -265,13 +265,13 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
     object paClient: TPanel
       Align = Client
       Size.Width = 688.000000000000000000
-      Size.Height = 409.000000000000000000
+      Size.Height = 408.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
       object ImageListGroupBox: TGroupBox
         Align = Left
         Size.Width = 217.000000000000000000
-        Size.Height = 409.000000000000000000
+        Size.Height = 408.000000000000000000
         Size.PlatformDefault = False
         Text = 'Properties of ImageList'
         TabOrder = 1
@@ -328,15 +328,12 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           TabOrder = 0
         end
         object FixedColorComboBox: TComboEdit
-          Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 12
-          ItemHeight = 19.000000000000000000
-          ItemIndex = -1
           Position.X = 6.000000000000000000
           Position.Y = 161.000000000000000000
           Size.Width = 167.000000000000000000
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
+          TabOrder = 12
           OnChange = FixedColorComboBoxChange
           OnChangeTracking = FixedColorComboBoxChangeTracking
         end
@@ -441,7 +438,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       object IconsGroupBox: TGroupBox
         Align = Client
         Size.Width = 471.000000000000000000
-        Size.Height = 409.000000000000000000
+        Size.Height = 408.000000000000000000
         Size.PlatformDefault = False
         Text = '%d Icons of Imagelist'
         TabOrder = 2
@@ -452,7 +449,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Margins.Right = 4.000000000000000000
           Margins.Bottom = 4.000000000000000000
           Size.Width = 463.000000000000000000
-          Size.Height = 389.000000000000000000
+          Size.Height = 388.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 0
           OnDragOver = ImageViewDragOver
@@ -468,14 +465,14 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           OnChange = ImageViewSelectItem
           OnDragChange = ImageViewDragChange
           Viewport.Width = 459.000000000000000000
-          Viewport.Height = 385.000000000000000000
+          Viewport.Height = 384.000000000000000000
         end
       end
     end
   end
   object ItemPanel: TPanel
     Align = Bottom
-    Position.Y = 415.000000000000000000
+    Position.Y = 414.000000000000000000
     Size.Width = 800.000000000000000000
     Size.Height = 177.000000000000000000
     Size.PlatformDefault = False
@@ -561,15 +558,12 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         TabOrder = 6
       end
       object FixedColorItemComboBox: TComboEdit
-        Touch.InteractiveGestures = [LongTap, DoubleTap]
-        TabOrder = 7
-        ItemHeight = 19.000000000000000000
-        ItemIndex = -1
         Position.X = 11.000000000000000000
         Position.Y = 111.000000000000000000
         Size.Width = 154.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
+        TabOrder = 7
         OnChange = FixedColorItemComboBoxChange
         OnChangeTracking = FixedColorItemComboBoxChangeTracking
       end
@@ -616,7 +610,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
     Align = Bottom
     Cursor = crVSplit
     MinSize = 160.000000000000000000
-    Position.Y = 409.000000000000000000
+    Position.Y = 408.000000000000000000
     Size.Width = 800.000000000000000000
     Size.Height = 6.000000000000000000
     Size.PlatformDefault = False
