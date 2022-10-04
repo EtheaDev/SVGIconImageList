@@ -35,7 +35,7 @@ uses
   System.Actions, FMX.Forms, FMX.Graphics, FMX.ActnList, FMX.StdCtrls, FMX.Colors, FMX.ListBox,
   FMX.Controls.Presentation, FMX.ImgList, FMX.Types, FMX.Layouts,
   System.ImageList, FMX.SVGIconImageList, FMX.Edit, FMX.EditBox, FMX.SpinBox,
-  FMX.ScrollBox, FMX.Memo, FMX.Dialogs, FMX.Memo.Types;
+  FMX.ScrollBox, FMX.Memo, FMX.Dialogs, FMX.Memo.Types, FMX.ComboEdit;
 
 type
   TSVGIconImageListEditorFMX = class(TForm)
@@ -58,7 +58,7 @@ type
     DefaultOpacityLabel: TLabel;
     SizeSpinBox: TSpinBox;
     SizeLabel: TLabel;
-    FixedColorComboBox: TComboBox;
+    FixedColorComboBox: TComboEdit;
     FixedColorLabel: TLabel;
     GrayScaleCheckBox: TCheckBox;
     ItemPanel: TPanel;
@@ -70,7 +70,7 @@ type
     SVGText: TMemo;
     GrayScaleItemCheckBox: TCheckBox;
     FixedColorItemLabel: TLabel;
-    FixedColorItemComboBox: TComboBox;
+    FixedColorItemComboBox: TComboEdit;
     IconPanel: TPanel;
     IconImage: TGlyph;
     WidthLabel: TLabel;
@@ -114,6 +114,8 @@ type
     procedure ZoomChange(Sender: TObject);
     procedure ApplyToRootOnlyCheckBoxChange(Sender: TObject);
     procedure ReformatXMLButtonClick(Sender: TObject);
+    procedure FixedColorItemComboBoxChangeTracking(Sender: TObject);
+    procedure FixedColorComboBoxChangeTracking(Sender: TObject);
   private
     FIconIndexLabel: string;
     FTotIconsLabel: string;
@@ -522,14 +524,46 @@ begin
   end;
 end;
 
+procedure TSVGIconImageListEditorFMX.FixedColorComboBoxChangeTracking(
+  Sender: TObject);
+begin
+  if FUpdating then Exit;
+
+  if FixedColorComboBox.Items.IndexOf(FixedColorComboBox.Text) < 0 then
+    FixedColorComboBox.ItemIndex := -1;  
+  
+  if (FixedColorComboBox.ItemIndex < 0) then begin 
+    if Length(FixedColorComboBox.Text) in [0, 6, 7] then begin
+      FEditingList.FixedColor := TSVGIconSourceItem.HTMLColorToAlphaColor(FixedColorComboBox.Text);
+      UpdateGUI;
+    end;
+  end;
+end;
+
 procedure TSVGIconImageListEditorFMX.FixedColorItemComboBoxChange(
   Sender: TObject);
 begin
   if FUpdating then Exit;
-  if FixedColorComboBox.ItemIndex >= 0 then begin
+  if FixedColorItemComboBox.ItemIndex >= 0 then begin
     SelectedSVGIcon.FixedColor :=
-      TColor(FixedColorComboBox.Items.Objects[FixedColorComboBox.ItemIndex]);
+      TColor(FixedColorItemComboBox.Items.Objects[FixedColorItemComboBox.ItemIndex]);
     UpdateGUI;
+  end;
+end;
+
+procedure TSVGIconImageListEditorFMX.FixedColorItemComboBoxChangeTracking(
+  Sender: TObject);
+begin
+  if FUpdating then Exit;
+
+  if FixedColorItemComboBox.Items.IndexOf(FixedColorItemComboBox.Text) < 0 then
+    FixedColorItemComboBox.ItemIndex := -1;  
+  
+  if (FixedColorItemComboBox.ItemIndex < 0) then begin 
+    if Length(FixedColorItemComboBox.Text) in [0, 6, 7] then begin
+      SelectedSVGIcon.FixedColor := TSVGIconSourceItem.HTMLColorToAlphaColor(FixedColorItemComboBox.Text);
+      UpdateGUI;
+    end;
   end;
 end;
 

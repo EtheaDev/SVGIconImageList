@@ -147,6 +147,8 @@ type
     function CreateMultiResBitmap: TMultiResBitmap; override;
     function StoreOpacity: Boolean; virtual;
   public
+    class function HTMLColorToAlphaColor(const AColor: string): TAlphaColor;
+
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
@@ -205,6 +207,8 @@ type
     function InsertIcon(const AIndex: Integer;
       const ASVGText: string; const AIconName: string = ''): TSVGIconSourceItem;
     function CloneIcon(const AIndex: Integer; const AInsertIndex: Integer = -1): TSVGIconSourceItem;
+    function GetIcon(const AIndex: Integer): TSVGIconSourceItem;
+    function GetIconByName(const AName: string): TSVGIconSourceItem;
     //Multiple icons methods
     function LoadFromFiles(const AFileNames: TStrings;
       const AAppend: Boolean = True): Integer;
@@ -449,6 +453,23 @@ end;
 
 { TSVGIconSourceItem }
 
+class function TSVGIconSourceItem.HTMLColorToAlphaColor(const AColor: string): TAlphaColor;
+var
+  LClearColorCode: string;
+  R, G, B: Integer;
+begin
+  if Length(AColor) < 6 then Exit(SVG_INHERIT_COLOR);
+
+  if AColor[1] = '#' then LClearColorCode := Copy(AColor, 2)
+  else LClearColorCode := AColor;
+
+  B := StrToInt('$' + Copy(LClearColorCode, 1, 2));
+  G := StrToInt('$' + Copy(LClearColorCode, 3, 2));
+  R := StrToInt('$' + Copy(LClearColorCode, 5, 2));
+
+  Result := TAlphaColorF.Create(R, G, B).ToAlphaColor;
+end;
+
 procedure TSVGIconSourceItem.Assign(Source: TPersistent);
 begin
   if Source is TSVGIconSourceItem then
@@ -692,6 +713,19 @@ begin
   Result.GrayScale := LItem.GrayScale;
   Result.SVG.LoadFromText(LItem.SVG.Source);
   RefreshAllIcons;
+end;
+
+function TSVGIconImageList.GetIcon(const AIndex: Integer): TSVGIconSourceItem;
+begin
+  Result := Self.Source.Items[AIndex] as TSVGIconSourceItem;
+end;
+
+function TSVGIconImageList.GetIconByName(const AName: string): TSVGIconSourceItem;
+var
+  LItemIndex: Integer;
+begin
+  LItemIndex := Self.Source.IndexOf(AName);
+  if LItemIndex >= 0 then Result := Self.GetIcon(LItemIndex);
 end;
 
 function TSVGIconImageList.LoadFromFiles(const AFileNames: TStrings;
