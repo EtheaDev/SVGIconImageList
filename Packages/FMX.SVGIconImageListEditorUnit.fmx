@@ -5,7 +5,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
   Caption = 
     'FireMonkey SVG Icons ImageList Editor %s - Copyright Ethea S.r.l' +
     '.'
-  ClientHeight = 623
+  ClientHeight = 624
   ClientWidth = 800
   FormFactor.Width = 320
   FormFactor.Height = 480
@@ -166,8 +166,8 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
     Top = 102
   end
   object BottomPanel: TPanel
-    Align = Bottom
-    Position.Y = 591.000000000000000000
+    Align = MostBottom
+    Position.Y = 592.000000000000000000
     Size.Width = 800.000000000000000000
     Size.Height = 32.000000000000000000
     Size.PlatformDefault = False
@@ -211,14 +211,14 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
   object TopPanel: TPanel
     Align = Client
     Size.Width = 800.000000000000000000
-    Size.Height = 408.000000000000000000
+    Size.Height = 346.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
     object ButtonsPanel: TPanel
       Align = Right
       Position.X = 688.000000000000000000
       Size.Width = 112.000000000000000000
-      Size.Height = 408.000000000000000000
+      Size.Height = 346.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 2
       object AddButton: TButton
@@ -265,26 +265,26 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
     object paClient: TPanel
       Align = Client
       Size.Width = 688.000000000000000000
-      Size.Height = 408.000000000000000000
+      Size.Height = 346.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
       object ImageListGroupBox: TGroupBox
         Align = Left
         Size.Width = 217.000000000000000000
-        Size.Height = 408.000000000000000000
+        Size.Height = 346.000000000000000000
         Size.PlatformDefault = False
         Text = 'Properties of ImageList'
         TabOrder = 1
         object AutoSizeCheckBox: TCheckBox
           Position.X = 94.000000000000000000
           Position.Y = 25.000000000000000000
-          TabOrder = 13
+          TabOrder = 14
           Text = 'AutoSizeBitmaps'
           OnChange = AutoSizeCheckBoxClick
         end
         object DefaultOpacitySpinBox: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 10
+          TabOrder = 12
           Cursor = crIBeam
           DecimalDigits = 1
           Value = 100.000000000000000000
@@ -327,29 +327,19 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Text = 'Size (in pixel)'
           TabOrder = 0
         end
-        object FixedColorComboBox: TComboEdit
-          Position.X = 6.000000000000000000
-          Position.Y = 161.000000000000000000
-          Size.Width = 167.000000000000000000
-          Size.Height = 22.000000000000000000
-          Size.PlatformDefault = False
-          TabOrder = 12
-          OnChange = FixedColorComboBoxChange
-          OnChangeTracking = FixedColorComboBoxChangeTracking
-        end
         object FixedColorLabel: TLabel
           Position.X = 6.000000000000000000
           Position.Y = 144.000000000000000000
           Size.Width = 107.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
-          Text = 'Fixed Color (HEX)'
-          TabOrder = 11
+          Text = 'Fixed Color'
+          TabOrder = 13
         end
         object GrayScaleCheckBox: TCheckBox
           Position.X = 94.000000000000000000
           Position.Y = 44.000000000000000000
-          TabOrder = 14
+          TabOrder = 15
           Text = 'GrayScale'
           OnChange = GrayScaleCheckBoxChange
         end
@@ -365,7 +355,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         end
         object WidthSpinBox: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 5
+          TabOrder = 6
           Cursor = crIBeam
           DecimalDigits = 0
           Max = 256.000000000000000000
@@ -383,12 +373,12 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Height (in pixel)'
-          TabOrder = 6
+          TabOrder = 7
           TabStop = False
         end
         object HeightSpinBox: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 7
+          TabOrder = 9
           Cursor = crIBeam
           DecimalDigits = 0
           Max = 256.000000000000000000
@@ -407,12 +397,12 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Zoom %'
-          TabOrder = 8
+          TabOrder = 10
           TabStop = False
         end
         object ZoomSpinBox: TSpinBox
           Touch.InteractiveGestures = [LongTap, DoubleTap]
-          TabOrder = 9
+          TabOrder = 11
           Cursor = crIBeam
           DecimalDigits = 0
           Min = 10.000000000000000000
@@ -425,20 +415,41 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           OnChange = ZoomChange
         end
         object ApplyToRootOnlyCheckBox: TCheckBox
-          Position.X = 6.000000000000000000
-          Position.Y = 186.000000000000000000
-          Size.Width = 171.000000000000000000
+          Position.X = 8.000000000000000000
+          Position.Y = 194.000000000000000000
+          Size.Width = 166.000000000000000000
           Size.Height = 19.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 2
-          Text = 'Apply to Root only'
+          Text = 'Fixed Color for Root only'
           OnChange = ApplyToRootOnlyCheckBoxChange
+        end
+        object FixedColorComboColorBox: TComboColorBox
+          Color = claNull
+          Position.X = 6.000000000000000000
+          Position.Y = 161.000000000000000000
+          Size.Width = 40.000000000000000000
+          Size.Height = 22.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 5
+          UseAlpha = False
+          OnChange = FixedColorComboColorBoxChange
+        end
+        object FixedColorEdit: TEdit
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 8
+          Position.X = 50.000000000000000000
+          Position.Y = 161.000000000000000000
+          Size.Width = 124.000000000000000000
+          Size.Height = 22.000000000000000000
+          Size.PlatformDefault = False
+          OnChange = FixedColorEditChange
         end
       end
       object IconsGroupBox: TGroupBox
         Align = Client
         Size.Width = 471.000000000000000000
-        Size.Height = 408.000000000000000000
+        Size.Height = 346.000000000000000000
         Size.PlatformDefault = False
         Text = '%d Icons of Imagelist'
         TabOrder = 2
@@ -449,7 +460,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Margins.Right = 4.000000000000000000
           Margins.Bottom = 4.000000000000000000
           Size.Width = 463.000000000000000000
-          Size.Height = 388.000000000000000000
+          Size.Height = 326.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 0
           OnDragOver = ImageViewDragOver
@@ -465,144 +476,195 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           OnChange = ImageViewSelectItem
           OnDragChange = ImageViewDragChange
           Viewport.Width = 459.000000000000000000
-          Viewport.Height = 384.000000000000000000
+          Viewport.Height = 322.000000000000000000
         end
       end
     end
   end
   object ItemPanel: TPanel
     Align = Bottom
-    Position.Y = 414.000000000000000000
+    Position.Y = 347.000000000000000000
     Size.Width = 800.000000000000000000
-    Size.Height = 177.000000000000000000
+    Size.Height = 245.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
     object ItemGroupBox: TGroupBox
       Align = Client
-      Size.Width = 656.000000000000000000
-      Size.Height = 177.000000000000000000
+      Padding.Left = 10.000000000000000000
+      Padding.Top = 20.000000000000000000
+      Padding.Right = 10.000000000000000000
+      Padding.Bottom = 10.000000000000000000
+      Size.Width = 680.000000000000000000
+      Size.Height = 245.000000000000000000
       Size.PlatformDefault = False
       Text = 'Properties of Selected Icon n.%d'
       TabOrder = 1
-      object IconName: TEdit
-        Touch.InteractiveGestures = [LongTap, DoubleTap]
-        TabOrder = 5
-        Position.X = 11.000000000000000000
-        Position.Y = 72.000000000000000000
-        Size.Width = 155.000000000000000000
-        Size.Height = 22.000000000000000000
-        Size.PlatformDefault = False
-        OnExit = IconNameExit
-      end
-      object IconNameLabel: TLabel
-        Position.X = 11.000000000000000000
-        Position.Y = 56.000000000000000000
-        Size.Width = 74.000000000000000000
-        Size.Height = 17.000000000000000000
-        Size.PlatformDefault = False
-        Text = 'IconName'
-        TabOrder = 4
-      end
-      object OpacityLabel: TLabel
-        Position.X = 11.000000000000000000
-        Position.Y = 15.000000000000000000
-        Size.Width = 97.000000000000000000
-        Size.Height = 17.000000000000000000
-        Size.PlatformDefault = False
-        Text = '% Opacity'
-        TabOrder = 0
-      end
-      object OpacitySpinBox: TSpinBox
-        Touch.InteractiveGestures = [LongTap, DoubleTap]
-        TabOrder = 2
-        Cursor = crIBeam
-        Value = 100.000000000000000000
-        Position.X = 11.000000000000000000
-        Position.Y = 33.000000000000000000
-        Size.Width = 77.000000000000000000
-        Size.Height = 22.000000000000000000
-        Size.PlatformDefault = False
-        OnChange = OpacitySpinBoxChange
-      end
       object SVGText: TMemo
         Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
         DataDetectorTypes = []
-        Anchors = [akLeft, akTop, akRight, akBottom]
-        Position.X = 176.000000000000000000
-        Position.Y = 16.000000000000000000
-        Size.Width = 471.000000000000000000
-        Size.Height = 154.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 8
-        OnExit = SVGTextExit
-        Viewport.Width = 467.000000000000000000
-        Viewport.Height = 150.000000000000000000
-      end
-      object GrayScaleItemCheckBox: TCheckBox
-        Position.X = 90.000000000000000000
-        Position.Y = 38.000000000000000000
-        Size.Width = 78.000000000000000000
-        Size.Height = 19.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 3
-        Text = 'GrayScale'
-        OnChange = GrayScaleItemCheckBoxChange
-      end
-      object FixedColorItemLabel: TLabel
-        Position.X = 10.000000000000000000
-        Position.Y = 94.000000000000000000
-        Size.Width = 107.000000000000000000
-        Size.Height = 17.000000000000000000
-        Size.PlatformDefault = False
-        Text = 'Fixed Color (HEX)'
-        TabOrder = 6
-      end
-      object FixedColorItemComboBox: TComboEdit
-        Position.X = 11.000000000000000000
-        Position.Y = 111.000000000000000000
-        Size.Width = 154.000000000000000000
-        Size.Height = 22.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 7
-        OnChange = FixedColorItemComboBoxChange
-        OnChangeTracking = FixedColorItemComboBoxChangeTracking
-      end
-      object ReformatXMLButton: TButton
-        Cancel = True
-        Position.X = 12.000000000000000000
-        Position.Y = 143.000000000000000000
-        Size.Width = 152.000000000000000000
-        Size.Height = 26.000000000000000000
+        Align = Client
+        Size.Width = 516.000000000000000000
+        Size.Height = 157.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
-        Text = 'Reformat XML'
-        OnClick = ReformatXMLButtonClick
+        OnExit = SVGTextExit
+        Viewport.Width = 512.000000000000000000
+        Viewport.Height = 153.000000000000000000
+      end
+      object IconControlsPanel: TPanel
+        Align = Top
+        Margins.Bottom = 5.000000000000000000
+        Position.X = 10.000000000000000000
+        Position.Y = 20.000000000000000000
+        Size.Width = 660.000000000000000000
+        Size.Height = 53.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 30
+        object FixedColorItemLabel: TLabel
+          Position.X = 159.000000000000000000
+          Position.Y = 5.000000000000000000
+          Size.Width = 107.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'Fixed Color'
+          TabOrder = 6
+        end
+        object GrayScaleItemCheckBox: TCheckBox
+          Position.X = 383.000000000000000000
+          Position.Y = 2.000000000000000000
+          Size.Width = 78.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 3
+          Text = 'GrayScale'
+          OnChange = GrayScaleItemCheckBoxChange
+        end
+        object IconName: TEdit
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 5
+          Position.X = 8.000000000000000000
+          Position.Y = 23.000000000000000000
+          Size.Width = 143.000000000000000000
+          Size.Height = 22.000000000000000000
+          Size.PlatformDefault = False
+          OnExit = IconNameExit
+        end
+        object IconNameLabel: TLabel
+          Position.X = 8.000000000000000000
+          Position.Y = 5.000000000000000000
+          Size.Width = 74.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'IconName'
+          TabOrder = 4
+        end
+        object OpacityLabel: TLabel
+          Position.X = 300.000000000000000000
+          Position.Y = 2.000000000000000000
+          Size.Width = 74.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'Opacity'
+          TabOrder = 0
+        end
+        object OpacitySpinBox: TSpinBox
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 1
+          Cursor = crIBeam
+          Value = 100.000000000000000000
+          Position.X = 298.000000000000000000
+          Position.Y = 23.000000000000000000
+          Size.Width = 77.000000000000000000
+          Size.Height = 22.000000000000000000
+          Size.PlatformDefault = False
+          OnChange = OpacitySpinBoxChange
+        end
+        object ApplyToRootOnlyItemCheckBox: TCheckBox
+          Position.X = 383.000000000000000000
+          Position.Y = 26.000000000000000000
+          Size.Width = 162.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 2
+          Text = 'FIxed Color for Root only'
+          OnChange = ApplyToRootOnlyItemCheckBoxChange
+        end
+        object FixedColorItemComboColorBox: TComboColorBox
+          Color = claNull
+          Position.X = 159.000000000000000000
+          Position.Y = 23.000000000000000000
+          Size.Width = 40.000000000000000000
+          Size.Height = 22.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 7
+          UseAlpha = False
+          OnChange = FixedColorItemComboColorBoxChange
+        end
+        object FixedColorItemEdit: TEdit
+          Touch.InteractiveGestures = [LongTap, DoubleTap]
+          TabOrder = 8
+          Position.X = 207.000000000000000000
+          Position.Y = 23.000000000000000000
+          Size.Width = 83.000000000000000000
+          Size.Height = 22.000000000000000000
+          Size.PlatformDefault = False
+          OnChange = FixedColorItemEditChange
+        end
+      end
+      object IconPanel: TPanel
+        Align = Left
+        Margins.Left = 8.000000000000000000
+        Margins.Top = 8.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 8.000000000000000000
+        Position.X = 18.000000000000000000
+        Position.Y = 86.000000000000000000
+        Size.Width = 128.000000000000000000
+        Size.Height = 141.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        object IconImage: TGlyph
+          Margins.Left = 4.000000000000000000
+          Margins.Top = 4.000000000000000000
+          Margins.Right = 4.000000000000000000
+          Margins.Bottom = 4.000000000000000000
+          Align = Top
+          Position.X = 4.000000000000000000
+          Position.Y = 4.000000000000000000
+          Size.Width = 120.000000000000000000
+          Size.Height = 120.000000000000000000
+          Size.PlatformDefault = False
+          ImageIndex = 1
+        end
       end
     end
-    object IconPanel: TPanel
-      Align = Left
+    object IconButtonsPanel: TPanel
+      Align = Right
+      Padding.Left = 5.000000000000000000
+      Padding.Top = 5.000000000000000000
+      Padding.Right = 5.000000000000000000
+      Padding.Bottom = 5.000000000000000000
       Margins.Left = 8.000000000000000000
       Margins.Top = 8.000000000000000000
       Margins.Right = 8.000000000000000000
       Margins.Bottom = 8.000000000000000000
-      Position.X = 8.000000000000000000
+      Position.X = 688.000000000000000000
       Position.Y = 8.000000000000000000
-      Size.Width = 128.000000000000000000
-      Size.Height = 161.000000000000000000
+      Size.Width = 104.000000000000000000
+      Size.Height = 229.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
-      object IconImage: TGlyph
-        Margins.Left = 4.000000000000000000
-        Margins.Top = 4.000000000000000000
-        Margins.Right = 4.000000000000000000
-        Margins.Bottom = 4.000000000000000000
-        Align = Top
-        Position.X = 4.000000000000000000
-        Position.Y = 4.000000000000000000
-        Size.Width = 120.000000000000000000
-        Size.Height = 120.000000000000000000
+      object ReformatXMLButton: TButton
+        Align = Bottom
+        Cancel = True
+        Position.X = 5.000000000000000000
+        Position.Y = 198.000000000000000000
+        Size.Width = 94.000000000000000000
+        Size.Height = 26.000000000000000000
         Size.PlatformDefault = False
-        ImageIndex = 1
+        TabOrder = 0
+        Text = 'Reformat XML'
+        OnClick = ReformatXMLButtonClick
       end
     end
   end
@@ -610,9 +672,9 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
     Align = Bottom
     Cursor = crVSplit
     MinSize = 160.000000000000000000
-    Position.Y = 408.000000000000000000
+    Position.Y = 346.000000000000000000
     Size.Width = 800.000000000000000000
-    Size.Height = 6.000000000000000000
+    Size.Height = 1.000000000000000000
     Size.PlatformDefault = False
   end
 end

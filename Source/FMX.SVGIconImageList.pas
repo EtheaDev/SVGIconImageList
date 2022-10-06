@@ -147,8 +147,6 @@ type
     function CreateMultiResBitmap: TMultiResBitmap; override;
     function StoreOpacity: Boolean; virtual;
   public
-    class function HTMLColorToAlphaColor(const AColor: string): TAlphaColor;
-
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
@@ -209,6 +207,8 @@ type
     function CloneIcon(const AIndex: Integer; const AInsertIndex: Integer = -1): TSVGIconSourceItem;
     function GetIcon(const AIndex: Integer): TSVGIconSourceItem;
     function GetIconByName(const AName: string): TSVGIconSourceItem;
+    function ExtractSVG(const AIndex: Integer): TFmxImageSVG;
+    function ExtractSVGByName(const AName: string): TFmxImageSVG;
     //Multiple icons methods
     function LoadFromFiles(const AFileNames: TStrings;
       const AAppend: Boolean = True): Integer;
@@ -453,23 +453,6 @@ end;
 
 { TSVGIconSourceItem }
 
-class function TSVGIconSourceItem.HTMLColorToAlphaColor(const AColor: string): TAlphaColor;
-var
-  LClearColorCode: string;
-  R, G, B: Integer;
-begin
-  if Length(AColor) < 6 then Exit(SVG_INHERIT_COLOR);
-
-  if AColor[1] = '#' then LClearColorCode := Copy(AColor, 2)
-  else LClearColorCode := AColor;
-
-  R := StrToInt('$' + Copy(LClearColorCode, 1, 2));
-  G := StrToInt('$' + Copy(LClearColorCode, 3, 2));
-  B := StrToInt('$' + Copy(LClearColorCode, 5, 2));
-
-  Result := TAlphaColorF.Create(R / 255, G / 255, B / 255, 1).ToAlphaColor;
-end;
-
 procedure TSVGIconSourceItem.Assign(Source: TPersistent);
 begin
   if Source is TSVGIconSourceItem then
@@ -702,7 +685,7 @@ var
   LItem: TSVGIconSourceItem;
   LNewIndex: Integer;
 begin
-  LItem := Self.Source.Items[AIndex] as TSVGIconSourceItem;
+  LItem := Self.GetIcon(AIndex);
 
   if AInsertIndex >= 0 then LNewIndex := AInsertIndex
   else LNewIndex := AIndex;
@@ -726,6 +709,37 @@ var
 begin
   LItemIndex := Self.Source.IndexOf(AName);
   if LItemIndex >= 0 then Result := Self.GetIcon(LItemIndex);
+end;
+
+function TSVGIconImageList.ExtractSVG(const AIndex: Integer): TFmxImageSVG;
+var
+  LItem: TSVGIconSourceItem;
+begin
+  LItem := Self.GetIcon(AIndex);
+
+  if Assigned(LItem) then
+  begin
+    {$IFDEF Image32_SVGEngine}
+    Result := TFmxImage32SVG.Create;
+    {$ENDIF}
+    {$IFDEF Skia_SVGEngine}
+    Result := TFmxImageSKIASVG.Create;
+    {$ENDIF}
+
+    Result.LoadFromText(LItem.SVG.Source);
+    Result.Opacity := LItem.Opacity;
+    Result.FixedColor := LItem.FixedColor;
+    Result.GrayScale := LItem.GrayScale;
+  end;
+end;
+
+function TSVGIconImageList.ExtractSVGByName(const AName: string): TFmxImageSVG;
+var
+  LItemIndex: Integer;
+  LItem: TSVGIconSourceItem;
+begin
+  LItemIndex := Self.Source.IndexOf(AName);
+  if Assigned(LItem) then Result := Self.ExtractSVG(LItemIndex);
 end;
 
 function TSVGIconImageList.LoadFromFiles(const AFileNames: TStrings;
