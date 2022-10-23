@@ -3,8 +3,8 @@ object ExportToPNGDialog: TExportToPNGDialog
   Top = 168
   BorderStyle = bsDialog
   Caption = 'Export SVG to PNG files'
-  ClientHeight = 280
-  ClientWidth = 458
+  ClientHeight = 279
+  ClientWidth = 454
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -37,6 +37,13 @@ object ExportToPNGDialog: TExportToPNGDialog
     Width = 46
     Height = 13
     Caption = 'Filename'
+  end
+  object SVGIconImage: TSVGIconImage
+    Left = 24
+    Top = 8
+    Width = 200
+    Height = 200
+    AutoSize = False
   end
   object FSearchOptions: TGroupBox
     Left = 247
@@ -176,13 +183,6 @@ object ExportToPNGDialog: TExportToPNGDialog
     TabOrder = 2
     OnClick = btnCancelClick
   end
-  object SVGIconImage: TSVGIconImage
-    Left = 24
-    Top = 8
-    Width = 200
-    Height = 200
-    AutoSize = False
-  end
   object FormatEdit: TEdit
     Left = 247
     Top = 174
@@ -198,7 +198,7 @@ object ExportToPNGDialog: TExportToPNGDialog
     Width = 169
     Height = 23
     Caption = 'Change output filename...'
-    TabOrder = 5
+    TabOrder = 3
     OnClick = OutputButtonClick
   end
   object SavePNGDialog: TSaveDialog

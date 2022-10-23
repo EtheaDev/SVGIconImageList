@@ -47,7 +47,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '3.9.3';
+  SVGIconImageListVersion = '3.9.4';
   DEFAULT_SIZE = 32;
   ZOOM_DEFAULT = 100;
   SVG_INHERIT_COLOR = TAlphaColors.Null;
@@ -708,7 +708,10 @@ var
   LItemIndex: Integer;
 begin
   LItemIndex := Self.Source.IndexOf(AName);
-  if LItemIndex >= 0 then Result := Self.GetIcon(LItemIndex);
+  if LItemIndex >= 0 then
+    Result := Self.GetIcon(LItemIndex)
+  else
+    Result := nil;
 end;
 
 function TSVGIconImageList.ExtractSVG(const AIndex: Integer): TFmxImageSVG;
@@ -730,16 +733,20 @@ begin
     Result.Opacity := LItem.Opacity;
     Result.FixedColor := LItem.FixedColor;
     Result.GrayScale := LItem.GrayScale;
-  end;
+  end
+  else
+    Result := nil;
 end;
 
 function TSVGIconImageList.ExtractSVGByName(const AName: string): TFmxImageSVG;
 var
   LItemIndex: Integer;
-  LItem: TSVGIconSourceItem;
 begin
   LItemIndex := Self.Source.IndexOf(AName);
-  if Assigned(LItem) then Result := Self.ExtractSVG(LItemIndex);
+  if LItemIndex >= 0 then
+    Result := Self.ExtractSVG(LItemIndex)
+  else
+    Result := nil;
 end;
 
 function TSVGIconImageList.LoadFromFiles(const AFileNames: TStrings;

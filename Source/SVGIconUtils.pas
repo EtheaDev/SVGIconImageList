@@ -47,6 +47,16 @@ uses
   , Vcl.Imaging.pngimage
   , ComCtrls;
 
+Type
+  TPngExportSize = (es16, es32, es48, es64, es96, es128, es192, es256, esCustom);
+  TPngExportSizes = Set of TPngExportSize;
+
+  TExportToPngEvent = procedure (const ASizes: TPngExportSizes; const SVGText: string;
+    const AFolder, AFormat: string; ACustomSize: Integer) of Object;
+
+const
+  AllPngExportSizes = [es16, es32, es48, es64, es96, es128, es192, es256, esCustom];
+
 function UpdateSVGIconListView(const AListView: TListView;
   const ACategory: string = '';
   const AIncludeIndex: Boolean = True): Integer;
@@ -63,7 +73,7 @@ uses
   System.SysUtils
   , System.Types
   , Vcl.Themes
-  , SVGIconImageCOllection
+  , SVGIconImageCollection
   {$IFDEF D10_3}
   , VirtualImageList
   {$ENDIF}

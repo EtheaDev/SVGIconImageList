@@ -145,6 +145,8 @@ begin
     Result := 'Delphi TSVG Engine'
   {$ELSEIF DEFINED(Image32_SVGEngine)}
     Result := 'Delphi Image32 Engine'
+  {$ELSEIF DEFINED(Skia_SVGEngine)}
+    Result := 'Skia4delphi Engine'
   {$ENDIF}
 end;
 

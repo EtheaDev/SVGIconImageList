@@ -509,7 +509,10 @@ end;
 procedure TSVGIconImage.SetSVGText(const AValue: string);
 begin
   FSVG.Source := AValue;
-  Repaint;
+  if AValue = '' then
+    Clear
+  else
+    Repaint;
 end;
 
 procedure TSVGIconImage.SetOpacity(Value: Byte);

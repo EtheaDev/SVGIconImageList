@@ -132,7 +132,7 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
-                <DeployFile LocalName="Win32\Debug\CategoryButtonTest.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\Bin\CategoryButtonTest.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>CategoryButtonTest.exe</RemoteName>
                         <Overwrite>true</Overwrite>

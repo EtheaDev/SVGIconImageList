@@ -5,7 +5,7 @@
 {                                                                              }
 {       Copyright (c) 2019-2022 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
-{       Contributors:                                                          }
+{       Contributors: Volodymyr B.                                             }
 {                                                                              }
 {       https://github.com/EtheaDev/SVGIconImageList                           }
 {                                                                              }
@@ -306,7 +306,6 @@ procedure TSVGIconImageListEditorFMX.UpdateGUI;
 var
   LIsItemSelected: Boolean;
   LIconItem: TSVGIconSourceItem;
-  LColorString: string;
 begin
   FUpdating := True;
   try
@@ -610,8 +609,8 @@ end;
 
 procedure TSVGIconImageListEditorFMX.FormResize(Sender: TObject);
 begin
-  if ClientWidth < 800 then
-    ClientWidth := 800;
+  if ClientWidth < 760 then
+    ClientWidth := 760;
   if ClientHeight < 500 then
     ClientHeight := 500;
 end;

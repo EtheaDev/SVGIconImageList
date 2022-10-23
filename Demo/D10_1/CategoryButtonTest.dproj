@@ -129,16 +129,6 @@
                     <Source Name="MainSource">CategoryButtonTest.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Program Files (x86)\FastReports\LibD24\dclfrx24.bpl">File C:\Program Files (x86)\FastReports\LibD24\dclfrx24.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Program Files (x86)\FastReports\LibD24\dclfrxDB24.bpl">File C:\Program Files (x86)\FastReports\LibD24\dclfrxDB24.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Program Files (x86)\FastReports\LibD24\dclfrxe24.bpl">File C:\Program Files (x86)\FastReports\LibD24\dclfrxe24.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Program Files (x86)\FastReports\LibD24\dclfrxtee24.bpl">File C:\Program Files (x86)\FastReports\LibD24\dclfrxtee24.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\dclISRtl7_D10_1.bpl">Ethea InstantSolutions 7 Rtl Library</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\dclISVcl7_D10_1.bpl">Ethea InstantSolutions 7 Vcl Library</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\dclISOpenOffice7_D10_1.bpl">Ethea InstantSolutions 7 LibreOffice/OpenOffice Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl\dclISFLib7_D10_1.bpl">Ethea InstantSolutions 7 Framework Library</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k240.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp240.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
