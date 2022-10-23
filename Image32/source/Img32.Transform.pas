@@ -2,8 +2,8 @@ unit Img32.Transform;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.2                                                             *
-* Date      :  30 May 2022                                                     *
+* Version   :  4.3                                                             *
+* Date      :  27 September 2022                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -65,11 +65,9 @@ type
     const srcPts, dstPts: TPathD; const margins: TRect): Boolean;
 
   function SplineVertTransform(img: TImage32; const topSpline: TPathD;
-    splineType: TSplineType; backColor: TColor32; reverseFill: Boolean;
-    out offset: TPoint): Boolean;
+    splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean;
   function SplineHorzTransform(img: TImage32; const leftSpline: TPathD;
-    splineType: TSplineType; backColor: TColor32; reverseFill: Boolean;
-    out offset: TPoint): Boolean;
+    splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean;
 
   function ExtractAngleFromMatrix(const mat: TMatrixD): double;
   function ExtractScaleFromMatrix(const mat: TMatrixD): TSizeD;
@@ -686,8 +684,7 @@ end;
 //------------------------------------------------------------------------------
 
 function SplineVertTransform(img: TImage32; const topSpline: TPathD;
-  splineType: TSplineType; backColor: TColor32; reverseFill: Boolean;
-  out offset: TPoint): Boolean;
+  splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean;
 var
   i,j, w,h, len: integer;
   y, q: double;
@@ -755,8 +752,7 @@ end;
 //------------------------------------------------------------------------------
 
 function SplineHorzTransform(img: TImage32; const leftSpline: TPathD;
-  splineType: TSplineType; backColor: TColor32; reverseFill: Boolean;
-  out offset: TPoint): Boolean;
+  splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean;
 var
   i,j, len, w,h: integer;
   x, q, prevY: double;

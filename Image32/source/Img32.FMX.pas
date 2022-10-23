@@ -2,8 +2,8 @@ unit Img32.FMX;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.2                                                             *
-* Date      :  30 May 2022                                                     *
+* Version   :  4.3                                                             *
+* Date      :  27 September 2022                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 * Purpose   :  Image file format support for TImage32 and FMX                  *
@@ -20,6 +20,7 @@ uses
   FMX.Platform, FMX.Types, FMX.Surfaces, FMX.Graphics, Img32;
 
 type
+
   TImageFormat_FMX = class(TImageFormat)
   private
     fExt: string;
@@ -119,7 +120,6 @@ begin
   try
     surf.SetSize(img32.Width, img32.Height, TPixelFormat.BGRA);
     Move(img32.PixelBase^, surf.Scanline[0]^, img32.Width * img32.Height * 4);
-
     if Ext = '' then
       cm.SaveToStream(stream, surf, 'PNG') else
       cm.SaveToStream(stream, surf, Ext);
@@ -138,7 +138,6 @@ begin
   Result := assigned(img32) and not img32.IsEmpty and
     TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, svc);
   if not Result then Exit;
-
   surf := TBitmapSurface.Create;
   try
     surf.SetSize(img32.Width, img32.Height, TPixelFormat.BGRA);
@@ -162,7 +161,6 @@ begin
   end else
     Result := false;
 end;
-
 //------------------------------------------------------------------------------
 
 class function TImageFormat_FMX.PasteFromClipboard(img32: TImage32): Boolean;
@@ -175,10 +173,8 @@ begin
   if not assigned(img32) or
     not TPlatformServices.Current.SupportsPlatformService(
     IFMXClipboardService, svc) then Exit;
-
   value := svc.GetClipboard;
   if not Value.IsObject then Exit;
-
   if Value.IsType<TBitmapSurface> and
     ((Value.AsType<TBitmapSurface>.PixelFormat = TPixelFormat.RGBA) or
     (Value.AsType<TBitmapSurface>.PixelFormat = TPixelFormat.BGRA)) then
@@ -198,8 +194,8 @@ var
   src, dst: TBitmapData; //TBitmapData is a record.
 begin
   if not Assigned(img) or not Assigned(bmp) then Exit;
-
-  src := TBitmapData.Create(img.Width, img.Height, TPixelFormat.BGRA);
+  //src := TBitmapData.Create(img.Width, img.Height, TPixelFormat.BGRA);
+  src := TBitmapData.Create(img.Width, img.Height, TPixelFormat.RGBA);
   src.Data := img.PixelBase;
   src.Pitch := img.Width * 4;
   bmp.SetSize(img.Width, img.Height);
@@ -210,9 +206,9 @@ begin
     bmp.Unmap(dst);
   end;
 end;
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 procedure CheckScreenScale;
 var
   ScreenService: IFMXScreenService;
@@ -237,4 +233,3 @@ initialization
 {$ENDIF}
 
 end.
-

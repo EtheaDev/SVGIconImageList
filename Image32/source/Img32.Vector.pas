@@ -2,8 +2,8 @@ unit Img32.Vector;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.2                                                            *
-* Date      :  28 July 2022                                                    *
+* Version   :  4.3                                                             *
+* Date      :  27 September 2022                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -337,7 +337,11 @@ type
   function GetUnitVector(const pt1, pt2: TPointD): TPointD;
 
   //GetUnitNormal: Used internally
-  function GetUnitNormal(const pt1, pt2: TPointD): TPointD;
+  function GetUnitNormal(const pt1, pt2: TPointD): TPointD; overload;
+  {$IFDEF INLINING} inline; {$ENDIF}
+  function GetUnitNormal(const pt1, pt2: TPointD; out norm: TPointD): Boolean; overload;
+  {$IFDEF INLINING} inline; {$ENDIF}
+
   function GetAvgUnitVector(const vec1, vec2: TPointD): TPointD;
   {$IFDEF INLINING} inline; {$ENDIF}
 
@@ -412,7 +416,7 @@ type
   //With a positive delta, clockwise paths will expand and counter-clockwise
   //ones will contract. The reverse happens with negative deltas.
   function Grow(const path, normals: TPathD; delta: double; joinStyle: TJoinStyle;
-    miterLimOrRndScale: double; isOpen: Boolean = false): TPathD;
+    miterLim: double; isOpen: Boolean = false): TPathD;
 
   function ValueAlmostZero(val: double; epsilon: double = 0.001): Boolean;
   function ValueAlmostOne(val: double; epsilon: double = 0.001): Boolean;
@@ -1036,21 +1040,25 @@ end;
 //------------------------------------------------------------------------------
 
 function GetUnitNormal(const pt1, pt2: TPointD): TPointD;
+begin
+  if not GetUnitNormal(pt1, pt2, Result) then
+    Result := NullPointD;
+end;
+//------------------------------------------------------------------------------
+
+function GetUnitNormal(const pt1, pt2: TPointD; out norm: TPointD): Boolean;
 var
   dx, dy, inverseHypot: Double;
 begin
-  if PointsNearEqual(pt1, pt2, 0.001) then
-  begin
-    Result := NullPointD;
-    Exit;
-  end;
+  result := not PointsNearEqual(pt1, pt2, 0.001);
+  if not result then Exit;
   dx := (pt2.X - pt1.X);
   dy := (pt2.Y - pt1.Y);
   inverseHypot := 1 / Hypot(dx, dy);
   dx := dx * inverseHypot;
   dy := dy * inverseHypot;
-  Result.X := dy;
-  Result.Y := -dx
+  norm.X := dy;
+  norm.Y := -dx
 end;
 //------------------------------------------------------------------------------
 
@@ -1330,39 +1338,29 @@ end;
 
 function GetNormals(const path: TPathD): TPathD;
 var
-  i,highI,j, len: cardinal;
-  pt: TPointD;
+  i, highI: integer;
+  last: TPointD;
 begin
-  len := length(path);
-  setLength(result, len);
-  if len = 0 then Exit;
-  pt := path[0];
-  //watch out for, and fix up duplicates at end of line
-  highI := len -1;
-  while (highI > 0) and PointsNearEqual(path[highI], pt, 0.001) do dec(highI);
-  if (highI = 0) then
+  highI := High(path);
+  setLength(result, highI+1);
+  if highI < 0 then Exit;
+
+  last := NullPointD;
+  for i := 0 to highI -1 do
   begin
-    //all points are equal!
-    for i := 0 to len -1 do result[i] := PointD(0,0);
-    Exit;
+    if GetUnitNormal(path[i], path[i+1], result[i]) then
+      last := result[i] else
+      result[i] := last;
   end;
-  result[highI] := GetUnitNormal(path[highI], pt);
-  //now fix up any duplicates at the end of the path
-  for j := highI +1 to len -1 do result[j] := result[j-1];
-  //with at least one valid vector, we can now
-  //safely get the remaining vectors
-  pt := path[highI];
-  for i := highI -1 downto 0 do
+  if GetUnitNormal(path[highI], path[0], result[highI]) then
+    last := result[highI];
+
+  for i := 0 to highI do
   begin
-    if (path[i].X <> pt.X) or (path[i].Y <> pt.Y) then
-    begin
-      result[i] := GetUnitNormal(path[i], pt);
-      if (Result[i].X = 0) and (Result[i].Y = 0) then
-        Result[i] := Result[i+1];
-      pt := path[i];
-    end else
-      result[i] := result[i+1]
+    if (result[i].X <> 0) or (result[i].Y <> 0) then Break;
+    result[i] := last;
   end;
+
 end;
 //------------------------------------------------------------------------------
 
@@ -1773,15 +1771,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function GetNormal(const pt, norm: TPointD; delta: double): TPointD;
+function ApplyNormal(const pt, norm: TPointD; delta: double): TPointD;
+  {$IFDEF INLINE} inline; {$ENDIF}
 begin
   result := PointD(pt.X + norm.X * delta, pt.Y + norm.Y * delta);
-end;
-//------------------------------------------------------------------------------
-
-function GetVector(const pt, norm: TPointD; delta: double): TPointD;
-begin
-  result := PointD(pt.X - norm.Y * delta, pt.Y + norm.X * delta);
 end;
 //------------------------------------------------------------------------------
 
@@ -1793,13 +1786,13 @@ begin
   len := Length(path);
   highI := len -1;
   SetLength(Result, len *2);
-  Result[0]  := GetNormal(path[0], norms[0], delta);
+  Result[0]  := ApplyNormal(path[0], norms[0], delta);
   for i := 1 to highI do
   begin
-    Result[i*2-1] := GetNormal(path[i], norms[i-1], delta);
-    Result[i*2]   := GetNormal(path[i], norms[i], delta);
+    Result[i*2-1] := ApplyNormal(path[i], norms[i-1], delta);
+    Result[i*2]   := ApplyNormal(path[i], norms[i], delta);
   end;
-  Result[highI*2+1] := GetNormal(path[0], norms[highI], delta);
+  Result[highI*2+1] := ApplyNormal(path[0], norms[highI], delta);
 end;
 //------------------------------------------------------------------------------
 
@@ -1846,9 +1839,11 @@ end;
 //------------------------------------------------------------------------------
 
 function Grow(const path, normals: TPathD; delta: double;
-  joinStyle: TJoinStyle; miterLimOrRndScale: double; isOpen: Boolean): TPathD;
+  joinStyle: TJoinStyle; miterLim: double; isOpen: Boolean): TPathD;
 var
   resCnt, resCap: integer;
+  norms : TPathD;
+  parallelOffsets : TPathD;
 
   procedure AddPoint(const pt: TPointD);
   begin
@@ -1861,6 +1856,42 @@ var
     inc(resCnt);
   end;
 
+  procedure DoMiter(i, prevI: integer; cosA: double);
+  var
+    a: double;
+  begin
+    a := delta / (1 + cosA); //see offset_triginometry4.svg
+    AddPoint(PointD(path[i].X + (norms[i].X + norms[prevI].X) * a,
+          path[i].Y + (norms[i].Y + norms[prevI].Y) * a));
+  end;
+  
+  procedure DoSquare(i, prevI: integer);
+  var
+    pt1, pt2, pt3, pt4: TPointD;
+    pt, ptQ : TPointD;
+    vec     : TPointD;
+  begin
+    // using the reciprocal of unit normals (as unit vectors)
+    // get the average unit vector ...
+    vec := GetAvgUnitVector(
+      PointD(-norms[prevI].Y, norms[prevI].X),
+      PointD(norms[i].Y, -norms[i].X));
+    // now offset the original vertex delta units along unit vector
+    ptQ := OffsetPoint(path[i], delta * vec.X, delta * vec.Y);
+
+    // get perpendicular vertices
+    pt1 := OffsetPoint(ptQ, delta * vec.Y, delta * -vec.X);
+    pt2 := OffsetPoint(ptQ, delta * -vec.Y, delta * vec.X);
+    // get 2 vertices along one edge offset
+    pt3 :=  parallelOffsets[prevI*2];
+    pt4 := parallelOffsets[prevI*2 +1];
+    IntersectPoint(pt1,pt2,pt3,pt4, pt);
+    AddPoint(pt);
+    //get the second intersect point through reflecion
+    pt := ReflectPoint(pt, ptQ);
+    AddPoint(pt);
+  end;
+  
   procedure AppendPath(const path: TPathD);
   var
     len: integer;
@@ -1881,14 +1912,9 @@ var
   len     : cardinal;
   highI   : cardinal;
   iLo,iHi : cardinal;
-  norms   : TPathD;
-  vec     : TPointD;
-  pt, ptQ : TPointD;
-  p       : TPathD;
-  a       : double;
   growRec   : TGrowRec;
   absDelta  : double;
-  pt1, pt2, pt3, pt4: TPointD;
+  almostNoAngle: Boolean;
 begin
   Result := nil;
   if not Assigned(path) then exit;
@@ -1920,11 +1946,10 @@ begin
     norms := GetNormals(path);
 
   highI := len -1;
-  p := GetParallelOffests(path, norms, delta);
+  parallelOffsets := GetParallelOffests(path, norms, delta);
 
   if joinStyle = jsRound then
   begin
-    if miterLimOrRndScale <= 0 then miterLimOrRndScale := 1;
     growRec.Radius := delta;
     growRec.StepsPerRad := CalcRoundingSteps(growRec.Radius)/(Pi *2);
     if delta < 0 then
@@ -1932,9 +1957,9 @@ begin
       GetSinCos(1/growRec.StepsPerRad, growRec.StepSin, growRec.StepCos);
   end else
   begin
-    if miterLimOrRndScale <= 0 then miterLimOrRndScale := DefaultMiterLimit
-    else if miterLimOrRndScale < 2 then miterLimOrRndScale := 2;
-    miterLimOrRndScale := 2 /(sqr(miterLimOrRndScale));
+    if miterLim <= 0 then miterLim := DefaultMiterLimit
+    else if miterLim < 2 then miterLim := 2;
+    miterLim := 2 /(sqr(miterLim));
     growRec.StepsPerRad := 0; //stop compiler warning.
   end;
 
@@ -1944,7 +1969,7 @@ begin
   begin
     iLo := 1; iHi := highI -1;
     prevI := 0;
-    AddPoint(p[0]);
+    AddPoint(parallelOffsets[0]);
   end else
   begin
     iLo := 0; iHi := highI;
@@ -1953,74 +1978,43 @@ begin
 
   for i := iLo to iHi do
   begin
-    pt1 := p[prevI*2];
-    pt2 := p[prevI*2+1];
-    pt3 := p[i*2];
-    pt4 := p[i*2+1];
+
+    if PointsNearEqual(path[i], path[prevI], 0.01) then
+    begin
+       prevI := i;
+       Continue;
+    end;
+
     growRec.aSin := CrossProduct(norms[prevI], norms[i]);
     growRec.aCos := DotProduct(norms[prevI], norms[i]);
 
-    if ValueAlmostZero(growRec.aSin) or ((growRec.aSin < 0) = (delta > 0)) then
-    begin //is concave
-      if SegmentsIntersect(pt1, pt2, pt3, pt4, pt) then
-        AddPoint(pt) else
-      begin
-        AddPoint(pt2);
-        AddPoint(pt3);
-      end;
+    almostNoAngle := ValueAlmostZero(growRec.aCos -1);
+    if almostNoAngle or ((growRec.aSin * delta < 0)) then
+    begin //ie is concave
+      AddPoint(parallelOffsets[prevI*2+1]);
+      AddPoint(parallelOffsets[i*2]);
     end
     else if (joinStyle = jsRound) and
       (Abs(growRec.aSin) > 0.08) then //only round if angle > ~5 deg
     begin
       AppendPath(DoRound(path[i], norms[prevI], growRec));
     end
-    else if (joinStyle = jsMiter) and
-      (1 + growRec.aCos > miterLimOrRndScale) then
-    begin
-      //within miter range
-      a := delta / (1 + growRec.aCos);
-      AddPoint(PointD(path[i].X + (norms[i].X + norms[prevI].X) * a,
-        path[i].Y + (norms[i].Y + norms[prevI].Y) * a));
+    else if (joinStyle = jsMiter) then // nb: miterLim <= 2
+    begin                      
+      if (1 + growRec.aCos > miterLim) then //within miter range
+        DoMiter(i, prevI, growRec.aCos) else
+        DoSquare(i, prevI);
     end
-    else if (growRec.aCos < -0.001) and (growRec.aCos > -0.999) then
-    begin
-      // squaring off at delta distance from original vertex
-
-      // while a negative cos indicates an angle > 90, the angle here
-      // is the **angle of deviation**, so convexity will be > 270.
-      // And only convex angles > 270 degrees will need squaring since
-      // less obtuse angles can be safely mitered.
-
-      // using the reciprocal of unit normals (as unit vectors)
-      // get the average unit vector ...
-      vec := GetAvgUnitVector(
-        PointD(-norms[prevI].Y, norms[prevI].X),
-        PointD(norms[i].Y, -norms[i].X));
-      // now offset the original vertex delta units along unit vector
-      ptQ := OffsetPoint(path[i], delta * vec.X, delta * vec.Y);
-
-      // get perpendicular vertices
-      pt1 := OffsetPoint(ptQ, delta * vec.Y, delta * -vec.X);
-      pt2 := OffsetPoint(ptQ, delta * -vec.Y, delta * vec.X);
-      // get 2 vertices along one edge offset
-      pt3 := p[prevI*2];
-      pt4 := p[prevI*2 +1];
-      IntersectPoint(pt1,pt2,pt3,pt4, pt);
-      AddPoint(pt);
-      //get the second intersect point through reflecion
-      pt := ReflectPoint(pt, ptQ);
-      AddPoint(pt);
-    end else
-    begin
-      a := delta / (1 + growRec.aCos);
-      AddPoint(PointD(path[i].X + (norms[i].X + norms[prevI].X) * a,
-        path[i].Y + (norms[i].Y + norms[prevI].Y) * a));
-//      AddPoint(pt2);
-//      AddPoint(pt3);
-    end;
+    // don't bother squaring angles that deviate < ~20 deg. because squaring 
+    // will be indistinguishable from mitering and just be a lot slower
+    else if (growRec.aCos > 0.9) then
+      DoMiter(i, prevI, growRec.aCos) 
+    else
+      DoSquare(i, prevI);
+      
     prevI := i;
   end;
-  if isOpen then AddPoint(p[highI*2-1]);
+  if isOpen then AddPoint(parallelOffsets[highI*2-1]);
   SetLength(Result, resCnt);
 end;
 //------------------------------------------------------------------------------
@@ -2352,7 +2346,7 @@ function GrowOpenLine(const line: TPathD; width: double;
   miterLimOrRndScale: double): TPathD;
 var
   len, x,y: integer;
-  halfWidth: double;
+  segLen, halfWidth: double;
   normals, lineL, lineR, arc: TPathD;
   invNorm: TPointD;
   growRec: TGrowRec;
@@ -2422,15 +2416,22 @@ begin
     AppendPath(Result, lineR);
   end else
   begin
-    //esSquare => extends both line ends by 1/2 lineWidth
+    lineL := Copy(line, 0, len);
     if endStyle = esSquare then
     begin
-      lineL := Copy(line, 0, len);
+      // esSquare => extends both line ends by 1/2 lineWidth
       AdjustPoint(lineL[0], lineL[1], width * 0.5);
       AdjustPoint(lineL[len-1], lineL[len-2], width * 0.5);
     end else
-      lineL := line;
-
+    begin
+      //esButt -> extend only very short end segments
+      segLen := Distance(lineL[0], lineL[1]);
+      if segLen < width * 0.5 then
+        AdjustPoint(lineL[0], lineL[1], width * 0.5 - segLen);
+      segLen := Distance(lineL[len-1], lineL[len-2]);
+      if segLen < width * 0.5 then
+        AdjustPoint(lineL[len-1], lineL[len-2], width * 0.5 - segLen);
+    end;
     //first grow the left side of the line => Result
     Result := Grow(lineL, normals,
       halfWidth, joinStyle, miterLimOrRndScale, true);

@@ -85,6 +85,7 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 
 23 Oct 2022: version 3.9.4 (VCL+FMX)
 - FMX Component editor: changed selection for fixed color
+- Updated to Image32 ver. 4.3 (27 Sep 2022)
 
 15 Sep 2022: version 3.9.3 (VCL+FMX)
 - Removed W11 Styles from Demo (available in Delphi only by Get-it)

@@ -2,8 +2,8 @@ unit Img32;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.2                                                             *
-* Date      :  30 July 2022                                                    *
+* Version   :  4.3                                                             *
+* Date      :  27 September 2022                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -20,8 +20,15 @@ interface
 
 uses
   Types, SysUtils, Classes,
-  {$IFDEF MSWINDOWS} Windows,{$ENDIF} {$IFDEF USING_VCL_LCL} Graphics, Forms,{$ENDIF}
-  {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults, Character,{$ENDIF}
+  {$IFDEF MSWINDOWS} Windows,{$ENDIF}
+  {$IFDEF USING_VCL_LCL}
+    {$IFDEF USES_NAMESPACES} Vcl.Graphics, Vcl.Forms,
+    {$ELSE}Graphics, Forms,
+    {$ENDIF}
+  {$ENDIF}
+  {$IFDEF XPLAT_GENERICS}
+    Generics.Collections, Generics.Defaults, Character,
+  {$ENDIF}
   {$IFDEF UITYPES} UITypes,{$ENDIF} Math;
 
 type
@@ -1515,27 +1522,42 @@ class procedure TImage32.RegisterImageFormatClass(ext: string;
 var
   i: Integer;
   imgFmtRec: PImgFmtRec;
+  isNewFormat: Boolean;
 begin
   if not Assigned(ImageFormatClassList) then CreateImageFormatList;
 
   if (ext = '') or (ext = '.') then Exit;
   if (ext[1] = '.') then Delete(ext, 1,1);
   if not IsAlphaChar(ext[1]) then Exit;
-  //avoid duplicates
+  isNewFormat := true;
+
+  // avoid duplicates but still allow overriding
   for i := 0 to imageFormatClassList.count -1 do
   begin
     imgFmtRec := PImgFmtRec(imageFormatClassList[i]);
-    if SameText(imgFmtRec.Fmt, ext) then Exit;
+    if SameText(imgFmtRec.Fmt, ext) then
+    begin
+      imgFmtRec.Obj := bm32ExClass; // replace prior class
+      if imgFmtRec.SortOrder = clipPriority then
+        Exit; // re-sorting isn't required
+      imgFmtRec.SortOrder := clipPriority;
+      isNewFormat := false;
+      Break;
+    end;
   end;
 
-  //ImageFormatClassList is sorted with lowest priority first in list
-  new(imgFmtRec);
-  imgFmtRec.Fmt := ext;
-  imgFmtRec.SortOrder := clipPriority;
-  imgFmtRec.Obj := bm32ExClass;
-  ImageFormatClassList.Add(imgFmtRec);
-  //sorting here is arguably inefficient, but there will be so few
-  //entries in the list that this inefficiency will be inconsequential.
+  if isNewFormat then
+  begin
+    new(imgFmtRec);
+    imgFmtRec.Fmt := ext;
+    imgFmtRec.SortOrder := clipPriority;
+    imgFmtRec.Obj := bm32ExClass;
+    ImageFormatClassList.Add(imgFmtRec);
+  end;
+
+  // Sort with lower priority before higher.
+  // Sorting here is arguably inefficient but, with so few
+  // entries, this inefficiency will be inconsequential.
 
 {$IFDEF XPLAT_GENERICS}
   ImageFormatClassList.Sort(TComparer<PImgFmtRec>.Construct(
@@ -2706,10 +2728,13 @@ var
 begin
   if not Assigned(bmp) then Exit;
   bmp.PixelFormat := pf32bit;
-  bmp.SetSize(Width, Height);
+  bmp.Width := Width;
+  bmp.Height := Height;
 {$IFDEF MSWINDOWS}
   {$IFNDEF FPC}
+  {$IFDEF ALPHAFORMAT}
   bmp.AlphaFormat := afDefined;
+  {$ENDIF}
   {$ENDIF}
   SetBitmapBits(bmp.Handle, Width * Height * 4, PixelBase);
 {$ELSE}

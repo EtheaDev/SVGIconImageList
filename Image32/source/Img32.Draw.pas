@@ -2,8 +2,8 @@ unit Img32.Draw;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.2                                                             *
-* Date      :  30 May 2022                                                     *
+* Version   :  4.3                                                             *
+* Date      :  27 September 2022                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -1025,25 +1025,23 @@ begin
           begin
             byteBuffer[j] := Min(255, Round(Abs(accum) * 318));
           end;
+{$IFDEF REVERSE_ORIENTATION}
         frPositive:
-          begin
-{$IFDEF REVERSE_ORIENTATION}
-            if accum < -0.002 then
-              byteBuffer[j] := Min(255, Round(-accum * 318));
 {$ELSE}
-            if accum > 0.002 then
-              byteBuffer[j] := Min(255, Round(accum * 318));
-{$ENDIF}
-          end;
         frNegative:
+{$ENDIF}
           begin
-{$IFDEF REVERSE_ORIENTATION}
             if accum > 0.002 then
               byteBuffer[j] := Min(255, Round(accum * 318));
+          end;
+{$IFDEF REVERSE_ORIENTATION}
+        frNegative:
 {$ELSE}
+        frPositive:
+{$ENDIF}
+          begin
             if accum < -0.002 then
               byteBuffer[j] := Min(255, Round(-accum * 318));
-{$ENDIF}
           end;
       end;
     end;

@@ -2,8 +2,8 @@ unit Img32.Text;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.2                                                             *
-* Date      :  30 May 2022                                                     *
+* Version   :  4.3                                                             *
+* Date      :  6 October 2022                                                  *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -282,6 +282,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
+    function GetFont(const fontName: string): TFontReader;
 {$IFDEF MSWINDOWS}
     function Load(const fontName: string): TFontReader;
 {$ENDIF}
@@ -512,6 +513,9 @@ type
       startLine, endLine: integer): TPathsD; overload;
     function GetTextOutline(x, y: double; const text: UnicodeString;
       out nextX: double; underlineIdx: integer = 0): TPathsD; overload;
+    function GetVerticalTextOutline(x, y: double;
+      const text: UnicodeString; interCharSpace: double =0): TPathsD;
+
 
     function GetAngledTextGlyphs(x, y: double; const text: UnicodeString;
       angleRadians: double; const rotatePt: TPointD;
@@ -2483,42 +2487,41 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-//function TFontCache.GetTextOutlineInternal(x, y: double;
-//  const text: UnicodeString; out glyphs: TArrayOfPathsD;
-//  out nextX: double): Boolean;
-//var
-//  i,j, len: integer;
-//  unicodes: TArrayOfWord;
-//  glyphInfo: PGlyphInfo;
-//  currGlyph: TPathsD;
-//  prevGlyphKernList: TArrayOfTKern;
-//begin
-//  len := Length(text);
-//  unicodes := nil;
-//  setLength(unicodes, len);
-//  for i := 0 to len -1 do
-//    unicodes[i] := Ord(text[i +1]);
-//  Result := true;
-//  GetMissingGlyphs(unicodes);
-//  nextX := x;
-//  prevGlyphKernList := nil;
-//  for i := 0 to len -1 do
-//  begin
-//    glyphInfo := GetCharInfo(unicodes[i]);
-//    if not assigned(glyphInfo) then Break;
-//    if fUseKerning and assigned(prevGlyphKernList) then
-//    begin
-//      j := FindInKernList(glyphInfo.metrics.glyphIdx, prevGlyphKernList);
-//      if (j >= 0) then
-//        nextX := nextX + prevGlyphKernList[j].kernValue * fScale ;
-//    end;
-//
-//    currGlyph := OffsetPath(glyphInfo.contours, nextX, y);
-//    AppendPath(glyphs, currGlyph);
-//    nextX := nextX + glyphInfo.metrics.hmtx.advanceWidth * fScale;
-//    prevGlyphKernList := glyphInfo.metrics.kernList;
-//  end;
-//end;
+function TFontCache.GetVerticalTextOutline(x, y: double;
+  const text: UnicodeString; interCharSpace: double): TPathsD;
+var
+  i, xxMax: integer;
+  glyphInfo: PGlyphInfo;
+  dx, dy: double;
+begin
+  Result := nil;
+  if not IsValidFont then Exit;
+
+  xxMax := 0;
+  for i := 1 to Length(text) do
+  begin
+    glyphInfo := GetCharInfo(ord(text[i]));
+    if not assigned(glyphInfo) then Exit;
+    with glyphInfo.metrics.glyf do
+      if xMax > xxMax then
+         xxMax := xMax;
+  end;
+
+  for i := 1 to Length(text) do
+  begin
+    glyphInfo := GetCharInfo(ord(text[i]));
+    with glyphInfo.metrics.glyf do
+    begin
+      dx :=  (xxMax - xMax) * 0.5 * scale;
+      y := y + yMax  * scale; //yMax = char ascent
+      dy := - yMin * scale;   //yMin = char descent
+    end;
+    AppendPath(Result, Img32.Vector.OffsetPath( glyphInfo.contours, x + dx, y));
+    if text[i] = #32 then
+      y := y + dy - interCharSpace else
+      y := y + dy + interCharSpace;
+  end;
+end;
 //------------------------------------------------------------------------------
 
 function TFontCache.GetTextOutlineInternal(x, y: double;
@@ -3449,11 +3452,28 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function TFontManager.GetFont(const fontName: string): TFontReader;
+var
+  i: integer;
+begin
+  Result := nil;
+  for i := 0 to fFontList.Count -1 do
+    if SameText(TFontReader(fFontList[i]).fFontInfo.faceName, fontName) then
+    begin
+      Result := fFontList[i];
+      Exit;
+    end;
+end;
+//------------------------------------------------------------------------------
+
 {$IFDEF MSWINDOWS}
 function TFontManager.Load(const fontName: string): TFontReader;
 begin
   if fFontList.Count >= fMaxFonts then
     raise Exception.Create(rsTooManyFonts);
+
+  Result := GetFont(fontname);
+  if Assigned(Result) then Exit;
 
   Result := TFontReader.Create;
   try

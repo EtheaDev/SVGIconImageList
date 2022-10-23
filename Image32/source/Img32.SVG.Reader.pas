@@ -2,8 +2,8 @@ unit Img32.SVG.Reader;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.2                                                             *
-* Date      :  30 May 2022                                                     *
+* Version   :  4.3                                                             *
+* Date      :  27 September 2022                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -547,7 +547,7 @@ const
   buffSize    = 32;
   clAlphaSet  = $00010101;
   SourceImage   : UTF8String = 'SourceGraphic';
-  SourceAlpha   : UTF8String = 'SourceAlpha';
+  //SourceAlpha   : UTF8String = 'SourceAlpha';
   tmpFilterImg  : UTF8String = 'tmp';
 
   //https://www.w3.org/TR/css-fonts-3/#font-family-prop
@@ -727,7 +727,7 @@ end;
 //------------------------------------------------------------------------------
 
 function UTF8StringToFloat(const ansiValue: UTF8String;
-  var value: double): Boolean;
+  out value: double): Boolean;
 var
   c: PUTF8Char;
 begin
@@ -2463,6 +2463,7 @@ function TPathElement.GetSimplePath(const drawDat: TDrawData): TPathsD;
 var
   i: integer;
 begin
+  Result := nil;
   SetLength(Result, fSvgPaths.Count);
   for i := 0 to fSvgPaths.Count -1 do
     Result[i] := fSvgPaths[i].GetSimplePath;
@@ -2994,6 +2995,8 @@ var
   mat: TMatrixD;
   tmpPath: TPathD;
   isClosed: Boolean;
+const
+  dblSpace: UnicodeString = #32#32;
 begin
   if Assigned(drawPathsC) then Exit;
   fReader.GetBestFontForFontCache(drawDat.FontInfo);
@@ -3044,11 +3047,11 @@ begin
   for i := 1 to Length(s) do
     if s[i] < #32 then s[i] := #32;
 
-  i := PosEx(#32#32, s);
+  i := PosEx(dblSpace, s);
   while i > 0 do
   begin
     Delete(s, i, 1);
-    i := PosEx(#32#32, s, i);
+    i := PosEx(dblSpace, s, i);
   end;
 
   el := FindRefElement(pathEl);
@@ -4718,4 +4721,3 @@ end;
 //------------------------------------------------------------------------------
 
 end.
-

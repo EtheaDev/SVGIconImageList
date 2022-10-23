@@ -2,8 +2,8 @@ unit Img32.Panels;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  3.3                                                             *
-* Date      :  21 September 2021                                               *
+* Version   :  4.3                                                             *
+* Date      :  21 September 2022                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  Component that displays images on a TPanel descendant           *
@@ -154,9 +154,11 @@ type
   TImage32Panel = class(TBaseImgPanel)
   private
     fImage             : TImage32;
-    fAllowCopyPaste    : Boolean;
+    fAllowCopy         : Boolean;
+    fAllowPaste        : Boolean;
     fOnFileDrop        : TFileDropEvent;
-    fAllowFileDrop   : Boolean;
+    fAllowFileDrop     : Boolean;
+    fOnCopy            : TNotifyEvent;
     fOnPaste           : TNotifyEvent;
     procedure SetAllowFileDrop(value: Boolean);
     procedure WMKeyDown(var Message: TWMKey); message WM_KEYDOWN;
@@ -174,14 +176,15 @@ type
     procedure  CopyToImage(srcImg: TImage32; const rec: TRect);
     function   CopyToClipboard: Boolean;
     function   PasteFromClipboard: Boolean;
-
     property Image: TImage32 read fImage;
-    property AllowCopyPaste: Boolean
-      read fAllowCopyPaste write fAllowCopyPaste;
+  published
+    property AllowCopy: Boolean read fAllowCopy write fAllowCopy;
+    property AllowPaste: Boolean read fAllowPaste write fAllowPaste;
     property AllowFileDrop: Boolean
       read fAllowFileDrop write SetAllowFileDrop;
     property OnFileDrop: TFileDropEvent
       read fOnFileDrop write fOnFileDrop;
+    property OnCopy: TNotifyEvent read fOnCopy write fOnCopy;
     property OnPaste: TNotifyEvent read fOnPaste write fOnPaste;
   end;
 
@@ -364,6 +367,11 @@ begin
   Height := 200;
   Width  := 200;
 
+  {$IFnDEF FPC}
+  {$IF COMPILERVERSION >= 17} //this is a guess
+  ShowCaption := false;
+  {$IFEND}
+  {$ENDIF}
   BevelWidth := 1;
   BorderWidth := 12;
   BevelInner := bvLowered;
@@ -708,9 +716,9 @@ procedure TBaseImgPanel.MouseDown(Button: TMouseButton;
 var
   rec: TRect;
 begin
+  fMouseDown := true;
   if fAllowScrnScroll or fAllowKeyScroll then
   begin
-    fMouseDown := true;
     fScrollbarHorz.MouseDownPos := X;
     fScrollbarVert.MouseDownPos := Y;
     rec := GetInnerClientRect;
@@ -758,9 +766,10 @@ begin
     inherited;
     Exit;
   end;
-  
-  if not fMouseDown then
-  begin  
+
+  if not fMouseDown or
+    not (fAllowScrnScroll or fAllowKeyScroll) then
+  begin
     if (BorderWidth >= MinBorderWidth) and
       ((fShowScrollBtns = ssAlways) or
         (focused and (fShowScrollBtns = ssbFocused))) then
@@ -890,7 +899,7 @@ procedure TBaseImgPanel.Paint;
       Canvas.PolyLine([bl, rec.TopLeft, tr]);
       Canvas.Pen.Color := brColor;
       Canvas.PolyLine([tr, rec.BottomRight, bl]);
-      InflateRect(rec, -1, -1);
+      InflateRect(rec, integer(-1), integer(-1));
       dec(width);
     end;
   end;
@@ -973,6 +982,8 @@ begin
   //prevent recursive paints (in case Invalidate etc called in fOnDrawImage)
   RedrawWindow(Handle, nil, 0, RDW_NOERASE or RDW_NOINTERNALPAINT or RDW_VALIDATE);
 
+  //Exit;//////////////////
+
   //paint the outer bevel
   tmpRec := ClientRect;
   case BevelOuter of
@@ -981,12 +992,12 @@ begin
   end;
 
   //paint the border
-  InflateRect(tmpRec, -BevelWidth, -BevelWidth);
+  InflateRect(tmpRec, integer(-BevelWidth), integer(-BevelWidth));
   if Focused then
     DrawFrame(tmpRec, fFocusedColor, fFocusedColor, dpiAwareBW)
   else
     DrawFrame(tmpRec, fUnfocusedColor, fUnfocusedColor, dpiAwareBW);
-  InflateRect(tmpRec, -dpiAwareBW, -dpiAwareBW);
+  InflateRect(tmpRec, integer(-dpiAwareBW), integer(-dpiAwareBW));
 
   //paint the inner bevel
   case BevelInner of
@@ -1145,7 +1156,6 @@ var
   shiftState: TShiftState;
 begin
   inherited;
-  if not fAllowZoom and not fAllowKeyScroll then Exit;
   shiftState := KeyDataToShiftState(Message.KeyData);
   if Assigned(fOnKeyDown) then
   begin
@@ -1153,6 +1163,7 @@ begin
     fOnKeyDown(Self, charCode, shiftState);
     if charCode = 0 then Exit;
   end;
+  if not fAllowZoom and not fAllowKeyScroll then Exit;
 
   case Message.CharCode of
 
@@ -1237,7 +1248,8 @@ begin
   fImage := TNotifyImage32.Create(Self);
   fImage.Resampler := rBicubicResampler;
   fImage.SetSize(200,200);
-  fAllowCopyPaste := true;
+  fAllowCopy := true;
+  fAllowPaste := true;
 end;
 //------------------------------------------------------------------------------
 
@@ -1360,29 +1372,30 @@ begin
   shiftState := KeyDataToShiftState(Message.KeyData);
   case Message.CharCode of
     Ord('C'):
-      if (ssCtrl in shiftState) and fAllowCopyPaste and
-        not fImage.IsEmpty then
-          fImage.CopyToClipboard;
+      if (ssCtrl in shiftState) and fAllowCopy and
+        not fImage.IsEmpty and
+        fImage.CopyToClipboard and
+        assigned(fOnCopy) then
+          fOnCopy(Self);
     Ord('V'):
-      if (ssCtrl in shiftState) and fAllowCopyPaste and
-        fImage.CanPasteFromClipBoard then
-        begin
-          if fImage.PasteFromClipboard and assigned(fOnPaste) then
-            fOnPaste(self);
-        end;
+      if (ssCtrl in shiftState) and fAllowPaste and
+        fImage.CanPasteFromClipBoard and
+        fImage.PasteFromClipboard and
+        assigned(fOnPaste) then
+          fOnPaste(self);
   end;
 end;
 //------------------------------------------------------------------------------
 
 function TImage32Panel.CopyToClipboard: Boolean;
 begin
-  Result := fAllowCopyPaste and Image.CopyToClipBoard;
+  Result := fAllowCopy and Image.CopyToClipBoard;
 end;
 //------------------------------------------------------------------------------
 
 function TImage32Panel.PasteFromClipboard: Boolean;
 begin
-  Result := fAllowCopyPaste and Image.PasteFromClipBoard;
+  Result := fAllowPaste and Image.PasteFromClipBoard;
   if Result and assigned(fOnPaste) then fOnPaste(self);
 end;
 //------------------------------------------------------------------------------

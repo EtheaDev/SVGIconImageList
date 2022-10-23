@@ -6,7 +6,7 @@
 //USING_VCL_LCL - using either Delphi or Lazarus Component Libraries
 //Adds a few extra library features (eg copying to and from TBitmap objects)
 //Enabled is recommended unless you're compiling console applications.
-{.$DEFINE USING_VCL_LCL}
+{$DEFINE USING_VCL_LCL} 
 
 {$IFDEF FPC}
   {$MODE DELPHI}
@@ -55,6 +55,7 @@
               {$IF declared(FireMonkeyVersion)}   //defined in FMX.Types
                 {$DEFINE FMX}
               {$IFEND}        
+              {$DEFINE USES_NAMESPACES}
               {$DEFINE FORMATSETTINGS}
               {$DEFINE TROUNDINGMODE}   
               {$DEFINE UITYPES}                   //added UITypes unit

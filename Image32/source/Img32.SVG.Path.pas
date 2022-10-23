@@ -2,8 +2,8 @@ unit Img32.SVG.Path;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.2                                                             *
-* Date      :  30 May 2022                                                     *
+* Version   :  4.0                                                             *
+* Date      :  28 December 2021                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -21,7 +21,7 @@ interface
 uses
   SysUtils, Classes, Types, Math,
   {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults,{$ENDIF}
-  Img32, Img32.SVG.Core, Img32.Vector, Img32.Text, Img32.Transform;
+  Img32, Img32.SVG.Core, Img32.Vector, Img32.Text;
 
 {$IFDEF ZEROBASEDSTR}
   {$ZEROBASEDSTRINGS OFF}
@@ -276,10 +276,7 @@ implementation
 resourcestring
   rsSvgPathRangeError = 'TSvgPath.GetPath range error';
   rsSvgSubPathRangeError = 'TSvgSubPath.GetSeg range error';
-  rsSvgSegmentRangeError = 'TSvgSegment.GetVal range error';
-
-const
-  buffSize    = 8;
+  //rsSvgSegmentRangeError = 'TSvgSegment.GetVal range error';
 
 //------------------------------------------------------------------------------
 // Miscellaneous functions ...
@@ -1217,7 +1214,7 @@ function TSvgSubPath.GetSimplePath: TPathD;
 var
   i: integer;
 begin
-  Result := MakePath([GetFirstPt.X, GetFirstPt.Y]);
+  Result := Img32.Vector.MakePath([GetFirstPt.X, GetFirstPt.Y]);
   for i := 0 to High(fSegs) do
     AppendPath(Result, fSegs[i].GetOnPathCtrlPts);
 end;
