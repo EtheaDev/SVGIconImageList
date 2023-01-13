@@ -2,7 +2,7 @@
 {                                                       }
 { SVGMessaging: Messaging unit for older Delphi version }
 {                                                       }
-{ Copyright (c) 2021-2022 (Ethea S.r.l.)                }
+{ Copyright (c) 2021-2023 (Ethea S.r.l.)                }
 { Author: Carlo Barazzetta                              }
 {                                                       }
 { https://github.com/EtheaDev/SVGIconImageList          }

@@ -394,6 +394,7 @@ type
   TWordInfoList = class;
 
   TWordInfo = class
+  private
     index         : integer;
     aWord         : UnicodeString;
     width         : double;

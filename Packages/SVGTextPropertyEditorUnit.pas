@@ -3,7 +3,7 @@
 {       SVGTextPropertyEditorUnit: A property editor for SVGText               }
 {       to simplify use of setting SVGText value                               }
 {                                                                              }
-{       Copyright (c) 2019-2022 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2023 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {                                                                              }
 {       https://github.com/EtheaDev/SVGIconImageList                           }

@@ -597,6 +597,7 @@ type
   PImgFmtRec = ^TImgFmtRec;
 
   TResamplerObj = class
+  private
     id: integer;
     name: string;
     func: TResamplerFunction;

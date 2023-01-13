@@ -2,7 +2,7 @@
 {                                                                              }
 {       SVG Image in TPicture: useful to show a Scalable Vector Graphic        }
 {                                                                              }
-{       Copyright (c) 2019-2022 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2023 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors:                                                          }
 {                                                                              }
@@ -41,14 +41,32 @@ uses
   , System.SysUtils
   , System.Types
   , System.Classes
-  , System.UITypes
   , Vcl.Controls
   , Vcl.Graphics
   , Vcl.ImgList
+  , System.UITypes
   , SVGIconItems
-  , SVGInterfaces;
+  , SVGInterfaces
+  , SVGIconImageListBase
+  {$IFDEF D10_3+}
+  , Vcl.VirtualImageList
+  {$ENDIF}
+  , SVGIconImageCollection;
 
 type
+  TSVGIconImage = class;
+
+  TSVGIconImageActionLink = class(TControlActionLink)
+  protected
+    FClient: TSVGIconImage;
+    function IsImageIndexLinked: Boolean; override;
+    {$IFDEF D10_4+}
+    function IsImageNameLinked: Boolean; override;
+    {$ENDIF}
+    procedure SetImageIndex(Value: Integer); override;
+    procedure AssignClient(AClient: TObject); override;
+  end;
+
   TSVGIconImage = class(TGraphicControl)
   strict private
     FSVG: ISVG;
@@ -60,6 +78,9 @@ type
     FFileName: TFileName;
     FImageList: TCustomImageList;
     FImageIndex: System.UITypes.TImageIndex;
+    {$IFDEF D10_4+}
+    FImageName: System.UITypes.TImageName;
+    {$ENDIF}
     FImageChangeLink: TChangeLink;
     FFixedColor: TColor;
     FGrayScale: Boolean;
@@ -68,7 +89,6 @@ type
     procedure SetProportional(Value: Boolean);
     procedure SetOpacity(Value: Byte);
     procedure SetFileName(const Value: TFileName);
-    procedure SetImageIndex(const Value: System.UITypes.TImageIndex);
     procedure SetStretch(const Value: Boolean);
     procedure SetImageList(const Value: TCustomImageList);
     procedure SetAutoSizeImage(const Value: Boolean);
@@ -81,12 +101,29 @@ type
     procedure ReadDummyBool(Reader: TReader);
     procedure ReadDummyFloat(Reader: TReader);
     procedure WriteDummy(Writer: TWriter);
+    function IsImageIndexAvail: Boolean;
   private
     function GetSVGText: string;
     procedure SetSVGText(const AValue: string);
     function UsingSVGText: Boolean;
     function GetSVG: ISVG;
+    function GetIconImageList: TSVGIconImageListBase;
+    function GetIconImageCollection: TSVGIconImageCollection;
+    {$IFDEF D10_3+}
+    function GetVirtualImageList: TVirtualImageList;
+    {$ENDIF}
+
+    procedure SetImageIndex(const Value: TImageIndex);
+    {$IFDEF D10_4+}
+    procedure SetImageName(const Value: TImageName);
+    function IsImageNameStored: Boolean;
+    {$ENDIF}
+    function IsImageIndexStored: Boolean;
   protected
+    procedure UpdateImage; virtual;
+    {$IFDEF D10_4+}
+    procedure CheckImageIndexes;
+    {$ENDIF}
     procedure DefineProperties(Filer: TFiler); override;
 
     procedure Paint; override;
@@ -104,12 +141,20 @@ type
     procedure SaveToFile(const FileName: string);
     procedure Assign(Source: TPersistent); override;
     property SVG: ISVG read GetSVG;
+    property SVGIconImageList: TSVGIconImageListBase read GetIconImageList;
+    property SVGIconImageCollection: TSVGIconImageCollection read GetIconImageCollection;
+    {$IFDEF D10_3+}
+    property SVGVirtualImageList: TVirtualImageList read GetVirtualImageList;
+    {$ENDIF}
   published
     property AutoSize: Boolean read FAutoSize write SetAutoSizeImage;
     property Center: Boolean read FCenter write SetCenter default True;
     property Opacity: Byte read FOpacity write SetOpacity default 255;
     property ImageList: TCustomImageList read FImageList write SetImageList;
-    property ImageIndex: System.UITypes.TImageIndex read FImageIndex write SetImageIndex default -1;
+    property ImageIndex: TImageIndex read FImageIndex write SetImageIndex stored IsImageIndexStored default -1;
+    {$IFDEF D10_4+}
+    property ImageName: TImageName read FImageName write SetImageName stored IsImageNameStored;
+    {$ENDIF}
     property FileName: TFileName read FFileName write SetFileName;
     property SVGText: string read GetSVGText write SetSVGText stored UsingSVGText;
     property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
@@ -194,21 +239,17 @@ type
 
 implementation
 
-uses
-  SVGIconImageListBase
-  {$IFDEF D10_3+}
-  , Vcl.VirtualImageList
-  {$ENDIF}
-  , SVGIconImageCollection;
-
 procedure TSVGIconImage.UpdateSVGFactory;
 var
   LOldSVGText: string;
 begin
-  LOldSVGText := fsvg.Source;
-  FSVG := GlobalSVGFactory.NewSvg;
-  FSVG.Source := LOldSVGText;
-  Invalidate;
+  if UsingSVGText then
+  begin
+    LOldSVGText := FSVG.Source;
+    FSVG := GlobalSVGFactory.NewSvg;
+    FSVG.Source := LOldSVGText;
+    Invalidate;
+  end;
 end;
 
 constructor TSVGIconImage.Create(AOwner: TComponent);
@@ -220,6 +261,9 @@ begin
   FStretch := True;
   FOpacity := 255;
   FImageIndex := -1;
+  {$IFDEF D10_4+}
+  FImageName := '';
+  {$ENDIF}
   FFixedColor := SVG_INHERIT_COLOR;
   FGrayScale := False;
   //ParentBackground := True;
@@ -253,7 +297,8 @@ end;
 
 destructor TSVGIconImage.Destroy;
 begin
-  FImageChangeLink.Free;
+  ImageList := nil;
+  FreeAndNil(FImageChangeLink);
   inherited;
 end;
 
@@ -264,6 +309,15 @@ begin
     SetBounds(Left, Top,  Round(FSVG.Width), Round(FSVG.Height));
   end;
 end;
+
+{$IFDEF D10_4+}
+procedure TSVGIconImage.CheckImageIndexes;
+begin
+  if (ImageList = nil) or not ImageList.IsImageNameAvailable then
+    Exit;
+  ImageList.CheckIndexAndName(FImageIndex, FImageName);
+end;
+{$ENDIF}
 
 procedure TSVGIconImage.Clear;
 begin
@@ -277,38 +331,38 @@ begin
   Empty := FSVG.IsEmpty;
 end;
 
-function TSVGIconImage.GetInheritedApplyToRootOnly: Boolean;
+function TSVGIconImage.IsImageIndexAvail: Boolean;
 begin
   Result := False;
-  if not Assigned(FImageList) then
-    Exit;
+  if (FImageIndex >= 0) and Assigned(FImageList) then
+    Result := FImageIndex <= FImageList.Count;
+end;
+
+function TSVGIconImage.GetInheritedApplyToRootOnly: Boolean;
+var
+  LSVGIconItem: TSVGIconItem;
+begin
+  Result := False;
+  LSVGIconItem := SVGIconItem;
+  if Assigned(LSVGIconItem) then
+    Result := SVGIconItem.ApplyFixedColorToRootOnly;
   if FImageList is TSVGIconImageListBase then
-  begin
-    if FImageIndex >= 0 then
-    begin
-      if FImageIndex < FImageList.Count then
-        Result := SVGIconItem.ApplyFixedColorToRootOnly;
-    end;
-    Result := Result or TSVGIconImageListBase(FImageList).ApplyFixedColorToRootOnly;
-  end;
+    Result := Result or TSVGIconImageListBase(FImageList).ApplyFixedColorToRootOnly
+  {$IFDEF D10_3+}
+  else if FImageList is TVirtualImageList and
+    (TVirtualImageList(FImageList).ImageCollection is TSVGIconImageCollection) then
+    Result := Result or TSVGIconImageCollection(TVirtualImageList(FImageList).ImageCollection).ApplyFixedColorToRootOnly;
+  {$ENDIF}
 end;
 
 function TSVGIconImage.GetInheritedFixedColor: TColor;
+var
+  LSVGIconItem: TSVGIconItem;
 begin
   Result := SVG_INHERIT_COLOR;
-  if not Assigned(FImageList) then
-    Exit;
-  if FImageList is TSVGIconImageListBase then
-  begin
-    if FImageIndex >= 0 then
-    begin
-      if FImageIndex < FImageList.Count then
-        Result := SVGIconItem.FixedColor;
-      if Result <> SVG_INHERIT_COLOR then
-        exit;
-    end;
-    Result := TSVGIconImageListBase(FImageList).FixedColor;
-  end;
+  LSVGIconItem := SVGIconItem;
+  if Assigned(LSVGIconItem) then
+    Result := LSVGIconItem.FixedColor;
 end;
 
 function TSVGIconImage.GetSVG: ISVG;
@@ -326,37 +380,109 @@ end;
 
 procedure TSVGIconImage.ImageListChange(Sender: TObject);
 begin
-  if Sender = FImageList then
-    Invalidate;
+  UpdateImage;
+  Invalidate;
 end;
 
-function TSVGIconImage.SVGIconItem: TSVGIconItem;
-var
-  {$IFDEF D10_3+}
-  LVirtualImageList: TVirtualImageList;
-  LItem: TVirtualImageListItem;
-  {$ENDIF}
-  LSVGIconItems: TSVGIconItems;
+function TSVGIconImage.GetIconImageList: TSVGIconImageListBase;
+begin
+  if FImageList is TSVGIconImageListBase then
+    Result := TSVGIconImageListBase(FImageList)
+  else
+    Result := nil;
+end;
+
+{$IFDEF D10_3+}
+function TSVGIconImage.GetVirtualImageList: TVirtualImageList;
 begin
   Result := nil;
-  if FImageList is TSVGIconImageListBase then
+  if (FImageList is TVirtualImageList) and
+    (TVirtualImageList(FImageList).ImageCollection is TSVGIconImageCollection) then
+    Result := TVirtualImageList(FImageList);
+end;
+{$ENDIF}
+
+function TSVGIconImage.IsImageIndexStored: Boolean;
+begin
+  Result := (ActionLink = nil) or
+    not TSVGIconImageActionLink(ActionLink).IsImageIndexLinked;
+end;
+
+{$IFDEF D10_4+}
+function TSVGIconImage.IsImageNameStored: Boolean;
+begin
+  Result := (ActionLink = nil) or
+    not TSVGIconImageActionLink(ActionLink).IsImageNameLinked;
+end;
+
+procedure TSVGIconImage.SetImageName(const Value: TImageName);
+begin
+  if Value <> FImageName then
   begin
-    LSVGIconItems := TSVGIconImageListBase(FImageList).SVGIconItems;
-    Result := LSVGIconItems[FImageIndex];
+    FImageName := Value;
+    if (FImageList <> nil) and FImageList.IsImageNameAvailable then
+      FImageIndex := FImageList.GetIndexByName(FImageName);
+    UpdateImage;
+    Invalidate;
   end;
+end;
+{$ENDIF}
+
+procedure TSVGIconImage.UpdateImage;
+begin
+{$IFDEF D10_4+}
+  if (FImageList <> nil) and FImageList.IsImageNameAvailable then
+  begin
+    if (FImageName <> '') and (FImageIndex = -1) then
+      FImageIndex := FImageList.GetIndexByName(FImageName)
+    else if (FImageName = '') and (FImageIndex <> -1) then
+      FImageName := FImageList.GetNameByIndex(FImageIndex);
+  end;
+{$ENDIF}
+end;
+
+function TSVGIconImage.GetIconImageCollection: TSVGIconImageCollection;
+{$IFDEF D10_3+}
+var
+  LVirtualImageList: TVirtualImageList;
+{$ENDIF}
+begin
+  Result := nil;
   {$IFDEF D10_3+}
   if (FImageList is TVirtualImageList) then
   begin
     LVirtualImageList := TVirtualImageList(FImageList);
     if LVirtualImageList.ImageCollection is TSVGIconImageCollection then
-    begin
-      LSVGIconItems := TSVGIconImageCollection(LVirtualImageList.ImageCollection).SVGIconItems;
-      LItem := LVirtualImageList.Images[FImageIndex];
-      if Assigned(LItem) then
-        Result := LSVGIconItems[LItem.Collectionindex];
-    end;
+      Result := TSVGIconImageCollection(LVirtualImageList.ImageCollection);
   end;
   {$ENDIF}
+end;
+
+function TSVGIconImage.SVGIconItem: TSVGIconItem;
+var
+  {$IFDEF D10_3+}
+  LItem: TVirtualImageListItem;
+  {$ENDIF}
+  LSVGIconItems: TSVGIconItems;
+begin
+  Result := nil;
+  if IsImageIndexAvail then
+  begin
+    if SVGIconImageList <> nil then
+    begin
+      LSVGIconItems := SVGIconImageList.SVGIconItems;
+      Result := LSVGIconItems[FImageIndex];
+    end
+    {$IFDEF D10_3+}
+    else if SVGVirtualImageList <> nil then
+    begin
+      LSVGIconItems := SVGIconImageCollection.SVGIconItems;
+      LItem := SVGVirtualImageList.Images[FImageIndex];
+      if Assigned(LItem) then
+        Result := LSVGIconItems[LItem.Collectionindex];
+    end
+    {$ENDIF}
+  end;
 end;
 
 function TSVGIconImage.UsingSVGText: Boolean;
@@ -562,24 +688,38 @@ begin
   end;
 end;
 
-procedure TSVGIconImage.SetImageIndex(const Value: System.UITypes.TImageIndex);
+procedure TSVGIconImage.SetImageIndex(const Value: TImageIndex);
 begin
-  if FImageIndex = Value then
-    Exit;
-  FImageIndex := Value;
-  CheckAutoSize;
-  Repaint;
+  if FImageIndex <> Value then
+  begin
+    FImageIndex := Value;
+    {$IFDEF D10_4+}
+    if (FImageList <> nil) and FImageList.IsImageNameAvailable then
+       FImageName := FImageList.GetNameByIndex(FImageIndex);
+    {$ENDIF}
+    CheckAutoSize;
+    UpdateImage;
+    Invalidate;
+  end;
 end;
 
 procedure TSVGIconImage.SetImageList(const Value: TCustomImageList);
 begin
-  if FImageList <> nil then FImageList.UnRegisterChanges(FImageChangeLink);
-  FImageList := Value;
-  if FImageList <> nil then
+  if Value <> FImageList then
   begin
-    FImageList.RegisterChanges(FImageChangeLink);
-    FImageList.FreeNotification(Self);
-    SVGText := '';
+    if FImageList <> nil then
+    begin
+      FImageList.RemoveFreeNotification(Self);
+      FImageList.UnRegisterChanges(FImageChangeLink);
+    end;
+    FImageList := Value;
+    if FImageList <> nil then
+    begin
+      FImageList.RegisterChanges(FImageChangeLink);
+      FImageList.FreeNotification(Self);
+    end;
+    UpdateImage;
+    Invalidate;
   end;
 end;
 
@@ -743,6 +883,34 @@ begin
   FSVG.SaveToStream(Stream);
 end;
 
+{ TSVGIconImageActionLink }
+
+procedure TSVGIconImageActionLink.AssignClient(AClient: TObject);
+begin
+  inherited AssignClient(AClient);
+  FClient := AClient as TSVGIconImage;
+end;
+
+function TSVGIconImageActionLink.IsImageIndexLinked: Boolean;
+begin
+  Result := inherited IsImageIndexLinked and
+    (TSVGIconImage(FClient).ImageIndex = TSVGIconImage(Action).ImageIndex);
+end;
+
+{$IFDEF D10_4+}
+function TSVGIconImageActionLink.IsImageNameLinked: Boolean;
+begin
+  Result := inherited IsImageIndexLinked and
+    (TSVGIconImage(FClient).ImageName = TSVGIconImage(Action).ImageName);
+end;
+{$ENDIF}
+
+procedure TSVGIconImageActionLink.SetImageIndex(Value: Integer);
+begin
+  inherited;
+  if IsImageIndexLinked then
+    TSVGIconImage(FClient).ImageIndex := Value;
+end;
 
 initialization
   TPicture.RegisterFileFormat('SVG', 'Scalable Vector Graphics', TSVGGraphic);

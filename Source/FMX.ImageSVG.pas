@@ -3,7 +3,7 @@
 {       SVGIconImageList: An extended ImageList for Delphi/FMX                 }
 {       to simplify use of SVG Icons (resize, opacity and more...)             }
 {                                                                              }
-{       Copyright (c) 2019-2022 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2023 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors:                                                          }
 {                                                                              }
@@ -49,15 +49,11 @@ type
   TFmxImageSVG = class(TObject)
   private
     FSource: String;
-    FWidth: Single;
-    FHeight: Single;
     FFixedColor: TAlphaColor;
     FApplyFixedColorToRootOnly: Boolean;
     FGrayScale: Boolean;
     FOpacity: Single;
     // property access methods
-    function GetWidth: Single;
-    function GetHeight: Single;
     function GetOpacity: Single;
     procedure SetOpacity(const Opacity: Single);
     function GetGrayScale: Boolean;
@@ -69,8 +65,6 @@ type
     function GetSource: string;
     // procedures and functions
     procedure Clear;
-    procedure SetHeight(const Value: Single);
-    procedure SetWidth(const Value: Single);
     {$IFDEF CheckForUnsupportedSvg}
     procedure CheckForUnsupportedSvg;
     {$ENDIF}
@@ -94,8 +88,6 @@ type
     property Opacity: Single read GetOpacity write SetOpacity;
     property FixedColor: TAlphaColor read GetFixedColor write SetFixedColor;
     property GrayScale: Boolean read GetGrayScale write SetGrayScale;
-    property Width: Single read GetWidth write SetWidth;
-    property Height: Single read GetHeight write SetHeight;
     property Source: string read GetSource;
     property ApplyFixedColorToRootOnly: Boolean read GetApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly;
   end;
@@ -148,12 +140,6 @@ function TFmxImageSVG.GetGrayScale: Boolean;
 begin
   Result := FGrayScale;
 end;
-
-function TFmxImageSVG.GetHeight: Single;
-begin
-  Result := FHeight;
-end;
-
 function TFmxImageSVG.GetOpacity: Single;
 begin
   Result := FOpacity;
@@ -163,12 +149,6 @@ function TFmxImageSVG.GetSource: string;
 begin
   Result := FSource;
 end;
-
-function TFmxImageSVG.GetWidth: Single;
-begin
-  Result := FWidth;
-end;
-
 procedure TFmxImageSVG.LoadFromText(const ASVGText: string);
 var
   LOldText: string;
@@ -244,12 +224,6 @@ begin
   FGrayScale := IsGrayScale;
   FFixedColor := TAlphaColorRec.Null;
 end;
-
-procedure TFmxImageSVG.SetHeight(const Value: Single);
-begin
-  FHeight := Value;
-end;
-
 procedure TFmxImageSVG.SetOpacity(const Opacity: Single);
 begin
   FOpacity := Opacity;
@@ -262,11 +236,6 @@ begin
     FSource := ASource;
     LoadFromSource;
   end;
-end;
-
-procedure TFmxImageSVG.SetWidth(const Value: Single);
-begin
-  FWidth := Value;
 end;
 
 end.

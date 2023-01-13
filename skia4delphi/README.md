@@ -109,8 +109,6 @@ You can install **Skia4Delphi** in 3 ways:
 
 1. Manual installation is possible, although it is not recommended; [Learn more...](Documents/INSTALLATION.md)
 2. The pre-built Skia binaries were included in the source, but you can easily recompile them; [Learn more...](Documents/BUILD.md)
-3. The pre-built Skia binary for **Linux64** targets was compiled for Debian (eg Ubuntu) and Red Hat (eg CentOS) based systems. If you want another distro you will need to [rebuild;](Documents/BUILD.md)
-4. For Red Hat based systems you must replace the `Binary/Linux64/Release/libsk4d.so` file with the `Binary/Linux64/Release/Other Distributions/Red Hat/libsk4d.so` file.
 
 ### Enable Skia
 
@@ -228,7 +226,7 @@ DrawExample(256, 256,
     LFont: ISkFont;
     LPaint: ISkPaint;
   begin
-    LFont := TSkFont.Create(TSkTypeface.MakeFromFile('Assets\Samples\nunito-extrabold.ttf'), 23);
+    LFont := TSkFont.Create(TSkTypeface.MakeFromFile('Samples\Demo\Assets\nunito-extrabold.ttf'), 23);
     LPaint := TSkPaint.Create;
     LPaint.Shader := TSkShader.MakeGradientLinear(PointF(0, 0), PointF(256, 145), $FFFF5F5F, $FF5B8DFE, TSkTileMode.Clamp);
 
@@ -237,7 +235,7 @@ DrawExample(256, 256,
     ACanvas.DrawSimpleText('of your future that will', 2, 85, LFont, LPaint);
     ACanvas.DrawSimpleText('no longer exist."', 2, 115, LFont, LPaint);
 
-    LFont := TSkFont.Create(TSkTypeface.MakeFromFile('Assets\Samples\bonheur-royale-regular.ttf'), 28);
+    LFont := TSkFont.Create(TSkTypeface.MakeFromFile('Samples\Demo\Assets\bonheur-royale-regular.ttf'), 28);
     LPaint.Shader := nil;
     LPaint.Color  := $FF5B8DFE;
     ACanvas.DrawSimpleText('(Steve Jobs)', 2, 150, LFont, LPaint);
@@ -260,7 +258,7 @@ var
   LSVGDOM: ISkSVGDOM;
   LSize: TSizeF;
 begin
-  LSVGDOM := TSkSVGDOM.MakeFromFile('Assets\Samples\lion.svg');
+  LSVGDOM := TSkSVGDOM.MakeFromFile('Samples\Demo\Assets\lion.svg');
   LSize := TSizeF.Create(600, 600);
   LSVGDOM.SetContainerSize(LSize);
 
@@ -312,6 +310,8 @@ The **Skia4Delphi** library supports many image formats. See below the list:
   | WBMP                           | .wbmp       |
   | WebP                           | .webp       |
 
+  _Note: Raw images are limited to non-windows platforms_
+
 - Supported formats for encoding
 
   | Image Format | Extensions  |
@@ -330,7 +330,7 @@ The example below demonstrates how to encoder to WebP format:
 var
   LImage: ISkImage;
 begin
-  LImage := TSkImage.MakeFromEncodedFile('Assets\Samples\kung-fu-panda.png');
+  LImage := TSkImage.MakeFromEncodedFile('Samples\Demo\Assets\kung-fu-panda.png');
   LImage.EncodeToFile('output.webp', TSkEncodedImageFormat.WEBP, 80);
   LImage.EncodeToFile('output.jpg', TSkEncodedImageFormat.JPEG, 80);
 end;
@@ -568,7 +568,7 @@ var
   LAnimatedImage: TSkAnimatedImage;
 begin
   LAnimatedimage := TSkAnimatedImage.Create(Self);
-  LAnimatedimage.LoadFromFile('Assets\Samples\rocket.json');
+  LAnimatedimage.LoadFromFile('Samples\Demo\Assets\rocket.json');
   LAnimatedimage.Parent := Self;
 end;
 ```
@@ -633,14 +633,14 @@ var
   LSvg: TSkSvg;
 begin
   LSvg := TSkSvg.Create(Self);
-  LSvg.Svg.Source := TFile.ReadAllText('Assets\Samples\gorilla.svg');
+  LSvg.Svg.Source := TFile.ReadAllText('Samples\Demo\Assets\gorilla.svg');
   LSvg.Parent := Self;
 end;
 ```
 
 The example above results in the output below:
 
-<p><img src="Assets/Samples/gorilla.svg" width="200" height="200" alt="Gorilla" /></p>
+<p><img src="Samples/Demo/Assets/gorilla.svg" width="200" height="200" alt="Gorilla" /></p>
 
 [Learn more...](Documents/SVG.md)
 
@@ -654,25 +654,24 @@ The example above results in the output below:
 
 For the platforms supported by **Skia4Delphi** (listed above), the OS versions supported by the library are the same [OS versions that RAD Studio supports.](https://docwiki.embarcadero.com/PlatformStatus/en/Main_Page)
 
-## Remarks
-
-1. The pre-built Skia binary for **Linux64** targets was compiled for Debian (eg Ubuntu) and Red Hat (eg CentOS) based systems. If you want another distro you will need to [rebuild;](Documents/BUILD.md)
-2. For Red Hat based systems you must replace the `Binary/Linux64/Release/libsk4d.so` file with the `Binary/Linux64/Release/Other Distributions/Red Hat/libsk4d.so` file.
-
 # Documentation
 
 The APIs are very similar to Skia's, few methods and functions have been renamed for readability, so the [Skia documentation](https://skia.org/docs) can be used.
 
 # Version
 
-**[Skia4Delphi 3.4.1](/../../releases/latest)**
+**[Skia4Delphi 4.0.2](/../../releases/latest)**
 
-Skia Version used: [chrome/m98](https://github.com/google/skia/tree/chrome/m98)
-What has changed from the original code? [Compare.](https://github.com/google/skia/compare/chrome/m98...skia4delphi:main)
+Skia Version used: [chrome/m107](https://github.com/google/skia/tree/chrome/m107)
 
-# Sponsors
+# Sponsors & Partners
 
-<p><a href="https://www.a-dato.com"><img src="https://user-images.githubusercontent.com/11139086/186210969-0179cdbd-b65a-41cc-ad15-b7cc828a764f.png" alt="A-dato logo" width="200" /></a></p>
+<p>
+  <a href="https://www.a-dato.com">
+    <img src="https://user-images.githubusercontent.com/11139086/186210969-0179cdbd-b65a-41cc-ad15-b7cc828a764f.png" alt="A-dato logo" width="200" /></a>
+  <a href="https://www.delphistyles.com">
+    <img src="https://user-images.githubusercontent.com/11139086/199366200-c5766e71-2684-4990-94bb-d44094fb90c4.png" alt="DelphiStyles logo" width="100" margin-left="100" /></a>
+</p>
 
 # Contributors
 
