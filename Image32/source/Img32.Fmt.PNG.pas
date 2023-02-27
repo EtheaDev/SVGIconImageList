@@ -2,10 +2,10 @@ unit Img32.Fmt.PNG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.3                                                             *
-* Date      :  27 September 2022                                               *
+* Version   :  4.4                                                             *
+* Date      :  30 January 2023                                               *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2022                                         *
+* Copyright :  Angus Johnson 2019-2023                                         *
 * Purpose   :  PNG file format extension for TImage32                          *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -23,7 +23,8 @@ type
   TImageFormat_PNG = class(TImageFormat)
   public
     class function IsValidImageStream(stream: TStream): Boolean; override;
-    function LoadFromStream(stream: TStream; img32: TImage32): Boolean; override;
+    function LoadFromStream(stream: TStream;
+      img32: TImage32; imgIndex: integer = 0): Boolean; override;
     procedure SaveToStream(stream: TStream; img32: TImage32); override;
     class function CanCopyToClipboard: Boolean; override;
     class function CopyToClipboard(img32: TImage32): Boolean; override;
@@ -58,7 +59,8 @@ end;
 //------------------------------------------------------------------------------
 
 {$IFDEF FPC}
-function TImageFormat_PNG.LoadFromStream(stream: TStream; img32: TImage32): Boolean;
+function TImageFormat_PNG.LoadFromStream(stream: TStream;
+  img32: TImage32; imgIndex: integer = 0): Boolean;
 var
   png: TPortableNetworkGraphic;
 begin
@@ -102,35 +104,62 @@ end;
 //------------------------------------------------------------------------------
 {$ELSE}
 
-function TImageFormat_PNG.LoadFromStream(stream: TStream; img32: TImage32): Boolean;
+function TImageFormat_PNG.LoadFromStream(stream: TStream;
+  img32: TImage32; imgIndex: integer): Boolean;
 var
   i,j       : integer;
   png       : TPngImage;
   dst       : PARGB;
   srcAlpha  : PByte;
   srcColor  : PByte;
+  bytesPerRow: integer;
+  palentries : array[0..255] of TPaletteEntry;
+  usingPal   : Boolean;
 begin
   img32.BeginUpdate;
   png := TPngImage.Create;
   try
     png.LoadFromStream(stream);
     img32.SetSize(png.Width, png.Height);
+
+    bytesPerRow := PByte(png.Scanline[1]) -
+      PByte(png.Scanline[0]);
+    usingPal := (Abs(bytesPerRow) = png.Width) and (png.Palette <> 0);
+
+    if usingPal then
+    begin
+      GetPaletteEntries(png.Palette, 0, 256, palentries);
+      FixPalette(@palentries[0], 256);
+    end;
+
     for i := 0 to img32.Height -1 do
     begin
       dst      := PARGB(img32.PixelRow[i]);
       srcColor := png.Scanline[i];
-      if png.Transparent then
+
+      if usingPal then
+      begin
+        for j := 0 to img32.Width -1 do
+        begin
+          dst.Color := TColor32(palentries[srcColor^]);
+          inc(srcColor);
+          inc(dst);
+        end;
+      end
+      else if png.Transparent then
       begin
         srcAlpha := PByte(png.AlphaScanline[i]);
         for j := 0 to img32.Width -1 do
         begin
           dst.A := srcAlpha^; inc(srcAlpha);
+
           dst.B := srcColor^; inc(srcColor);
           dst.G := srcColor^; inc(srcColor);
           dst.R := srcColor^; inc(srcColor);
           inc(dst);
         end
       end else
+      begin
         for j := 0 to img32.Width -1 do
         begin
           dst.A := 255;
@@ -139,6 +168,8 @@ begin
           dst.R := srcColor^; inc(srcColor);
           inc(dst);
         end;
+      end;
+
     end;
   finally
     png.Free;

@@ -2,10 +2,10 @@ unit Img32.Vector;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.3                                                             *
-* Date      :  27 September 2022                                               *
+* Version   :  4.4                                                             *
+* Date      :  21 January 2023                                                 *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2022                                         *
+* Copyright :  Angus Johnson 2019-2023                                         *
 *                                                                              *
 * Purpose   :  Vector drawing for TImage32                                     *
 *                                                                              *
@@ -431,6 +431,7 @@ const
   NullRectD     : TRectD = (left: 0; top: 0; right: 0; Bottom: 0);
   InvalidRect   : TRect = (left: MaxInt; top: MaxInt; right: 0; Bottom: 0);
   BezierTolerance: double  = 0.25;
+  DoubleTolerance: double  = 1.0e-12;
 var
   //AutoWidthThreshold: When JoinStyle = jsAuto, this is the threshold at
   //which line joins will be rounded instead of squared. With wider strokes,
@@ -736,13 +737,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-
 function Rect(const recD: TRectD): TRect;
 begin
-  Result.Left := Floor(recD.Left);
-  Result.Top := Floor(recD.Top);
-  Result.Right := Ceil(recD.Right);
-  Result.Bottom := Ceil(recD.Bottom);
+  // see https://github.com/AngusJohnson/Image32/issues/15
+  Result.Left := Floor(recD.Left + DoubleTolerance);
+  Result.Top := Floor(recD.Top + DoubleTolerance);
+  Result.Right := Ceil(recD.Right - DoubleTolerance);
+  Result.Bottom := Ceil(recD.Bottom - DoubleTolerance);
 end;
 //------------------------------------------------------------------------------
 
@@ -2258,7 +2259,7 @@ var
   m1,b1,m2,b2: double;
 begin
   result := InvalidPointD;
-  //see http://astronomy.swin.edu.au/~pbourke/geometry/lineline2d/
+  //see http://paulbourke.net/geometry/pointlineplane/
   if (ln1B.X = ln1A.X) then
   begin
     if (ln2B.X = ln2A.X) then exit; //parallel lines
@@ -3191,8 +3192,8 @@ var
   l,t,r,b: double;
   p: PPointD;
 begin
-  l := MaxInt; t := MaxInt;
-  r := -MaxInt; b := -MaxInt;
+  l := MaxDouble; t := MaxDouble;
+  r := -MaxDouble; b := -MaxDouble;
   for i := 0 to high(paths) do
   begin
     p := PPointD(paths[i]);

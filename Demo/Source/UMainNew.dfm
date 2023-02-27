@@ -37,7 +37,6 @@ object MainForm: TMainForm
     Height = 509
     Align = alLeft
     TabOrder = 0
-    ExplicitHeight = 508
     object SelectThemeRadioGroup: TRadioGroup
       Left = 1
       Top = 1
@@ -47,7 +46,6 @@ object MainForm: TMainForm
       Caption = 'Select Theme/Color'
       TabOrder = 0
       OnClick = SelectThemeRadioGroupClick
-      ExplicitHeight = 209
     end
     object LoadGroupBox: TGroupBox
       Left = 1
@@ -57,7 +55,6 @@ object MainForm: TMainForm
       Align = alBottom
       Caption = 'Load SVG from disk'
       TabOrder = 1
-      ExplicitTop = 210
       object BuildFromFilesButton: TButton
         Left = 3
         Top = 23
@@ -76,7 +73,6 @@ object MainForm: TMainForm
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 3
-      ExplicitTop = 372
       object IconSizeLabel: TLabel
         Left = 8
         Top = 3
@@ -107,7 +103,6 @@ object MainForm: TMainForm
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitTop = 269
       object ClearButton: TButton
         Left = 5
         Top = 5
@@ -135,7 +130,6 @@ object MainForm: TMainForm
       Align = alBottom
       Caption = 'Fixed color'
       TabOrder = 4
-      ExplicitTop = 434
       object FixedColorComboBox: TColorBox
         Left = 10
         Top = 19
@@ -175,7 +169,6 @@ object MainForm: TMainForm
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 5
-      ExplicitTop = 310
       object IconOpacityLabel: TLabel
         Left = 8
         Top = 3
@@ -210,7 +203,6 @@ object MainForm: TMainForm
     Images = VirtualImageList
     TabOrder = 1
     Transparent = False
-    ExplicitWidth = 705
     object ToolButton1: TToolButton
       Left = 0
       Top = 0
@@ -262,8 +254,6 @@ object MainForm: TMainForm
     Align = alRight
     TabOrder = 2
     OnResize = paButtonsResize
-    ExplicitLeft = 625
-    ExplicitHeight = 508
     object SVGIconImage: TSVGIconImage
       Left = 1
       Top = 428
@@ -277,6 +267,7 @@ object MainForm: TMainForm
       AutoSize = False
       ImageList = VirtualImageList
       ImageIndex = 100
+      ImageName = 'Delphi_Product icon'
       Align = alBottom
       OnDblClick = SVGIconImageDblClick
       OnMouseDown = SVGIconImageMouseDown
@@ -319,8 +310,6 @@ object MainForm: TMainForm
     Height = 509
     Align = alClient
     TabOrder = 3
-    ExplicitWidth = 420
-    ExplicitHeight = 508
     object ImageListLabel: TLabel
       Left = 1
       Top = 209
@@ -350,7 +339,6 @@ object MainForm: TMainForm
         0000000000FFFFFFFF0000000000000000000000000107740077006F00200074
         0077006F00280000000300000003000000FFFFFFFFFFFFFFFF00000000000000
         0000000000010574006800720065006500}
-      ExplicitWidth = 418
     end
     object ImageView: TListView
       Left = 1

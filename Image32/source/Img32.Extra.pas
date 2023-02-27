@@ -1211,7 +1211,6 @@ type
     next      : PFloodFillRec;
   end;
   TFloodFillStack = class
-  private
     first     : PFloodFillRec;
     maxY      : integer;
     constructor Create(maxY: integer);
@@ -1536,7 +1535,6 @@ end;
 type
   TPt2Container = class;
   TPt2 = class
-  private
     pt         : TPointD;
     owner      : TPt2Container;
     isStart    : Boolean;
@@ -1552,7 +1550,6 @@ type
     property IsAscending: Boolean read isStart;
   end;
   TPt2Container = class
-  private
     prevRight: integer;
     leftMostPt, rightMost: TPt2;
     solution: TPathsD;

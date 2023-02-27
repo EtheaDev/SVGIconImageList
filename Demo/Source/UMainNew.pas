@@ -126,10 +126,10 @@ implementation
 {$R *.dfm}
 
 uses
-  PasSVGFactory
-  , Image32SVGFactory
-  , SkiaSVGFactory
-  , D2DSVGFactory
+  Image32SVGFactory
+//  , PasSVGFactory
+//  , SkiaSVGFactory
+//  , D2DSVGFactory
 
   , Themes
   {$IFDEF DXE3+}

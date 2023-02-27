@@ -17,6 +17,7 @@ const
   hClass                      = $E45C07DD;    // Class
   hClip_045_path              = $B6C7D97A;    // Clip-path
   hClippath                   = $241B0E0D;    // Clippath
+  hcollapse                   = $22A7B0EC;    // collapse
   hColor                      = $E953FD29;    // Color
   hCurrentColor               = $5B8F31B0;    // CurrentColor
   hCx                         = $B5177A89;    // Cx
@@ -70,6 +71,7 @@ const
   hGradientUnits              = $07DD34B6;    // GradientUnits
   hGramma                     = $302368DC;    // Gramma
   hHeight                     = $52FDF336;    // Height
+  hhidden                     = $4C4D777D;    // hidden
   hHref                       = $8E926F4B;    // Href
   hId                         = $1B60404D;    // Id
   hIn                         = $4D5FA44B;    // In
@@ -179,6 +181,8 @@ const
   hUserSpaceOnUse             = $3D19F8A4;    // UserSpaceOnUse
   hValues                     = $33429E55;    // Values
   hViewbox                    = $AEF665C8;    // Viewbox
+  hVisibility                 = $9F832B01;    // Visibility
+  hvisible                    = $96C79D31;    // visible
   hWidth                      = $96BEECA0;    // Width
   hX                          = $9303A5E5;    // X
   hX1                         = $74A7DE27;    // X1

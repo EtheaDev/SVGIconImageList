@@ -6,7 +6,9 @@
 //USING_VCL_LCL - using either Delphi or Lazarus Component Libraries
 //Adds a few extra library features (eg copying to and from TBitmap objects)
 //Enabled is recommended unless you're compiling console applications.
-{$DEFINE USING_VCL_LCL} 
+{$IFDEF MSWINDOWS}
+  {$DEFINE USING_VCL_LCL}
+{$ENDIF}
 
 {$IFDEF FPC}
   {$MODE DELPHI}

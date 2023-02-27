@@ -284,7 +284,7 @@ type
     procedure Clear;
     function GetFont(const fontName: string): TFontReader;
 {$IFDEF MSWINDOWS}
-    function Load(const fontName: string): TFontReader;
+    function Load(const fontName: string; Weight: Integer = FW_NORMAL; Italic: Boolean = False): TFontReader;
 {$ENDIF}
     function LoadFromStream(stream: TStream): TFontReader;
     function LoadFromResource(const resName: string; resType: PChar): TFontReader;
@@ -355,7 +355,7 @@ type
     constructor Create; overload;
     constructor CreateFromResource(const resName: string; resType: PChar);
 {$IFDEF MSWINDOWS}
-    constructor Create(const fontname: string); overload;
+    constructor Create(const fontname: string; Weight: Integer = FW_NORMAL; Italic: Boolean = False); overload;
 {$ENDIF}
     destructor Destroy; override;
     procedure Clear;
@@ -366,7 +366,7 @@ type
     function LoadFromResource(const resName: string; resType: PChar): Boolean;
     function LoadFromFile(const filename: string): Boolean;
 {$IFDEF MSWINDOWS}
-    function Load(const fontname: string): Boolean;
+    function Load(const fontname: string; Weight: Integer = FW_NORMAL; Italic: Boolean = False): Boolean;
     function LoadUsingFontHdl(hdl: HFont): Boolean;
 {$ENDIF}
     function GetGlyphInfo(unicode: Word; out paths: TPathsD;
@@ -394,7 +394,6 @@ type
   TWordInfoList = class;
 
   TWordInfo = class
-  private
     index         : integer;
     aWord         : UnicodeString;
     width         : double;
@@ -870,10 +869,10 @@ end;
 //------------------------------------------------------------------------------
 
 {$IFDEF MSWINDOWS}
-constructor TFontReader.Create(const fontname: string);
+constructor TFontReader.Create(const fontname: string; Weight: Integer; Italic: Boolean);
 begin
   Create;
-  Load(fontname);
+  Load(fontname, Weight, Italic);
 end;
 //------------------------------------------------------------------------------
 {$ENDIF}
@@ -1056,7 +1055,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TFontReader.Load(const fontname: string): Boolean;
+function TFontReader.Load(const fontname: string; Weight: Integer; Italic: Boolean): Boolean;
 var
   logfont: TLogFont;
   hdl: HFont;
@@ -1064,6 +1063,8 @@ begin
   Result := false;
   FillChar(logfont, SizeOf(logfont), 0);
   StrPCopy(@logfont.lfFaceName[0], fontname);
+  logFont.lfWeight := Weight;
+  logFont.lfItalic := Byte(Italic);
   hdl := CreateFontIndirect(logfont);
   if hdl = 0 then Exit;
   try
@@ -3468,7 +3469,7 @@ end;
 //------------------------------------------------------------------------------
 
 {$IFDEF MSWINDOWS}
-function TFontManager.Load(const fontName: string): TFontReader;
+function TFontManager.Load(const fontName: string; Weight: Integer; Italic: Boolean): TFontReader;
 begin
   if fFontList.Count >= fMaxFonts then
     raise Exception.Create(rsTooManyFonts);
@@ -3478,7 +3479,7 @@ begin
 
   Result := TFontReader.Create;
   try
-    if not Result.Load(fontName) or
+    if not Result.Load(fontName, Weight, Italic) or
       not ValidateAdd(Result) then
         FreeAndNil(Result);
   except

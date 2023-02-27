@@ -2,10 +2,10 @@ unit Img32;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.3                                                             *
-* Date      :  27 September 2022                                               *
+* Version   :  4.4                                                             *
+* Date      :  30 January 2023                                               *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2022                                         *
+* Copyright :  Angus Johnson 2019-2023                                         *
 *                                                                              *
 * Purpose   :  The core module of the Image32 library                          *
 *                                                                              *
@@ -38,6 +38,15 @@ type
   TPointD = record
     X, Y: double;
   end;
+
+  PARGB = ^TARGB;
+  TARGB = packed record
+    case boolean of
+      false: (B: Byte; G: Byte; R: Byte; A: Byte);
+      true : (Color: TColor32);
+  end;
+  TArrayOfARGB = array of TARGB;
+  PArgbArray = ^TArrayOfARGB;
 
 const
   clNone32     = TColor32($00000000);
@@ -140,11 +149,14 @@ type
   //file storage formats (eg BMP, PNG, GIF & JPG).<br>
   //Derived classes register with TImage32 using TImage32.RegisterImageFormatClass.
   TImageFormat = class
+  public
     class function IsValidImageStream(stream: TStream): Boolean; virtual; abstract;
     procedure SaveToStream(stream: TStream; img32: TImage32); virtual; abstract;
     function SaveToFile(const filename: string; img32: TImage32): Boolean; virtual;
-    function LoadFromStream(stream: TStream; img32: TImage32): Boolean; virtual; abstract;
+    function LoadFromStream(stream: TStream;
+      img32: TImage32; imgIndex: integer = 0): Boolean; virtual; abstract;
     function LoadFromFile(const filename: string; img32: TImage32): Boolean; virtual;
+    class function GetImageCount(stream: TStream): integer; virtual;
     class function CanCopyToClipboard: Boolean; virtual;
     class function CopyToClipboard(img32: TImage32): Boolean; virtual; abstract;
     class function CanPasteFromClipboard: Boolean; virtual; abstract;
@@ -305,7 +317,7 @@ type
     function SaveToFile(filename: string): Boolean;
     function SaveToStream(stream: TStream; const FmtExt: string): Boolean;
     function LoadFromFile(const filename: string): Boolean;
-    function LoadFromStream(stream: TStream): Boolean;
+    function LoadFromStream(stream: TStream; imgIdx: integer = 0): Boolean;
     function LoadFromResource(const resName: string; resType: PChar): Boolean;
 
     //properties ...
@@ -356,15 +368,6 @@ type
     property IsImageOwner: Boolean read fIsImageOwner write fIsImageOwner;
     property Last: TImage32 read GetLast;
   end;
-
-  PARGB = ^TARGB;
-  TARGB = packed record
-    case boolean of
-      false: (B: Byte; G: Byte; R: Byte; A: Byte);
-      true : (Color: TColor32);
-  end;
-  TArrayOfARGB = array of TARGB;
-  PArgbArray = ^TArrayOfARGB;
 
   THsl = packed record
     hue  : byte;
@@ -448,6 +451,8 @@ type
   {$IFDEF MSWINDOWS}
   //Color32: Converts a Graphics.TColor value into a TColor32 value.
   function Color32(rgbColor: Integer): TColor32; overload;
+
+  procedure FixPalette(p: PARGB; count: integer);
   {$ENDIF}
   function Color32(a, r, g, b: Byte): TColor32; overload;
 
@@ -597,7 +602,6 @@ type
   PImgFmtRec = ^TImgFmtRec;
 
   TResamplerObj = class
-  private
     id: integer;
     name: string;
     func: TResamplerFunction;
@@ -1042,6 +1046,19 @@ begin
     result := rgbColor;
   res.A := res.B; res.B := res.R; res.R := res.A; //byte swap
   res.A := 255;
+end;
+//------------------------------------------------------------------------------
+
+procedure FixPalette(p: PARGB; count: integer);
+var
+  i: integer;
+begin
+  for i := 1 to count do
+  begin
+    p.Color := SwapRedBlue(p.Color);
+    p.A := 255;
+    inc(p);
+  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -2273,7 +2290,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TImage32.LoadFromStream(stream: TStream): Boolean;
+function TImage32.LoadFromStream(stream: TStream; imgIdx: integer): Boolean;
 var
   ifc: TImageFormatClass;
 begin
@@ -2283,7 +2300,7 @@ begin
 
   with ifc.Create do
   try
-    result := LoadFromStream(stream, self);
+    result := LoadFromStream(stream, self, imgIdx);
   finally
     free;
   end;
@@ -2489,6 +2506,7 @@ end;
 //------------------------------------------------------------------------------
 
 {$IFDEF MSWINDOWS}
+
 procedure TImage32.CopyFromDC(srcDc: HDC; const srcRect: TRect);
 var
   bi: TBitmapInfoHeader;
@@ -3358,6 +3376,12 @@ end;
 class function TImageFormat.CanCopyToClipboard: Boolean;
 begin
   Result := false;
+end;
+//------------------------------------------------------------------------------
+
+class function TImageFormat.GetImageCount(stream: TStream): integer;
+begin
+  Result := 1;
 end;
 
 //------------------------------------------------------------------------------
