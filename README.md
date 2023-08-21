@@ -92,7 +92,7 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 - Updated to Skia4Delphi ver. 6.0.0
 - TSVGIconVirtualImageList inherits from TVirtualImageList (from D10.3 to actual version).
 - Added SVGIconVirtualImageListDemo to test multiple TSVGIconVirtualImageList in same form
-- Added supporto for Delphi 12
+- Added support for Delphi 12
 
 28 Feb 2023: version 3.9.6 (VCL+FMX)
 - Updated to Image32 ver. 4.4 (30 Jan 2023)
