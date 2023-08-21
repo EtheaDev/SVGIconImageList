@@ -90,7 +90,6 @@ uses
   {$ENDIF}
   , SVGIconImageListBase
   , SVGInterfaces
-  , ShellAPI
   , Xml.XMLDoc
   //WARNING: you must define this directive to use this unit outside the IDE
   //WARNING: you must define this directive to use this unit outside the IDE
@@ -99,7 +98,7 @@ uses
   , BrandingAPI
   {$IF (CompilerVersion >= 32.0)}, IDETheme.Utils{$IFEND}
 {$ENDIF}
-  , SVG;
+  , ShellAPI;
 
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);

@@ -96,6 +96,13 @@
         <DCCReference Include="..\..\Image32\source\Img32.SVG.Core.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.SVG.Path.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.SVG.Reader.pas"/>
+        <DCCReference Include="..\..\Image32\Source\Img32.Clipper2.pas"/>
+        <DCCReference Include="..\..\Image32\source\Clipper.pas"/>
+        <DCCReference Include="..\..\Image32\source\Clipper.Core.pas"/>
+        <DCCReference Include="..\..\Image32\source\Clipper.Engine.pas"/>
+        <DCCReference Include="..\..\Image32\source\Clipper.Minkowski.pas"/>
+        <DCCReference Include="..\..\Image32\source\Clipper.Offset.pas"/>
+        <DCCReference Include="..\..\Image32\source\Clipper.RectClip.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

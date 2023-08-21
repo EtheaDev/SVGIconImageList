@@ -80,7 +80,6 @@ procedure TFrameView.InitViewer(
   const ATitle: string; const SVGFactory: ISVGFactory);
 begin
   TitlePanel.Caption := ATitle;
-  TitlePanel.Font.Style := TitlePanel.Font.Style + [fsBold];
   SetGlobalSvgFactory(SVGFactory);
   FKeeAspectRatio := True;
   FSVG := GlobalSvgFactory.NewSvg;

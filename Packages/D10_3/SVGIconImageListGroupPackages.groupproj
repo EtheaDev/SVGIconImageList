@@ -6,9 +6,6 @@
         <Projects Include="SVGImage32Package.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="SVGIconPackage.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="SVGIconImageList.dproj">
             <Dependencies/>
         </Projects>
@@ -37,15 +34,6 @@
     </Target>
     <Target Name="SVGImage32Package:Make">
         <MSBuild Projects="SVGImage32Package.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="SVGIconPackage">
-        <MSBuild Projects="SVGIconPackage.dproj"/>
-    </Target>
-    <Target Name="SVGIconPackage:Clean">
-        <MSBuild Projects="SVGIconPackage.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="SVGIconPackage:Make">
-        <MSBuild Projects="SVGIconPackage.dproj" Targets="Make"/>
     </Target>
     <Target Name="SVGIconImageList">
         <MSBuild Projects="SVGIconImageList.dproj"/>
@@ -84,13 +72,13 @@
         <MSBuild Projects="dclSVGIconImageListFMX.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="SVGImage32Package;SVGIconPackage;SVGIconImageList;dclSVGIconImageList;SVGIconImageListFMX;dclSVGIconImageListFMX"/>
+        <CallTarget Targets="SVGImage32Package;SVGIconImageList;dclSVGIconImageList;SVGIconImageListFMX;dclSVGIconImageListFMX"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="SVGImage32Package:Clean;SVGIconPackage:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean;SVGIconImageListFMX:Clean;dclSVGIconImageListFMX:Clean"/>
+        <CallTarget Targets="SVGImage32Package:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean;SVGIconImageListFMX:Clean;dclSVGIconImageListFMX:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="SVGImage32Package:Make;SVGIconPackage:Make;SVGIconImageList:Make;dclSVGIconImageList:Make;SVGIconImageListFMX:Make;dclSVGIconImageListFMX:Make"/>
+        <CallTarget Targets="SVGImage32Package:Make;SVGIconImageList:Make;dclSVGIconImageList:Make;SVGIconImageListFMX:Make;dclSVGIconImageListFMX:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

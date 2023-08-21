@@ -51,38 +51,75 @@ uses
   SVGIconImageCollection;
 
 type
+  {$IFDEF D10_3+}
+  TSVGIconVirtualImageList = class(TVirtualImageList)
+  {$ELSE}
   TSVGIconVirtualImageList = class(TSVGIconImageListBase)
+  {$ENDIF}
   private
-    FImageCollection : TSVGIconImageCollection;
+    {$IFDEF D10_3+}
+    FFixedColor: TColor;
+    FApplyFixedColorToRootOnly: Boolean;
+    FGrayScale: Boolean;
+    FAntiAliasColor: TColor;
+    FOpacity: Byte;
+    procedure SetFixedColor(const Value: TColor);
+    procedure SetGrayScale(const Value: Boolean);
+    procedure SetAntiAliasColor(const Value: TColor);
+    procedure SetApplyFixedColorToRootOnly(const Value: Boolean);
+    procedure SetOpacity(const Value: Byte);
+    function GetSize: Integer;
+    procedure SetSize(const Value: Integer);
+    function StoreSize: Boolean;
+    procedure UpdateImageCollection;
+    {$ELSE}
+    FImageCollection: TSVGIconImageCollection;
+    {$ENDIF}
   protected
+    {$IFNDEF D10_3+}
     // override abstract methods
-    function GetSVGIconItems: TSVGIconItems; override;
-    procedure RecreateBitmaps; override;
+    function GetSVGIconItems: TSVGIconItems; {$IFDEF D10_3+}virtual;{$ELSE}override;{$ENDIF}
+    procedure RecreateBitmaps; {$IFDEF D10_3+}virtual;{$ELSE}override;{$ENDIF}
+    procedure DoAssign(const source : TPersistent); {$IFDEF D10_3+}virtual;{$ELSE}override;{$ENDIF}
     procedure SetImageCollection(const value: TSVGIconImageCollection);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
-
-    procedure DoAssign(const source : TPersistent); override;
     function GetCount: Integer; override;
+    {$ELSE}
+    procedure DoChange; override;
+    {$ENDIF}
 
   public
+    {$IFNDEF D10_3+}
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
       const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
-
+    {$ELSE}
+    constructor Create(AOwner: TComponent); override;
+    {$ENDIF}
   published
     //Publishing properties of Custom Class
     property OnChange;
     //New properties
+    {$IFDEF D10_3+}
+    property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
+    property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default False;
+    property AntiAliasColor: TColor read FAntiAliasColor write SetAntiAliasColor default clBtnFace;
+    property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
+    property Opacity: Byte read FOpacity write SetOpacity default 255;
+    property Size: Integer read GetSize write SetSize stored StoreSize default DEFAULT_SIZE;
+    property ImageCollection;
+    {$ELSE}
     property Opacity;
-    property Width;
-    property Height;
     property Size;
     property FixedColor;
     property AntiAliasColor;
     property GrayScale;
+    property ApplyFixedColorToRootOnly;
+    property ImageCollection : TSVGIconImageCollection read FImageCollection write SetImageCollection;
+    {$ENDIF}
+    property Width;
+    property Height;
     property DisabledGrayScale;
     property DisabledOpacity;
-    property ImageCollection : TSVGIconImageCollection read FImageCollection write SetImageCollection;
-
     {$IFDEF HiDPISupport}
     property Scaled;
     {$ENDIF}
@@ -102,6 +139,7 @@ uses
 
 { TSVGIconVirtualImageList }
 
+{$IFNDEF D10_3+}
 procedure TSVGIconVirtualImageList.DoAssign(const source: TPersistent);
 begin
   inherited;
@@ -242,5 +280,110 @@ begin
     Change;
   end;
 end;
+{$ENDIF}
+
+{$IFDEF D10_3+}
+procedure TSVGIconVirtualImageList.SetFixedColor(const Value: TColor);
+begin
+  if FFixedColor <> Value then
+  begin
+    FFixedColor := Value;
+    UpdateImageCollection;
+  end;
+end;
+
+procedure TSVGIconVirtualImageList.SetApplyFixedColorToRootOnly(
+  const Value: Boolean);
+begin
+  if FApplyFixedColorToRootOnly <> Value then
+  begin
+    FApplyFixedColorToRootOnly := Value;
+    UpdateImageCollection;
+  end;
+end;
+
+procedure TSVGIconVirtualImageList.SetGrayScale(const Value: Boolean);
+begin
+  if FGrayScale <> Value then
+  begin
+    FGrayScale := Value;
+    UpdateImageCollection;
+  end;
+end;
+
+procedure TSVGIconVirtualImageList.SetOpacity(const Value: Byte);
+begin
+  if FOpacity <> Value then
+  begin
+    FOpacity := Value;
+    UpdateImageCollection;
+  end;
+end;
+
+procedure TSVGIconVirtualImageList.SetAntiAliasColor(const Value: TColor);
+begin
+  if FAntiAliasColor <> Value then
+  begin
+    FAntiAliasColor := Value;
+    UpdateImageCollection;
+  end;
+end;
+
+procedure TSVGIconVirtualImageList.UpdateImageCollection;
+begin
+  if ImageCollection is TSVGIconImageCollection then
+  begin
+    TSVGIconImageCollection(ImageCollection).UpdateAttributes(
+      FFixedColor,
+      FApplyFixedColorToRootOnly,
+      FGrayScale,
+      FAntiAliasColor,
+      FOpacity);
+  end;
+end;
+
+procedure TSVGIconVirtualImageList.DoChange;
+begin
+  UpdateImageCollection;
+  inherited;
+end;
+
+function TSVGIconVirtualImageList.GetSize: Integer;
+begin
+  Result := Max(Width, Height);
+end;
+
+procedure TSVGIconVirtualImageList.SetSize(const Value: Integer);
+begin
+  if (Height <> Value) or (Width <> Value) then
+  begin
+    BeginUpdate;
+    try
+      Width := Value;
+      Height := Value;
+    finally
+      EndUpdate;
+    end;
+  end;
+end;
+
+function TSVGIconVirtualImageList.StoreSize: Boolean;
+begin
+  Result := (Width = Height) and (Width <> DEFAULT_SIZE);
+end;
+
+constructor TSVGIconVirtualImageList.Create(AOwner: TComponent);
+begin
+  FFixedColor := SVG_INHERIT_COLOR;
+  FApplyFixedColorToRootOnly := False;
+  FAntiAliasColor := clBtnFace;
+  FGrayScale := False;
+  FOpacity := 255;
+  {$IFDEF HiDPISupport}
+  FScaled := True;
+  {$ENDIF}
+  inherited;
+end;
+{$ENDIF}
 
 end.

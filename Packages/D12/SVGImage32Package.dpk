@@ -1,0 +1,63 @@
+package SVGImage32Package;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE RELEASE}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Image32 2D Graphic Library - Copyright Angus Johnson'}
+{$LIBSUFFIX AUTO}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  vclimg;
+
+contains
+  Img32 in '..\..\Image32\source\Img32.pas',
+  Img32.Panels in '..\..\Image32\source\Img32.Panels.pas',
+  Img32.Fmt.PNG in '..\..\Image32\source\Img32.Fmt.PNG.pas',
+  Img32.CQ in '..\..\Image32\source\Img32.CQ.pas',
+  Img32.Draw in '..\..\Image32\source\Img32.Draw.pas',
+  Img32.Extra in '..\..\Image32\source\Img32.Extra.pas',
+  Img32.Layers in '..\..\Image32\source\Img32.Layers.pas',
+  Img32.Resamplers in '..\..\Image32\source\Img32.Resamplers.pas',
+  Img32.Transform in '..\..\Image32\source\Img32.Transform.pas',
+  Img32.Text in '..\..\Image32\source\Img32.Text.pas',
+  Img32.Vector in '..\..\Image32\source\Img32.Vector.pas',
+  Img32.Fmt.SVG in '..\..\Image32\source\Img32.Fmt.SVG.pas',
+  Img32.Storage in '..\..\Image32\source\Img32.Storage.pas',
+  Img32.SVG.Core in '..\..\Image32\source\Img32.SVG.Core.pas',
+  Img32.SVG.Path in '..\..\Image32\source\Img32.SVG.Path.pas',
+  Img32.SVG.Reader in '..\..\Image32\source\Img32.SVG.Reader.pas',
+  Img32.Clipper2 in '..\..\Image32\Source\Img32.Clipper2.pas',
+  Clipper in '..\..\Image32\source\Clipper.pas',
+  Clipper.Core in '..\..\Image32\source\Clipper.Core.pas',
+  Clipper.Engine in '..\..\Image32\source\Clipper.Engine.pas',
+  Clipper.Minkowski in '..\..\Image32\source\Clipper.Minkowski.pas',
+  Clipper.Offset in '..\..\Image32\source\Clipper.Offset.pas',
+  Clipper.RectClip in '..\..\Image32\source\Clipper.RectClip.pas';
+
+end.

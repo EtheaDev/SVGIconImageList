@@ -9,7 +9,7 @@ package SVGImage32Package;
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
-{$LOCALSYMBOLS ON}
+{$LOCALSYMBOLS OFF}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
 {$OPTIMIZATION ON}
@@ -51,6 +51,13 @@ contains
   Img32.Storage in '..\..\Image32\source\Img32.Storage.pas',
   Img32.SVG.Core in '..\..\Image32\source\Img32.SVG.Core.pas',
   Img32.SVG.Path in '..\..\Image32\source\Img32.SVG.Path.pas',
-  Img32.SVG.Reader in '..\..\Image32\source\Img32.SVG.Reader.pas';
+  Img32.SVG.Reader in '..\..\Image32\source\Img32.SVG.Reader.pas',
+  Img32.Clipper2 in '..\..\Image32\Source\Img32.Clipper2.pas',
+  Clipper in '..\..\Image32\source\Clipper.pas',
+  Clipper.Core in '..\..\Image32\source\Clipper.Core.pas',
+  Clipper.Engine in '..\..\Image32\source\Clipper.Engine.pas',
+  Clipper.Minkowski in '..\..\Image32\source\Clipper.Minkowski.pas',
+  Clipper.Offset in '..\..\Image32\source\Clipper.Offset.pas',
+  Clipper.RectClip in '..\..\Image32\source\Clipper.RectClip.pas';
 
 end.

@@ -2,8 +2,8 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   Left = 392
   Top = 450
   Caption = 'SVG Icon ImageList Editor %s - Copyright Ethea S.r.l.'
-  ClientHeight = 619
-  ClientWidth = 719
+  ClientHeight = 618
+  ClientWidth = 715
   Color = clBtnFace
   Constraints.MinHeight = 600
   Constraints.MinWidth = 700
@@ -12,18 +12,16 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OldCreateOrder = True
   ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 15
   object BottomSplitter: TSplitter
     Left = 0
-    Top = 377
-    Width = 719
+    Top = 376
+    Width = 715
     Height = 4
     Cursor = crVSplit
     Align = alBottom
@@ -35,11 +33,13 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   object paTop: TPanel
     Left = 0
     Top = 0
-    Width = 719
-    Height = 377
+    Width = 715
+    Height = 376
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 719
+    ExplicitHeight = 377
     object paClient: TPanel
       Left = 0
       Top = 0
@@ -310,12 +310,13 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           object PropertiesGroupBox: TGroupBox
             AlignWithMargins = True
             Left = 3
-            Top = 131
+            Top = 130
             Width = 179
             Height = 175
             Align = alBottom
             Caption = 'Global properties'
             TabOrder = 1
+            ExplicitTop = 131
             object FixedColorLabel: TLabel
               Left = 6
               Top = 19
@@ -403,17 +404,19 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
   end
   object BottomPanel: TPanel
     Left = 0
-    Top = 581
-    Width = 719
+    Top = 580
+    Width = 715
     Height = 38
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitTop = 581
+    ExplicitWidth = 719
     DesignSize = (
-      719
+      715
       38)
     object OKButton: TButton
-      Left = 354
+      Left = 346
       Top = 6
       Width = 85
       Height = 25
@@ -423,9 +426,10 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       ModalResult = 1
       TabOrder = 0
       OnClick = OkButtonClick
+      ExplicitLeft = 354
     end
     object ApplyButton: TButton
-      Left = 537
+      Left = 529
       Top = 6
       Width = 85
       Height = 25
@@ -433,9 +437,10 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Caption = '&Apply'
       TabOrder = 2
       OnClick = ApplyButtonClick
+      ExplicitLeft = 537
     end
     object CancelButton: TButton
-      Left = 446
+      Left = 438
       Top = 6
       Width = 85
       Height = 25
@@ -444,9 +449,10 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Caption = 'Cancel'
       ModalResult = 2
       TabOrder = 1
+      ExplicitLeft = 446
     end
     object HelpButton: TButton
-      Left = 629
+      Left = 621
       Top = 6
       Width = 85
       Height = 25
@@ -454,26 +460,30 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Caption = '&Help'
       TabOrder = 3
       OnClick = HelpButtonClick
+      ExplicitLeft = 629
     end
     object SVGErrorStaticText: TStaticText
       Left = 6
       Top = 3
-      Width = 346
+      Width = 338
       Height = 30
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
       TabOrder = 4
       Transparent = False
+      ExplicitWidth = 346
     end
   end
   object paIcon: TPanel
     Left = 0
-    Top = 381
-    Width = 719
+    Top = 380
+    Width = 715
     Height = 200
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitTop = 381
+    ExplicitWidth = 719
     object IconButtonsPanel: TPanel
       Left = 622
       Top = 0
@@ -519,7 +529,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       Caption = 'Selected Icon'
       TabOrder = 0
       DesignSize = (
-        622
+        618
         200)
       object IconNameLabel: TLabel
         Left = 53
@@ -594,7 +604,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       object SVGText: TMemo
         Left = 136
         Top = 65
-        Width = 477
+        Width = 469
         Height = 124
         Hint = 'SVG Text content'
         Anchors = [akLeft, akTop, akRight, akBottom]
@@ -604,6 +614,7 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         OnEnter = SVGTextEnter
         OnExit = SVGTextExit
         OnKeyDown = SVGTextKeyDown
+        ExplicitWidth = 477
       end
       object FixedColorItemComboBox: TColorBox
         Left = 343

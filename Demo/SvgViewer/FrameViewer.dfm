@@ -10,14 +10,16 @@ object FrameView: TFrameView
     Width = 510
     Height = 432
     Align = alClient
-    BevelOuter = bvLowered
+    BevelOuter = bvNone
     BorderWidth = 1
+    Ctl3D = False
+    ParentCtl3D = False
     TabOrder = 0
     object SVGPaintBox: TPaintBox
-      Left = 2
-      Top = 25
-      Width = 506
-      Height = 405
+      Left = 1
+      Top = 24
+      Width = 508
+      Height = 407
       Align = alClient
       Color = clWhite
       ParentColor = False
@@ -28,13 +30,23 @@ object FrameView: TFrameView
       ExplicitHeight = 300
     end
     object TitlePanel: TPanel
-      Left = 2
-      Top = 2
-      Width = 506
+      Left = 1
+      Top = 1
+      Width = 508
       Height = 23
       Align = alTop
+      BevelOuter = bvNone
       Caption = 'Title'
+      Color = clHighlight
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clHighlightText
+      Font.Height = -12
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsBold]
+      ParentBackground = False
+      ParentFont = False
       TabOrder = 0
+      StyleElements = [seBorder]
     end
   end
 end

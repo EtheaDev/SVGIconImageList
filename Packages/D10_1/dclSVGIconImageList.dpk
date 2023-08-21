@@ -42,3 +42,4 @@ contains
   SVGTextPropertyEditorUnit in '..\SVGTextPropertyEditorUnit.pas' {SVGTextPropertyEditorForm};
 
 end.
+

@@ -1,8 +1,8 @@
 ﻿# SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
-## Four engines to render SVG (Delphi Image32, Delphi TSVG, SKIA4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
+## Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 3.9.6 (VCL+FMX)
+### Actual official version 4.0.0 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -13,45 +13,49 @@
 
 ## Very important notice
 
-**TVirtualImageList** (available from D10.3) and **TSVGIconVirtualImageList** both use images from **TSVGIconImageCollection**. An important difference is that TVirtualImageList may use and create only a subset of the images in the collection, whereas TSVGIconVirtualImageList creates all images of the collection everytime it is needed (e,g. DPI change), which is slower and consumes more memory.
+WARNING: From version 4.0, **TSVGIconVirtualImageList** inherits from **TVirtualImageList** (using Delphi 10.3 to latest). For previous Delphi versions **TSVGIconVirtualImageList** inherits from **TSVGIconImageListBase**.
 
-Although TVirtualImageList does not have the FixedColor, GrayScale and Opacity properties, these properties exist at the TSVGIconImageCollection and they would be reflected on the linked TVirtualImageList.
+An important difference is that a TVirtualImageList may use and create only a subset of the images in the collection.
 
-We advise that TSVGIconVirtualImageList should be used only for versions of Delphi before 10.3. For recent versions of Delphi the recommended combination should be **TSVGIconImageCollection + TVirtualImageList**. Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to "True", everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.
+Although, the standard TVirtualImageList does not have the FixedColor, GrayScale, ApplyToRootOnly and Opacity properties, these properties exist at the TSVGIconImageCollection and they would be reflected on the linked TVirtualImageList, but if you change those properties at collection level, all the VirtualImageList linked changes!
 
-From D10.3 version, the **TSVGIconImageCollection** inherits from TCustomImageCollection, so you can also use it with the TVirtualImage component and place SVG icons into the new TControlList component (available from Delphi 10.4.2), as explained [here...](https://github.com/EtheaDev/SVGIconImageList/wiki/TControlList-with-SVGIconImageCollection)
+For this reasons, now TSVGIconVirtualImageList have also FixedColor, GrayScale, ApplyToRootOnly and Opacity properties, so you can setup those properties only at VirtualImageList level, and you can share the same TSVGIconImageCollection from many VirtualImageList with different poperties, as you can see in the new SVGIconVirtualImageListDemo.
+
+So, if you are using those components from Delphi 10.3, the recommended combination should be **TSVGIconImageCollection + TSVGIconVirtualImageList**.
+
+Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to "True", everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.
+
+Another feature available from Delphi 10.4 version, is that **TSVGIconImageCollection** inherits from TCustomImageCollection, so you can also use it with the TVirtualImage component and place SVG icons into the TControlList component, as explained [here...](https://github.com/EtheaDev/SVGIconImageList/wiki/TControlList-with-SVGIconImageCollection)
 
 ## Choose your preferred SVG engine!
 
-There are four implementation:
+There are three implementation:
 
-- Native Delphi Image32 (default): the new implementatio, using Image32 library by Angus Johnson
+- **Native Delphi Image32** (default), uses Image32 library by Angus Johnson
 
-- Native Delphi TSVG: the first native Delphi code, based on Martin's work which is using GDI+
+- Using **Skia4Delphi** library, a cross-platform 2D graphics API based on Google's Skia Graphics Library
 
-- Using SKIA4Delphi library, a cross-platform 2D graphics API based on Google's Skia Graphics Library
-
-- A wrapper to the native Windows Direct2D implementation 
+- A wrapper to the native Windows **Direct2D** implementation
 
 You can read more details [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories)
 
 ## Performance comparison
 
-This table shows the performance of the four rendering engines tested with SVGExplorer, using a significant amount of icons from different sets, rendered at 128x128 pixels.
+This table shows the performance of the three rendering engines tested with SVGExplorer, using a significant amount of icons from different sets, rendered at 128x128 pixels.
 
-Count | Icon set        |    TSVG | Image32 |    D2D |SKIA4Delphi|
-  --: | :--             |     --: |     --: |    --: |     --:   |
- 997  | Font-Awesome    |  1171ms |  1265ms | 1453ms |  1172ms   |
- 654  | Papirus         |  1093ms |  2750ms<sup>(1)</sup> |  937ms | 1266ms<sup>(1)</sup> |
-5366  | Material-Design | 10796ms | 11015ms | 12001ms | 10688ms   |
+Count | Icon set        | Image32 |    D2D |Skia4Delphi|
+  --: | :--             |     --: |    --: |     --:   |
+ 997  | Font-Awesome    |  1265ms | 1453ms |  1172ms   |
+ 654  | Papirus         |  2750ms<sup>(1)</sup> |  937ms | 1266ms<sup>(1)</sup> |
+5366  | Material-Design | 11015ms | 12001ms | 10688ms   |
 
-As you can see, the four engines perform differently depending on the icons and their complexity.
+As you can see, the three engines perform differently depending on the icons and their complexity.
 
-<sup>(1)</sup>Notice that Image32 and SKIA4Delphi are the only engines capable of rendering blur effect (that is always slow to calculate): this is the reason of "slow" performance to render Papirus icons that contains blur effect.
+<sup>(1)</sup>Notice that Image32 and Skia4Delphi are the only engines capable of rendering blur effect (that is always slow to calculate): this is the reason of "slow" performance to render Papirus icons that contains blur effect.
 
-### Available from Delphi XE3 to Delphi 11 (32bit and 64bit platforms)
+### Available from Delphi XE3 to Delphi 12 (VCL and FMX Platforms)
 
-![Delphi 11 Sydney Support](./Demo/Images/SupportingDelphi.jpg)
+![Delphi 12 Support](./Demo/Images/SupportingDelphi.jpg)
 
 Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
@@ -69,19 +73,26 @@ Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org
 
 ![SVGTextPropertyEditorFMX.jpg](./Demo/Images/SVGTextPropertyEditorFMX.jpg)
 
-### UTILITY
+### UTILITIES
 
 The [SVG Viewer Demo](https://github.com/EtheaDev/SVGIconImageList/wiki/SVG-Viewer-(VCL)) is useful to check the rendering quality of the engines available.
 
 The [SVG Icon Explorer](https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIconExplorer) utility is useful to explore and preview your svg image collections.
 
-You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtensions) if you want to see your icons directly into Windows Explorer or you want to edit them using a powerful SVG Text Editor.
+You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtensions) if you want to see your icons directly into Windows Explorer or you want to edit them using a powerful **SVG Text Editor**.
 
 ### DOCUMENTATION
 
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 ### RELEASE NOTES
+
+21 Aug 2023: version 4.0.0 (VCL+FMX)
+- Removed old "native" engine TSVG
+- Updated to Skia4Delphi ver. 6.0.0
+- TSVGIconVirtualImageList inherits from TVirtualImageList (from D10.3 to actual version).
+- Added SVGIconVirtualImageListDemo to test multiple TSVGIconVirtualImageList in same form
+- Added supporto for Delphi 12
 
 28 Feb 2023: version 3.9.6 (VCL+FMX)
 - Updated to Image32 ver. 4.4 (30 Jan 2023)
@@ -128,29 +139,29 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 - Updated Library suffix for Delphi 10.4 and 11 to (auto)
 
 09 Mar 2022: version 3.7.0 (VCL+FMX)
-- Support for SKIA4Delphi 3.2.0 completed
+- Support for Skia4Delphi 3.2.0 completed
 - Removed support for Cairo Engine
 - Fixed rendering with Image32
 
 28 Feb 2022: version 3.6.0 (VCL + FMX)
-- Support for SKIA4Delphi also in FMX platforms
+- Support for Skia4Delphi also in FMX platforms
 
 26 Feb 2022: version 3.5.2 (VCL+FMX)
 - Fixed rendering with FMX-Image32
 
 23 Feb 2022: version 3.5.1 (VCL+FMX)
 - Updated Image32 Library to 4.1.0 version
-- Updated support to SKIA4Delphi 3.1.0
+- Updated support to Skia4Delphi 3.1.0
 
 19 Feb 2022: version 3.5.0 (VCL+FMX)
 - Updated Image32 Library to 4.0.2 version
-- Updated support to SKIA4Delphi 3.0.3
+- Updated support to Skia4Delphi 3.0.3
 - Fixed SVGText Editor
-- Fixed some SKIA4Delphi SVG rendering
+- Fixed some Skia4Delphi SVG rendering
 
 14 Feb 2022: version 3.4.0 (VCL+FMX)
 - Updated Image32 Library to 4.0.1 version
-- Added support to SKIA4Delphi 3.0
+- Added support to Skia4Delphi 3.0
 - Fixed some Image32 drawing problem
 
 13 Jan 2022: version 3.3.0 (VCL+FMX)
@@ -342,8 +353,8 @@ These components use the followin libraries:
   This library is included in the svg folder of this project.
 - Image32 library by [Angus Johnson](http://www.angusj.com/delphi/image32/Docs/_Body.htm)
   These files are included in the Image32/Source and Image32/source/Image32_SVG folders
-- SKIA4Delphi Library by [the autohors](https://github.com/skia4delphi/skia4delphi)
-  These files are included in the skia4delphi/Source folder
+- Skia4Delphi Library by [the autohors](https://github.com/Skia4Delphi/Skia4Delphi)
+  These files are included in the Skia4Delphi/Source folder
 
 Many thanks to **Vincent Parrett** and **Kiriakos Vlahos** for their great contibution.
 

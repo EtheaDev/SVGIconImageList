@@ -78,6 +78,7 @@ const
   hIn2                        = $FBFE02B1;    // In2
   hIntercept                  = $7CBB607F;    // Intercept
   hItalic                     = $F07E7786;    // Italic
+  hJustify                    = $13E85AB8;    // Justify
   hK1                         = $33176D43;    // K1
   hK2                         = $DD11C139;    // K2
   hK3                         = $CF4B25AC;    // K3

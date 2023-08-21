@@ -39,12 +39,6 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
-        <Cfg_2_Win32>true</Cfg_2_Win32>
-        <CfgParent>Cfg_2</CfgParent>
-        <Cfg_2>true</Cfg_2>
-        <Base>true</Base>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_DcuOutput>..\..\Lib\D10_2\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
@@ -61,7 +55,7 @@
         <DCC_Description>Ethea SVGIconImageList VCL components</DCC_Description>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DllSuffix>_D10_2</DllSuffix>
-        <DCC_UnitSearchPath>..\..\svg;..\..\Image32\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\Image32\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
@@ -95,7 +89,6 @@
         </DelphiCompile>
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="VclSmp.dcp"/>
-        <DCCReference Include="SVGIconPackage.dcp"/>
         <DCCReference Include="SVGImage32Package.dcp"/>
         <DCCReference Include="vclimg.dcp"/>
         <DCCReference Include="..\..\Source\SVGIconImage.pas"/>
@@ -107,21 +100,20 @@
         <DCCReference Include="..\..\Source\SVGIconImageListBase.pas"/>
         <DCCReference Include="..\..\Source\D2DSVGFactory.pas"/>
         <DCCReference Include="..\..\Source\Winapi.D2DMissing.pas"/>
-        <DCCReference Include="..\..\Source\PasSVGFactory.pas"/>
         <DCCReference Include="..\..\Source\Image32SVGFactory.pas"/>
         <DCCReference Include="..\..\Source\SVGInterfaces.pas"/>
         <DCCReference Include="..\..\Source\dlgExportPNG.pas">
             <Form>ExportToPNGDialog</Form>
         </DCCReference>
-        <BuildConfiguration Include="Release">
-            <Key>Cfg_2</Key>
-            <CfgParent>Base</CfgParent>
-        </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>

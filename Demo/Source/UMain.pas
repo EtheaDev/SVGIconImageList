@@ -39,7 +39,7 @@ uses
   Spin, SVGIconImageList, SVGIconImage, Vcl.ExtDlgs,
   System.Actions,
   SVGIconImageListBase, SVGIconImageCollection, SVGIconVirtualImageList,
-  UDataModule, System.ImageList;
+  UDataModule;
 
 type
   TMainForm = class(TForm)

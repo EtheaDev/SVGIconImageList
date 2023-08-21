@@ -217,19 +217,16 @@ object MainForm: TMainForm
       Left = 78
       Top = 0
       ImageIndex = 2
-      ImageName = 'calendar'
     end
     object ToolButton4: TToolButton
       Left = 117
       Top = 0
       ImageIndex = 3
-      ImageName = 'about'
     end
     object ToolButton5: TToolButton
       Left = 156
       Top = 0
       ImageIndex = 4
-      ImageName = 'calculator'
     end
     object ToolButton6: TToolButton
       Left = 195
@@ -242,7 +239,6 @@ object MainForm: TMainForm
       Caption = 'Change Color'
       Enabled = False
       ImageIndex = 7
-      ImageName = 'advertising'
       OnClick = ChangeColorActionExecute
     end
   end
@@ -267,7 +263,6 @@ object MainForm: TMainForm
       AutoSize = False
       ImageList = VirtualImageList
       ImageIndex = 100
-      ImageName = 'Delphi_Product icon'
       Align = alBottom
       OnDblClick = SVGIconImageDblClick
       OnMouseDown = SVGIconImageMouseDown
@@ -372,14 +367,12 @@ object MainForm: TMainForm
       Category = 'Edit'
       Caption = 'Change icon'
       ImageIndex = 255
-      ImageName = 'synchronize'
       OnExecute = ChangeIconActionExecute
     end
     object DeleteIconAction: TAction
       Category = 'Edit'
       Caption = 'Delete Icon'
       ImageIndex = 39
-      ImageName = 'cancel'
       OnExecute = DeleteIconActionExecute
     end
     object DisabledAction: TAction
@@ -387,13 +380,11 @@ object MainForm: TMainForm
       Caption = 'Disabled'
       Enabled = False
       ImageIndex = 0
-      ImageName = 'business\businessman'
     end
     object NewFormAction: TAction
       Category = 'View'
       Caption = 'New Form'
       ImageIndex = 107
-      ImageName = 'frame'
       OnExecute = NewFormActionExecute
     end
   end

@@ -186,7 +186,9 @@ type
     FSelectedCategory: string;
     FSourceList, FEditingList: TSVGIconImageList;
     FImageCollection: TSVGIconImageCollection;
+    {$IFNDEF D10_3+}
     FSVGIconVirtualImageList: TSVGIconVirtualImageList;
+    {$ENDIF}
     FTotIconsLabel: string;
     FUpdating: Boolean;
     FChanged: Boolean;
@@ -196,7 +198,9 @@ type
     procedure UpdateCategories;
     procedure Apply;
     procedure ApplyToImageCollection;
+    {$IFNDEF D10_3+}
     procedure ApplyToSVGIconVirtualImageList;
+    {$ENDIF}
     procedure UpdateGUI;
     function SelectedIcon: TSVGIconItem;
     procedure UpdateSizeGUI;
@@ -210,7 +214,9 @@ type
 
 function EditSVGIconImageList(const AImageList: TSVGIconImageList): Boolean;
 
+{$IFNDEF D10_3+}
 function EditSVGIconVirtualImageList(const AImageList: TSVGIconVirtualImageList): Boolean;
+{$ENDIF}
 
 function EditSVGIconImageCollection(const AImageCollection: TSVGIconImageCollection): Boolean;
 
@@ -277,6 +283,7 @@ begin
   end;
 end;
 
+{$IFNDEF D10_3+}
 function EditSVGIconVirtualImageList(const AImageList: TSVGIconVirtualImageList): Boolean;
 var
   LEditor: TSVGIconImageListEditor;
@@ -314,6 +321,7 @@ begin
     end;
   end;
 end;
+{$ENDIF}
 
 function EditSVGIconImageCollection(const AImageCollection: TSVGIconImageCollection): Boolean;
 var
@@ -436,11 +444,13 @@ begin
   UpdateGUI;
 end;
 
+{$IFNDEF D10_3+}
 procedure TSVGIconImageListEditor.ApplyToSVGIconVirtualImageList;
 begin
   FSVGIconVirtualImageList.ImageCollection.SVGIconItems.Assign(FEditingList.SVGIconItems);
   FSVGIconVirtualImageList.Assign(FEditingList);
 end;
+{$ENDIF}
 
 procedure TSVGIconImageListEditor.AddButtonClick(Sender: TObject);
 begin
@@ -953,8 +963,10 @@ begin
   try
     if Assigned(FImageCollection) then
       ApplyToImageCollection
+    {$IFNDEF D10_3+}
     else if Assigned(FSVGIconVirtualImageList) then
       ApplyToSVGIconVirtualImageList
+    {$ENDIF}
     else
       FSourceList.Assign(FEditingList);
     FChanged := False;
@@ -1057,9 +1069,16 @@ var
           LOutputPath := ExtractFilePath(LFileName);
           if not System.SysUtils.DirectoryExists(LOutputPath) then
             System.SysUtils.ForceDirectories(LOutputPath);
+
+          //Apply "root" attributes to the item SVG Interface
+          LItem.ApplyAttributesToInterface(FixedColorComboBox.Selected,
+            ApplyToRootOnlyCheckBox.Checked,
+            OpacitySpinEdit.Value,
+            GrayScaleCheckBox.Checked);
+
+          //Export image by the Interface
           SVGExportToPng(StrToInt(PngWidthEdit.Text), StrToInt(PngHeightEdit.Text),
-            LItem.SVG,
-              LOutputPath, ExtractFileName(LFileName));
+            LItem.SVG, LOutputPath, ExtractFileName(LFileName));
           Inc(C);
         end;
       end;

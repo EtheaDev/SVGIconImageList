@@ -2,8 +2,8 @@ object SVGViewerForm: TSVGViewerForm
   Left = 0
   Top = 0
   Caption = 'SVG Preview & Engine Comparison'
-  ClientHeight = 604
-  ClientWidth = 823
+  ClientHeight = 600
+  ClientWidth = 800
   Color = clWhite
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -11,33 +11,32 @@ object SVGViewerForm: TSVGViewerForm
   Font.Height = -11
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OldCreateOrder = False
   OnCreate = FormCreate
   OnResize = FormResize
-  PixelsPerInch = 96
   TextHeight = 13
-  object RightPanel: TPanel
-    Left = 624
+  object FilesPanel: TPanel
+    Left = 0
     Top = 0
-    Width = 199
-    Height = 604
-    Align = alRight
+    Width = 200
+    Height = 600
+    Align = alLeft
     TabOrder = 0
+    ExplicitHeight = 599
     object ListBox: TListBox
       Left = 1
       Top = 42
-      Width = 197
-      Height = 376
+      Width = 198
+      Height = 557
       Align = alClient
       ItemHeight = 13
       TabOrder = 0
       OnClick = ListBoxClick
-      ExplicitHeight = 386
+      ExplicitHeight = 556
     end
     object OpenPanel: TPanel
       Left = 1
       Top = 1
-      Width = 197
+      Width = 198
       Height = 41
       Align = alTop
       BevelOuter = bvNone
@@ -61,218 +60,227 @@ object SVGViewerForm: TSVGViewerForm
         OnClick = SetPathButtonClick
       end
     end
-    object ColorGroupBox: TGroupBox
-      Left = 1
-      Top = 532
-      Width = 197
-      Height = 71
-      Align = alBottom
-      Caption = 'Fixed Color'
-      TabOrder = 3
-      ExplicitTop = 531
-      object FixedColorComboBox: TColorBox
-        Left = 11
-        Top = 17
-        Width = 178
-        Height = 22
-        DefaultColorColor = clDefault
-        NoneColorColor = clNone
-        Selected = clDefault
-        Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
-        TabOrder = 0
-        OnChange = FixedColorComboBoxChange
-      end
-      object ApplyToRootOnlyCheckBox: TCheckBox
-        Left = 10
-        Top = 45
-        Width = 130
-        Height = 17
-        Caption = 'Apply To Root Only'
-        TabOrder = 1
-        OnClick = ApplyToRootOnlyCheckBoxClick
-      end
-    end
-    object AspectGroupBox: TGroupBox
-      Left = 1
-      Top = 418
-      Width = 197
-      Height = 57
-      Align = alBottom
-      Caption = 'Aspect'
-      TabOrder = 2
-      ExplicitLeft = 3
-      ExplicitTop = 390
-      object KeepCheckBox: TCheckBox
-        Left = 12
-        Top = 16
-        Width = 130
-        Height = 17
-        Caption = 'Keep aspect ratio'
-        Checked = True
-        State = cbChecked
-        TabOrder = 0
-        OnClick = KeepCheckBoxClick
-      end
-      object GrayScaleCheckBox: TCheckBox
-        Left = 12
-        Top = 34
-        Width = 130
-        Height = 17
-        Caption = 'GrayScale'
-        TabOrder = 1
-        OnClick = GrayScaleCheckBoxClick
-      end
-    end
-    object OpacityGroupBox: TGroupBox
-      Left = 1
-      Top = 475
-      Width = 197
-      Height = 57
-      Align = alBottom
-      Caption = 'Opacity:'
-      TabOrder = 4
-      ExplicitTop = 473
-      object OpacityTrackBar: TTrackBar
-        Left = 2
-        Top = 16
-        Width = 193
-        Height = 39
-        Align = alBottom
-        Max = 100
-        Frequency = 5
-        Position = 100
-        PositionToolTip = ptBottom
-        TabOrder = 0
-        OnChange = OpacityTrackBarChange
-      end
-    end
   end
-  object LeftPanel: TPanel
-    Left = 0
+  object RightPanel: TPanel
+    Left = 500
     Top = 0
-    Width = 313
-    Height = 604
-    Align = alLeft
+    Width = 300
+    Height = 600
+    Align = alRight
+    BevelOuter = bvNone
     TabOrder = 1
+    ExplicitLeft = 496
+    ExplicitHeight = 599
     inline FrameViewSkia: TFrameView
-      Left = 1
-      Top = 301
-      Width = 311
-      Height = 302
+      Left = 0
+      Top = 300
+      Width = 300
+      Height = 300
       Align = alClient
       TabOrder = 0
-      ExplicitLeft = 1
-      ExplicitTop = 301
-      ExplicitWidth = 311
-      ExplicitHeight = 302
+      ExplicitTop = 300
+      ExplicitWidth = 300
+      ExplicitHeight = 299
       inherited ClientPanel: TPanel
-        Width = 311
-        Height = 302
-        ExplicitWidth = 311
-        ExplicitHeight = 302
+        Width = 300
+        Height = 300
+        ExplicitWidth = 300
+        ExplicitHeight = 299
         inherited SVGPaintBox: TPaintBox
-          Width = 307
+          Width = 298
           Height = 275
-          ExplicitWidth = 311
-          ExplicitHeight = 273
+          ExplicitWidth = 296
+          ExplicitHeight = 276
         end
         inherited TitlePanel: TPanel
-          Width = 307
-          ExplicitWidth = 307
+          Width = 298
+          Font.Height = -11
+          ExplicitWidth = 298
         end
       end
     end
-    inline FrameViewTSVG: TFrameView
-      Left = 1
-      Top = 1
-      Width = 311
+    object ControlPanel: TPanel
+      Left = 0
+      Top = 0
+      Width = 300
       Height = 300
       Align = alTop
+      BevelOuter = bvNone
+      Ctl3D = True
+      ParentCtl3D = False
       TabOrder = 1
-      ExplicitLeft = 1
-      ExplicitTop = 1
-      ExplicitWidth = 311
-      ExplicitHeight = 300
-      inherited ClientPanel: TPanel
-        Width = 311
-        Height = 300
-        ExplicitWidth = 311
-        ExplicitHeight = 300
-        inherited SVGPaintBox: TPaintBox
-          Width = 307
-          Height = 273
-          ExplicitWidth = 303
-          ExplicitHeight = 275
+      object ColorGroupBox: TGroupBox
+        AlignWithMargins = True
+        Left = 3
+        Top = 28
+        Width = 294
+        Height = 71
+        Align = alTop
+        Caption = 'Fixed Color'
+        TabOrder = 0
+        object FixedColorComboBox: TColorBox
+          Left = 11
+          Top = 17
+          Width = 178
+          Height = 22
+          DefaultColorColor = clDefault
+          NoneColorColor = clNone
+          Selected = clDefault
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
+          TabOrder = 0
+          OnChange = FixedColorComboBoxChange
         end
-        inherited TitlePanel: TPanel
-          Width = 307
-          ExplicitWidth = 307
+        object ApplyToRootOnlyCheckBox: TCheckBox
+          Left = 10
+          Top = 45
+          Width = 130
+          Height = 17
+          Caption = 'Apply To Root Only'
+          TabOrder = 1
+          OnClick = ApplyToRootOnlyCheckBoxClick
         end
+      end
+      object AspectGroupBox: TGroupBox
+        AlignWithMargins = True
+        Left = 3
+        Top = 105
+        Width = 294
+        Height = 57
+        Align = alTop
+        Caption = 'Aspect'
+        TabOrder = 1
+        object KeepCheckBox: TCheckBox
+          Left = 12
+          Top = 16
+          Width = 130
+          Height = 17
+          Caption = 'Keep aspect ratio'
+          Checked = True
+          State = cbChecked
+          TabOrder = 0
+          OnClick = KeepCheckBoxClick
+        end
+        object GrayScaleCheckBox: TCheckBox
+          Left = 12
+          Top = 34
+          Width = 130
+          Height = 17
+          Caption = 'GrayScale'
+          TabOrder = 1
+          OnClick = GrayScaleCheckBoxClick
+        end
+      end
+      object OpacityGroupBox: TGroupBox
+        AlignWithMargins = True
+        Left = 3
+        Top = 168
+        Width = 294
+        Height = 57
+        Align = alTop
+        Caption = 'Opacity:'
+        TabOrder = 2
+        object OpacityTrackBar: TTrackBar
+          Left = 2
+          Top = 16
+          Width = 290
+          Height = 39
+          Align = alBottom
+          Max = 100
+          Frequency = 5
+          Position = 100
+          PositionToolTip = ptBottom
+          TabOrder = 0
+          OnChange = OpacityTrackBarChange
+        end
+      end
+      object TitlePanel: TPanel
+        AlignWithMargins = True
+        Left = 1
+        Top = 1
+        Width = 298
+        Height = 23
+        Margins.Left = 1
+        Margins.Top = 1
+        Margins.Right = 1
+        Margins.Bottom = 1
+        Align = alTop
+        BevelOuter = bvNone
+        Caption = 'Control Panel'
+        Color = clHighlight
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clHighlightText
+        Font.Height = -11
+        Font.Name = 'Segoe UI'
+        Font.Style = [fsBold]
+        ParentBackground = False
+        ParentFont = False
+        TabOrder = 3
+        StyleElements = [seBorder]
       end
     end
   end
   object ClientPanel: TPanel
-    Left = 313
+    Left = 200
     Top = 0
-    Width = 311
-    Height = 604
+    Width = 300
+    Height = 600
     Align = alClient
+    BevelOuter = bvNone
     TabOrder = 2
-    inline FrameViewImage32: TFrameView
-      Left = 1
-      Top = 301
-      Width = 309
-      Height = 302
+    ExplicitWidth = 296
+    ExplicitHeight = 599
+    inline FrameViewerD2D: TFrameView
+      Left = 0
+      Top = 300
+      Width = 300
+      Height = 300
       Align = alClient
       TabOrder = 0
-      ExplicitLeft = 1
-      ExplicitTop = 301
-      ExplicitWidth = 309
-      ExplicitHeight = 302
+      ExplicitTop = 300
+      ExplicitWidth = 296
+      ExplicitHeight = 299
       inherited ClientPanel: TPanel
-        Width = 309
-        Height = 302
-        ExplicitWidth = 309
-        ExplicitHeight = 302
+        Width = 300
+        Height = 300
+        ExplicitWidth = 296
+        ExplicitHeight = 299
         inherited SVGPaintBox: TPaintBox
-          Width = 305
+          Width = 298
           Height = 275
-          ExplicitWidth = 303
+          ExplicitWidth = 296
           ExplicitHeight = 273
         end
         inherited TitlePanel: TPanel
-          Width = 305
-          ExplicitWidth = 305
+          Width = 298
+          Font.Height = -11
+          ExplicitWidth = 294
         end
       end
     end
-    inline FrameViewerD2D: TFrameView
-      Left = 1
-      Top = 1
-      Width = 309
+    inline FrameViewImage32: TFrameView
+      Left = 0
+      Top = 0
+      Width = 300
       Height = 300
       Align = alTop
       TabOrder = 1
-      ExplicitLeft = 1
-      ExplicitTop = 1
-      ExplicitWidth = 309
+      ExplicitWidth = 296
       ExplicitHeight = 300
       inherited ClientPanel: TPanel
-        Width = 309
+        Width = 300
         Height = 300
-        ExplicitWidth = 309
+        ExplicitWidth = 296
         ExplicitHeight = 300
         inherited SVGPaintBox: TPaintBox
-          Width = 305
-          Height = 273
-          ExplicitLeft = 0
-          ExplicitTop = 23
-          ExplicitWidth = 323
+          Width = 298
+          Height = 275
+          ExplicitWidth = 296
           ExplicitHeight = 273
         end
         inherited TitlePanel: TPanel
-          Width = 305
-          ExplicitWidth = 305
+          Width = 298
+          Font.Height = -11
+          ExplicitWidth = 294
         end
       end
     end

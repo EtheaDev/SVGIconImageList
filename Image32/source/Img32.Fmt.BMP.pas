@@ -3,7 +3,7 @@ unit Img32.Fmt.BMP;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  30 January 2023                                               *
+* Date      :  12 March 2023                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2023                                         *
 * Purpose   :  BMP file format extension for TImage32                          *
@@ -32,8 +32,10 @@ type
     class function IsValidImageStream(stream: TStream): Boolean; override;
     function LoadFromStream(stream: TStream;
       img32: TImage32; imgIndex: integer = 0): Boolean; override;
-    function SaveToFile(const filename: string; img32: TImage32): Boolean; override;
-    procedure SaveToStream(stream: TStream; img32: TImage32); override;
+    function SaveToFile(const filename: string;
+      img32: TImage32; quality: integer = 0): Boolean; override;
+    procedure SaveToStream(stream: TStream;
+      img32: TImage32; quality: integer = 0); override;
 {$IFDEF MSWINDOWS}
     class function CanCopyToClipboard: Boolean; override;
     class function CopyToClipboard(img32: TImage32): Boolean; override;
@@ -746,7 +748,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TImageFormat_BMP.SaveToStream(stream: TStream; img32: TImage32);
+procedure TImageFormat_BMP.SaveToStream(stream: TStream;
+  img32: TImage32; quality: integer = 0);
 var
   bfh: TBitmapFileHeader;
   bih: TBitmapV4Header;
@@ -849,7 +852,7 @@ end;
 //------------------------------------------------------------------------------
 
 function TImageFormat_BMP.SaveToFile(const filename: string;
-  img32: TImage32): Boolean;
+  img32: TImage32; quality: integer = 0): Boolean;
 var
   SaveStateIncludeFileHeader: Boolean;
   stream: TFilestream;

@@ -1854,9 +1854,9 @@ type
                                  out deviceContext: ID2D1DeviceContext): HResult; stdcall;
 
     // Creates a D2D print control.
-    function CreatePrintControl(wicFactory: IWICImagingFactory;
-                                documentTarget: IPrintDocumentPackageTarget;
-                                printControlProperties: D2D1_PRINT_CONTROL_PROPERTIES;
+    function CreatePrintControl(const wicFactory: IWICImagingFactory;
+                                const documentTarget: IPrintDocumentPackageTarget;
+                                printControlProperties: PD2D1_PRINT_CONTROL_PROPERTIES;
                                 out printControl: ID2D1PrintControl): HResult; stdcall;
 
     // Sets the maximum amount of texture memory to maintain before evicting caches.

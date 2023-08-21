@@ -34,7 +34,6 @@ package dclSVGIconImageListFMX;
 requires
   DesignIDE,
   dclfmxstd,
-  SVGIconPackage,
   SVGIconImageListFMX;
 
 contains

@@ -3,7 +3,7 @@ unit Img32.Vector;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  21 January 2023                                                 *
+* Date      :  24 March 2023                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2023                                         *
 *                                                                              *
@@ -110,8 +110,10 @@ type
 
   function FlattenCBezier(const pt1, pt2, pt3, pt4: TPointD;
     tolerance: double = 0.0): TPathD; overload;
-  function FlattenCBezier(const pts: TPathD;
+  function FlattenCBezier(const path: TPathD;
     tolerance: double = 0.0): TPathD; overload;
+  function FlattenCBezier(const paths: TPathsD;
+    tolerance: double = 0.0): TPathsD; overload;
   function FlattenCBezier(const firstPt: TPointD; const pts: TPathD;
     tolerance: double = 0.0): TPathD; overload;
 
@@ -447,6 +449,7 @@ resourcestring
   rsInvalidMatrix = 'Invalid matrix.'; //nb: always start with IdentityMatrix
 
 implementation
+
 
 resourcestring
   rsInvalidQBezier = 'Invalid number of control points for a QBezier';
@@ -1805,28 +1808,33 @@ type
     Radius      : double;
     aSin        : double;
     aCos        : double;
+    pt          : TPointD;
+    norm1       : TPointD;
+    norm2       : TPointD;
   end;
 
-function DoRound(const pt, norm1: TPointD;
-  const growRec: TGrowRec): TPathD;
+function DoRound(const growRec: TGrowRec): TPathD;
 var
   i, steps: Integer;
   a: Double;
   pt2: TPointD;
 begin
-  a := ArcTan2(growRec.aSin, growRec.aCos);
-  steps := Round(growRec.StepsPerRad * Abs(a));
-  SetLength(Result, steps +1);
-
-  pt2 := PointD(norm1.x * growRec.Radius, norm1.y * growRec.Radius);
-  Result[0] := PointD(pt.x + pt2.x, pt.y + pt2.y);
   with growRec do
+  begin
+    a := ArcTan2(aSin, aCos);
+    steps := Round(StepsPerRad * Abs(a));
+    SetLength(Result, steps + 2);
+    pt2 := PointD(norm1.x * Radius, norm1.y * Radius);
+    Result[0] := PointD(pt.x + pt2.x, pt.y + pt2.y);
     for i := 1 to steps do
     begin
       pt2 := PointD(pt2.X * StepCos - StepSin * pt2.Y,
         pt2.X * StepSin + pt2.Y * StepCos);
       Result[i] := PointD(pt.X + pt2.X, pt.Y + pt2.Y);
     end;
+    pt2 := PointD(norm2.x * Radius, norm2.y * Radius);
+    Result[steps+1] := PointD(pt.x + pt2.x, pt.y + pt2.y);
+  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -1857,42 +1865,45 @@ var
     inc(resCnt);
   end;
 
-  procedure DoMiter(i, prevI: integer; cosA: double);
+  procedure DoMiter(const growRec: TGrowRec);
   var
     a: double;
   begin
-    a := delta / (1 + cosA); //see offset_triginometry4.svg
-    AddPoint(PointD(path[i].X + (norms[i].X + norms[prevI].X) * a,
-          path[i].Y + (norms[i].Y + norms[prevI].Y) * a));
+    with growRec do
+    begin
+      a := delta / (1 + aCos); //see offset_triginometry4.svg
+      AddPoint(PointD(pt.X + (norm2.X + norm1.X) * a,
+            pt.Y + (norm2.Y + norm1.Y) * a));
+    end;
   end;
-  
-  procedure DoSquare(i, prevI: integer);
+
+  procedure DoSquare(const growRec: TGrowRec; const po1, po2: TPointD);
   var
-    pt1, pt2, pt3, pt4: TPointD;
-    pt, ptQ : TPointD;
+    pt1, pt2: TPointD;
+    ip, ptQ : TPointD;
     vec     : TPointD;
   begin
-    // using the reciprocal of unit normals (as unit vectors)
-    // get the average unit vector ...
-    vec := GetAvgUnitVector(
-      PointD(-norms[prevI].Y, norms[prevI].X),
-      PointD(norms[i].Y, -norms[i].X));
-    // now offset the original vertex delta units along unit vector
-    ptQ := OffsetPoint(path[i], delta * vec.X, delta * vec.Y);
+    with growRec do
+    begin
+      // using the reciprocal of unit normals (as unit vectors)
+      // get the average unit vector ...
+      //vec := GetAvgUnitVector(PointD(-norm1.Y, norm1.X),PointD(norm2.Y,-norm2.X));
+      vec := NormalizeVector(PointD(norm2.Y - norm1.Y, norm1.X - norm2.X));
+      // now offset the original vertex delta units along unit vector
+      ptQ := OffsetPoint(pt, delta * vec.X, delta * vec.Y);
 
-    // get perpendicular vertices
-    pt1 := OffsetPoint(ptQ, delta * vec.Y, delta * -vec.X);
-    pt2 := OffsetPoint(ptQ, delta * -vec.Y, delta * vec.X);
-    // get 2 vertices along one edge offset
-    pt3 :=  parallelOffsets[prevI*2];
-    pt4 := parallelOffsets[prevI*2 +1];
-    IntersectPoint(pt1,pt2,pt3,pt4, pt);
-    AddPoint(pt);
-    //get the second intersect point through reflecion
-    pt := ReflectPoint(pt, ptQ);
-    AddPoint(pt);
+      // get perpendicular vertices
+      pt1 := OffsetPoint(ptQ, delta * vec.Y, delta * -vec.X);
+      pt2 := OffsetPoint(ptQ, delta * -vec.Y, delta * vec.X);
+      // using 2 vertices along one edge offset (po1 & po2)
+      IntersectPoint(pt1,pt2,po1,po2, ip);
+      AddPoint(ip);
+      //get the second intersect point through reflecion
+      ip := ReflectPoint(ip, ptQ);
+      AddPoint(ip);
+    end;
   end;
-  
+
   procedure AppendPath(const path: TPathD);
   var
     len: integer;
@@ -1915,7 +1926,6 @@ var
   iLo,iHi : cardinal;
   growRec   : TGrowRec;
   absDelta  : double;
-  almostNoAngle: Boolean;
 begin
   Result := nil;
   if not Assigned(path) then exit;
@@ -1988,31 +1998,43 @@ begin
 
     growRec.aSin := CrossProduct(norms[prevI], norms[i]);
     growRec.aCos := DotProduct(norms[prevI], norms[i]);
+    if (growRec.aSin > 1.0) then growRec.aSin := 1.0
+    else if (growRec.aSin < -1.0) then growRec.aSin := -1.0;
 
-    almostNoAngle := ValueAlmostZero(growRec.aCos -1);
-    if almostNoAngle or ((growRec.aSin * delta < 0)) then
+    growRec.pt := path[i];
+    growRec.norm1 := norms[prevI];
+    growRec.norm2 := norms[i];
+
+    if (growRec.aCos > 0.99) then // almost straight - less than 8 degrees
+    begin
+      AddPoint(parallelOffsets[prevI*2+1]);
+      if (growRec.aCos < 0.9998) then // greater than 1 degree
+        AddPoint(parallelOffsets[i*2]);
+    end
+    else if (growRec.aCos > -0.99) and (growRec.aSin * delta < 0) then
     begin //ie is concave
       AddPoint(parallelOffsets[prevI*2+1]);
+      AddPoint(path[i]);
       AddPoint(parallelOffsets[i*2]);
     end
-    else if (joinStyle = jsRound) and
-      (Abs(growRec.aSin) > 0.08) then //only round if angle > ~5 deg
+    else if (joinStyle = jsRound) then
     begin
-      AppendPath(DoRound(path[i], norms[prevI], growRec));
+      AppendPath(DoRound(growRec));
     end
     else if (joinStyle = jsMiter) then // nb: miterLim <= 2
-    begin                      
+    begin
       if (1 + growRec.aCos > miterLim) then //within miter range
-        DoMiter(i, prevI, growRec.aCos) else
-        DoSquare(i, prevI);
+        DoMiter(growRec) else
+        DoSquare(growRec,
+          parallelOffsets[prevI*2], parallelOffsets[prevI*2 +1]);
     end
-    // don't bother squaring angles that deviate < ~20 deg. because squaring 
+    // don't bother squaring angles that deviate < ~20 deg. because squaring
     // will be indistinguishable from mitering and just be a lot slower
     else if (growRec.aCos > 0.9) then
-      DoMiter(i, prevI, growRec.aCos) 
+      DoMiter(growRec)
     else
-      DoSquare(i, prevI);
-      
+      DoSquare(growRec, parallelOffsets[prevI*2], parallelOffsets[prevI*2 +1]);
+
     prevI := i;
   end;
   if isOpen then AddPoint(parallelOffsets[highI*2-1]);
@@ -2348,20 +2370,21 @@ function GrowOpenLine(const line: TPathD; width: double;
 var
   len, x,y: integer;
   segLen, halfWidth: double;
-  normals, lineL, lineR, arc: TPathD;
+  normals, line2, lineL, lineR, arc: TPathD;
   invNorm: TPointD;
   growRec: TGrowRec;
 begin
   Result := nil;
-  len := length(line);
+  line2 := StripNearDuplicates(line, 0.5, false);
+  len := length(line2);
   if len = 0 then Exit;
   if width < MinStrokeWidth then
     width := MinStrokeWidth;
   halfWidth := width * 0.5;
   if len = 1 then
   begin
-    x := Round(line[0].X);
-    y := Round(line[0].Y);
+    x := Round(line2[0].X);
+    y := Round(line2[0].Y);
     SetLength(result, 1);
     result := Ellipse(RectD(x -halfWidth, y -halfWidth,
       x +halfWidth, y +halfWidth));
@@ -2383,24 +2406,26 @@ begin
       joinStyle := jsSquare;
   end;
 
-  normals := GetNormals(line);
+  normals := GetNormals(line2);
   if endStyle = esRound then
   begin
-    //get the rounding parameters
-    growRec.StepsPerRad :=
-      CalcRoundingSteps(halfWidth * miterLimOrRndScale)/(Pi*2);
-    GetSinCos(1/growRec.StepsPerRad, growRec.StepSin, growRec.StepCos);
-    growRec.Radius := halfWidth;
-
     //grow the line's left side of the line => line1
-    lineL := Grow(line, normals,
+    lineL := Grow(line2, normals,
       halfWidth, joinStyle, miterLimOrRndScale, true);
     //build the rounding at the start => result
     invNorm.X := -normals[0].X;
     invNorm.Y := -normals[0].Y;
+    //get the rounding parameters
+    growRec.StepsPerRad :=
+      CalcRoundingSteps(halfWidth * miterLimOrRndScale)/(Pi*2);
+    GetSinCos(1/growRec.StepsPerRad, growRec.StepSin, growRec.StepCos);
     growRec.aSin := invNorm.X * normals[0].Y - invNorm.Y * normals[0].X;
     growRec.aCos := invNorm.X * normals[0].X + invNorm.Y * normals[0].Y;
-    Result := DoRound(line[0], invNorm, growRec);
+    growRec.Radius := halfWidth;
+    growRec.pt := line2[0];
+    growRec.norm1 := invNorm;
+    growRec.norm2 := normals[0];
+    Result := DoRound(growRec);
     //join line1 into result
     AppendPath(Result, lineL);
     //reverse the normals and build the end arc => arc
@@ -2408,16 +2433,19 @@ begin
     invNorm.X := -normals[0].X; invNorm.Y := -normals[0].Y;
     growRec.aSin := invNorm.X * normals[0].Y - invNorm.Y * normals[0].X;
     growRec.aCos := invNorm.X * normals[0].X + invNorm.Y * normals[0].Y;
-    arc := DoRound(line[High(line)], invNorm, growRec);
+    growRec.pt := line2[High(line2)];
+    growRec.norm1 := invNorm;
+    growRec.norm2 := normals[0];
+    arc := DoRound(growRec);
     //grow the line's right side of the line
-    lineR := Grow(ReversePath(line), normals,
+    lineR := Grow(ReversePath(line2), normals,
       halfWidth, joinStyle, miterLimOrRndScale, true);
     //join arc and line2 into result
     AppendPath(Result, arc);
     AppendPath(Result, lineR);
   end else
   begin
-    lineL := Copy(line, 0, len);
+    lineL := Copy(line2, 0, len);
     if endStyle = esSquare then
     begin
       // esSquare => extends both line ends by 1/2 lineWidth
@@ -2453,19 +2481,20 @@ var
   rec: TRectD;
   skipHole: Boolean;
 begin
-  rec := GetBoundsD(line);
+  line2 := StripNearDuplicates(line, 0.5, true);
+  rec := GetBoundsD(line2);
   skipHole := (rec.Width <= width) or (rec.Height <= width);
   if skipHole then
   begin
     SetLength(Result, 1);
-    norms := GetNormals(line);
-    Result[0] := Grow(line, norms, width/2, joinStyle, miterLimOrRndScale);
+    norms := GetNormals(line2);
+    Result[0] := Grow(line2, norms, width/2, joinStyle, miterLimOrRndScale);
   end else
   begin
     SetLength(Result, 2);
-    norms := GetNormals(line);
-    Result[0] := Grow(line, norms, width/2, joinStyle, miterLimOrRndScale);
-    line2 := ReversePath(line);
+    norms := GetNormals(line2);
+    Result[0] := Grow(line2, norms, width/2, joinStyle, miterLimOrRndScale);
+    line2 := ReversePath(line2);
     norms := ReverseNormals(norms);
     Result[1] := Grow(line2, norms, width/2, joinStyle, miterLimOrRndScale);
   end;
@@ -3400,33 +3429,44 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function FlattenCBezier(const pts: TPathD; tolerance: double = 0.0): TPathD;
+function FlattenCBezier(const path: TPathD; tolerance: double = 0.0): TPathD;
 var
   i, len: integer;
   p: TPathD;
 begin
   Result := nil;
-  len := Length(pts) -1;
+  len := Length(path) -1;
   if len < 0 then Exit;
   if (len < 3) or (len mod 3 <> 0) then
     raise Exception.Create(rsInvalidCBezier);
   if tolerance <= 0.0 then tolerance := BezierTolerance;
   setLength(Result, 1);
-  Result[0] := pts[0];
+  Result[0] := path[0];
   for i := 0 to (len div 3) -1 do
   begin
-    if PointsEqual(pts[i*3], pts[i*3+1]) and
-      PointsEqual(pts[i*3+2], pts[i*3+3]) then
+    if PointsEqual(path[i*3], path[i*3+1]) and
+      PointsEqual(path[i*3+2], path[i*3+3]) then
     begin
-      AppendPoint(Result, pts[i*3]);
-      AppendPoint(Result, pts[i*3 +3]);
+      AppendPoint(Result, path[i*3]);
+      AppendPoint(Result, path[i*3 +3]);
     end else
     begin
-      p := FlattenCBezier(pts[i*3], pts[i*3+1],
-        pts[i*3+2], pts[i*3+3], tolerance);
+      p := FlattenCBezier(path[i*3], path[i*3+1],
+        path[i*3+2], path[i*3+3], tolerance);
       AppendPath(Result, Copy(p, 1, Length(p) -1));
     end;
   end;
+end;
+//------------------------------------------------------------------------------
+
+function FlattenCBezier(const paths: TPathsD; tolerance: double): TPathsD;
+var
+  i, len: integer;
+begin
+  len := Length(paths);
+  SetLength(Result, len);
+  for i := 0 to len -1 do
+    Result[i] := FlattenCBezier(paths[i], tolerance);
 end;
 //------------------------------------------------------------------------------
 

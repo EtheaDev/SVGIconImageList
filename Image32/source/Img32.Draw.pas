@@ -3,9 +3,9 @@ unit Img32.Draw;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  21 December 2022                                                *
+* Date      :  26 March 2023                                                   *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2021                                         *
+* Copyright :  Angus Johnson 2019-2023                                         *
 *                                                                              *
 * Purpose   :  Polygon renderer for TImage32                                   *
 *                                                                              *
@@ -210,6 +210,8 @@ type
   procedure DrawPoint(img: TImage32; const paths: TPathsD;
     radius: double; color: TColor32); overload;
 
+  procedure DrawInvertedPoint(img: TImage32; const pt: TPointD; radius: double);
+
   procedure DrawLine(img: TImage32;
     const pt1, pt2: TPointD; lineWidth: double; color: TColor32); overload;
   procedure DrawLine(img: TImage32;
@@ -270,6 +272,11 @@ type
     fillRule: TFillRule; color: TColor32); overload;
   procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
     fillRule: TFillRule; renderer: TCustomRenderer); overload;
+
+  procedure DrawInvertedPolygon(img: TImage32; const polygon: TPathD;
+    fillRule: TFillRule); overload;
+  procedure DrawInvertedPolygon(img: TImage32; const polygons: TPathsD;
+    fillRule: TFillRule); overload;
 
   // 'Clear Type' text rendering is quite useful for low resolution
   // displays (96 ppi). However it's of little to no benefit on higher
@@ -1739,6 +1746,19 @@ begin
 end;
 // ------------------------------------------------------------------------------
 
+procedure DrawInvertedPoint(img: TImage32; const pt: TPointD; radius: double);
+var
+  cr: TCustomRenderer;
+begin
+  cr := TInverseRenderer.Create;
+  try
+    DrawPoint(img, pt, radius, cr);
+  finally
+    cr.Free;
+  end;
+end;
+// ------------------------------------------------------------------------------
+
 procedure DrawPoint(img: TImage32; const points: TPathD;
   radius: double; color: TColor32);
 var
@@ -2064,6 +2084,37 @@ begin
   begin
     Rasterize(polygons, img.bounds, fillRule, renderer);
     renderer.NotifyChange;
+  end;
+end;
+// ------------------------------------------------------------------------------
+
+procedure DrawInvertedPolygon(img: TImage32; const polygon: TPathD;
+  fillRule: TFillRule);
+var
+  polygons: TPathsD;
+begin
+  if not assigned(polygon) then exit;
+  setLength(polygons, 1);
+  polygons[0] := polygon;
+  DrawInvertedPolygon(img, polygons, fillRule);
+end;
+// ------------------------------------------------------------------------------
+
+procedure DrawInvertedPolygon(img: TImage32; const polygons: TPathsD;
+  fillRule: TFillRule);
+var
+  cr: TCustomRenderer;
+begin
+  if not assigned(polygons) then exit;
+  cr := TInverseRenderer.Create;
+  try
+    if cr.Initialize(img) then
+    begin
+      Rasterize(polygons, img.bounds, fillRule, cr);
+      cr.NotifyChange;
+    end;
+  finally
+    cr.free;
   end;
 end;
 // ------------------------------------------------------------------------------

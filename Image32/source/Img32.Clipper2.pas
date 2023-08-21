@@ -13,18 +13,22 @@ unit Img32.Clipper2;
 interface
 
 uses
-  Img32, Img32.Draw, Img32.Vector;
+  Img32, Img32.Draw, Img32.Vector, Clipper.Offset;
 
 //nb: InflatePath assumes that there's consistent winding where
 //outer paths wind in one direction and inner paths in the other
+type
+  TClipperEndType = Clipper.Offset.TEndType;
+
+function ClipperEndType(endStyle: TEndStyle): TClipperEndType;
 
 function InflatePath(const path: TPathD; delta: Double;
-  joinStyle: TJoinStyle = jsAuto; endStyle: TEndStyle = esPolygon;
+  joinStyle: TJoinStyle = jsAuto; endType: TClipperEndType = etPolygon;
   miterLimit: double = 2.0; arcTolerance: double = 0.0;
   minEdgeLength: double = 0.25): TPathsD;
 
 function InflatePaths(const paths: TPathsD; delta: Double;
-  joinStyle: TJoinStyle = jsAuto; endStyle: TEndStyle = esPolygon;
+  joinStyle: TJoinStyle = jsAuto; endType: TClipperEndType = etPolygon;
   miterLimit: double = 2.0; arcTolerance: double = 0.0;
   minEdgeLength: double = 0): TPathsD;
 
@@ -45,48 +49,59 @@ function IntersectPolygons(const polygons1, polygons2: TPathsD;
 function DifferencePolygons(const polygons1, polygons2: TPathsD;
   fillRule: TFillRule): TPathsD;
 
+const
+  etPolygon   = Clipper.Offset.etPolygon;
+  etJoined    = Clipper.Offset.etJoined;
+  etButt      = Clipper.Offset.etButt;
+  etSquare    = Clipper.Offset.etSquare;
+  etRound     = Clipper.Offset.etRound;
+
 implementation
 
-uses Clipper, Clipper.Core, Clipper.Engine, Clipper.Offset;
+uses Clipper, Clipper.Core, Clipper.Engine;
 
 //------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+
+function ClipperEndType(endStyle: TEndStyle): TClipperEndType;
+begin
+  case endStyle of
+    esPolygon: Result := etJoined;
+    esButt: Result := etButt;
+    esSquare: Result := etSquare;
+    else Result := etRound;
+  end;
+end;
 //------------------------------------------------------------------------------
 
 function InflatePath(const path: Img32.TPathD;
-  delta: Double; joinStyle: TJoinStyle; endStyle: TEndStyle;
+  delta: Double; joinStyle: TJoinStyle; endType: TClipperEndType;
   miterLimit: double; arcTolerance: double; minEdgeLength: double): Img32.TPathsD;
 var
   paths: Img32.TPathsD;
 begin
   setLength(paths, 1);
   paths[0] := path;
-  Result := InflatePaths(paths, delta, joinStyle, endStyle,
+  Result := InflatePaths(paths, delta, joinStyle, endType,
     miterLimit, arcTolerance, minEdgeLength);
 end;
 //------------------------------------------------------------------------------
 
 function InflatePaths(const paths: Img32.TPathsD;
-  delta: Double; joinStyle: TJoinStyle; endStyle: TEndStyle;
+  delta: Double; joinStyle: TJoinStyle; endType: TClipperEndType;
   miterLimit: double; arcTolerance: double; minEdgeLength: double): Img32.TPathsD;
 var
   jt: Clipper.Offset.TJoinType;
-  et: TEndType;
 begin
   case joinStyle of
     jsSquare: jt := jtSquare;
     jsMiter:  jt :=  jtMiter;
     jsRound:  jt := jtRound;
-    else if endStyle = esRound then jt := jtRound
+    else if endType = etRound then jt := jtRound
     else jt := jtSquare;
   end;
-  case endStyle of
-    esButt: et := etButt;
-    esSquare: et := etSquare;
-    esRound: et := etRound;
-    else et := etPolygon;
-  end;
   Result := Img32.TPathsD(Clipper.InflatePaths(
-    Clipper.Core.TPathsD(paths), delta, jt, et));
+    Clipper.Core.TPathsD(paths), delta, jt, endType));
 end;
 //------------------------------------------------------------------------------
 

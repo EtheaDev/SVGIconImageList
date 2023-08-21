@@ -2,8 +2,8 @@ unit Img32.SVG.Core;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.3                                                             *
-* Date      :  27 September 2022                                               *
+* Version   :  4.4                                                             *
+* Date      :  16 March 2023                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -93,7 +93,7 @@ type
 
   TSvgItalicSyle  = (sfsUndefined, sfsNone, sfsItalic);
   TFontDecoration = (fdUndefined, fdNone, fdUnderline, fdStrikeThrough);
-  TSvgTextAlign = (staUndefined, staLeft, staCenter, staRight);
+  TSvgTextAlign = (staUndefined, staLeft, staCenter, staRight, staJustify);
 
   TSVGFontInfo = record
     family      : TTtfFontFamily;
@@ -1170,7 +1170,7 @@ begin
     else
       Exit;
     color :=  clr;
-  end else                                        //color name lookup
+  end else                          //color name lookup
   begin
     i := ColorConstList.IndexOf(string(value));
     if i < 0 then Exit;
@@ -1332,6 +1332,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function TagNameToLower(const tagName: UTF8String): UTF8String;
+var
+  i: integer;
+begin
+  Result := tagName;
+  for i := 1 to Length(Result) do
+    if (Result[i] >= 'A') and (Result[i] <= 'Z') then
+      Result[i] := AnsiChar(Ord(Result[i]) + 32);
+end;
+//------------------------------------------------------------------------------
+
 function TXmlEl.ParseHeader(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 var
   style: UTF8String;
@@ -1340,7 +1351,7 @@ begin
   SkipBlanks(c, endC);
   c2 := c;;
   ParseNameLength(c, endC);
-  name := ToUTF8String(c2, c);
+  name := TagNameToLower(ToUTF8String(c2, c));
 
   //load the class's style (ie undotted style) if found.
   style := owner.classStyles.GetStyle(name);

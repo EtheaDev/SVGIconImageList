@@ -85,6 +85,7 @@ type
   TRGBA = packed record B, G, R, A: byte end;
   TRGBAArray = array[0..0] of TRGBA;
 
+{$R-}
 function PNG4TransparentBitMap(aBitmap: TBitmap): TPNGImage;
 var
   X, Y: integer;

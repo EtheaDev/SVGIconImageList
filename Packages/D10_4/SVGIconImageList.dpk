@@ -33,7 +33,6 @@ package SVGIconImageList;
 requires
   vcl,
   VclSmp,
-  SVGIconPackage,
   SVGImage32Package,
   vclwinx;
 

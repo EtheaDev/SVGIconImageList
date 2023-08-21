@@ -10,10 +10,8 @@ object frmBenchmark: TfrmBenchmark
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OldCreateOrder = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 15
   object splHorizontal: TSplitter
     Left = 0
@@ -28,13 +26,12 @@ object frmBenchmark: TfrmBenchmark
     ExplicitTop = 422
     ExplicitWidth = 784
   end
-  object SVGIconImage: TSVGIconImage
+  object BenchMarkImage: TSVGIconImage
     Left = 150
     Top = 0
     Width = 519
     Height = 449
     AutoSize = False
-    ImageList = SVGIconVirtualImageList
     Align = alClient
   end
   object memOutput: TMemo
@@ -52,6 +49,8 @@ object frmBenchmark: TfrmBenchmark
     ReadOnly = True
     ScrollBars = ssVertical
     TabOrder = 0
+    ExplicitTop = 452
+    ExplicitWidth = 815
   end
   object pnlButtons: TPanel
     Left = 669
@@ -61,6 +60,17 @@ object frmBenchmark: TfrmBenchmark
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitLeft = 665
+    ExplicitHeight = 448
+    object SVGIconImage: TSVGIconImage
+      Left = 0
+      Top = 178
+      Width = 150
+      Height = 102
+      AutoSize = False
+      ImageList = SVGIconVirtualImageList
+      Align = alClient
+    end
     object btnClear: TButton
       AlignWithMargins = True
       Left = 10
@@ -75,6 +85,7 @@ object frmBenchmark: TfrmBenchmark
       Caption = '&Clear Output'
       TabOrder = 0
       OnClick = btnClearClick
+      ExplicitTop = 416
     end
     object btnLoad: TButton
       AlignWithMargins = True
@@ -105,6 +116,7 @@ object frmBenchmark: TfrmBenchmark
       Caption = '&Benchmark'
       TabOrder = 2
       OnClick = btnRunBenchmarkClick
+      ExplicitTop = 382
     end
     object chkGrayScale: TCheckBox
       AlignWithMargins = True
@@ -121,6 +133,7 @@ object frmBenchmark: TfrmBenchmark
       Checked = True
       State = cbChecked
       TabOrder = 3
+      ExplicitTop = 328
     end
     object chkFixedColor: TCheckBox
       AlignWithMargins = True
@@ -137,6 +150,7 @@ object frmBenchmark: TfrmBenchmark
       Checked = True
       State = cbChecked
       TabOrder = 4
+      ExplicitTop = 304
     end
     object pnlLoops: TPanel
       Left = 0
@@ -146,6 +160,7 @@ object frmBenchmark: TfrmBenchmark
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 5
+      ExplicitTop = 350
       object lblLoops: TLabel
         AlignWithMargins = True
         Left = 10
@@ -207,6 +222,7 @@ object frmBenchmark: TfrmBenchmark
       Checked = True
       State = cbChecked
       TabOrder = 7
+      ExplicitTop = 281
     end
     object KeepAspectCheckBox: TCheckBox
       AlignWithMargins = True
@@ -235,6 +251,7 @@ object frmBenchmark: TfrmBenchmark
     BevelOuter = bvNone
     TabOrder = 2
     Visible = False
+    ExplicitHeight = 448
     object BtnSelDir: TButton
       AlignWithMargins = True
       Left = 10
@@ -258,7 +275,7 @@ object frmBenchmark: TfrmBenchmark
       Align = alClient
       ItemHeight = 15
       TabOrder = 1
-      ExplicitTop = 43
+      ExplicitHeight = 408
     end
   end
   object SVGIconImageCollection: TSVGIconImageCollection
@@ -272,8 +289,8 @@ object frmBenchmark: TfrmBenchmark
     Top = 136
   end
   object SVGIconVirtualImageList: TSVGIconVirtualImageList
+    Images = <>
     ImageCollection = SVGIconImageCollection
-    Scaled = True
     Left = 48
     Top = 88
   end

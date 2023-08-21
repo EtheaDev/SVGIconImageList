@@ -27,6 +27,8 @@ unit SVGIconImageRegister;
 
 interface
 
+{$INCLUDE ..\Source\SVGIconImageList.inc}
+
 uses
   Classes
   , DesignIntf
@@ -44,13 +46,14 @@ type
     procedure ExecuteVerb(Index: Integer); override;
   end;
 
+  {$IFNDEF D10_3+}
   TSVGIconVirtualImageListCompEditor = class(TComponentEditor)
   public
     function GetVerbCount: Integer; override;
     function GetVerb(Index: Integer): string; override;
     procedure ExecuteVerb(Index: Integer); override;
   end;
-
+  {$ENDIF}
 
   TSVGIconImageCollectionCompEditor = class(TComponentEditor)
   public
@@ -245,7 +248,9 @@ begin
      TSVGIconImageCollection]);
 
   RegisterComponentEditor(TSVGIconImageList, TSVGIconImageListCompEditor);
+  {$IFNDEF D10_3+}
   RegisterComponentEditor(TSVGIconVirtualImageList, TSVGIconVirtualImageListCompEditor);
+  {$ENDIF}
   RegisterComponentEditor(TSVGIconImageCollection, TSVGIconImageCollectionCompEditor);
   RegisterComponentEditor(TSVGIconImage, TSVGIconImageCompEditor);
   RegisterPropertyEditor(TypeInfo(TSVGIconItems), TSVGIconImageList, 'SVGIconItems', TSVGIconImageListProperty);
@@ -289,6 +294,7 @@ begin
   Result := 2;
 end;
 
+{$IFNDEF D10_3+}
 { TSVGIconVirtualImageListCompEditor }
 
 procedure TSVGIconVirtualImageListCompEditor.ExecuteVerb(Index: Integer);
@@ -320,6 +326,7 @@ function TSVGIconVirtualImageListCompEditor.GetVerbCount: Integer;
 begin
   result := 2;
 end;
+{$ENDIF}
 
 { TSVGIconImageCompEditor }
 

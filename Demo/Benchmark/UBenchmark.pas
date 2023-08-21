@@ -15,15 +15,15 @@ uses
   Vcl.ImgList,
   SVGIconImageCollection, SVGIconImage, Vcl.Samples.Spin, Vcl.ExtCtrls,
   SVGIconImageListBase, SVGIconVirtualImageList, Vcl.BaseImageCollection,
-  Vcl.ComCtrls;
+  Vcl.ComCtrls, Vcl.VirtualImageList;
 
 type
-  TSVGFactory = (svgNativeTSVG, svgImage32, svgSkia, svgDirect2D);
+  TSVGFactory = (svgImage32, svgSkia, svgDirect2D);
   //TSVGFactory = (svgSkia, svgImage32);
 
 const
   ASVGFactoryNames: Array[TSVGFactory] of string =
-    ('Native TSVG','Native Image32','Skia4Delphi','Direct2D');
+    ('Native Image32','Skia4Delphi','Direct2D');
     //('Skia4Delphi','Native Image32');
 
 type
@@ -33,7 +33,6 @@ type
     btnClear: TButton;
     btnLoad: TButton;
     OpenDialog: TOpenDialog;
-    SVGIconImage: TSVGIconImage;
     btnRunBenchmark: TButton;
     speLoops: TSpinEdit;
     lblLoops: TLabel;
@@ -44,11 +43,13 @@ type
     pnlLoops: TPanel;
     grpFactory: TRadioGroup;
     chkDrawVisible: TCheckBox;
-    SVGIconVirtualImageList: TSVGIconVirtualImageList;
     KeepAspectCheckBox: TCheckBox;
     Panel1: TPanel;
     BtnSelDir: TButton;
     FilesListBox: TListBox;
+    SVGIconVirtualImageList: TSVGIconVirtualImageList;
+    SVGIconImage: TSVGIconImage;
+    BenchMarkImage: TSVGIconImage;
     procedure btnClearClick(Sender: TObject);
     procedure btnLoadClick(Sender: TObject);
     procedure btnRunBenchmarkClick(Sender: TObject);
@@ -90,7 +91,6 @@ uses
   SVGInterfaces,
   Image32SVGFactory,
   D2DSVGFactory,
-  PasSVGFactory,
   SkiaSVGFactory,
   System.IOUtils,
   System.Math,
@@ -133,7 +133,10 @@ var
 begin
   // Benchmark Draw
   if chkDrawVisible.Checked then
-    DrawOnCanvas(TCanvasImage(SVGIconImage).Canvas)
+  begin
+    DrawOnCanvas(TCanvasImage(BenchMarkImage).Canvas);
+    BenchMarkImage.Repaint;
+  end
   else
     begin
       LBitmap := TBitmap.Create;
@@ -198,7 +201,10 @@ begin
       LogTicks(FLine, FLastTick);
 
       SVGIconImageCollection.SVGIconItems.Clear;
-      SVGIconImageCollection.Add(LSvg, '');
+      SVGIconImageCollection.Add(LSvg, 'IconName');
+
+      SVGIconVirtualImageList.Clear;
+      SVGIconVirtualImageList.Add('IconName', 'IconName');
       SVGIconImage.ImageIndex := 0;
 
       LogTicks(FLine, FLastTick);
@@ -396,8 +402,6 @@ end;
 procedure TfrmBenchmark.SetFactory(AFactory: TSVGFactory);
 begin
   case AFactory of
-    svgNativeTSVG:
-      SetGlobalSvgFactory(GetPasSVGFactory);
     svgDirect2D:
       SetGlobalSvgFactory(GetD2DSVGFactory);
     svgImage32:
