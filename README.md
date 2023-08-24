@@ -87,7 +87,7 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 
 ### RELEASE NOTES
 
-21 Aug 2023: version 4.0.0 (VCL+FMX)
+24 Aug 2023: version 4.0.0 (VCL+FMX)
 - Removed old "native" engine TSVG
 - Updated to Skia4Delphi ver. 6.0.0
 - TSVGIconVirtualImageList inherits from TVirtualImageList (from D10.3 to actual version).
