@@ -74,20 +74,12 @@ implementation
 {$INCLUDE SVGIconImageList.inc}
 
 Uses
-{$IF NOT DEFINED(Delphi_SVGEngine) and NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine)}
-  {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine) into SVGIconImageList.inc)'}
+{$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine)}
+  {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine) into SVGIconImageList.inc)'}
 {$ENDIF}
 
-{$IF DEFINED(Image32_SVGEngine) and (DEFINED(Delphi_SVGEngine) or  DEFINED(Skia_SVGEngine))}
-  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine) into SVGIconImageList.inc)'}
-{$ENDIF}
-
-{$IF DEFINED(Delphi_SVGEngine) and (DEFINED(Image32_SVGEngine) or  DEFINED(Skia_SVGEngine))}
-  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine) into SVGIconImageList.inc)'}
-{$ENDIF}
-
-{$IF DEFINED(Skia_SVGEngine) and (DEFINED(Image32_SVGEngine) or DEFINED(Delphi_SVGEngine))}
-  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine or Delphi_SVGEngine) into SVGIconImageList.inc)'}
+{$IF DEFINED(Image32_SVGEngine) and DEFINED(Skia_SVGEngine)}
+  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine) into SVGIconImageList.inc)'}
 {$ENDIF}
 
 {$IF DEFINED(Image32_SVGEngine)}
@@ -136,9 +128,7 @@ begin
     Result := 'Direct2D Windows Engine'
   else
   {$ENDIF}
-  {$IF DEFINED(Delphi_SVGEngine)}
-    Result := 'Delphi TSVG Engine'
-  {$ELSEIF DEFINED(Image32_SVGEngine)}
+  {$IF DEFINED(Image32_SVGEngine)}
     Result := 'Delphi Image32 Engine'
   {$ELSEIF DEFINED(Skia_SVGEngine)}
     Result := 'Skia4delphi Engine'

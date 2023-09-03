@@ -180,13 +180,15 @@ function RamerDouglasPeucker(const paths: TPathsD;
 
 // SimplifyPath: Better than RDP when simplifying closed paths
 function SimplifyPath(const path: TPathD;
-  epsilon: double; isOpenPath: Boolean = false): TPathD;
+  shapeTolerance: double; isOpenPath: Boolean = false): TPathD;
 function SimplifyPaths(const paths: TPathsD;
-  epsilon: double; isOpenPath: Boolean = false): TPathsD;
+  shapeTolerance: double; isOpenPath: Boolean = false): TPathsD;
 
 // SimplifyPathEx: this is mainly useful following Vectorize()
-function SimplifyPathEx(const path: TPathD): TPathD;
-function SimplifyPathsEx(const paths: TPathsD): TPathsD;
+function SimplifyPathEx(const path: TPathD;
+  shapeTolerance: double): TPathD;
+function SimplifyPathsEx(const paths: TPathsD;
+  shapeTolerance: double): TPathsD;
 
 // SmoothToCubicBezier - produces a series of cubic bezier control points.
 // This function is very useful in the following combination:
@@ -1737,259 +1739,248 @@ begin
 end;
 //---------------------------------------------------------------------------
 
-function SimplifyPath(const path: TPathD;
-  epsilon: double; isOpenPath: Boolean = false): TPathD;
-var
-  i,j, len, high: integer;
-  curr, prev, start, prev2, next, next2: integer;
-  epsSqr: double;
-  flags: array of boolean;
-  dsq: array of double;
-begin
-  Result := nil;
-  len := Length(path);
-  if (len < 4) then Exit;;
-  high := len -1;
-  epsSqr := Sqr(epsilon);
-  SetLength(flags, len);
-  SetLength(dsq, len);
-
-  curr := 0;
-  if (isOpenPath) then
-  begin
-    dsq[0] := MaxDouble;
-    dsq[high] := MaxDouble;
-  end else
-  begin
-    dsq[0] := PerpendicularDistSqrd(path[0], path[high], path[1]);
-    dsq[high] := PerpendicularDistSqrd(path[high], path[0], path[high - 1]);
+type
+  PSimplifyRec = ^TSimplifyRec;
+  TSimplifyRec = record
+    pt      : TPointD;
+    pdSqrd  : double;
+    prev    : PSimplifyRec;
+    next    : PSimplifyRec;
+    isEnd   : Boolean;
   end;
 
-  for i := 1 to high -1 do
-    dsq[i] := PerpendicularDistSqrd(path[i], path[i - 1], path[i + 1]);
+function SimplifyPath(const path: TPathD;
+  shapeTolerance: double; isOpenPath: Boolean = false): TPathD;
+var
+  i, highI, minLen: integer;
+  tolSqrd: double;
+  srArray: array of TSimplifyRec;
+  first, last: PSimplifyRec;
+begin
+  Result := nil;
+  highI := High(path);
+  if isOpenPath then minLen := 2 else minLen := 3;
 
-  while true do
+  if highI +1 < minLen then Exit;
+
+  SetLength(srArray, highI +1);
+  with srArray[0] do
   begin
-    if (dsq[curr] > epsSqr) then
+    pt      := path[0];
+    prev    := @srArray[highI];
+    next    := @srArray[1];
+    if isOpenPath then
     begin
-      start := curr;
-      repeat
-        curr := GetNext(curr, high, flags);
-      until (curr = start) or (dsq[curr] < epsSqr);
-      if (curr = start) then break;
-    end;
-
-    prev := GetPrior(curr, high, flags);
-    next := GetNext(curr, high, flags);
-    if (next = prev) then break;
-
-    if (dsq[next] < dsq[curr]) then
-    begin
-      flags[next] := true;
-      next := GetNext(next, high, flags);
-      next2 := GetNext(next, high, flags);
-      dsq[curr] := PerpendicularDistSqrd(
-        path[curr], path[prev], path[next]);
-      if (next <> high) or not isOpenPath then
-        dsq[next] := PerpendicularDistSqrd(
-          path[next], path[curr], path[next2]);
-      curr := next;
+      pdSqrd  := MaxDouble;
+      isEnd   := true;
     end else
     begin
-      flags[curr] := true;
-      curr := next;
-      next := GetNext(next, high, flags);
-      prev2 := GetPrior(prev, high, flags);
-      dsq[curr] := PerpendicularDistSqrd(
-        path[curr], path[prev], path[next]);
-      if (prev <> 0) or not isOpenPath then
-        dsq[prev] := PerpendicularDistSqrd(
-          path[prev], path[prev2], path[curr]);
+      pdSqrd  := PerpendicularDistSqrd(path[0], path[highI], path[1]);
+      isEnd   := false;
     end;
   end;
-  j := 0;
-  SetLength(Result, len);
-  for i := 0 to High do
-    if not flags[i] then
+
+  with srArray[highI] do
+  begin
+    pt      := path[highI];
+    prev    := @srArray[highI-1];
+    next    := @srArray[0];
+    if isOpenPath then
     begin
-      Result[j] := path[i];
-      inc(j);
+      pdSqrd  := MaxDouble;
+      isEnd   := true;
+    end else
+    begin
+      pdSqrd  := PerpendicularDistSqrd(path[highI], path[highI-1], path[0]);
+      isEnd   := false;
     end;
-  SetLength(Result, j);
+  end;
+
+  for i := 1 to highI -1 do
+    with srArray[i] do
+    begin
+      pt      := path[i];
+      prev    := @srArray[i-1];
+      next    := @srArray[i+1];
+      pdSqrd  := PerpendicularDistSqrd(path[i], path[i-1], path[i+1]);
+      isEnd   := false;
+    end;
+
+  first := @srArray[0];
+  last := first.prev;
+
+  tolSqrd := Sqr(shapeTolerance);
+  while first <> last do
+  begin
+    if first.isEnd or (first.pdSqrd > tolSqrd) or
+      (first.next.pdSqrd < first.pdSqrd) then
+    begin
+      first := first.next;
+    end else
+    begin
+      first.prev.next := first.next;
+      first.next.prev := first.prev;
+      last := first.prev;
+      dec(highI);
+      if last.next = last.prev then break;
+      last.pdSqrd :=
+        PerpendicularDistSqrd(last.pt, last.prev.pt, last.next.pt);
+      first := last.next;
+      first.pdSqrd :=
+        PerpendicularDistSqrd(first.pt, first.prev.pt, first.next.pt);
+    end;
+  end;
+  if highI +1 < minLen then Exit;
+  if isOpenPath then first := @srArray[0];
+  SetLength(Result, highI +1);
+  for i := 0 to HighI do
+  begin
+    Result[i] := first.pt;
+    first := first.next;
+  end;
 end;
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 function SimplifyPaths(const paths: TPathsD;
-  epsilon: double; isOpenPath: Boolean = false): TPathsD;
+  shapeTolerance: double; isOpenPath: Boolean = false): TPathsD;
 var
   i, len: integer;
 begin
   len := Length(paths);
   SetLength(Result, len);
   for i := 0 to len -1 do
-    result[i] := SimplifyPath(paths[i], epsilon, isOpenPath);
+    result[i] := SimplifyPath(paths[i], shapeTolerance, isOpenPath);
 end;
 
 //---------------------------------------------------------------------------
-// SimplifyPathEx support functions
 //---------------------------------------------------------------------------
 
-function GetVertex(base: PVertex; offset: integer): PVertex; inline;
-begin
-  Result := base;
-  inc(Result, offset);
-end;
-//---------------------------------------------------------------------------
-
-procedure InitVertex(currV, loV, highV: PVertex; const pt: TPointD);
-var
-  prev, prevPrev: PVertex;
-begin
-  currV.pt := pt;
-  if currV <> loV then
-  begin
-    currV.prev := GetVertex(currV, -1);
-    prev := currV.prev;
-    if prev <> loV then
-      prevPrev := GetVertex(prev, -1) else
-      prevPrev := highV;
-    prev.dist := Distance(prev.pt, pt);
-    prev.uvec := GetUnitVector(prev.pt, pt);
-    prev.perpD := PerpendicularDistSqrd(prev.pt, prevPrev.pt, currV.pt);
-  end else
-  begin
-    currV.prev := highV;
-    prevPrev := GetVertex(highV, -1);
-    highV.dist := Distance(highV.pt, pt);
-    highV.uvec := GetUnitVector(highV.pt, pt);
-    highV.perpD := PerpendicularDistSqrd(highV.pt, prevPrev.pt, currV.pt);
+type
+  PSimplifyExRec = ^TSimplifyExRec;
+  TSimplifyExRec = record
+    pt      : TPointD;
+    pdSqrd  : double;
+    segLenSq: double;
+    prev    : PSimplifyExRec;
+    next    : PSimplifyExRec;
   end;
 
-  if currV = highV then
-    currV.next := loV else
-    currV.next := GetVertex(currV, 1);
-end;
-//---------------------------------------------------------------------------
-
-function RemoveVertex(vertex: PVertex): PVertex;
-begin
-  if vertex.next = vertex then
-    Result := nil else
-    Result := vertex.next;
-  vertex.prev.next := vertex.next;
-  vertex.next.prev := vertex.prev;
-end;
-//---------------------------------------------------------------------------
-
-function Delete(e: PVertex; var start: PVertex): PVertex;
-begin
-  Result := e.next;
-  e := RemoveVertex(e);
-  Result.dist := Distance(Result.pt, Result.next.pt);
-  Result.uvec := GetUnitVector(Result.pt, Result.next.pt);
-  Result.perpD := PerpendicularDistSqrd(Result.pt, Result.prev.pt, Result.next.pt);
-  start := e;
-end;
-//---------------------------------------------------------------------------
-
-procedure Delete1(e: PVertex; frac: double; var start: PVertex);
-begin
-  e.pt := OffsetPoint(e.pt, e.uvec.X * e.dist * frac, e.uvec.Y * e.dist * frac);
-  RemoveVertex(e.next);
-  e.prev.dist := Distance(e.prev.pt, e.pt);
-  e.prev.uvec := GetUnitVector(e.prev.pt, e.pt);
-  e.prev.perpD := PerpendicularDistSqrd(e.prev.pt, e.prev.prev.pt, e.pt);
-
-  e.dist := Distance(e.pt, e.next.pt);
-  e.uvec := GetUnitVector(e.pt, e.next.pt);
-  e.perpD := PerpendicularDistSqrd(e.pt, e.prev.pt, e.next.pt);
-  start := e.prev;
-end;
-//---------------------------------------------------------------------------
-
-function Delete2(e: PVertex; var start: PVertex): PVertex;
-begin
-  Result := e.prev;
-  RemoveVertex(Result.next);
-  RemoveVertex(Result.next);
-  Result.dist := Distance(Result.pt, Result.next.pt);
-  Result.uvec := GetUnitVector(Result.pt, Result.next.pt);
-  Result.perpD := PerpendicularDistSqrd(Result.pt, Result.prev.pt, Result.next.pt);
-  start := Result.prev;
-end;
-//---------------------------------------------------------------------------
-
-function SimplifyPathEx(const path: TPathD): TPathD;
+function DeleteCurrent(var current: PSimplifyExRec): Boolean;
 var
-  i, len: integer;
-  vecs, currV, highV: PVertex;
-const
-  maxLen = 10;
-  minLen = 1.2;
+  next: PSimplifyExRec;
+begin
+  current.prev.next := current.next;
+  current.next.prev := current.prev;
+  current := current.prev;
+  next := current.next;
+  Result := next <> current.prev;
+  if not Result then Exit;
+  next.pdSqrd := PerpendicularDistSqrd(next.pt, next.prev.pt, next.next.pt);
+  next.segLenSq := DistanceSqrd(next.prev.pt, next.pt);
+  current.pdSqrd := PerpendicularDistSqrd(current.pt, current.prev.pt, current.next.pt);
+end;
+//---------------------------------------------------------------------------
+
+function SimplifyPathEx(const path: TPathD; shapeTolerance: double): TPathD;
+var
+  i, highI: integer;
+  shapeTolSqr: double;
+  srArray: array of TSimplifyExRec;
+  current, start: PSimplifyExRec;
 begin
   Result := nil;
-  len := Length(path);
-  if len < 3 then Exit;
-  GetMem(vecs, len * sizeOf(TVertex));
-  try
-    currV := vecs;
-    // set second last and last vertex pts.
-    highV := GetVertex(vecs, len -2);
-    highV.pt := path[len -2];
-    inc(highV);
-    highV.pt := path[len -1];
-    // now init all vertices
-    for i := 0 to len -1 do
+  highI := High(path);
+  if highI < 2 then Exit;
+
+  shapeTolSqr := Sqr(shapeTolerance);
+  SetLength(srArray, highI +1);
+  with srArray[0] do
+  begin
+    pt      := path[0];
+    segLenSq:= DistanceSqrd(path[highI], path[0]);
+    pdSqrd  := PerpendicularDistSqrd(path[0], path[highI], path[1]);
+    prev    := @srArray[highI];
+    next    := @srArray[1];
+  end;
+  with srArray[highI] do
+  begin
+    pt      := path[highI];
+    segLenSq:= DistanceSqrd(path[highI-1], path[highI]);
+    pdSqrd  := PerpendicularDistSqrd(path[highI], path[highI-1], path[0]);
+    prev    := @srArray[highI-1];
+    next    := @srArray[0];
+  end;
+
+  for i := 1 to highI -1 do
+    with srArray[i] do
     begin
-      InitVertex(currV, vecs, highV, path[i]);
-      inc(currV);
+      pt      := path[i];
+      segLenSq:= DistanceSqrd(path[i-1], path[i]);
+      pdSqrd  := PerpendicularDistSqrd(path[i], path[i-1], path[i+1]);
+      prev    := @srArray[i-1];
+      next    := @srArray[i+1];
     end;
 
-    currV := vecs;
-    while (currV <> highV) and (currV.next <> currV.prev) do
-    begin
-      if (currV.dist > currV.next.dist) or (currV.dist >= maxLen) then
-        currV := currV.next
-      else if currV.dist < minLen then
-        currV := Delete(currV, highV)
-      else if currV.perpD < 0.2 then
-        currV := Delete(currV, highV)
-      else if (DotProduct(currV.prev.uvec, currV.next.next.uvec) > 0.9) and
-        (currV.prev.dist + currV.next.next.dist > 10 * (currV.dist + currV.next.dist)) then
-          currV := Delete2(currV, highV)
-      else if (DotProduct(currV.prev.uvec, currV.next.uvec) > 0.9) then
-        Delete1(currV, currV.next.dist /
-          (currV.prev.dist + currV.next.dist), highV)
-      else if (DotProduct(currV.prev.uvec, currV.uvec) > 0.9) then
-        currV := Delete(currV, highV)
-      else
-        currV := currV.next
-    end;
+  current := @srArray[0];
+  start := current.prev;
 
-    i := 0;
-    SetLength(Result, len);
-    currV.prev.next := nil;
-    while Assigned(currV) do
+  while current <> start do
+  begin
+    if ((current.pdSqrd < shapeTolSqr) and
+      (current.pdSqrd < current.next.pdSqrd)) then
     begin
-      Result[i] := currV.pt;
-      inc(i);
-      currV := currV.next;
-    end;
-    SetLength(Result, i);
-  finally
-    FreeMem(vecs);
+      // nb: always remove the shorter segment first
+      // irrespective of segment length remove vertices that
+      // deviate insignificantly from their adjacent vertices.
+      dec(highI);
+      if not DeleteCurrent(current) then Break;
+      start := current.prev;
+    end else if (current.segLenSq * 25 < current.prev.segLenSq) and
+      (current.segLenSq * 25 < current.next.segLenSq) then
+    begin
+      current := current.next;
+//      cp := CrossProduct(current.prev.prev.pt, current.prev.pt, current.pt);
+//      cp2 := CrossProduct(current.prev.pt, current.pt, current.next.pt);
+//      if ((cp > 0) = (cp2 > 0)) then
+//      begin
+//        // nat a zig-zag (ie avoids truncating tightly rounded corners)
+//        current := current.next;
+//      end else
+//      begin
+//        // remove insignificant zigzags
+//        dec(highI);
+////        current.prev.pt := MidPoint(current.pt, current.prev.pt);
+////        current.prev.segLenSq :=
+////                DistanceSqrd(current.prev.prev.pt, current.prev.pt);
+//
+////        if (current.prev.segLenSq < current.next.segLenSq) then
+////          current := current.prev;
+//        if not DeleteCurrent(current) then Break;
+//        start := current.prev;
+//      end;
+    end else
+      current := current.next;
+  end;
+
+  if highI < 2 then Exit;
+  SetLength(Result, highI +1);
+  for i := 0 to HighI do
+  begin
+    Result[i] := current.pt;
+    current := current.next;
   end;
 end;
-//---------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
-function SimplifyPathsEx(const paths: TPathsD): TPathsD;
+function SimplifyPathsEx(const paths: TPathsD;
+  shapeTolerance: double): TPathsD;
 var
   i, len: integer;
 begin
   len := Length(paths);
   SetLength(Result, len);
   for i := 0 to len -1 do
-    Result[i] := SimplifyPathEx(paths[i]);
+    Result[i] := SimplifyPathEx(paths[i], shapeTolerance);
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

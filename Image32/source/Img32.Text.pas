@@ -3,7 +3,7 @@ unit Img32.Text;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  2 May 2023                                                      *
+* Date      :  19 May 2023                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2023                                         *
 * Purpose   :  TrueType fonts for TImage32 (without Windows dependencies)      *
@@ -290,7 +290,7 @@ type
     // is found, or a TFontReader is found but not in the specified family.
     // When the latter occurs, fntReader will be assigned and index will be > 0.
     function FindReaderContainingGlyph(missingUnicode: Word;
-      fntFamily: TTtfFontFamily; out fntReader: TFontReader; out index: integer): Boolean;
+      fntFamily: TTtfFontFamily; out fontReader: TFontReader): integer;
     function Delete(fontReader: TFontReader): Boolean;
     property MaxFonts: integer read fMaxFonts write SetMaxFonts;
   end;
@@ -1227,17 +1227,14 @@ var
   i: integer;
   w: WORD;
 begin
-
+  result := 0; //default to the 'missing' glyph
   if fFormat4Offset = 0 then
   begin
-    if idx > 255 then Result := 0
-    else Result := fFormat0CodeMap[idx];
+    if idx <= 255 then Result := fFormat0CodeMap[idx];
     Exit;
   end;
 
   //Format4 mapping
-
-  result := 0; //default to the 'missing' glyph
   for i := 0 to High(fFormat4EndCodes) do
     if idx <= fFormat4EndCodes[i] then
     begin
@@ -1951,8 +1948,8 @@ begin
   if (glyphIdx = 0) then
   begin
     if (unicode > 32) and Assigned(fFontManager)  then
-      fFontManager.FindReaderContainingGlyph(unicode,
-        fFontInfo.fontFamily, altFontReader, glyphIdx);
+      glyphIdx := fFontManager.FindReaderContainingGlyph(unicode,
+        fFontInfo.fontFamily, altFontReader);
     if (glyphIdx > 0) then
       glyphMetrics := altFontReader.GetGlyphMetricsInternal(glyphIdx, pathsEx)
     else
@@ -3668,29 +3665,26 @@ end;
 //------------------------------------------------------------------------------
 
 function TFontManager.FindReaderContainingGlyph(missingUnicode: Word;
-  fntFamily: TTtfFontFamily; out fntReader: TFontReader;
-  out index: integer): Boolean;
+  fntFamily: TTtfFontFamily; out fontReader: TFontReader): integer;
 var
   i: integer;
+  reader: TFontReader;
 begin
-  fntReader := nil;
-  index := 0;
+  fontReader := nil;
   for i := 1 to fFontList.Count -1 do
-    with TFontReader(fFontList[i]) do
   begin
-    index := GetGlyphIdxFromCmapIdx(missingUnicode);
-    if index = 0 then Continue;
-    fntReader := TFontReader(self.fFontList[i]);
-
+    reader := TFontReader(fFontList[i]);
+    Result := reader.GetGlyphIdxFromCmapIdx(missingUnicode);
     // if a font family is specified, then only return true
     // when finding the glyph within that font family
-    if (fntFamily <> ttfUnknown) and (FontFamily = fntFamily) then
+    if (Result > 0) and ((fntFamily = ttfUnknown) or
+      (fntFamily = reader.FontFamily)) then
     begin
-      Result := true;
-      Exit;
+      fontReader := reader;
+      break;
     end;
   end;
-  Result := false;
+  Result := 0;
 end;
 //------------------------------------------------------------------------------
 

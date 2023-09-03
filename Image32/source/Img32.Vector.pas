@@ -89,6 +89,9 @@ type
   function Circle(const pt: TPointD; radius: double): TPathD; overload;
   function Circle(const pt: TPointD; radius: double; pendingScale: double): TPathD; overload;
 
+  function CalcCircleFrom3Points(const p1,p2,p3: TPointD;
+    out centre: TPointD; out radius: double): Boolean;
+
   function Star(const rec: TRectD; points: integer; indentFrac: double = 0.4): TPathD; overload;
   function Star(const focalPt: TPointD;
     innerRadius, outerRadius: double; points: integer): TPathD; overload;
@@ -450,6 +453,8 @@ resourcestring
 
 implementation
 
+uses
+  Img32.Transform;
 
 resourcestring
   rsInvalidQBezier = 'Invalid number of control points for a QBezier';
@@ -2744,6 +2749,32 @@ begin
   rec.Top := pt.Y - radius;
   rec.Bottom := pt.Y + radius;
   Result := Ellipse(rec, pendingScale);
+end;
+//------------------------------------------------------------------------------
+
+function CalcCircleFrom3Points(const p1,p2,p3: TPointD;
+  out centre: TPointD; out radius: double): Boolean;
+var
+  mat11, mat12, mat13, mat14: TMatrixD;
+  m11,m12,m13,m14: double;
+begin
+  mat11 := Matrix(p1.X, p1.Y, 1, p2.X, p2.Y, 1, p3.X, p3.Y, 1);
+  m11 := MatrixDeterminant(mat11);
+  Result := m11 <> 0;
+  if not Result then Exit;
+  mat12 := Matrix(Sqr(p1.X)+Sqr(p1.Y), p1.Y, 1,
+    Sqr(p2.X)+Sqr(p2.Y), p2.Y, 1, Sqr(p3.X)+Sqr(p3.Y), p3.Y, 1);
+  mat12 := Matrix(2, 1, 1, 20, 4, 1, 34, 3, 1);
+  m12 := MatrixDeterminant(mat12);
+  mat13 := Matrix(Sqr(p1.X)+Sqr(p1.Y), p1.X, 1,
+    Sqr(p2.X)+Sqr(p2.Y), p2.X, 1, Sqr(p3.X)+Sqr(p3.Y), p3.X, 1);
+  m13 := MatrixDeterminant(mat13);
+  mat14 := Matrix(Sqr(p1.X)+Sqr(p1.Y), p1.X, p1.Y,
+    Sqr(p2.X)+Sqr(p2.Y), p2.X, p2.Y, Sqr(p3.X)+Sqr(p3.Y), p3.X, p3.Y);
+  m14 := MatrixDeterminant(mat14);
+  centre.X := 0.5 * m12/m11;
+  centre.Y := -0.5 * m13/m11;
+  radius := Sqrt(Sqr(centre.X) + Sqr(centre.Y) + m14/m11);
 end;
 //------------------------------------------------------------------------------
 

@@ -15,8 +15,9 @@ interface
 uses
   Img32;
 
-function Vectorize(img: TImage32; compareColor: TColor32;
-  compareFunc: TCompareFunction; colorTolerance: Integer): TPathsD;
+function Vectorize(img: TImage32;
+  compareColor: TColor32; compareFunc: TCompareFunction;
+  colorTolerance: Integer; simplifyTolerance: double = 0.25): TPathsD;
 
 implementation
 
@@ -398,8 +399,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function Vectorize(img: TImage32; compareColor: TColor32;
-  compareFunc: TCompareFunction; colorTolerance: Integer): TPathsD;
+function Vectorize(img: TImage32;
+  compareColor: TColor32; compareFunc: TCompareFunction;
+  colorTolerance: Integer; simplifyTolerance: double = 0.25): TPathsD;
 var
   ba: TArrayOfByte;
 begin
@@ -410,8 +412,7 @@ begin
   finally
     free;
   end;
-  Result := SimplifyPathsEx(Result);
-  //Result := SimplifyPaths(Result, 0.25);
+  Result := SimplifyPathsEx(Result, simplifyTolerance);
 end;
 //------------------------------------------------------------------------------
 

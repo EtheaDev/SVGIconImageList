@@ -3,7 +3,7 @@ unit Img32.CQ;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  14 May 2023                                                     *
+* Date      :  4 July 2023                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  Color reduction for TImage32                                    *
@@ -399,20 +399,20 @@ begin
   if (gx >= rx) and (gx >= bx) then
   begin
     PaletteSort(cfArr, start, finish, PalGreenSorter);
-    midC := (loG + hiG) * 6 div 11;
+    midC := (loG + hiG) div 2;
     while (mid <> finish) and
       (TARGB(cfArr[mid].color).G > midC) do inc(mid);
   end
   else if (bx >= rx) then
   begin
     PaletteSort(cfArr, start, finish, PalBlueSorter);
-    midC := (loB + hiB) * 6 div 11;
+    midC := (loB + hiB) div 2;
     while (mid <> finish) and
       (TARGB(cfArr[mid].color).B > midC) do inc(mid);
   end else
   begin
     PaletteSort(cfArr, start, finish, PalRedSorter);
-    midC := (loR + hiR) * 6 div 11;
+    midC := (loR + hiR) div 2;
     while (mid <> finish) and
       (TARGB(cfArr[mid].color).R > midC) do inc(mid);
   end;

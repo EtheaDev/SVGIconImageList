@@ -3,9 +3,9 @@ unit Img32.Layers;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.3                                                             *
-* Date      :  27 September 2022                                               *
+* Date      :  3 September 2023                                                *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2022                                         *
+* Copyright :  Angus Johnson 2019-2023                                         *
 *                                                                              *
 * Purpose   :  Layered images support                                          *
 *                                                                              *
@@ -39,11 +39,9 @@ type
     destructor Destroy; override;
   end;
 
-  TUpdateMethod = (umNone, umAll, umRegion);
+  TUpdateMethod = (umNone, umSelf, umChild);
   TUpdateInfo = record
     updateMethod  : TUpdateMethod;
-    childUpdating : Boolean;
-    updateRegion  : TRectD;
     priorPosition : TRectD; //ie update the previous position when moved.
   end;
 
@@ -128,12 +126,15 @@ type
     function   SendToBack: Boolean;
     function   Move(newParent: TLayer32; idx: integer): Boolean;
 
+    // convert relative to absolute and absolute to relative functions
+    // where absolute is still relative to the container TLayeredImage32
     function   MakeAbsolute(const pt: TPointD): TPointD; overload;
     function   MakeAbsolute(const rec: TRectD): TRectD; overload;
     function   MakeRelative(const pt: TPoint): TPoint; overload;
     function   MakeRelative(const pt: TPointD): TPointD; overload;
     function   MakeRelative(const rec: TRectD): TRectD; overload;
 
+    // positioning functions
     procedure  PositionAt(const pt: TPointD); overload;
     procedure  PositionAt(x, y: double); overload; virtual;
     procedure  PositionCenteredAt(X, Y: double); overload;
@@ -141,8 +142,8 @@ type
     procedure  SetInnerBounds(const newBounds: TRectD); virtual;
     procedure  SetSize(width, height: double);
 
-    procedure  Invalidate; overload; virtual;
-    procedure  Invalidate(const rec: TRectD); overload; virtual;
+    procedure  Invalidate; virtual;
+    //procedure  Invalidate(const rec: TRectD); overload; virtual;
 
     function   AddChild(layerClass: TLayer32Class;
       const name: string = ''): TLayer32; reintroduce; virtual;
@@ -181,7 +182,7 @@ type
 
   TGroupLayer32 = class(TLayer32)
   protected
-    procedure  UpdateBounds;
+    procedure  UpdateGroupBounds;
     procedure  PreMerge(hideDesigners: Boolean); override;
   public
     constructor Create(parent: TLayer32 = nil; const name: string = ''); override;
@@ -263,7 +264,6 @@ type
     fPreScaleSize : TSize;
     fAutoHitTest  : Boolean;
     procedure DoAutoHitTest;
-    //procedure DoPreRotationCheck;
     function  GetMatrix: TMatrixD;
   protected
     procedure ImageChanged(Sender: TImage32); override;
@@ -665,8 +665,7 @@ end;
 
 function TLayer32.GetUpdateNeeded: Boolean;
 begin
-  with UpdateInfo do
-    Result := (updateMethod <> umNone) or childUpdating;
+     Result := (UpdateInfo.updateMethod <> umNone);
 end;
 //------------------------------------------------------------------------------
 
@@ -674,42 +673,40 @@ procedure TLayer32.Invalidate;
 var
   layer : TLayer32;
 begin
-  if (UpdateInfo.updateMethod = umAll) or
-    not Assigned(fLayeredImage) then Exit;
-  UpdateInfo.updateMethod := umAll;
+  if (UpdateInfo.updateMethod = umSelf) then Exit;
+  UpdateInfo.updateMethod := umSelf;
 
   layer := Parent;
   while Assigned(layer) do
   begin
-    if layer.UpdateInfo.childUpdating then Break;
-    layer.UpdateInfo.childUpdating := true;
+    if layer.UpdateInfo.updateMethod <> umNone then Break;
+    layer.UpdateInfo.updateMethod := umChild;
     layer := layer.Parent;
   end;
 end;
 //------------------------------------------------------------------------------
 
-procedure TLayer32.Invalidate(const rec: TRectD);
-var
-  layer : TLayer32;
-begin
-  if (UpdateInfo.updateMethod = umAll) or
-    not Assigned(fLayeredImage) or (self = Root) then Exit;
-
-  with UpdateInfo do
-  begin
-    updateMethod := umRegion;
-    updateRegion := UnionRect(updateRegion, rec);
-  end;
-
-  layer := Parent;
-  while Assigned(layer) do
-  begin
-    if layer.UpdateInfo.childUpdating then Break;
-    layer.UpdateInfo.childUpdating := true;
-    layer := layer.Parent;
-  end;
-
-end;
+//procedure TLayer32.Invalidate(const rec: TRectD);
+//var
+//  layer : TLayer32;
+//begin
+//  if (UpdateInfo.updateMethod = umAll) or
+//    not Assigned(fLayeredImage) or (self = Root) then Exit;
+//
+//  with UpdateInfo do
+//  begin
+//    updateMethod := umRegion;
+//    updateRegion := UnionRect(updateRegion, rec);
+//  end;
+//
+//  layer := Parent;
+//  while Assigned(layer) do
+//  begin
+//    if layer.UpdateInfo.childUpdating then Break;
+//    layer.UpdateInfo.childUpdating := true;
+//    layer := layer.Parent;
+//  end;
+//end;
 //------------------------------------------------------------------------------
 
 function TLayer32.GetNextLayerInGroup: TLayer32;
@@ -1163,32 +1160,24 @@ begin
     with childLayer do
     begin
       if not Visible or
-        (hideDesigners and IsDesignerLayer) then
-          Continue;
+         (hideDesigners and IsDesignerLayer) or
+         (UpdateInfo.updateMethod = umNone) then
+           Continue;
 
-      with UpdateInfo do
-        case updateMethod of
-          umRegion:
-            begin
-              rec := Parent.MakeAbsolute(updateRegion);
-              with fLayeredImage do
-                fInvalidRect := UnionRect(fInvalidRect, rec);
-            end;
-          umAll:
-            begin
-              rec := Parent.MakeAbsolute(priorPosition);
-              with fLayeredImage do
-                fInvalidRect := UnionRect(fInvalidRect, rec);
+      if UpdateInfo.updateMethod = umSelf then
+      begin
+        rec := Parent.MakeAbsolute(UpdateInfo.priorPosition);
+        with fLayeredImage do
+          fInvalidRect := UnionRect(fInvalidRect, rec);
+        UpdateInfo.priorPosition := OuterBounds;
+        rec := Parent.MakeAbsolute(UpdateInfo.priorPosition);
+        with fLayeredImage do
+          fInvalidRect := UnionRect(fInvalidRect, rec);
+      end;
 
-              priorPosition := OuterBounds;
-              rec := Parent.MakeAbsolute(priorPosition);
-              with fLayeredImage do
-                fInvalidRect := UnionRect(fInvalidRect, rec);
-            end;
-        end;
+      // premerge children (recursion)
       DoBeforeMerge;
-      if HasChildren and UpdateInfo.childUpdating then
-        PreMerge(hideDesigners);
+      PreMerge(hideDesigners);
     end;
   end;
 end;
@@ -1204,10 +1193,6 @@ begin
   //layers with children will merge to fMergeImage to preserve its own image.
   //that fMergeImage will then merge with its parent fMergeImage until root.
 
-  if not (self = Root) and
-    ((UpdateInfo.updateMethod = umNone) and not
-      UpdateInfo.childUpdating) then Exit;
-
   if not (self is TGroupLayer32) then
     Types.OffsetRect(updateRect, -Floor(fLeft), -Floor(fTop));
 
@@ -1217,9 +1202,9 @@ begin
     img := fImage;
   end else
   begin
-    if Assigned(fMergeImage) then
-      fMergeImage.Assign(fImage) else
-      fMergeImage := TImage32.Create(fImage);
+    if not Assigned(fMergeImage) then
+      fMergeImage := TImage32.Create;
+    fMergeImage.Assign(fImage);
     img := fMergeImage;
   end;
 
@@ -1227,51 +1212,44 @@ begin
   for i := 0 to ChildCount -1 do
   begin
     childLayer := Child[i];
-
     with childLayer do
     begin
-      if not Visible or
-        not RectsIntersect(Rect(outerbounds) , updateRect) or
-        (hideDesigners and IsDesignerLayer) then
-          Continue;
+      if not visible or (hideDesigners and IsDesignerLayer) then
+         Continue;
 
       //recursive merge
-      if (HasChildren) and UpdateNeeded and Visible then
+      if (UpdateInfo.updateMethod <> umNone) then
         Merge(hideDesigners, updateRect);
-    end;
 
-    if Assigned(childLayer.fMergeImage) then
-      childImg := childLayer.fMergeImage else
-      childImg := childLayer.Image;
+      if Assigned(fMergeImage) then
+        childImg := fMergeImage else
+        childImg := Image;
 
-    dstRect := Rect(childLayer.OuterBounds);
+      dstRect := Rect(OuterBounds);
+      if (self = Root) then
+      begin
+        //root layer
+        Types.IntersectRect(dstRect, dstRect, fLayeredImage.Bounds);
+        Types.IntersectRect(dstRect, dstRect, updateRect);
+      end else
+      begin
+        //childs of group layers are positioned
+        //independently of the group layer's positioning
+        if (self is TGroupLayer32) then
+          Types.OffsetRect(dstRect, Floor(-self.Left), Floor(-self.Top));
+          Types.IntersectRect(dstRect, dstRect, self.Image.Bounds);
+      end;
 
-    if (self <> Root) then
-    begin
-      //childs of group layers are positioned
-      //independantly of the group layer's positioning
-      if (self is TGroupLayer32) then
-        Types.OffsetRect(dstRect, Floor(-Left), Floor(-Top));
+      if dstRect.IsEmpty then Continue;
 
-      if (UpdateInfo.updateMethod = umRegion) then
-        dstRect := updateRect else
-        Types.IntersectRect(dstRect, dstRect, Image.Bounds);
-    end else
-    begin
-      //self must be the root layer
-      Types.IntersectRect(dstRect, dstRect, fLayeredImage.Bounds);
-      Types.IntersectRect(dstRect, dstRect, updateRect);
-    end;
-
-    //get srcRect (offset to childLayer coords)
-    //and further adjust dstRect to accommodate OuterMargin
-    with childLayer do
-    begin
+      //get srcRect (offset to childLayer coords)
+      //and further adjust dstRect to accommodate OuterMargin
       srcRect.Left := Floor(dstRect.Left - Left + fOuterMargin);
       srcRect.Top := Floor(dstRect.Top - Top + fOuterMargin);
       srcRect.Right := srcRect.Left + RectWidth(dstRect);
       srcRect.Bottom := srcRect.Top + RectHeight(dstRect);
     end;
+
     if (self is TGroupLayer32) then
       Types.OffsetRect(srcRect, Floor(fLeft), Floor(fTop))
     else //nb: offsetting **dstRect** below
@@ -1308,22 +1286,12 @@ begin
         childImg2.Free;
       img.UnblockNotify;
     end;
-
-    with childLayer.UpdateInfo do
-    begin
-      priorPosition := childLayer.OuterBounds;
-      updateMethod := umNone;
-      updateRegion := NullRectD;
-      childUpdating := false;
-    end;
   end;
 
   with UpdateInfo do
   begin
     priorPosition := OuterBounds;
     updateMethod := umNone;
-    updateRegion := NullRectD;
-    childUpdating := false;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -1427,7 +1395,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TGroupLayer32.UpdateBounds;
+procedure TGroupLayer32.UpdateGroupBounds;
 var
   i: integer;
   rec: TRectD;
@@ -1451,8 +1419,8 @@ end;
 procedure  TGroupLayer32.PreMerge(hideDesigners: Boolean);
 begin
   inherited;
-  if (self <> Root) and (UpdateInfo.childUpdating) then
-    UpdateBounds;
+  if (self <> Root) and (UpdateInfo.updateMethod <> umNone) then
+    UpdateGroupBounds;
 end;
 //------------------------------------------------------------------------------
 
@@ -1895,11 +1863,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-//procedure TRasterLayer32.DoPreRotationCheck;
-//begin
-//end;
-//------------------------------------------------------------------------------
-
 function TRasterLayer32.GetMatrix: TMatrixD;
 begin
   Result := fMatrix;
@@ -2266,7 +2229,7 @@ end;
 
 function TLayeredImage32.GetRepaintNeeded: Boolean;
 begin
-  Result := Root.UpdateInfo.childUpdating;
+  Result := Root.UpdateInfo.updateMethod <> umNone;
 end;
 //------------------------------------------------------------------------------
 

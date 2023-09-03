@@ -130,7 +130,6 @@ uses
   {$IFDEF DXE3+}
   , UITypes
   {$ENDIF}
-  , SVGColor
   , SVGIconUtils
   , SVGIconImageListEditorUnit;
 

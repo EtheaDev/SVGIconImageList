@@ -2139,6 +2139,14 @@ begin
     end else
     begin
       clipRec := drawDat.bounds;
+      if clipRec.IsEmpty and (drawDat.fontInfo.textLength > 0) and
+        (self is TSubtextElement) then
+      begin
+        clipRec.Left := fParent.elRectWH.left.rawVal;
+        clipRec.Bottom := fParent.elRectWH.top.rawVal;
+        clipRec.Right := clipRec.Left + drawDat.fontInfo.textLength;
+        clipRec.Top := clipRec.Bottom - drawDat.fontInfo.size;
+      end;
       if stroked and drawDat.strokeWidth.IsValid then
       begin
         with drawDat.strokeWidth do

@@ -3,7 +3,7 @@ unit Img32.FMX;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  1 May 2023                                                      *
+* Date      :  3 September 2023                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2023                                         *
 * Purpose   :  Image file format support for TImage32 and FMX                  *
@@ -200,8 +200,11 @@ var
   src, dst: TBitmapData; //TBitmapData is a record.
 begin
   if not Assigned(img) or not Assigned(bmp) then Exit;
-  //src := TBitmapData.Create(img.Width, img.Height, TPixelFormat.BGRA);
+{$IF DEFINED(ANDROID)} //todo: check this on android devices
   src := TBitmapData.Create(img.Width, img.Height, TPixelFormat.RGBA);
+{$ELSE}
+  src := TBitmapData.Create(img.Width, img.Height, TPixelFormat.BGRA);
+{$IFEND}
   src.Data := img.PixelBase;
   src.Pitch := img.Width * 4;
   bmp.SetSize(img.Width, img.Height);
