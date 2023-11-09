@@ -90,6 +90,7 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 - Aligned To Skia4Delphi 6.0.0
 - Added FMX Components to all platform
 - Fixed Demos for Delphi 12
+- Added SvgDisableEngineHint option
 
 03 Sep 2023: version 4.1.0 (VCL+FMX)
 - Aligned Image32 Library released on 03/09/2023
