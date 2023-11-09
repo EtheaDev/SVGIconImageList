@@ -183,6 +183,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       Size.PlatformDefault = False
       TabOrder = 0
       Text = 'OK'
+      TextSettings.Trimming = None
     end
     object CancelButton: TButton
       Anchors = [akTop, akRight]
@@ -195,6 +196,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       Size.PlatformDefault = False
       TabOrder = 1
       Text = 'Cancel'
+      TextSettings.Trimming = None
     end
     object HelpButton: TButton
       Anchors = [akTop, akRight]
@@ -205,6 +207,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       Size.PlatformDefault = False
       TabOrder = 2
       Text = 'Help'
+      TextSettings.Trimming = None
       OnClick = HelpButtonClick
     end
   end
@@ -229,6 +232,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.PlatformDefault = False
         TabOrder = 1
         Text = 'Add...'
+        TextSettings.Trimming = None
         OnClick = AddButtonClick
       end
       object DeleteButton: TButton
@@ -239,6 +243,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.PlatformDefault = False
         TabOrder = 2
         Text = 'Delete'
+        TextSettings.Trimming = None
         OnClick = DeleteButtonClick
       end
       object ClearAllButton: TButton
@@ -249,6 +254,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.PlatformDefault = False
         TabOrder = 3
         Text = 'Clear all'
+        TextSettings.Trimming = None
         OnClick = ClearAllButtonClick
       end
       object NewButton: TButton
@@ -259,6 +265,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.PlatformDefault = False
         TabOrder = 0
         Text = 'New'
+        TextSettings.Trimming = None
         OnClick = NewButtonClick
       end
     end
@@ -301,6 +308,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Width = 107.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
+          TextSettings.Trimming = None
           Text = '% Opacity (default)'
           TabOrder = 3
         end
@@ -324,6 +332,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Width = 88.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
+          TextSettings.Trimming = None
           Text = 'Size (in pixel)'
           TabOrder = 0
         end
@@ -333,6 +342,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Width = 107.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
+          TextSettings.Trimming = None
           Text = 'Fixed Color'
           TabOrder = 13
         end
@@ -349,6 +359,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Width = 88.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
+          TextSettings.Trimming = None
           Text = 'Width (in pixel)'
           TabOrder = 4
           TabStop = False
@@ -372,6 +383,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Width = 88.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
+          TextSettings.Trimming = None
           Text = 'Height (in pixel)'
           TabOrder = 7
           TabStop = False
@@ -396,6 +408,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Width = 83.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
+          TextSettings.Trimming = None
           Text = 'Zoom %'
           TabOrder = 10
           TabStop = False
@@ -526,6 +539,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Width = 107.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
+          TextSettings.Trimming = None
           Text = 'Fixed Color'
           TabOrder = 6
         end
@@ -555,6 +569,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Width = 74.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
+          TextSettings.Trimming = None
           Text = 'IconName'
           TabOrder = 4
         end
@@ -564,6 +579,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           Size.Width = 74.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
+          TextSettings.Trimming = None
           Text = 'Opacity'
           TabOrder = 0
         end
@@ -664,6 +680,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.PlatformDefault = False
         TabOrder = 0
         Text = 'Reformat XML'
+        TextSettings.Trimming = None
         OnClick = ReformatXMLButtonClick
       end
     end

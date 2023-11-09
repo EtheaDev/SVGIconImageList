@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{D0A69637-2974-4401-9226-4F66893CB5CE}</ProjectGuid>
         <MainSource>SVGImage32Package.dpk</MainSource>
-        <ProjectVersion>20.0</ProjectVersion>
+        <ProjectVersion>20.1</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>

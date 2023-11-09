@@ -47,7 +47,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '4.1.0';
+  SVGIconImageListVersion = '4.1.1';
   DEFAULT_SIZE = 32;
   ZOOM_DEFAULT = 100;
   SVG_INHERIT_COLOR = TAlphaColors.Null;
@@ -163,7 +163,7 @@ type
 
   {TSVGIconImageList}
   {$IF CompilerVersion > 34}
-  [ComponentPlatforms(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator32 or pidiOSDevice32 or pidAndroidArm32)]
+  [ComponentPlatforms(pidWin32 or pidWin64 or pidOSX32 or pidOSX64 or pidiOSSimulator32 or pidiOSDevice32 or pidiOSDevice64 or pidAndroidArm32 or pidAndroidArm64)]
   {$ELSE}
   [ComponentPlatforms(pidWin32 or pidWin64 or pidOSX32 or pidiOSSimulator32 or pidiOSDevice32 or pidAndroid32Arm)]
   {$ENDIF}
@@ -500,7 +500,7 @@ end;
 
 destructor TSVGIconSourceItem.Destroy;
 begin
-  FSVG.DisposeOf;
+  FSVG.Free;
   inherited;
 end;
 

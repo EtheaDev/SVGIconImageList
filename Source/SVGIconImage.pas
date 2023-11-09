@@ -303,11 +303,12 @@ begin
 end;
 
 procedure TSVGIconImage.CheckAutoSize;
+var
+  LSVG: ISVG;
 begin
-  if FAutoSize and (FSVG.Width > 0) and (FSVG.Height > 0) then
-  begin
-    SetBounds(Left, Top,  Round(FSVG.Width), Round(FSVG.Height));
-  end;
+  LSVG := GetSVG;
+  if FAutoSize and (LSVG.Width > 0) and (LSVG.Height > 0) then
+    SetBounds(Left, Top,  Round(LSVG.Width), Round(LSVG.Height));
 end;
 
 {$IFDEF D10_4+}
@@ -321,14 +322,14 @@ end;
 
 procedure TSVGIconImage.Clear;
 begin
-  FSVG.Clear;
+  SVG.Clear;
   FFileName := '';
   Repaint;
 end;
 
 function TSVGIconImage.Empty: Boolean;
 begin
-  Empty := FSVG.IsEmpty;
+  Empty := SVG.IsEmpty;
 end;
 
 function TSVGIconImage.IsImageIndexAvail: Boolean;

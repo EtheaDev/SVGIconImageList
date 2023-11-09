@@ -379,9 +379,6 @@ begin
   FAntiAliasColor := clBtnFace;
   FGrayScale := False;
   FOpacity := 255;
-  {$IFDEF HiDPISupport}
-  FScaled := True;
-  {$ENDIF}
   inherited;
 end;
 {$ENDIF}

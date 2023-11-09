@@ -41,8 +41,8 @@ Uses
   , FMX.Graphics
   , FMX.Objects
   , FMX.ImageSVG
-  , Skia       //You must add those search path: SVGIconImageList\skia4delphi\Source
-  , Skia.FMX;  //and SVGIconImageList\skia4delphi\Source\FMX
+  , System.Skia       
+  , Skia.FMX;
 
 type
   TFmxImageSkiaSVG = class(TFmxImageSVG)

@@ -9,8 +9,7 @@ unit SkiaSVGFactory;
 interface
 
 Uses
-  SVGInterfaces
-  , Vcl.Skia;
+  SVGInterfaces;
 
 // Factory Methods
 function GetSkiaSVGFactory: ISVGFactory;
@@ -31,6 +30,7 @@ Uses
   System.Classes,
   System.Math.Vectors,
   //Skia engine
+  Vcl.Skia,
   System.Skia;
 
 type

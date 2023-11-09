@@ -281,13 +281,13 @@ end;
 function TSVGIconImageCollection.LoadFromResource(const hInstance: THandle; const ResourceName, IconName: string) : integer;
 var
   ResStream: TResourceStream;
-  Svg : ISVG;
+  LSvg: ISVG;
 begin
   resStream := TResourceStream.Create(hInstance, ResourceName, RT_RCDATA);
   try
-    Svg := GlobalSVGFactory.NewSvg;
-    Svg.LoadFromStream(ResStream);
-    result := Add(Svg, IconName);
+    LSvg := GlobalSVGFactory.NewSvg;
+    LSvg.LoadFromStream(ResStream);
+    result := Add(LSvg, IconName);
   finally
     ResStream.Free;
   end;
@@ -295,11 +295,11 @@ end;
 
 function TSVGIconImageCollection.LoadFromString(const Source,  IconName: string): integer;
 var
-  Svg : ISVG;
+  LSvg: ISVG;
 begin
-  Svg := GlobalSVGFactory.NewSvg;
-  Svg.Source := Source;
-  result := Add(Svg, IconName);
+  LSvg := GlobalSVGFactory.NewSvg;
+  LSvg.Source := Source;
+  result := Add(LSvg, IconName);
 end;
 
 procedure TSVGIconImageCollection.ReadLeft(Reader: TReader);

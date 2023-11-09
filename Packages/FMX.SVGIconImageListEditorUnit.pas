@@ -249,7 +249,7 @@ begin
       SavedBounds := Bounds;
       ItemPanelHeight := ItemPanel.Height;
     finally
-      DisposeOf;
+      Free;
     end;
   end;
 end;
