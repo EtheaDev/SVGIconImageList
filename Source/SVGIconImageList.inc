@@ -1,3 +1,6 @@
+//To silent Hint messege of engine used
+{.$DEFINE SvgDisableEngineHint}
+
 //Prefer Engine Direct2D by Kiriakos Vlahos
 //if supported by Windows Platform (from Windows Creators update)
 {.$DEFINE PreferNativeSvgSupport}

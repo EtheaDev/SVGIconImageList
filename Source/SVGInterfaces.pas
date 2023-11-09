@@ -74,25 +74,31 @@ implementation
 {$INCLUDE SVGIconImageList.inc}
 
 Uses
-{$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine)}
-  {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine) into SVGIconImageList.inc)'}
-{$ENDIF}
+  {$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine)}
+    {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine) into SVGIconImageList.inc)'}
+  {$ENDIF}
 
-{$IF DEFINED(Image32_SVGEngine) and DEFINED(Skia_SVGEngine)}
-  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine) into SVGIconImageList.inc)'}
-{$ENDIF}
+  {$IF DEFINED(Image32_SVGEngine) and DEFINED(Skia_SVGEngine)}
+    {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine) into SVGIconImageList.inc)'}
+  {$ENDIF}
 
-{$IF DEFINED(Image32_SVGEngine)}
-  {$MESSAGE HINT 'Use Delphi native Image32 SVG-Engine for SVGIconImageList'}
-  Image32SVGFactory
-{$ELSEIF DEFINED(Skia_SVGEngine)}
-  {$MESSAGE HINT 'Use Skia4Delphi "wrapper" SVG-Engine for SVGIconImageList'}
-  SkiaSVGFactory
-{$ENDIF}
-{$IFDEF PreferNativeSvgSupport}
-  {$MESSAGE HINT 'but Prefer Windows Direct-2D SVG-Engine if available'}
-  , D2DSVGFactory
-{$ENDIF}
+  {$IF DEFINED(Image32_SVGEngine)}
+    {$IFNDEF SvgDisableEngineHint}
+    {$MESSAGE HINT 'Use Delphi native Image32 SVG-Engine for SVGIconImageList'}
+    {$ENDIF}
+    Image32SVGFactory
+  {$ELSEIF DEFINED(Skia_SVGEngine)}
+    {$IFNDEF SvgDisableEngineHint}
+    {$MESSAGE HINT 'Use Skia4Delphi "wrapper" SVG-Engine for SVGIconImageList'}
+    {$ENDIF}
+    SkiaSVGFactory
+  {$ENDIF}
+  {$IFDEF PreferNativeSvgSupport}
+    {$IFNDEF SvgDisableEngineHint}
+    {$MESSAGE HINT 'but Prefer Windows Direct-2D SVG-Engine if available'}
+    {$ENDIF}
+    , D2DSVGFactory
+  {$ENDIF}
   ;
 
 Var
