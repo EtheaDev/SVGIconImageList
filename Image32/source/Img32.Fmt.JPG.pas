@@ -24,8 +24,9 @@ type
     class function IsValidImageStream(stream: TStream): Boolean; override;
     function LoadFromStream(stream: TStream;
       img32: TImage32; imgIndex: integer = 0): Boolean; override;
+    //SaveToStream: compressionQuality (range: 0-100%)
     procedure SaveToStream(stream: TStream;
-      img32: TImage32; quality: integer = 0); override;
+      img32: TImage32; compressionQlty: integer = -1); override;
     class function CopyToClipboard(img32: TImage32): Boolean; override;
     class function CanPasteFromClipboard: Boolean; override;
     class function PasteFromClipboard(img32: TImage32): Boolean; override;
@@ -90,15 +91,15 @@ end;
 //------------------------------------------------------------------------------
 
 procedure TImageFormat_JPG.SaveToStream(stream: TStream;
-  img32: TImage32; quality: integer = 0);
+  img32: TImage32; compressionQlty: integer);
 var
   Jpeg: TJpegImage;
 begin
   Jpeg := TJpegImage.Create;
   with TJpegImageHack(jpeg) do
   try
-    if (quality > 0) and (quality <= 100) then
-      CompressionQuality := quality;
+    if (compressionQlty >= 0) then
+      jpeg.CompressionQuality := Min(100, compressionQlty);
     NewImage;
     NewBitmap;
     Bitmap.Width := img32.Width;

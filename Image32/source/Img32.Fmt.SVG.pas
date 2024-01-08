@@ -3,7 +3,7 @@ unit Img32.Fmt.SVG;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  12 March 2023                                                   *
+* Date      :  22 October 2023                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2023                                         *
 * Purpose   :  SVG file format extension for TImage32                          *
@@ -15,9 +15,14 @@ interface
 {$I Img32.inc}
 
 uses
-  {$IFDEF MSWINDOWS} Windows, {$ENDIF} SysUtils, Classes, Math,
+  {$IFDEF MSWINDOWS} Windows, {$ENDIF}
+  {$IF NOT DEFINED(NEWPOSFUNC) OR DEFINED(FPC)} StrUtils, {$IFEND}
+  {$IFDEF UNICODE} AnsiStrings, {$ENDIF}
+  SysUtils, Classes, Math,
   {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults, {$ENDIF}
-  Img32, Img32.Vector, Img32.SVG.Reader;
+  Img32, Img32.Vector, Img32.SVG.Core, Img32.SVG.Reader
+  {$IF DEFINED(USING_LCL)}, Types{$IFEND}
+  ;
 
 type
   TImageFormat_SVG = class(TImageFormat)
@@ -25,6 +30,7 @@ type
     class function IsValidImageStream(stream: TStream): Boolean; override;
     function LoadFromStream(stream: TStream;
       img32: TImage32; imgIndex: integer = 0): Boolean; override;
+    // SaveToStream: not implemented for SVG streams
     procedure SaveToStream(stream: TStream;
       img32: TImage32; quality: integer = 0); override;
     class function CanCopyToClipboard: Boolean; override;
@@ -96,9 +102,10 @@ implementation
 function GetImageSize(const filename: string): TSize;
 var
   i,j, l,t,r,b: integer;
-  s: string;
+  s: AnsiString;
+  ms: TMemoryStream;
 
-  function GetVal(var i: integer): integer;
+  function GetValAndIgnoreFracs(var i: integer): integer;
   begin
     Result := 0;
     while (s[i] >= '0') and (s[i] <= '9') do
@@ -106,6 +113,11 @@ var
       Result := Result * 10 + Ord(s[i]) - Ord('0');
       inc(i);
     end;
+
+    // ignore fractions
+    if s[i] <> '.' then Exit;
+    inc(i);
+    while (s[i] >= '0') and (s[i] <= '9') do inc(i);
   end;
 
 begin
@@ -113,38 +125,62 @@ begin
   // needs to be made much more reliable
   FillChar(Result.cx, SizeOf(TSize), 0);
   if not FileExists(filename) then Exit;
-  with TStringList.Create do
+  ms := TMemoryStream.Create;
   try
-    LoadFromFile(filename);
-    s := text;
+    ms.LoadFromFile(filename);
+    ConvertUnicodeToUtf8(ms);
+    {$IFDEF UNICODE}
+    s := AnsiStrings.StrPas(ms.Memory);
+    {$ELSE}
+    s := StrPas(ms.Memory);
+    {$ENDIF}
   finally
-    free;
+    ms.Free;
   end;
+  {$IFDEF UNICODE}
+  i := AnsiStrings.PosEx('<svg ', s);
+  {$ELSE}
   i := Pos('<svg ', s);
+  {$ENDIF}
   if i < 1 then Exit;
-  j := Pos('>', s, i);          //watch out for inside '>'
+
+  {$IFDEF UNICODE}
+  j := AnsiStrings.PosEx('>', s, i); //watch out for inside '>'
+  {$ELSE}
+  j := PosEx('>', s, i);
+  {$ENDIF}
+
   if j < i then Exit;
   s := Lowercase(Copy(s, i + 5, j - i -5));
-  i := Pos('width="', s);       //watch out for space before =
-  j := Pos('height="', s);
+  {$IFDEF UNICODE}
+  i := AnsiStrings.PosEx('width="', s);       //watch out for space before =
+  j := AnsiStrings.PosEx('height="', s);
+  {$ELSE}
+  i := PosEx('width="', s);       //watch out for space before =
+  j := PosEx('height="', s);
+  {$ENDIF}
   if (i > 0) and (j > 0) then
   begin
     inc(i,7);
-    Result.cx := GetVal(i);
+    Result.cx := GetValAndIgnoreFracs(i);
     inc(j,8);
-    Result.cy := GetVal(j);
+    Result.cy := GetValAndIgnoreFracs(j);
   end else
   begin
-    i := Pos('viewbox="', s);
+    {$IFDEF UNICODE}
+    i := AnsiStrings.PosEx('viewbox="', s);
+    {$ELSE}
+    i := PosEx('viewbox="', s);
+    {$ENDIF}
     if i < 1 then Exit;
     inc(i, 9);
-    l := GetVal(i);
+    l := GetValAndIgnoreFracs(i);
     while (s[i] <= #32) do inc(i);
-    t := GetVal(i);
+    t := GetValAndIgnoreFracs(i);
     while (s[i] <= #32) do inc(i);
-    r := GetVal(i);
+    r := GetValAndIgnoreFracs(i);
     while (s[i] <= #32) do inc(i);
-    b := GetVal(i);
+    b := GetValAndIgnoreFracs(i);
     Result.cx := r - l;
     Result.cy := b - t;
   end;

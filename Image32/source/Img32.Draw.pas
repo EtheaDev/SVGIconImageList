@@ -3,7 +3,7 @@ unit Img32.Draw;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  26 March 2023                                                   *
+* Date      :  15 December 2023                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2023                                         *
 *                                                                              *
@@ -1004,85 +1004,83 @@ begin
   // Delphi's Round() function is *much* faster than Trunc(),
   // and even a little faster than __Trunc() above (except
   // when the FastMM4 memory manager is enabled.)
-  savedRoundMode := SetRoundMode(rmDown);
-
   fragments := nil;
-  RectWidthHeight(clipRec2, maxW, maxH);
-  SetLength(scanlines, maxH +1);
-  SetLength(windingAccum, maxW +2);
-  AllocateScanlines(paths2, scanlines, fragments, maxH, maxW-1);
-  InitializeScanlines(paths2, scanlines, fragments, clipRec2);
-  SetLength(byteBuffer, maxW);
-  if byteBuffer = nil then
-  begin
-    FreeMem(fragments);
-    Exit;
-  end;
+  savedRoundMode := SetRoundMode(rmDown);
+  try
+    RectWidthHeight(clipRec2, maxW, maxH);
+    SetLength(scanlines, maxH +1);
+    SetLength(windingAccum, maxW +2);
+    AllocateScanlines(paths2, scanlines, fragments, maxH, maxW-1);
+    InitializeScanlines(paths2, scanlines, fragments, clipRec2);
+    SetLength(byteBuffer, maxW);
+    if byteBuffer = nil then Exit;
 
-  scanline := @scanlines[0];
-  for i := 0 to high(scanlines) do
-  begin
-    if scanline.fragCnt = 0 then
+    scanline := @scanlines[0];
+    for i := 0 to high(scanlines) do
     begin
-      inc(scanline);
-      Continue;
-    end;
-
-    // process each scanline to fill the winding count accumulation buffer
-    ProcessScanlineFragments(scanline^, fragments, windingAccum);
-    // it's faster to process only the modified sub-array of windingAccum
-    xli := scanline.minX;
-    xri := Min(maxW -1, scanline.maxX +1);
-    FillChar(byteBuffer[xli], xri - xli +1, 0);
-
-    // a 25% weighting has been added to the alpha channel to minimize any
-    // background bleed-through where polygons join with a common edge.
-
-    accum := 0; //winding count accumulator
-    for j := xli to xri do
-    begin
-      accum := accum + windingAccum[j];
-      case fillRule of
-        frEvenOdd:
-          begin
-            aa := Round(Abs(accum) * 1275) mod 2550;              // *5
-            if aa > 1275 then
-              byteBuffer[j] := Min(255, (2550 - aa) shr 2) else   // /4
-              byteBuffer[j] := Min(255, aa shr 2);                // /4
-          end;
-        frNonZero:
-          begin
-            byteBuffer[j] := Min(255, Round(Abs(accum) * 318));
-          end;
-{$IFDEF REVERSE_ORIENTATION}
-        frPositive:
-{$ELSE}
-        frNegative:
-{$ENDIF}
-          begin
-            if accum > 0.002 then
-              byteBuffer[j] := Min(255, Round(accum * 318));
-          end;
-{$IFDEF REVERSE_ORIENTATION}
-        frNegative:
-{$ELSE}
-        frPositive:
-{$ENDIF}
-          begin
-            if accum < -0.002 then
-              byteBuffer[j] := Min(255, Round(-accum * 318));
-          end;
+      if scanline.fragCnt = 0 then
+      begin
+        inc(scanline);
+        Continue;
       end;
-    end;
-    renderer.RenderProc(clipRec2.Left + xli, clipRec2.Left + xri,
-      clipRec2.Top + i, @byteBuffer[xli]);
 
-    // cleanup and deallocate memory
-    FillChar(windingAccum[xli], (xri - xli +1) * sizeOf(Double), 0);
-    inc(scanline);
+      // process each scanline to fill the winding count accumulation buffer
+      ProcessScanlineFragments(scanline^, fragments, windingAccum);
+      // it's faster to process only the modified sub-array of windingAccum
+      xli := scanline.minX;
+      xri := Min(maxW -1, scanline.maxX +1);
+      FillChar(byteBuffer[xli], xri - xli +1, 0);
+
+      // a 25% weighting has been added to the alpha channel to minimize any
+      // background bleed-through where polygons join with a common edge.
+
+      accum := 0; //winding count accumulator
+      for j := xli to xri do
+      begin
+        accum := accum + windingAccum[j];
+        case fillRule of
+          frEvenOdd:
+            begin
+              aa := Round(Abs(accum) * 1275) mod 2550;              // *5
+              if aa > 1275 then
+                byteBuffer[j] := Min(255, (2550 - aa) shr 2) else   // /4
+                byteBuffer[j] := Min(255, aa shr 2);                // /4
+            end;
+          frNonZero:
+            begin
+              byteBuffer[j] := Min(255, Round(Abs(accum) * 318));
+            end;
+  {$IFDEF REVERSE_ORIENTATION}
+          frPositive:
+  {$ELSE}
+          frNegative:
+  {$ENDIF}
+            begin
+              if accum > 0.002 then
+                byteBuffer[j] := Min(255, Round(accum * 318));
+            end;
+  {$IFDEF REVERSE_ORIENTATION}
+          frNegative:
+  {$ELSE}
+          frPositive:
+  {$ENDIF}
+            begin
+              if accum < -0.002 then
+                byteBuffer[j] := Min(255, Round(-accum * 318));
+            end;
+        end;
+      end;
+      renderer.RenderProc(clipRec2.Left + xli, clipRec2.Left + xri,
+        clipRec2.Top + i, @byteBuffer[xli]);
+
+      // cleanup and deallocate memory
+      FillChar(windingAccum[xli], (xri - xli +1) * sizeOf(Double), 0);
+      inc(scanline);
+    end;
+  finally
+    FreeMem(fragments);
+    SetRoundMode(savedRoundMode);
   end;
-  FreeMem(fragments);
-  SetRoundMode(savedRoundMode);
 end;
 
 // ------------------------------------------------------------------------------

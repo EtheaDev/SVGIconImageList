@@ -3,7 +3,7 @@
 {       SVGIconImageList: An extended ImageList for Delphi/VCL                 }
 {       to simplify use of SVG Icons (resize, opacity and more...)             }
 {                                                                              }
-{       Copyright (c) 2019-2023 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2024 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors: Vincent Parrett, Kiriakos Vlahos                         }
 {                                                                              }
@@ -66,6 +66,7 @@ procedure SVGExportToPng(const AWidth, AHeight: Integer;
   FSVG: ISVG; const AOutFolder: string;
   const AFileName: string = '');
 function PNG4TransparentBitMap(aBitmap: TBitmap): TPNGImage;
+procedure SVGCopyToClipboardAsPng(const AWidth, AHeight: Integer; FSVG: ISVG);
 
 implementation
 
@@ -74,6 +75,7 @@ uses
   , System.Types
   , Vcl.Themes
   , SVGIconImageCollection
+  , Vcl.Clipbrd
   {$IFDEF D10_3}
   , VirtualImageList
   {$ENDIF}
@@ -122,6 +124,41 @@ begin
       end;
       Inc(PngRGB);
     end;
+  end;
+end;
+
+procedure SVGCopyToClipboardAsPng(const AWidth, AHeight: Integer;
+  FSVG: ISVG);
+var
+  LImagePng: TPngImage;
+  LBitmap: TBitmap;
+  iFormat: Word;
+  iData: THandle;
+  iPalette: HPALETTE;
+begin
+  LBitmap := nil;
+  LImagePng := nil;
+  try
+    LBitmap := TBitmap.Create;
+    LBitmap.PixelFormat := TPixelFormat.pf32bit;   // 32bit bitmap
+    LBitmap.AlphaFormat := TAlphaFormat.afDefined; // Enable alpha channel
+
+    LBitmap.SetSize(AWidth, AHeight);
+
+    // Fill background with transparent
+    LBitmap.Canvas.Brush.Color := clNone;
+    LBitmap.Canvas.FillRect(Rect(0, 0, AWidth, AHeight));
+
+    FSVG.PaintTo(LBitmap.Canvas.Handle, TRectF.Create(0, 0, AWidth, AHeight));
+
+    LImagePng := PNG4TransparentBitMap(LBitmap);
+
+    iFormat := RegisterClipboardFormat('PNG');
+    LImagePng.SaveToClipBoardFormat(iFormat, iData, iPalette);
+    ClipBoard.SetAsHandle(iFormat, iData);
+  finally
+    LBitmap.Free;
+    LImagePng.Free;
   end;
 end;
 

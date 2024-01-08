@@ -19,7 +19,7 @@ object ExportToPNGDialog: TExportToPNGDialog
   TextHeight = 13
   object OutputFileNameLabel: TLabel
     Left = 247
-    Top = 159
+    Top = 187
     Width = 125
     Height = 13
     Caption = 'Output filename format:'
@@ -169,7 +169,7 @@ object ExportToPNGDialog: TExportToPNGDialog
     Caption = 'OK'
     Default = True
     ModalResult = 1
-    TabOrder = 1
+    TabOrder = 4
     OnClick = btnOKClick
   end
   object btnCancel: TButton
@@ -180,15 +180,15 @@ object ExportToPNGDialog: TExportToPNGDialog
     Cancel = True
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 2
+    TabOrder = 5
     OnClick = btnCancelClick
   end
   object FormatEdit: TEdit
     Left = 247
-    Top = 174
-    Width = 204
+    Top = 204
+    Width = 201
     Height = 21
-    TabOrder = 4
+    TabOrder = 2
     Text = '%FileName%_%size%'
     OnChange = FormatEditChange
   end
@@ -200,6 +200,15 @@ object ExportToPNGDialog: TExportToPNGDialog
     Caption = 'Change output filename...'
     TabOrder = 3
     OnClick = OutputButtonClick
+  end
+  object BtnCopyToClipboard: TButton
+    Left = 317
+    Top = 159
+    Width = 131
+    Height = 25
+    Caption = 'Copy to clipboard...'
+    TabOrder = 1
+    OnClick = BtnCopyToClipboardClick
   end
   object SavePNGDialog: TSaveDialog
     Filter = 'PNG Image files (.png)|*.png'

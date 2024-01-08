@@ -3,7 +3,7 @@
 {       SVGIconImageList: An extended ImageList for Delphi/VCL                 }
 {       to simplify use of SVG Icons (resize, opacity and more...)             }
 {                                                                              }
-{       Copyright (c) 2019-2023 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2024 (Ethea S.r.l.)                                 }
 {       Author: Vincent Parrett                                                }
 {       Contributors: Carlo Barazzetta, Kiriakos Vlahos                        }
 {                                                                              }
@@ -63,6 +63,7 @@ type
     ExampleFileName: TLabel;
     SavePNGDialog: TSaveDialog;
     OutputButton: TButton;
+    BtnCopyToClipboard: TButton;
     procedure btnOKClick(Sender: TObject);
     procedure FormatEditChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -70,6 +71,7 @@ type
     procedure OutputButtonClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnCancelClick(Sender: TObject);
+    procedure BtnCopyToClipboardClick(Sender: TObject);
   private
     FFileName: TFileName;
     FIconName: string;
@@ -175,6 +177,13 @@ begin
   Close;
 end;
 
+procedure TExportToPNGDialog.BtnCopyToClipboardClick(Sender: TObject);
+begin
+  SVGCopyToClipboardAsPng(StrToInt(CustomSizeEdit.Text),
+    StrToInt(CustomSizeEdit.Text),
+    SVGIconImage.SVG);
+end;
+
 procedure TExportToPNGDialog.btnOKClick(Sender: TObject);
 begin
   ExportToPNG;
@@ -193,6 +202,7 @@ begin
     Export192x192.Checked or
     Export256x256.Checked or
     (ExportCustom.Checked and (CustomSizeValue > 0 ));
+  BtnCopyToClipboard.Enabled := (ExportCustom.Checked and (CustomSizeValue > 0 ));
 end;
 
 procedure TExportToPNGDialog.ExportToPNG;

@@ -2,7 +2,7 @@
 
 ## Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 4.1.1 (VCL+FMX)
+### Actual official version 4.1.2 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -86,6 +86,11 @@ You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtension
 Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
 
 ### RELEASE NOTES
+08 Jan 2024: version 4.1.2 (VCL+FMX)
+- Aligned To latest Image32
+- Added copy SVG to Clipboard into "Export to png" dialog
+- Updated Copyrights
+
 09 Nov 2023: version 4.1.1 (VCL+FMX)
 - Aligned To Skia4Delphi 6.0.0
 - Added FMX Components to all platform

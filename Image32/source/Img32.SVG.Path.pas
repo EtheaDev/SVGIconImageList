@@ -2,8 +2,8 @@ unit Img32.SVG.Path;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.0                                                             *
-* Date      :  28 December 2021                                                *
+* Version   :  4.4                                                             *
+* Date      :  14 October 2023                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -1429,11 +1429,18 @@ begin
     end
     else if (currSegType = stClose) then
     begin
+      if currPt.X = InvalidD then Continue;
+
       if Assigned(currSubPath) and (currSubPath.Count > 0) then
       begin
         lastPt := currPt;
         currPt := currSubPath.GetFirstPt;
         currSubPath.AddZSeg(lastPt, currPt);
+      end else
+      begin
+        if not Assigned(currSubPath) then
+          currSubPath := AddPath;
+        currSubPath.AddZSeg(currPt, currPt);
       end;
       currSubPath := nil;
       Continue;

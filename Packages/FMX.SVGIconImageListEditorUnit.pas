@@ -3,7 +3,7 @@
 {       SVG Icon ImageList: An extended ImageList for Delphi/VLC+FMX           }
 {       to simplify use of Icons (resize, opacity and more...)                 }
 {                                                                              }
-{       Copyright (c) 2019-2023 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2024 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors: Volodymyr B.                                             }
 {                                                                              }

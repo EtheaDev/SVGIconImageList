@@ -3,7 +3,7 @@ unit Img32.Extra;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  1 May 2023                                                      *
+* Date      :  17 December 2023                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2023                                         *
 * Purpose   :  Miscellaneous routines that don't belong in other modules.      *
@@ -1844,12 +1844,17 @@ end;
 function SimplifyPaths(const paths: TPathsD;
   shapeTolerance: double; isOpenPath: Boolean = false): TPathsD;
 var
-  i, len: integer;
+  i,j, len: integer;
 begin
   len := Length(paths);
   SetLength(Result, len);
+  j := 0;
   for i := 0 to len -1 do
-    result[i] := SimplifyPath(paths[i], shapeTolerance, isOpenPath);
+  begin
+    result[j] := SimplifyPath(paths[i], shapeTolerance, isOpenPath);
+    if Length(result[j]) > 0 then inc(j);
+  end;
+  SetLength(Result, j);
 end;
 
 //---------------------------------------------------------------------------
@@ -1883,8 +1888,8 @@ end;
 
 function SimplifyPathEx(const path: TPathD; shapeTolerance: double): TPathD;
 var
-  i, highI: integer;
-  shapeTolSqr: double;
+  i, prevI, nextI, highI: integer;
+  cp, cp2, shapeTolSqr, shapeTolSqrEx: double;
   srArray: array of TSimplifyExRec;
   current, start: PSimplifyExRec;
 begin
@@ -1893,33 +1898,25 @@ begin
   if highI < 2 then Exit;
 
   shapeTolSqr := Sqr(shapeTolerance);
+  shapeTolSqrEx := shapeTolerance * 4 +1; // may need adjusting
   SetLength(srArray, highI +1);
-  with srArray[0] do
-  begin
-    pt      := path[0];
-    segLenSq:= DistanceSqrd(path[highI], path[0]);
-    pdSqrd  := PerpendicularDistSqrd(path[0], path[highI], path[1]);
-    prev    := @srArray[highI];
-    next    := @srArray[1];
-  end;
-  with srArray[highI] do
-  begin
-    pt      := path[highI];
-    segLenSq:= DistanceSqrd(path[highI-1], path[highI]);
-    pdSqrd  := PerpendicularDistSqrd(path[highI], path[highI-1], path[0]);
-    prev    := @srArray[highI-1];
-    next    := @srArray[0];
-  end;
 
-  for i := 1 to highI -1 do
+  for i := 0 to highI do
+  begin
+    prevI := i -1;
+    nextI := i +1;
+    if i = 0 then prevI := highI
+    else if i = highI then nextI := 0;
+
     with srArray[i] do
     begin
       pt      := path[i];
-      segLenSq:= DistanceSqrd(path[i-1], path[i]);
-      pdSqrd  := PerpendicularDistSqrd(path[i], path[i-1], path[i+1]);
-      prev    := @srArray[i-1];
-      next    := @srArray[i+1];
+      segLenSq:= DistanceSqrd(path[prevI], path[i]);
+      pdSqrd  := PerpendicularDistSqrd(path[i], path[prevI], path[nextI]);
+      prev    := @srArray[prevI];
+      next    := @srArray[nextI];
     end;
+  end;
 
   current := @srArray[0];
   start := current.prev;
@@ -1935,29 +1932,24 @@ begin
       dec(highI);
       if not DeleteCurrent(current) then Break;
       start := current.prev;
-    end else if (current.segLenSq * 25 < current.prev.segLenSq) and
-      (current.segLenSq * 25 < current.next.segLenSq) then
+    end else if
+      (current.segLenSq * shapeTolSqrEx < current.prev.segLenSq) and
+      (current.segLenSq * shapeTolSqrEx < current.next.segLenSq) then
     begin
-      current := current.next;
-//      cp := CrossProduct(current.prev.prev.pt, current.prev.pt, current.pt);
-//      cp2 := CrossProduct(current.prev.pt, current.pt, current.next.pt);
-//      if ((cp > 0) = (cp2 > 0)) then
-//      begin
-//        // nat a zig-zag (ie avoids truncating tightly rounded corners)
-//        current := current.next;
-//      end else
-//      begin
-//        // remove insignificant zigzags
-//        dec(highI);
-////        current.prev.pt := MidPoint(current.pt, current.prev.pt);
-////        current.prev.segLenSq :=
-////                DistanceSqrd(current.prev.prev.pt, current.prev.pt);
-//
-////        if (current.prev.segLenSq < current.next.segLenSq) then
-////          current := current.prev;
-//        if not DeleteCurrent(current) then Break;
-//        start := current.prev;
-//      end;
+      cp := CrossProduct(current.prev.prev.pt, current.prev.pt, current.pt);
+      cp2 := CrossProduct(current.prev.pt, current.pt, current.next.pt);
+      if ((cp > 0) = (cp2 > 0)) then
+      begin
+        // not a zig-zag (ie avoids truncating tightly rounded corners)
+        current := current.next;
+      end else
+      begin
+        // remove insignificant zigzags
+        current.prev.pt := MidPoint(current.pt, current.prev.pt);
+        if not DeleteCurrent(current) then Break;
+        start := current.prev;
+        dec(highI);
+      end;
     end else
       current := current.next;
   end;
@@ -1972,15 +1964,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function SimplifyPathsEx(const paths: TPathsD;
-  shapeTolerance: double): TPathsD;
+function SimplifyPathsEx(const paths: TPathsD; shapeTolerance: double): TPathsD;
 var
-  i, len: integer;
+  i,j, len: integer;
 begin
   len := Length(paths);
   SetLength(Result, len);
+  j := 0;
   for i := 0 to len -1 do
-    Result[i] := SimplifyPathEx(paths[i], shapeTolerance);
+  begin
+    Result[j] := SimplifyPathEx(paths[i], shapeTolerance);
+    if Length(Result[j]) > 0 then inc(j);
+  end;
+  SetLength(Result, len);
 end;
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------

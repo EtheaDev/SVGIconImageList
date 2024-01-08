@@ -1240,7 +1240,7 @@ begin
           Types.IntersectRect(dstRect, dstRect, self.Image.Bounds);
       end;
 
-      if dstRect.IsEmpty then Continue;
+      if IsEmptyRect(dstRect) then Continue;
 
       //get srcRect (offset to childLayer coords)
       //and further adjust dstRect to accommodate OuterMargin

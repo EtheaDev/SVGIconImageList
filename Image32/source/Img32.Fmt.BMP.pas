@@ -3,7 +3,7 @@ unit Img32.Fmt.BMP;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  12 March 2023                                                   *
+* Date      :  12 October 2023                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2023                                         *
 * Purpose   :  BMP file format extension for TImage32                          *
@@ -32,10 +32,12 @@ type
     class function IsValidImageStream(stream: TStream): Boolean; override;
     function LoadFromStream(stream: TStream;
       img32: TImage32; imgIndex: integer = 0): Boolean; override;
+    // SaveToFile: compressionQuality parameter is ignored here
     function SaveToFile(const filename: string;
-      img32: TImage32; quality: integer = 0): Boolean; override;
+      img32: TImage32; compressionQuality: integer = 0): Boolean; override;
+    // SaveToStream: the compressionQuality parameter is ignored here
     procedure SaveToStream(stream: TStream;
-      img32: TImage32; quality: integer = 0); override;
+      img32: TImage32; compressionQuality: integer = 0); override;
 {$IFDEF MSWINDOWS}
     class function CanCopyToClipboard: Boolean; override;
     class function CopyToClipboard(img32: TImage32): Boolean; override;
@@ -485,7 +487,8 @@ begin
     isTopDown := bih.biHeight < 0;
     bih.biHeight := abs(bih.biHeight);
 
-    if ((bih.biCompression and BI_BITFIELDS) = BI_BITFIELDS) then
+    if (bih.biBitCount < 32) and
+      ((bih.biCompression and BI_BITFIELDS) = BI_BITFIELDS) then
     begin
       stream.Position := bihStart + 40;
       stream.Read(bitfields[0], Sizeof(TTriColor32));
@@ -533,15 +536,15 @@ begin
       //read pixels ....
       if stream.Position < bfh.bfOffBits then stream.Position := bfh.bfOffBits;
 
-      if hasValidBitFields then
-        tmp := StreamReadImageWithBitfields(
-          stream, img32.Width, img32.Height, bih.biBitCount, bitfields)
-
-      else if (bih.biBitCount = 32) then
+      if (bih.biBitCount = 32) then
       begin
         Read(img32.Pixels[0], bih.biWidth * bih.biHeight * sizeof(TColor32));
         if AlphaChannelAllZero(img32) then ResetAlphaChannel(img32);
       end
+
+      else if hasValidBitFields then
+        tmp := StreamReadImageWithBitfields(
+          stream, img32.Width, img32.Height, bih.biBitCount, bitfields)
 
       else if (bih.biCompression = BI_RLE8) or (bih.biCompression = BI_RLE4) then
         tmp := ReadRLE4orRLE8Compression(
@@ -749,7 +752,7 @@ end;
 //------------------------------------------------------------------------------
 
 procedure TImageFormat_BMP.SaveToStream(stream: TStream;
-  img32: TImage32; quality: integer = 0);
+  img32: TImage32; compressionQuality: integer = 0);
 var
   bfh: TBitmapFileHeader;
   bih: TBitmapV4Header;
@@ -852,7 +855,7 @@ end;
 //------------------------------------------------------------------------------
 
 function TImageFormat_BMP.SaveToFile(const filename: string;
-  img32: TImage32; quality: integer = 0): Boolean;
+  img32: TImage32; compressionQuality: integer = 0): Boolean;
 var
   SaveStateIncludeFileHeader: Boolean;
   stream: TFilestream;

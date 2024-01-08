@@ -3,7 +3,7 @@ unit Img32.Transform;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  7 April 2023                                                    *
+* Date      :  17 December 2023                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 *                                                                              *
@@ -393,7 +393,7 @@ end;
 
 function AffineTransformImage(img: TImage32; matrix: TMatrixD): TPoint;
 var
-  i,j, srcWidth, srcHeight: integer;
+  i, j: integer;
   newWidth, newHeight: integer;
   x,y: double;
   pc: PColor32;
@@ -402,15 +402,13 @@ var
   resampler: TResamplerFunction;
 begin
   Result := NullPoint;
-  srcWidth := img.Width;
-  srcHeight := img.Height;
 
   if img.Resampler = 0 then
     resampler := nil else
     resampler := GetResampler(img.Resampler);
 
-  if not Assigned(resampler) or
-    (srcWidth * srcHeight = 0) or IsIdentityMatrix(matrix) then
+  if not Assigned(resampler) or img.IsEmpty or
+    IsIdentityMatrix(matrix) then
       Exit;
 
   //auto-resize the image so it'll fit transformed image
@@ -850,8 +848,8 @@ begin
   begin
     fAlphaTot := a;
     fColorTotB := (a * argb.B);
-    fColorTotG := (a * argb.B);
-    fColorTotR := (a * argb.B);
+    fColorTotG := (a * argb.G);
+    fColorTotR := (a * argb.R);
   end;
 end;
 //------------------------------------------------------------------------------

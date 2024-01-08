@@ -2,7 +2,7 @@ unit Img32.Fmt.QOI;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  30 January 2023                                               *
+* Date      :  12 March 2023                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2023                                         *
 * Purpose   :  QOI file format extension for TImage32                          *
@@ -43,7 +43,9 @@ type
     class function IsValidImageStream(stream: TStream): Boolean; override;
     function LoadFromStream(stream: TStream;
       img32: TImage32; imgIndex: integer = 0): Boolean; override;
-    procedure SaveToStream(stream: TStream; img32: TImage32); override;
+    // SaveToStream: the compressionQuality parameter is ignored here
+    procedure SaveToStream(stream: TStream;
+      img32: TImage32; compressionQuality: integer = 0); override;
     class function CanCopyToClipboard: Boolean; override;
     class function CopyToClipboard(img32: TImage32): Boolean; override;
     class function CanPasteFromClipboard: Boolean; override;
@@ -245,7 +247,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TImageFormat_QOI.SaveToStream(stream: TStream; img32: TImage32);
+procedure TImageFormat_QOI.SaveToStream(stream: TStream;
+  img32: TImage32; compressionQuality: integer);
 var
   i, max_size, run: integer;
   vr, vg, vb, vg_r, vg_b: integer;

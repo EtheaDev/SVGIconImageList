@@ -2,7 +2,7 @@ unit Clipper.Offset;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Date      :  8 April 2023                                                    *
+* Date      :  24 September 2023                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2023                                         *
 * Purpose   :  Path Offset (Inflate/Shrink)                                    *
@@ -18,13 +18,20 @@ uses
 
 type
 
-  TJoinType = (jtSquare, jtRound, jtMiter);
+  TJoinType = (jtMiter, jtSquare, jtBevel, jtRound);
+  //jtSquare: Joins are 'squared' at exactly the offset distance (complex code)
+  //jtBevel : offset distances vary depending on the angle (simple code, faster)
+
   TEndType = (etPolygon, etJoined, etButt, etSquare, etRound);
   // etButt   : offsets both sides of a path, with square blunt ends
   // etSquare : offsets both sides of a path, with square extended ends
   // etRound  : offsets both sides of a path, with round extended ends
   // etJoined : offsets both sides of a path, with joined ends
   // etPolygon: offsets only one side of a closed path
+
+  TDeltaCallback64 = function (const path: TPath64;
+    const path_norms: TPathD; currIdx, prevIdx: integer): double of object;
+
 
   TGroup = class
 	  paths     : TPaths64;
@@ -38,7 +45,6 @@ type
   private
     fDelta        : Double;
     fGroupDelta   : Double; //*0.5 for open paths; *-1.0 for neg areas
-    fAbsGrpDelta  : Double;
     fMinLenSqrd   : double;
     fJoinType     : TJoinType;
     fEndType      : TEndType;
@@ -57,6 +63,7 @@ type
     fSolution     : TPaths64;
     fPreserveCollinear  : Boolean;
     fReverseSolution    : Boolean;
+    fDeltaCallback64    : TDeltaCallback64;
 {$IFDEF USINGZ}
     fZCallback64 : TZCallback64;
     procedure AddPoint(x,y: double; z: Int64); overload;
@@ -66,6 +73,7 @@ type
     procedure AddPoint(const pt: TPoint64); overload;
       {$IFDEF INLINING} inline; {$ENDIF}
     procedure DoSquare(j, k: Integer);
+    procedure DoBevel(j, k: Integer);
     procedure DoMiter(j, k: Integer; cosA: Double);
     procedure DoRound(j, k: integer; angle: double);
     procedure OffsetPoint(j: Integer; var k: integer);
@@ -89,6 +97,7 @@ type
     procedure Clear;
     procedure Execute(delta: Double; out solution: TPaths64); overload;
     procedure Execute(delta: Double; polytree: TPolyTree64); overload;
+    procedure Execute(DeltaCallback: TDeltaCallback64; out solution: TPaths64); overload;
 
     // MiterLimit: needed for mitered offsets (see offset_triginometry3.svg)
     property MiterLimit: Double read fMiterLimit write fMiterLimit;
@@ -98,6 +107,8 @@ type
       read fPreserveCollinear write fPreserveCollinear;
     property ReverseSolution: Boolean
       read fReverseSolution write fReverseSolution;
+    property DeltaCallback: TDeltaCallback64 read
+      fDeltaCallback64 write fDeltaCallback64;
 {$IFDEF USINGZ}
     property ZCallback: TZCallback64 read fZCallback64 write fZCallback64;
 {$ENDIF}
@@ -291,8 +302,9 @@ end;
 
 procedure TClipperOffset.DoGroupOffset(group: TGroup);
 var
-  i,j, len, lowestIdx: Integer;
+  i,j, len, lowestIdx, steps: Integer;
   r, stepsPer360, arcTol, area: Double;
+  absDelta: double;
   rec: TRect64;
   isJoined: Boolean;
 begin
@@ -313,24 +325,25 @@ begin
     group.reversed := false;
     fGroupDelta := Abs(fDelta) * 0.5;
   end;
-  fAbsGrpDelta := Abs(fGroupDelta);
   fJoinType := group.joinType;
   fEndType := group.endType;
 
   // calculate a sensible number of steps (for 360 deg for the given offset
-  if (group.joinType = jtRound) or (group.endType = etRound) then
+  if (not Assigned(fDeltaCallback64) and
+    (group.joinType = jtRound) or (group.endType = etRound)) then
   begin
+    absDelta := Abs(fGroupDelta);
 		// arcTol - when fArcTolerance is undefined (0), the amount of
 		// curve imprecision that's allowed is based on the size of the
 		// offset (delta). Obviously very large offsets will almost always
 		// require much less precision. See also offset_triginometry2.svg
     if fArcTolerance > 0.01 then
-      arcTol := Min(fAbsGrpDelta, fArcTolerance) else
-      arcTol := Log10(2 + fAbsGrpDelta) * 0.25; // empirically derived
+      arcTol := Min(absDelta, fArcTolerance) else
+      arcTol := Log10(2 + absDelta) * 0.25; // empirically derived
     //http://www.angusj.com/clipper2/Docs/Trigonometry.htm
-    stepsPer360 := Pi / ArcCos(1 - arcTol / fAbsGrpDelta);
-		if (stepsPer360 > fAbsGrpDelta * Pi) then
-			stepsPer360 := fAbsGrpDelta * Pi;  // avoid excessive precision
+    stepsPer360 := Pi / ArcCos(1 - arcTol / absDelta);
+		if (stepsPer360 > absDelta * Pi) then
+			stepsPer360 := absDelta * Pi;  // avoid excessive precision
     fStepSin := sin(TwoPi/stepsPer360);
     fStepCos := cos(TwoPi/stepsPer360);
 		if (fGroupDelta < 0.0) then fStepSin := -fStepSin;
@@ -354,12 +367,14 @@ begin
     if len = 1 then
     begin
       if fGroupDelta < 1 then Continue;
+      absDelta := Abs(fGroupDelta);
       if (group.endType = etRound) then
       begin
-        r := fAbsGrpDelta;
+        r := absDelta;
         with fInPath[0] do
         begin
-          fOutPath := Path64(Ellipse(RectD(X-r, Y-r, X+r, Y+r)));
+          steps := Ceil(fStepsPerRad * TwoPi); //#617
+          fOutPath := Path64(Ellipse(RectD(X-r, Y-r, X+r, Y+r), steps));
 {$IFDEF USINGZ}
           for j := 0 to high(fOutPath) do
             fOutPath[j].Z := Z;
@@ -367,7 +382,7 @@ begin
         end;
       end else
       begin
-        j := Round(fGroupDelta);
+        j := Round(absDelta);
         with fInPath[0] do
         begin
           rec := Rect64(X -j, Y -j, X+j, Y+j);
@@ -388,8 +403,8 @@ begin
           fEndType := etRound else
           fEndType := etSquare;
       end;
-
       BuildNormals;
+
       if fEndType = etPolygon then OffsetPolygon
       else if fEndType = etJoined then OffsetOpenJoined
       else OffsetOpenPath;
@@ -419,7 +434,20 @@ end;
 procedure TClipperOffset.OffsetPolygon;
 var
   i,j: integer;
+  a, offsetMinDim: double;
+  rec: TRect64;
 begin
+  //when the path is contracting, make sure
+  //there is sufficient space to do so.                //#593
+  //nb: this will have a small impact on performance
+  a := Area(fInPath);
+  if (a < 0) <> (fGroupDelta < 0) then
+  begin
+    rec := GetBounds(fInPath);
+    offsetMinDim := Abs(fGroupDelta) * 2;
+    if (offsetMinDim >= rec.Width) or (offsetMinDim >= rec.Height) then Exit;
+  end;
+
   j := high(fInPath);
   for i := 0 to high(fInPath) do
     OffsetPoint(i, j);
@@ -450,22 +478,16 @@ var
 begin
   highI := high(fInPath);
 
- // do the line start cap
+  if Assigned(fDeltaCallback64) then
+    fGroupDelta := fDeltaCallback64(fInPath, fNorms, 0, 0);
+
+  // do the line start cap
+  if Abs(fGroupDelta) < Tolerance then
+  begin
+    AddPoint(fInPath[0]);
+  end else
   case fEndType of
-    etButt:
-      begin
-{$IFDEF USINGZ}
-        with fInPath[0] do AddPoint(Point64(
-          X - fNorms[0].X * fGroupDelta,
-          Y - fNorms[0].Y * fGroupDelta,
-          Z));
-{$ELSE}
-        with fInPath[0] do AddPoint(Point64(
-          X - fNorms[0].X * fGroupDelta,
-          Y - fNorms[0].Y * fGroupDelta));
-{$ENDIF}
-        AddPoint(GetPerpendic(fInPath[0], fNorms[0], fGroupDelta));
-      end;
+    etButt: DoBevel(0, 0);
     etRound: DoRound(0,0, PI);
     else DoSquare(0, 0);
   end;
@@ -484,21 +506,15 @@ begin
   fNorms[0] := fNorms[highI];
 
  // do the line end cap
+
+ if Assigned(fDeltaCallback64) then
+    fGroupDelta := fDeltaCallback64(fInPath, fNorms, highI, highI);
+  if Abs(fGroupDelta) < Tolerance then
+  begin
+    AddPoint(fInPath[highI]);
+  end else
   case fEndType of
-    etButt:
-      begin
-{$IFDEF USINGZ}
-        with fInPath[highI] do AddPoint(Point64(
-          X - fNorms[highI].X *fGroupDelta,
-          Y - fNorms[highI].Y *fGroupDelta,
-          Z));
-{$ELSE}
-        with fInPath[highI] do AddPoint(Point64(
-          X - fNorms[highI].X *fGroupDelta,
-          Y - fNorms[highI].Y *fGroupDelta));
-{$ENDIF}
-        AddPoint(GetPerpendic(fInPath[highI], fNorms[highI], fGroupDelta));
-      end;
+    etButt: DoBevel(highI, highI);
     etRound: DoRound(highI,highI, PI);
     else DoSquare(highI, highI);
   end;
@@ -581,6 +597,13 @@ begin
   finally
     free;
   end;
+end;
+//------------------------------------------------------------------------------
+
+procedure TClipperOffset.Execute(DeltaCallback: TDeltaCallback64; out solution: TPaths64);
+begin
+  fDeltaCallback64 := DeltaCallback;
+  Execute(1.0, solution);
 end;
 //------------------------------------------------------------------------------
 
@@ -688,14 +711,40 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TClipperOffset.DoSquare(j, k: Integer);
+procedure TClipperOffset.DoBevel(j, k: Integer);
 var
-  vec, pt1,pt2,pt3,pt4, pt,ptQ : TPointD;
+  absDelta: double;
 begin
   if k = j then
   begin
-    vec.X := fNorms[0].Y;     //squaring a line end
-    vec.Y := -fNorms[0].X;
+		absDelta :=  abs(fGroupDelta);
+		AddPoint(
+      fInPath[j].x - absDelta * fNorms[j].x,
+      fInPath[j].y - absDelta * fNorms[j].y);
+		AddPoint(
+      fInPath[j].x + absDelta * fNorms[j].x,
+      fInPath[j].y + absDelta * fNorms[j].y);
+  end else
+  begin
+		AddPoint(
+      fInPath[j].x + fGroupDelta * fNorms[k].x,
+      fInPath[j].y + fGroupDelta * fNorms[k].y);
+		AddPoint(
+      fInPath[j].x + fGroupDelta * fNorms[j].x,
+      fInPath[j].y + fGroupDelta * fNorms[j].y);
+  end;
+end;
+//------------------------------------------------------------------------------
+
+procedure TClipperOffset.DoSquare(j, k: Integer);
+var
+  vec, pt1,pt2,pt3,pt4, pt,ptQ : TPointD;
+  absDelta: double;
+begin
+  if k = j then
+  begin
+    vec.X := fNorms[j].Y;     //squaring a line end
+    vec.Y := -fNorms[j].X;
   end else
   begin
     // using the reciprocal of unit normals (as unit vectors)
@@ -705,9 +754,10 @@ begin
       PointD(fNorms[j].Y, -fNorms[j].X));
   end;
 
+  absDelta := Abs(fGroupDelta);
   // now offset the original vertex delta units along unit vector
   ptQ := PointD(fInPath[j]);
-  ptQ := TranslatePoint(ptQ, fAbsGrpDelta * vec.X, fAbsGrpDelta * vec.Y);
+  ptQ := TranslatePoint(ptQ, absDelta * vec.X, absDelta * vec.Y);
 
   // get perpendicular vertices
   pt1 := TranslatePoint(ptQ, fGroupDelta * vec.Y, fGroupDelta * -vec.X);
@@ -767,9 +817,29 @@ end;
 procedure TClipperOffset.DoRound(j, k: Integer; angle: double);
 var
   i, steps: Integer;
+  absDelta, arcTol, stepsPer360: double;
   pt: TPoint64;
   offDist: TPointD;
 begin
+
+  if Assigned(fDeltaCallback64) then
+  begin
+    // when fDeltaCallback64 is assigned, fGroupDelta won't be constant,
+    // so we'll need to do the following calculations for *every* vertex.
+    absDelta := Abs(fGroupDelta);
+    if fArcTolerance > 0.01 then
+      arcTol := Min(absDelta, fArcTolerance) else
+      arcTol := Log10(2 + absDelta) * 0.25; // empirically derived
+    //http://www.angusj.com/clipper2/Docs/Trigonometry.htm
+    stepsPer360 := Pi / ArcCos(1 - arcTol / absDelta);
+		if (stepsPer360 > absDelta * Pi) then
+			stepsPer360 := absDelta * Pi;  // avoid excessive precision
+    fStepSin := sin(TwoPi/stepsPer360);
+    fStepCos := cos(TwoPi/stepsPer360);
+		if (fGroupDelta < 0.0) then fStepSin := -fStepSin;
+    fStepsPerRad := stepsPer360 / TwoPi;
+  end;
+
 	// nb: angles may be negative but this will always be a convex join
   pt := fInPath[j];
   offDist := ScalePoint(fNorms[k], fGroupDelta);
@@ -814,7 +884,19 @@ begin
   if (sinA > 1.0) then sinA := 1.0
   else if (sinA < -1.0) then sinA := -1.0;
 
+  if Assigned(fDeltaCallback64) then
+  begin
+    fGroupDelta := fDeltaCallback64(fInPath, fNorms, j, k);
+    if TGroup(fGroupList[0]).reversed then fGroupDelta := -fGroupDelta;
+  end;
 
+  if Abs(fGroupDelta) <= Tolerance then
+  begin
+    AddPoint(fInPath[j]);
+    Exit;
+  end;
+
+  //test for concavity first (#593)
   if (cosA > -0.99) and (sinA * fGroupDelta < 0) then
   begin
     // is concave
@@ -824,20 +906,22 @@ begin
     AddPoint(fInPath[j]); // (#405)
     AddPoint(GetPerpendic(fInPath[j], fNorms[j], fGroupDelta));
   end
+  else if (cosA > 0.999) then
+    // almost straight - less than 2.5 degree (#424, #526)
+    DoMiter(j, k, cosA)
   else if (fJoinType = jtMiter) then
   begin
     // miter unless the angle is so acute the miter would exceeds ML
     if (cosA > fTmpLimit -1) then DoMiter(j, k, cosA)
     else DoSquare(j, k);
   end
-  else if (cosA > 0.9998) then
-		// almost straight - less than 1 degree (#424)
-    DoMiter(j, k, cosA)
-  else if (cosA > 0.99) or (fJoinType = jtSquare) then
-		//angle less than 8 degrees or squared joins
-    DoSquare(j, k)
+  else if (cosA > 0.99) or (fJoinType = jtBevel) then
+		// ie > 2.5 deg (see above) but less than ~8 deg ( acos(0.99) )
+    DoBevel(j, k)
+  else if (fJoinType = jtRound) then
+    DoRound(j, k, ArcTan2(sinA, cosA))
   else
-    DoRound(j, k, ArcTan2(sinA, cosA));
+    DoSquare(j, k);
 
   k := j;
 end;

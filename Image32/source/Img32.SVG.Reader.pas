@@ -3,7 +3,7 @@ unit Img32.SVG.Reader;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  7 April 2023                                                    *
+* Date      :  22 October 2023                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -667,7 +667,7 @@ begin
       drawDat.strokeWidth := strokeWidth;
     if strokeCap = esPolygon then
       drawDat.strokeCap := strokeCap;
-    if strokeJoin = jsAuto then
+    if strokeJoin <> jsMiter then
       drawDat.strokeJoin := strokeJoin;
     if strokeMitLim > 0 then
       drawDat.strokeMitLim := strokeMitLim;
@@ -1458,6 +1458,8 @@ begin
         end;
     end;
 
+    if (delta.cx = InvalidD) or (delta.cy = InvalidD) then Exit;
+
     //limit the filter margin to 20% if only blurring
     if not hasOffset then
       with delta, bounds do
@@ -1918,7 +1920,7 @@ end;
 
 procedure TFeGaussElement.Apply;
 begin
-  if not GetSrcAndDst then Exit;
+  if not GetSrcAndDst or (stdDev = InvalidD) then Exit;
 
   if srcImg <> dstImg then
     dstImg.Copy(srcImg, srcRec, dstRec);
@@ -3464,12 +3466,17 @@ begin
 {$ELSE}
   fChilds         := TList.Create;
 {$ENDIF}
-  fParserEl          := svgEl;
+  fParserEl       := svgEl;
   self.fParent    := parent;
-  fDrawData       := emptyDrawInfo;
   elRectWH.Init;
+  fDrawData       := emptyDrawInfo;
   if Assigned(parent) then
+  begin
+    fDrawData.strokeCap := parent.fDrawData.strokeCap;
+    fDrawData.strokeJoin := parent.fDrawData.strokeJoin;
     fReader := parent.fReader;
+  end
+  else
 end;
 //------------------------------------------------------------------------------
 

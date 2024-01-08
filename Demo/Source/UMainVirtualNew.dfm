@@ -37,7 +37,6 @@ object MainForm: TMainForm
     Height = 509
     Align = alLeft
     TabOrder = 0
-    ExplicitHeight = 508
     object SelectThemeRadioGroup: TRadioGroup
       Left = 1
       Top = 1
@@ -47,7 +46,6 @@ object MainForm: TMainForm
       Caption = 'Select Theme/Color'
       TabOrder = 0
       OnClick = SelectThemeRadioGroupClick
-      ExplicitHeight = 209
     end
     object LoadGroupBox: TGroupBox
       Left = 1
@@ -57,7 +55,6 @@ object MainForm: TMainForm
       Align = alBottom
       Caption = 'Load SVG from disk'
       TabOrder = 1
-      ExplicitTop = 210
       object BuildFromFilesButton: TButton
         Left = 3
         Top = 23
@@ -76,7 +73,6 @@ object MainForm: TMainForm
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 3
-      ExplicitTop = 372
       object IconSizeLabel: TLabel
         Left = 8
         Top = 3
@@ -107,7 +103,6 @@ object MainForm: TMainForm
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitTop = 269
       object ClearButton: TButton
         Left = 5
         Top = 5
@@ -135,7 +130,6 @@ object MainForm: TMainForm
       Align = alBottom
       Caption = 'Fixed color'
       TabOrder = 4
-      ExplicitTop = 434
       object FixedColorComboBox: TColorBox
         Left = 10
         Top = 19
@@ -175,7 +169,6 @@ object MainForm: TMainForm
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 5
-      ExplicitTop = 310
       object IconOpacityLabel: TLabel
         Left = 8
         Top = 3
@@ -210,7 +203,6 @@ object MainForm: TMainForm
     Images = ToolBarImages
     TabOrder = 1
     Transparent = False
-    ExplicitWidth = 705
     object ToolButton1: TToolButton
       Left = 0
       Top = 0
@@ -266,8 +258,6 @@ object MainForm: TMainForm
     Align = alRight
     TabOrder = 2
     OnResize = paButtonsResize
-    ExplicitLeft = 625
-    ExplicitHeight = 508
     object SVGIconImage: TSVGIconImage
       Left = 1
       Top = 428
@@ -324,8 +314,6 @@ object MainForm: TMainForm
     Height = 509
     Align = alClient
     TabOrder = 3
-    ExplicitWidth = 420
-    ExplicitHeight = 508
     object ImageListLabel: TLabel
       Left = 1
       Top = 209
@@ -346,16 +334,16 @@ object MainForm: TMainForm
       Indent = 35
       TabOrder = 0
       Items.NodeData = {
-        0303000000240000000100000001000000FFFFFFFFFFFFFFFF00000000000000
-        000100000001036F006E0065002C0000000400000004000000FFFFFFFFFFFFFF
-        FF00000000000000000000000001076F006E0065002D006F006E006500240000
-        000200000002000000FFFFFFFFFFFFFFFF000000000000000002000000010374
-        0077006F002C0000000500000005000000FFFFFFFFFFFFFFFF00000000000000
-        00000000000107740077006F0020006F006E0065002C00000006000000070000
-        0000000000FFFFFFFF0000000000000000000000000107740077006F00200074
-        0077006F00280000000300000003000000FFFFFFFFFFFFFFFF00000000000000
-        0000000000010574006800720065006500}
-      ExplicitWidth = 418
+        070300000009540054007200650065004E006F00640065002500000001000000
+        01000000FFFFFFFFFFFFFFFF0000000000000000000100000001036F006E0065
+        0000002D0000000400000004000000FFFFFFFFFFFFFFFF000000000000000000
+        0000000001076F006E0065002D006F006E006500000025000000020000000200
+        0000FFFFFFFFFFFFFFFF000000000000000000020000000103740077006F0000
+        002D0000000500000005000000FFFFFFFFFFFFFFFF0000000000000000000000
+        00000107740077006F0020006F006E00650000002D0000000600000007000000
+        00000000FFFFFFFF000000000000000000000000000107740077006F00200074
+        0077006F000000290000000300000003000000FFFFFFFFFFFFFFFF0000000000
+        0000000000000000010574006800720065006500}
     end
     object ImageView: TListView
       Left = 1
@@ -377,8 +365,6 @@ object MainForm: TMainForm
       SmallImages = SVGIconVirtualImageList
       TabOrder = 1
       OnSelectItem = ImageViewSelectItem
-      ExplicitWidth = 418
-      ExplicitHeight = 285
     end
   end
   object ActionList: TActionList

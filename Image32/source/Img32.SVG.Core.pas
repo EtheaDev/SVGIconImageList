@@ -3,7 +3,7 @@ unit Img32.SVG.Core;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  16 March 2023                                                   *
+* Date      :  22 October 2023                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -191,7 +191,7 @@ type
   TSvgParser = class
   private
     svgStream : TMemoryStream;
-    procedure ParseStream;
+    procedure ParseUtf8Stream;
   public
     classStyles :TClassStylesList;
     xmlHeader   : TXmlEl;
@@ -242,6 +242,8 @@ type
 
   function SkipBlanks(var c: PUTF8Char; endC: PUTF8Char): Boolean;
   function SkipBlanksAndComma(var current: PUTF8Char; currentEnd: PUTF8Char): Boolean;
+
+  procedure ConvertUnicodeToUtf8(memStream: TMemoryStream);
 
 type
   TSetOfUTF8Char = set of UTF8Char;
@@ -360,15 +362,21 @@ end;
 
 function GetXmlEncoding(memory: Pointer; len: integer): TSvgEncoding;
 var
-  p: PUTF8Char;
+  p, p1: PUTF8Char;
 begin
   Result := eUnknown;
   if (len < 4) or not Assigned(memory) then Exit;
   p := PUTF8Char(memory);
+  p1 := (p + 1);
   case p^ of
-    #$EF: if ((p +1)^ = #$BB) and ((p +2)^ = #$BF) then Result := eUtf8;
-    #$FF: if ((p +1)^ = #$FE) then Result := eUnicodeLE;
-    #$FE: if ((p +1)^ = #$FF) then Result := eUnicodeBE;
+    #$EF: if (p1^ = #$BB) then
+      if ((p +2)^ = #$BF) then
+        Result := eUtf8 else
+        Exit;
+    #$FF: if (p1^ = #$FE) or (p1^ = #0) then
+      Result := eUnicodeLE;
+    #$FE: if (p1^ = #$FF) then
+      Result := eUnicodeBE;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -1783,7 +1791,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TSvgParser.LoadFromStream(stream: TStream): Boolean;
+procedure ConvertUnicodeToUtf8(memStream: TMemoryStream);
 var
   i, len: LongInt;
   encoding: TSvgEncoding;
@@ -1791,34 +1799,37 @@ var
   wc: PWord;
   utf8: UTF8String;
 begin
+  memStream.Position := 0;
+  encoding := GetXmlEncoding(memStream.Memory, memStream.Size);
+  if not (encoding in [eUnicodeLE, eUnicodeBE]) then Exit;
+  SetLength(s, memStream.Size div 2);
+  Move(memStream.Memory^, s[1], memStream.Size);
+  if encoding = eUnicodeBE then
+  begin
+    wc := @s[1];
+    for i := 1 to Length(s) do
+    begin
+      wc^ := Swap(wc^);
+      inc(wc);
+    end;
+  end;
+  utf8 := UTF8Encode(s);
+  len := Length(utf8);
+  memStream.SetSize(len);
+  Move(utf8[1], memStream.Memory^, len);
+end;
+//------------------------------------------------------------------------------
+
+function TSvgParser.LoadFromStream(stream: TStream): Boolean;
+begin
   Clear;
   Result := true;
   try
     svgStream.LoadFromStream(stream);
-
-    //check encoding and set to UTF-8 if necessary
-    encoding := GetXmlEncoding(svgStream.Memory, svgStream.Size);
-    case encoding of
-      eUnicodeLE, eUnicodeBE:
-        begin
-          SetLength(s, svgStream.Size div 2);
-          Move(svgStream.Memory^, s[1], svgStream.Size);
-          if encoding = eUnicodeBE then
-          begin
-            wc := @s[1];
-            for i := 1 to Length(s) do
-            begin
-              wc^ := Swap(wc^);
-              inc(wc);
-            end;
-          end;
-          utf8 := UTF8Encode(s);
-          len := Length(utf8);
-          svgStream.SetSize(len);
-          Move(utf8[1], svgStream.Memory^, len);
-        end;
-    end;
-    ParseStream;
+    // very few SVG files are unicode encoded, almost all are Utf8
+    // so it's more efficient to parse them all as Utf8 encoded files
+    ConvertUnicodeToUtf8(svgStream);
+    ParseUtf8Stream;
   except
     Result := false;
   end;
@@ -1842,7 +1853,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgParser.ParseStream;
+procedure TSvgParser.ParseUtf8Stream;
 var
   c, endC: PUTF8Char;
 begin

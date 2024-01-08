@@ -3,7 +3,7 @@
 {       SVG Icon ImageList: An extended ImageList for Delphi/VCL               }
 {       to simplify use of Icons (resize, colors and more...)                  }
 {                                                                              }
-{       Copyright (c) 2019-2023 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2024 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors:                                                          }
 {         Nicola Tambascia, Vincent Parrett                                    }
@@ -276,7 +276,7 @@ begin
   try
     {$IFDEF D10_3+}
     //Warning: native VirtualImageList can change FixedColor only at Collection level
-    //so the changes are affected to all forms opened!
+    //so the changes are affected to all forms opened!
     (VirtualImageList.ImageCollection as TSVGIconImageCollection).GrayScale:=
       GrayScaleCheckBox.Checked;
     {$ENDIF}

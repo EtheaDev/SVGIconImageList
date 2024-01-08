@@ -3,7 +3,7 @@ unit Img32.Resamplers;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.3                                                             *
-* Date      :  27 September 2022                                               *
+* Date      :  17 December 2023                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2021                                         *
 * Purpose   :  For image transformations (scaling, rotating etc.)              *
@@ -100,24 +100,32 @@ begin
   color.Reset;
 
   weight := (($100 - xf) * ($100 - yf)) shr 8;        //top-left
-  if (xi < 0) or (yi < 0) then
-    color.AddWeight(weight) else
-    color.Add(pixels[xi + yi * iw], weight);
+  if weight > 0 then
+  begin
+    if (xi < 0) or (yi < 0) then color.AddWeight(weight)
+    else color.Add(pixels[xi + yi * iw], weight);
+  end;
 
   weight := (xf * ($100 - yf)) shr 8;                 //top-right
-  if ((xi+1) >= iw) or (yi < 0) then
-    color.AddWeight(weight) else
-    color.Add(pixels[(xi+1) + yi * iw], weight);
+  if weight > 0 then
+  begin
+    if ((xi+1) >= iw) or (yi < 0) then color.AddWeight(weight)
+    else color.Add(pixels[(xi+1) + yi * iw], weight);
+  end;
 
   weight := (($100 - xf) * yf) shr 8;                 //bottom-left
-  if (xi < 0) or ((yi+1) >= ih) then
-    color.AddWeight(weight) else
-    color.Add(pixels[(xi) + (yi+1) * iw], weight);
+  if weight > 0 then
+  begin
+    if (xi < 0) or ((yi+1) >= ih) then color.AddWeight(weight)
+    else color.Add(pixels[(xi) + (yi+1) * iw], weight);
+  end;
 
   weight := (xf * yf) shr 8;                          //bottom-right
-  if (xi + 1 >= iw) or (yi + 1 >= ih) then
-    color.AddWeight(weight) else
-    color.Add(pixels[(xi+1) + (yi+1) * iw], weight);
+  if weight > 0 then
+  begin
+    if (xi + 1 >= iw) or (yi + 1 >= ih) then color.AddWeight(weight)
+    else color.Add(pixels[(xi+1) + (yi+1) * iw], weight);
+  end;
 
   Result := color.Color;
 end;

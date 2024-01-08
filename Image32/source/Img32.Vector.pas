@@ -3,7 +3,7 @@ unit Img32.Vector;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  24 March 2023                                                   *
+* Date      :  14 October 2023                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2023                                         *
 *                                                                              *
@@ -2396,6 +2396,14 @@ begin
     Exit;
   end;
 
+  if endStyle = esPolygon then
+  begin
+    case joinStyle of
+      jsSquare, jsMiter : endStyle := esSquare;
+      else                endStyle := esRound;
+    end;
+  end;
+
   //with very narrow lines, don't get fancy with joins and line ends
   if (width <= 2) then
   begin
@@ -2539,9 +2547,15 @@ begin
       joinStyle := jsSquare;
   end;
   if endStyle = esPolygon then
+  begin
     for i := 0 to high(lines) do
-      AppendPath(Result, GrowClosedLine(lines[i],
-        lineWidth, joinStyle, miterLimOrRndScale))
+      if Length(lines[i]) > 2 then
+        AppendPath(Result, GrowClosedLine(lines[i],
+          lineWidth, joinStyle, miterLimOrRndScale))
+      else
+        AppendPath(Result, GrowOpenLine(lines[i], lineWidth,
+          joinStyle, endStyle, miterLimOrRndScale));
+  end
   else
     for i := 0 to high(lines) do
       AppendPath(Result, GrowOpenLine(lines[i], lineWidth,
