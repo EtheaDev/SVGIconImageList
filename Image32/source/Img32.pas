@@ -98,9 +98,9 @@ type
 
   //A INotifyRecipient receives change notifications though a property
   //interface from a single NotifySender (eg a Font property).
-  //A NotifySender can send change notificatons to multiple NotifyRecipients
+  //A NotifySender can send change notifications to multiple NotifyRecipients
   //(eg where multiple object use the same font property). NotifyRecipients can
-  //still receive change notificatons from mulitple NotifySenders, but it
+  //still receive change notifications from mulitple NotifySenders, but it
   //must use a separate property for each NotifySender. (Also there's little
   //benefit in using INotifySender and INotifyRecipient interfaces where there
   //will only be one receiver - eg scroll - scrolling window.)
@@ -415,7 +415,7 @@ type
   function BlendToOpaque(bgColor, fgColor: TColor32): TColor32;
   //BlendToAlpha: Blends two semi-transparent images (slower than BlendToOpaque)
   function BlendToAlpha(bgColor, fgColor: TColor32): TColor32;
-  //BlendMask: Whereever the mask is, preserves the background
+  //BlendMask: Wherever the mask is, preserves the background
   function BlendMask(bgColor, alphaMask: TColor32): TColor32;
   function BlendAltMask(bgColor, alphaMask: TColor32): TColor32;
   function BlendDifference(color1, color2: TColor32): TColor32;

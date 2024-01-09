@@ -500,7 +500,7 @@ type
     procedure Clear;
     //TFontCache is both an INotifySender and an INotifyRecipient.
     //It receives notifications from a TFontReader object and it sends
-    //notificiations to any number of TFontCache object users
+    //notifications to any number of TFontCache object users
     procedure ReceiveNotification(Sender: TObject; notify: TImg32Notification);
     procedure AddRecipient(recipient: INotifyRecipient);
     procedure DeleteRecipient(recipient: INotifyRecipient);
