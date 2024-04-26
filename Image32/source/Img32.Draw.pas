@@ -3,9 +3,9 @@ unit Img32.Draw;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  15 December 2023                                                *
+* Date      :  23 March 2024                                                   *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2023                                         *
+* Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
 * Purpose   :  Polygon renderer for TImage32                                   *
 *                                                                              *
@@ -18,7 +18,13 @@ interface
 
 {$I Img32.inc}
 
-{.$DEFINE MemCheck} //for debugging only (adds a minimal cost to performance)
+// MemCheck may be useful for debugging (adds a minimal cost to performance)
+{.$DEFINE MemCheck}
+
+// UseTrunc makes rendering thread safe,
+// so it's generally preferred over Round and SetRoundMode().
+// See https://github.com/AngusJohnson/Image32/issues/45
+{$DEFINE UseTrunc}
 
 uses
   SysUtils, Classes, Types, Math, Img32, Img32.Vector;
@@ -424,27 +430,6 @@ end;
 // Other miscellaneous functions
 // ------------------------------------------------------------------------------
 
-// //__Trunc: An efficient Trunc() algorithm (ie rounds toward zero)
-// function __Trunc(val: double): integer; {$IFDEF INLINE} inline; {$ENDIF}
-// var
-//  exp: integer;
-//  i64: UInt64 absolute val;
-// begin
-//  //https://en.wikipedia.org/wiki/Double-precision_floating-point_format
-//  Result := 0;
-//  if i64 = 0 then Exit;
-//  exp := Integer(Cardinal(i64 shr 52) and $7FF) - 1023;
-//  //nb: when exp == 1024 then val == INF or NAN.
-//  if exp < 0 then
-//    Exit
-//  else if exp > 52 then
-//    Result := ((i64 and $1FFFFFFFFFFFFF) shl (exp - 52)) or (UInt64(1) shl exp)
-//  else
-//    Result := ((i64 and $1FFFFFFFFFFFFF) shr (52 - exp)) or (UInt64(1) shl exp);
-//  if val < 0 then Result := -Result;
-// end;
-// ------------------------------------------------------------------------------
-
 function ClampByte(val: double): byte; {$IFDEF INLINE} inline; {$ENDIF}
 begin
   if val < 0 then result := 0
@@ -534,9 +519,15 @@ end;
 function MirrorD(d: double; colorCnt: integer): integer;
 begin
   dec(colorCnt);
+{$IFDEF UseTrunc} // used in TSvgRadialGradientRenderer.RenderProc
+  if Odd(Trunc(d)) then
+    result := Trunc((1 - frac(d)) * colorCnt) else
+    result := Trunc(frac(d)  * colorCnt);
+{$ELSE}
   if Odd(Round(d)) then
     result := Round((1 - frac(d)) * colorCnt) else
     result := Round(frac(d)  * colorCnt);
+{$ENDIF}
 end;
 // ------------------------------------------------------------------------------
 
@@ -564,9 +555,15 @@ end;
 function RepeatD(d: double; colorCnt: integer): integer;
 begin
   dec(colorCnt);
+{$IFDEF UseTrunc} // used in TSvgRadialGradientRenderer.RenderProc
+  if (d < 0) then
+    result := Trunc((1 + frac(d)) * colorCnt) else
+    result := Trunc(frac(d)  * colorCnt);
+{$ELSE}
   if (d < 0) then
     result := Round((1 + frac(d)) * colorCnt) else
     result := Round(frac(d)  * colorCnt);
+{$ENDIF}
 end;
 // ------------------------------------------------------------------------------
 
@@ -659,10 +656,18 @@ begin
   begin
     highJ := high(polygons[i]);
     if highJ < 2 then continue;
+{$IFDEF UseTrunc}
+    y1 := Trunc(polygons[i][highJ].Y);
+{$ELSE}
     y1 := Round(polygons[i][highJ].Y);
+{$ENDIF}
     for j := 0 to highJ do
     begin
+{$IFDEF UseTrunc}
+      y2 := Trunc(polygons[i][j].Y);
+{$ELSE}
       y2 := Round(polygons[i][j].Y);
+{$ENDIF}
       if y1 < y2 then
       begin
         // descending (but ignore edges outside the clipping range)
@@ -758,8 +763,13 @@ begin
     // but still update maxX for each scanline the edge passes
     if bot.X > maxX then
     begin
+{$IFDEF UseTrunc}
+      for i := Min(maxY, Trunc(bot.Y)) downto Max(0, Trunc(top.Y)) do
+        scanlines[i].maxX := maxX;
+{$ELSE}
       for i := Min(maxY, Round(bot.Y)) downto Max(0, Round(top.Y)) do
         scanlines[i].maxX := maxX;
+{$ENDIF}
       Exit;
     end;
 
@@ -776,14 +786,24 @@ begin
   begin
     if top.X >= maxX then
     begin
+{$IFDEF UseTrunc}
+      for i := Min(maxY, Trunc(bot.Y)) downto Max(0, Trunc(top.Y)) do
+        scanlines[i].maxX := maxX;
+{$ELSE}
       for i := Min(maxY, Round(bot.Y)) downto Max(0, Round(top.Y)) do
         scanlines[i].maxX := maxX;
+{$ENDIF}
       Exit;
     end;
     // here the edge must be oriented bottom-right to top-left
     y := bot.Y - (bot.X - maxX) * Abs(dydx);
+{$IFDEF UseTrunc}
+    for i := Min(maxY, Trunc(bot.Y)) downto Max(0, Trunc(y)) do
+      scanlines[i].maxX := maxX;
+{$ELSE}
     for i := Min(maxY, Round(bot.Y)) downto Max(0, Round(y)) do
       scanlines[i].maxX := maxX;
+{$ENDIF}
     bot.Y := y;
     if bot.Y <= 0 then Exit;
     bot.X := maxX;
@@ -792,8 +812,13 @@ begin
   begin
     // here the edge must be oriented bottom-left to top-right
     y := top.Y + (top.X - maxX) * Abs(dydx);
+{$IFDEF UseTrunc}
+    for i := Min(maxY, Trunc(y)) downto Max(0, Trunc(top.Y)) do
+      scanlines[i].maxX := maxX;
+{$ELSE}
     for i := Min(maxY, Round(y)) downto Max(0, Round(top.Y)) do
       scanlines[i].maxX := maxX;
+{$ENDIF}
     top.Y := y;
     if top.Y >= maxY then Exit;
     top.X := maxX;
@@ -812,7 +837,11 @@ begin
   end;
 
   // SPLIT THE EDGE INTO MULTIPLE SCANLINE FRAGMENTS
+{$IFDEF UseTrunc}
+  scanlineY := Trunc(bot.Y);
+{$ELSE}
   scanlineY := Round(bot.Y);
+{$ENDIF}
   if bot.Y = scanlineY then dec(scanlineY);
 
   // at the lower-most extent of the edge 'split' the first fragment
@@ -920,8 +949,13 @@ begin
       right := q;
     end;
 
+{$IFDEF UseTrunc}
+    leftXi := Max(0, Trunc(left));
+    rightXi := Max(0, Trunc(right));
+{$ELSE}
     leftXi := Max(0, Round(left));
     rightXi := Max(0, Round(right));
+{$ENDIF}
 
     if (leftXi = rightXi) then
     begin
@@ -992,20 +1026,24 @@ var
   scanlines: TArrayOfScanline;
   fragments: PDouble;
   scanline: PScanline;
+{$IFnDEF UseTrunc}
   savedRoundMode: TRoundingMode;
+{$ENDIF}
 begin
   // See also https://nothings.org/gamedev/rasterize/
   if not assigned(renderer) then Exit;
   Types.IntersectRect(clipRec2, clipRec, GetBounds(paths));
   if IsEmptyRect(clipRec2) then Exit;
 
-  paths2 := OffsetPath(paths, -clipRec2.Left, -clipRec2.Top);
+  paths2 := TranslatePath(paths, -clipRec2.Left, -clipRec2.Top);
 
   // Delphi's Round() function is *much* faster than Trunc(),
-  // and even a little faster than __Trunc() above (except
+  // and even a little faster than Trunc() above (except
   // when the FastMM4 memory manager is enabled.)
   fragments := nil;
+{$IFnDEF UseTrunc}
   savedRoundMode := SetRoundMode(rmDown);
+{$ENDIF}
   try
     RectWidthHeight(clipRec2, maxW, maxH);
     SetLength(scanlines, maxH +1);
@@ -1041,14 +1079,22 @@ begin
         case fillRule of
           frEvenOdd:
             begin
+{$IFDEF UseTrunc}
+              aa := Trunc(Abs(accum) * 1275) mod 2550;            // *5
+{$ELSE}
               aa := Round(Abs(accum) * 1275) mod 2550;              // *5
+{$ENDIF}
               if aa > 1275 then
                 byteBuffer[j] := Min(255, (2550 - aa) shr 2) else   // /4
                 byteBuffer[j] := Min(255, aa shr 2);                // /4
             end;
           frNonZero:
             begin
+{$IFDEF UseTrunc}
+              byteBuffer[j] := Min(255, Trunc(Abs(accum) * 318));
+{$ELSE}
               byteBuffer[j] := Min(255, Round(Abs(accum) * 318));
+{$ENDIF}
             end;
   {$IFDEF REVERSE_ORIENTATION}
           frPositive:
@@ -1056,8 +1102,13 @@ begin
           frNegative:
   {$ENDIF}
             begin
+{$IFDEF UseTrunc}
+              if accum > 0.002 then
+                byteBuffer[j] := Min(255, Trunc(accum * 318));
+{$ELSE}
               if accum > 0.002 then
                 byteBuffer[j] := Min(255, Round(accum * 318));
+{$ENDIF}
             end;
   {$IFDEF REVERSE_ORIENTATION}
           frNegative:
@@ -1065,8 +1116,13 @@ begin
           frPositive:
   {$ENDIF}
             begin
+{$IFDEF UseTrunc}
+              if accum < -0.002 then
+                byteBuffer[j] := Min(255, Trunc(-accum * 318));
+{$ELSE}
               if accum < -0.002 then
                 byteBuffer[j] := Min(255, Round(-accum * 318));
+{$ENDIF}
             end;
         end;
       end;
@@ -1079,7 +1135,9 @@ begin
     end;
   finally
     FreeMem(fragments);
+{$IFnDEF UseTrunc}
     SetRoundMode(savedRoundMode);
+{$ENDIF}
   end;
 end;
 
@@ -1500,7 +1558,11 @@ begin
   for i := x1 to x2 do
   begin
     dist := Hypot((y - fCenterPt.Y) *fScaleY, (i - fCenterPt.X) *fScaleX);
+{$IFDEF UseTrunc}
+    color.Color := fColors[fBoundsProc(Trunc(dist), fColorsCnt)];
+{$ELSE}
     color.Color := fColors[fBoundsProc(Round(dist), fColorsCnt)];
+{$ENDIF}
     pDst^ := BlendToAlpha(pDst^,
       MulBytes(color.A, Ord(alpha^)) shl 24 or (color.Color and $FFFFFF));
     inc(pDst); inc(alpha);
@@ -1551,7 +1613,7 @@ end;
 procedure TSvgRadialGradientRenderer.RenderProc(x1, x2, y: integer; alpha: PByte);
 var
   i: integer;
-  q,m,c, qa,qb,qc,qs: double;
+  q,qq, m,c, qa,qb,qc,qs: double;
   dist, dist2: double;
   color: TARGB;
   pDst: PColor32;
@@ -1567,7 +1629,10 @@ begin
     if (pt.X = fFocusPt.X) then //vertical line
     begin
       // let x = pt.X, then y*y = b*b(1 - Sqr(pt.X)/aa)
-      q := Sqrt(fBB*(1 - Sqr(pt.X)/fAA));
+      qq := (1 - Sqr(pt.X)/fAA);
+      if (qq > 1) then qq := 1
+      else if (qq < 0) then qq := 0;
+      q := Sqrt(fBB*qq);
       ellipsePt.X := pt.X;
       if pt.Y >= fFocusPt.Y then
         ellipsePt.Y := q else
@@ -1834,7 +1899,7 @@ var
 begin
   if not assigned(lines) then exit;
   if (lineWidth < MinStrokeWidth) then lineWidth := MinStrokeWidth;
-  lines2 := Outline(lines, lineWidth, joinStyle, endStyle, miterLimit);
+  lines2 := RoughOutline(lines, lineWidth, joinStyle, endStyle, miterLimit);
 
   if img.AntiAliased then
     cr := TColorRenderer.Create(color) else
@@ -1860,7 +1925,7 @@ var
 begin
   if (not assigned(lines)) or (not assigned(renderer)) then exit;
   if (lineWidth < MinStrokeWidth) then lineWidth := MinStrokeWidth;
-  lines2 := Outline(lines, lineWidth, joinStyle, endStyle, miterLimit);
+  lines2 := RoughOutline(lines, lineWidth, joinStyle, endStyle, miterLimit);
   if renderer.Initialize(img) then
   begin
     Rasterize(lines2, img.bounds, frNonZero, renderer);
@@ -1878,7 +1943,7 @@ var
 begin
   if not assigned(lines) then exit;
   if (lineWidth < MinStrokeWidth) then lineWidth := MinStrokeWidth;
-  lines2 := Outline(lines, lineWidth, joinStyle, endStyle, 2);
+  lines2 := RoughOutline(lines, lineWidth, joinStyle, endStyle, 2);
   ir := TInverseRenderer.Create;
   try
     if ir.Initialize(img) then
@@ -1908,15 +1973,20 @@ begin
 
   lines := GetDashedPath(line, endStyle = esPolygon, dashPattern, patternOffset);
   if Length(lines) = 0 then Exit;
+
   case joinStyle of
+    jsAuto:
+      if endStyle = esRound then
+        joinStyle := jsRound else
+        joinStyle := jsSquare;
     jsSquare, jsMiter:
       endStyle := esSquare;
     jsRound:
       endStyle := esRound;
-    else
+    jsButt:
       endStyle := esButt;
   end;
-  lines := Outline(lines, lineWidth, joinStyle, endStyle);
+  lines := RoughOutline(lines, lineWidth, joinStyle, endStyle);
   cr := TColorRenderer.Create(color);
   try
     if cr.Initialize(img) then
@@ -1958,7 +2028,7 @@ begin
 
   lines := GetDashedPath(line, endStyle = esPolygon, dashPattern, patternOffset);
   if Length(lines) = 0 then Exit;
-  lines := Outline(lines, lineWidth, joinStyle, endStyle);
+  lines := RoughOutline(lines, lineWidth, joinStyle, endStyle);
   if renderer.Initialize(img) then
   begin
     Rasterize(lines, img.bounds, frNonZero, renderer);
@@ -1997,7 +2067,7 @@ begin
 
   lines := GetDashedPath(line, endStyle = esPolygon, dashPattern, patternOffset);
   if Length(lines) = 0 then Exit;
-  lines := Outline(lines, lineWidth, joinStyle, endStyle);
+  lines := RoughOutline(lines, lineWidth, joinStyle, endStyle);
   renderer := TInverseRenderer.Create;
   try
     if renderer.Initialize(img) then
@@ -2132,7 +2202,7 @@ begin
   RectWidthHeight(rec, w, h);
   tmpImg := TImage32.Create(w *3, h);
   try
-    tmpPolygons := OffsetPath(polygons, -rec.Left, -rec.Top);
+    tmpPolygons := TranslatePath(polygons, -rec.Left, -rec.Top);
     tmpPolygons := ScalePath(tmpPolygons, 3, 1);
     cr := TColorRenderer.Create(clBlack32);
     try

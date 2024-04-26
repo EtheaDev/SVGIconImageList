@@ -3,9 +3,9 @@ unit Img32.SVG.Core;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  22 October 2023                                                   *
+* Date      :  13 March 2024                                                   *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2022                                         *
+* Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
 * Purpose   :  Essential structures and functions to read SVG files            *
 *                                                                              *
@@ -245,6 +245,11 @@ type
 
   procedure ConvertUnicodeToUtf8(memStream: TMemoryStream);
 
+  function GetScale(src, dst: double): double;
+  function GetScaleForBestFit(srcW, srcH, dstW, dstH: double): double;
+
+  function Base64Decode(const str: PAnsiChar; len: integer; memStream: TMemoryStream): Boolean;
+
 type
   TSetOfUTF8Char = set of UTF8Char;
   UTF8Strings = array of UTF8String;
@@ -286,8 +291,104 @@ const
   {$I Img32.SVG.HtmlHashConsts.inc}
 
 //------------------------------------------------------------------------------
+// Base64 (MIME) Encode & Decode and other encoding functions ...
+//------------------------------------------------------------------------------
+
+type
+  PFourChars = ^TFourChars;
+  TFourChars = record
+    c1: ansichar;
+    c2: ansichar;
+    c3: ansichar;
+    c4: ansichar;
+  end;
+
+function Chr64ToVal(c: ansiChar): integer; {$IFDEF INLINE} inline; {$ENDIF}
+begin
+  case c of
+    '+': result := 62;
+    '/': result := 63;
+    '0'..'9': result := ord(c) + 4;
+    'A'..'Z': result := ord(c) -65;
+    'a'..'z': result := ord(c) -71;
+    else Raise Exception.Create('Corrupted MIME encoded text');
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function FrstChr(c: PFourChars): ansichar; {$IFDEF INLINE} inline; {$ENDIF}
+begin
+  result := ansichar(Chr64ToVal(c.c1) shl 2 or Chr64ToVal(c.c2) shr 4);
+end;
+//------------------------------------------------------------------------------
+
+function ScndChr(c: PFourChars): ansichar; {$IFDEF INLINE} inline; {$ENDIF}
+begin
+  result := ansichar(Chr64ToVal(c.c2) shl 4 or Chr64ToVal(c.c3) shr 2);
+end;
+//------------------------------------------------------------------------------
+
+function ThrdChr(c: PFourChars): ansichar; {$IFDEF INLINE} inline; {$ENDIF}
+begin
+  result := ansichar( Chr64ToVal(c.c3) shl 6 or Chr64ToVal(c.c4) );
+end;
+//------------------------------------------------------------------------------
+
+function Base64Decode(const str: PAnsiChar; len: integer; memStream: TMemoryStream): Boolean;
+var
+  i, j, extra: integer;
+  Chars4: PFourChars;
+  dst: PAnsiChar;
+begin
+  result := false;
+  if (len = 0) or (len mod 4 > 0) or not Assigned(memStream) then exit;
+  if str[len-2] = '=' then extra := 2
+  else if str[len-1] = '=' then extra := 1
+  else extra := 0;
+  memStream.SetSize(LongInt((len div 4 * 3) - extra));
+  dst := memStream.Memory;
+  Chars4 := @str[0];
+  i := 0;
+  try
+    for j := 1 to (len div 4) -1 do
+    begin
+      dst[i] := FrstChr(Chars4);
+      dst[i+1] := ScndChr(Chars4);
+      dst[i+2] := ThrdChr(Chars4);
+      inc(pbyte(Chars4),4);
+      inc(i,3);
+    end;
+    dst[i] := FrstChr(Chars4);
+    if extra < 2  then dst[i+1] := ScndChr(Chars4);
+    if extra < 1 then dst[i+2] := ThrdChr(Chars4);
+  except
+    Exit;
+  end;
+  Result := true;
+end;
+
+//------------------------------------------------------------------------------
 // Miscellaneous functions ...
 //------------------------------------------------------------------------------
+
+function GetScale(src, dst: double): double;
+begin
+  Result := dst / src;
+  if (SameValue(Result, 1, 0.00001)) then Result := 1;
+end;
+//------------------------------------------------------------------------------
+
+function GetScaleForBestFit(srcW, srcH, dstW, dstH: double): double;
+var
+  sx,sy: double;
+begin
+  sx := dstW / srcW;
+  sy := dstH / srcH;
+  if sy < sx then sx := sy;
+  if (SameValue(sx, 1, 0.00001)) then
+    Result := 1 else
+    Result := sx;
+end;
 
 function ClampRange(val, min, max: double): double;
   {$IFDEF INLINE} inline; {$ENDIF}

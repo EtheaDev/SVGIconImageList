@@ -1,14 +1,14 @@
 object FrameView: TFrameView
   Left = 0
   Top = 0
-  Width = 510
-  Height = 432
+  Width = 300
+  Height = 300
   TabOrder = 0
   object ClientPanel: TPanel
     Left = 0
     Top = 0
-    Width = 510
-    Height = 432
+    Width = 300
+    Height = 300
     Align = alClient
     BevelOuter = bvNone
     BorderWidth = 1
@@ -18,21 +18,17 @@ object FrameView: TFrameView
     object SVGPaintBox: TPaintBox
       Left = 1
       Top = 24
-      Width = 508
-      Height = 407
+      Width = 298
+      Height = 275
       Align = alClient
       Color = clWhite
       ParentColor = False
       OnPaint = SVGPaintBoxPaint
-      ExplicitLeft = 145
-      ExplicitTop = 129
-      ExplicitWidth = 300
-      ExplicitHeight = 300
     end
     object TitlePanel: TPanel
       Left = 1
       Top = 1
-      Width = 508
+      Width = 298
       Height = 23
       Align = alTop
       BevelOuter = bvNone

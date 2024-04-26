@@ -166,7 +166,7 @@ begin
   //nb: default widths should be the target image's dimensions
   //since these values will be used for SVG images that simply
   //specify their widths and heights as percentages
-  vbox := fSvgReader.GetViewbox(defaultWidth, defaultHeight);
+  vbox := fSvgReader.RootElement.GetViewbox;
   FWidth := vbox.Width;
   FHeight := vbox.Height;
 end;

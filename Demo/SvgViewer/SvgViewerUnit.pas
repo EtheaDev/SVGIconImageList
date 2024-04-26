@@ -125,6 +125,7 @@ end;
 
 procedure TSVGViewerForm.FormCreate(Sender: TObject);
 begin
+  Caption := Application.Title;
   SourcePath := ExtractFilePath(Application.ExeName)+'..\svg_examples';
 
   FrameViewerD2D.InitViewer('Native Direct2D', GetD2DSVGFactory);

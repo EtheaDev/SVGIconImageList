@@ -46,6 +46,7 @@ const
   hfeFuncG                    = $E45FE81A;    // feFuncG
   hfeFuncR                    = $F8BB10C8;    // feFuncR
   hfeGaussianBlur             = $B2225552;    // feGaussianBlur
+  hfeImage                    = $905096A0;    // feImage
   hfeMerge                    = $A2C358C0;    // feMerge
   hfeMergeNode                = $F5F1E90F;    // feMergeNode
   hfeOffset                   = $04493A72;    // feOffset
@@ -74,6 +75,7 @@ const
   hhidden                     = $4C4D777D;    // hidden
   hHref                       = $8E926F4B;    // Href
   hId                         = $1B60404D;    // Id
+  hImage                      = $D58C8637;    // Image
   hIn                         = $4D5FA44B;    // In
   hIn2                        = $FBFE02B1;    // In2
   hIntercept                  = $7CBB607F;    // Intercept

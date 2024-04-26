@@ -2,9 +2,9 @@ unit Clipper.Engine;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Date      :  27 August 2023                                                  *
+* Date      :  14 February 2024                                                *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2010-2023                                         *
+* Copyright :  Angus Johnson 2010-2024                                         *
 * Purpose   :  This is the main polygon clipping module                        *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -347,10 +347,9 @@ type
   TPolyPath64 = class(TPolyPathBase)
   {$IFDEF STRICT}strict{$ENDIF} private
     FPath : TPath64;
-    function    GetChild64(index: Integer): TPolyPath64;
-  protected
-    function AddChild(const path: TPath64): TPolyPathBase; override;
+    function GetChild64(index: Integer): TPolyPath64;
   public
+    function AddChild(const path: TPath64): TPolyPathBase; override;
     property Child[index: Integer]: TPolyPath64 read GetChild64; default;
     property Polygon: TPath64 read FPath;
   end;
@@ -403,8 +402,9 @@ type
     function  GetChildD(index: Integer): TPolyPathD;
   protected
     FScale  : double;
-    function  AddChild(const path: TPath64): TPolyPathBase; override;
   public
+    function AddChild(const path: TPath64): TPolyPathBase; overload; override;
+    function AddChild(const path: TPathD): TPolyPathBase; reintroduce; overload;
     property  Polygon: TPathD read FPath;
     property Child[index: Integer]: TPolyPathD read GetChildD; default;
   end;
@@ -862,6 +862,7 @@ begin
       ((op2.pt.Y <> op2.next.pt.Y) or (op2.pt.Y <> prevOp.pt.Y))) then
     begin
       result[cnt] := op2.pt;
+      inc(cnt);
       prevOp := op2;
     end;
     op2 := op2.next;
@@ -958,11 +959,16 @@ begin
     else if pipResult = pipInside then dec(outsideCnt);
     op := op.next;
   until (op = op1) or (Abs(outsideCnt) = 2);
-  // if path1's location is still equivocal then check its midpoint
-  path := GetCleanPath(op1);
-  mp := Clipper.Core.GetBounds(path).MidPoint;
-  path := GetCleanPath(op2);
-  Result := PointInPolygon(mp, path) <> pipOutside;
+  if (Abs(outsideCnt) < 2) then
+  begin
+    // if path1's location is still equivocal then check its midpoint
+    path := GetCleanPath(op1);
+    mp := Clipper.Core.GetBounds(path).MidPoint;
+    path := GetCleanPath(op2);
+    Result := PointInPolygon(mp, path) <> pipOutside;
+  end
+  else
+     Result := (outsideCnt < 0);
 end;
 //------------------------------------------------------------------------------
 
@@ -1119,7 +1125,7 @@ begin
     Exit;
   end;
 
-  if (cnt = 3) and IsVerySmallTriangle(op) then
+  if (cnt = 3) and not IsOpen and IsVerySmallTriangle(op) then
   begin
     Result := false;
     Exit;
@@ -1715,23 +1721,18 @@ begin
       if (Abs(e2.windCnt) > 1) then
       begin
         // outside prev poly but still inside another.
-        if (e2.windDx * e.windDx < 0) then
-          // reversing direction so use the same WC
-          e.windCnt := e2.windCnt else
-          // otherwise keep 'reducing' the WC by 1 (ie towards 0) ...
-          e.windCnt := e2.windCnt + e.windDx;
+        e.windCnt := Iif(e2.windDx * e.windDx < 0,
+          e2.windCnt, // reversing direction so use the same WC
+          e2.windCnt + e.windDx);
       end
       // now outside all polys of same polytype so set own WC ...
       else e.windCnt := e.windDx;
     end else
     begin
       //'e' must be inside 'e2'
-      if (e2.windDx * e.windDx < 0) then
-        // reversing direction so use the same WC
-        e.windCnt := e2.windCnt
-      else
-        // otherwise keep 'increasing' the WC by 1 (ie away from 0) ...
-        e.windCnt := e2.windCnt + e.windDx;
+      e.windCnt := Iif(e2.windDx * e.windDx < 0,
+        e2.windCnt, // reversing direction so use the same WC
+        e2.windCnt + e.windDx); // else keep 'increasing' the WC
     end;
     e.windCnt2 := e2.windCnt2;
     e2 := e2.nextInAEL;
@@ -1772,8 +1773,8 @@ begin
       else if not IsOpen(e2) then inc(cnt1);
       e2 := e2.nextInAEL;
     end;
-    if Odd(cnt1) then e.windCnt := 1 else e.windCnt := 0;
-    if Odd(cnt2) then e.windCnt2 := 1 else e.windCnt2 := 0;
+    e.windCnt  := Iif(Odd(cnt1), 1, 0);
+    e.windCnt2 := Iif(Odd(cnt2), 1, 0);
   end else
   begin
     // if FClipType in [ctUnion, ctDifference] then e.WindCnt := e.WindDx;
@@ -2149,7 +2150,7 @@ begin
   prevOp := splitOp.prev;
   nextNextOp := splitOp.next.next;
   outrec.pts := prevOp;
-  GetIntersectPoint(
+  GetSegmentIntersectPt(
     prevOp.pt, splitOp.pt, splitOp.next.pt, nextNextOp.pt, ip);
 {$IFDEF USINGZ}
   if Assigned(fZCallback) then
@@ -2336,21 +2337,9 @@ begin
   begin
     e2.outrec.pts := e1.outrec.pts;
     e1.outrec.pts := nil;
-  end else
-  begin
+  end
+  else
     SetOwner(e2.outrec, e1.outrec);
-
-//    if FUsingPolytree then
-//    begin
-//      e := GetPrevHotEdge(e1);
-//      if not Assigned(e) then
-//        outRec.owner := nil else
-//        SetOwner(outRec, e.outrec);
-//      // nb: outRec.owner here is likely NOT the real
-//      // owner but this will be checked in DeepCheckOwner()
-//    end;
-
-  end;
 
   // and e1 and e2 are maxima and are about to be dropped from the Actives list.
   e1.outrec := nil;
@@ -2380,14 +2369,16 @@ var
   prev: PActive;
 begin
   prev := e.prevInAEL;
-  if IsOpen(e) or not IsHotEdge(e) or not Assigned(prev) or
-    IsOpen(prev) or not IsHotEdge(prev) then Exit;
+  if not Assigned(prev) or
+    not IsHotEdge(e) or not IsHotEdge(prev) or
+    IsHorizontal(e) or IsHorizontal(prev) or
+    IsOpen(e) or IsOpen(prev) then Exit;
   if ((pt.Y < e.top.Y +2) or (pt.Y < prev.top.Y +2)) and
     ((e.bot.Y > pt.Y) or (prev.bot.Y > pt.Y)) then Exit; // (#490)
 
   if checkCurrX then
   begin
-    if DistanceFromLineSqrd(pt, prev.bot, prev.top) > 0.25 then Exit
+    if PerpendicDistFromLineSqrd(pt, prev.bot, prev.top) > 0.25 then Exit
   end else if (e.currX <> prev.currX) then Exit;
 
   if (CrossProduct(e.top, pt, prev.top) <> 0) then Exit;
@@ -2409,14 +2400,16 @@ var
   next: PActive;
 begin
   next := e.nextInAEL;
-  if IsOpen(e) or not IsHotEdge(e) or not Assigned(next) or
-    not IsHotEdge(next) or IsOpen(next) then Exit;
+  if not Assigned(next) or
+    not IsHotEdge(e) or not IsHotEdge(next) or
+    IsHorizontal(e) or IsHorizontal(next) or
+    IsOpen(e) or IsOpen(next) then Exit;
   if ((pt.Y < e.top.Y +2) or (pt.Y < next.top.Y +2)) and
     ((e.bot.Y > pt.Y) or (next.bot.Y > pt.Y)) then Exit; // (#490)
 
   if (checkCurrX) then
   begin
-    if DistanceFromLineSqrd(pt, next.bot, next.top) > 0.25 then Exit
+    if PerpendicDistFromLineSqrd(pt, next.bot, next.top) > 0.25 then Exit
   end
   else if (e.currX <> next.currX) then Exit;
 
@@ -2486,6 +2479,31 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure TrimHorz(horzEdge: PActive; preserveCollinear: Boolean);
+var
+  pt: TPoint64;
+  wasTrimmed: Boolean;
+begin
+  wasTrimmed := false;
+  pt := NextVertex(horzEdge).pt;
+  while (pt.Y = horzEdge.top.Y) do
+  begin
+    // always trim 180 deg. spikes (in closed paths)
+    // but otherwise break if preserveCollinear = true
+    if preserveCollinear and
+    ((pt.X < horzEdge.top.X) <> (horzEdge.bot.X < horzEdge.top.X)) then
+      break;
+
+    horzEdge.vertTop := NextVertex(horzEdge);
+    horzEdge.top := pt;
+    wasTrimmed := true;
+    if IsMaxima(horzEdge) then Break;
+    pt := NextVertex(horzEdge).pt;
+  end;
+  if wasTrimmed then SetDx(horzEdge); // +/-infinity
+end;
+//------------------------------------------------------------------------------
+
 procedure TClipperBase.UpdateEdgeIntoAEL(var e: PActive);
 begin
   e.bot := e.top;
@@ -2496,7 +2514,11 @@ begin
 
   if IsJoined(e) then UndoJoin(e, e.bot);
 
-  if IsHorizontal(e) then Exit;
+  if IsHorizontal(e) then
+  begin
+    if not IsOpen(e) then TrimHorz(e, PreserveCollinear);
+    Exit;
+  end;
   InsertScanLine(e.top.Y);
 
   CheckJoinLeft(e, e.bot);
@@ -2610,12 +2632,10 @@ begin
       e2.windCnt := e1WindCnt;
     end else
     begin
-      if e1.windCnt + e2.windDx = 0 then
-        e1.windCnt := -e1.windCnt else
-        Inc(e1.windCnt, e2.windDx);
-      if e2.windCnt - e1.windDx = 0 then
-        e2.windCnt := -e2.windCnt else
-        Dec(e2.windCnt, e1.windDx);
+      e1.windCnt := Iif(e1.windCnt + e2.windDx = 0,
+        -e1.windCnt, e1.windCnt + e2.windDx);
+      e2.windCnt := Iif(e2.windCnt - e1.windDx = 0,
+        -e2.windCnt, e2.windCnt - e1.windDx);
     end;
   end else
   begin
@@ -2882,14 +2902,14 @@ function HorzontalsOverlap(const horz1a, horz1b, horz2a, horz2b: TPoint64): bool
 begin
   if horz1a.X < horz1b.X then
   begin
-    if horz2a.X < horz2b.X then
-      Result := HorzOverlapWithLRSet(horz1a, horz1b, horz2a, horz2b) else
-      Result := HorzOverlapWithLRSet(horz1a, horz1b, horz2b, horz2a);
+    Result := Iif(horz2a.X < horz2b.X,
+      HorzOverlapWithLRSet(horz1a, horz1b, horz2a, horz2b),
+      HorzOverlapWithLRSet(horz1a, horz1b, horz2b, horz2a));
   end else
   begin
-    if horz2a.X < horz2b.X then
-      Result := HorzOverlapWithLRSet(horz1b, horz1a, horz2a, horz2b) else
-      Result := HorzOverlapWithLRSet(horz1b, horz1a, horz2b, horz2a);
+    Result := Iif(horz2a.X < horz2b.X,
+      HorzOverlapWithLRSet(horz1b, horz1a, horz2a, horz2b),
+      HorzOverlapWithLRSet(horz1b, horz1a, horz2b, horz2a));
   end;
 end;
 //------------------------------------------------------------------------------
@@ -3128,7 +3148,7 @@ var
   absDx1, absDx2: double;
   node: PIntersectNode;
 begin
-  if not GetIntersectPoint(e1.bot, e1.top, e2.bot, e2.top, ip) then
+  if not GetSegmentIntersectPt(e1.bot, e1.top, e2.bot, e2.top, ip) then
     ip := Point64(e1.currX, topY);
   // Rounding errors can occasionally place the calculated intersection
   // point either below or above the scanbeam, so check and correct ...
@@ -3148,12 +3168,8 @@ begin
       ip := GetClosestPointOnSegment(ip, e2.bot, e2.top)
     else
     begin
-      if (ip.Y < topY) then
-        ip.Y := topY else
-        ip.Y := fBotY;
-      if (absDx1 < absDx2)  then
-        ip.X := TopX(e1, ip.Y) else
-        ip.X := TopX(e2, ip.Y);
+      ip.Y := Iif(ip.Y < topY, topY , fBotY);
+      ip.X := Iif(absDx1 < absDx2, TopX(e1, ip.Y), TopX(e2, ip.Y));
     end;
   end;
   new(node);
@@ -3339,41 +3355,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function HorzIsSpike(horzEdge: PActive): Boolean;
-var
-  nextPt: TPoint64;
-begin
-  nextPt := NextVertex(horzEdge).pt;
-  Result := (nextPt.Y = horzEdge.top.Y) and
-    (horzEdge.bot.X < horzEdge.top.X) <> (horzEdge.top.X < nextPt.X);
-end;
-//------------------------------------------------------------------------------
-
-procedure TrimHorz(horzEdge: PActive; preserveCollinear: Boolean);
-var
-  pt: TPoint64;
-  wasTrimmed: Boolean;
-begin
-  wasTrimmed := false;
-  pt := NextVertex(horzEdge).pt;
-  while (pt.Y = horzEdge.top.Y) do
-  begin
-    // always trim 180 deg. spikes (in closed paths)
-    // but otherwise break if preserveCollinear = true
-    if preserveCollinear and
-    ((pt.X < horzEdge.top.X) <> (horzEdge.bot.X < horzEdge.top.X)) then
-      break;
-
-    horzEdge.vertTop := NextVertex(horzEdge);
-    horzEdge.top := pt;
-    wasTrimmed := true;
-    if IsMaxima(horzEdge) then Break;
-    pt := NextVertex(horzEdge).pt;
-  end;
-  if wasTrimmed then SetDx(horzEdge); // +/-infinity
-end;
-//------------------------------------------------------------------------------
-
 function GetLastOp(hotEdge: PActive): POutPt;
   {$IFDEF INLINING} inline; {$ENDIF}
 var
@@ -3449,10 +3430,6 @@ begin
   if horzIsOpen then
     maxVertex := GetCurrYMaximaVertexOpen(horzEdge) else
     maxVertex := GetCurrYMaximaVertex(horzEdge);
-
-  if Assigned(maxVertex) and not horzIsOpen and
-    (maxVertex <> horzEdge.vertTop) then
-      TrimHorz(horzEdge, FPreserveCollinear);
 
   isLeftToRight := ResetHorzDirection;
 
@@ -3533,12 +3510,14 @@ begin
       begin
         IntersectEdges(horzEdge, e, pt);
         SwapPositionsInAEL(horzEdge, e);
+        CheckJoinLeft(e, pt);
         horzEdge.currX := e.currX;
         e := horzEdge.nextInAEL;
       end else
       begin
         IntersectEdges(e, horzEdge, pt);
         SwapPositionsInAEL(e, horzEdge);
+        CheckJoinRight(e, pt);
         horzEdge.currX := e.currX;
         e := horzEdge.prevInAEL;
       end;
@@ -3573,11 +3552,6 @@ begin
     if IsHotEdge(horzEdge) then
       AddOutPt(horzEdge, horzEdge.top);
     UpdateEdgeIntoAEL(horzEdge);
-
-    if PreserveCollinear and
-      not horzIsOpen and HorzIsSpike(horzEdge) then
-        TrimHorz(horzEdge, true);
-
     isLeftToRight := ResetHorzDirection;
   end; // end while horizontal
 
@@ -4046,9 +4020,7 @@ end;
 
 function  TPolyPathBase.GetIsHole: Boolean;
 begin
-  if not Assigned(Parent) then
-    Result := false else
-    Result := not Odd(GetLevel);
+  Result := Iif(Assigned(Parent), not Odd(GetLevel), false);
 end;
 //------------------------------------------------------------------------------
 
@@ -4252,6 +4224,16 @@ begin
   Result.Parent := self;
   TPolyPathD(Result).fScale := fScale;
   TPolyPathD(Result).FPath := ScalePathD(path, 1/FScale);
+  ChildList.Add(Result);
+end;
+//------------------------------------------------------------------------------
+
+function TPolyPathD.AddChild(const path: TPathD): TPolyPathBase;
+begin
+  Result := TPolyPathD.Create;
+  Result.Parent := self;
+  TPolyPathD(Result).fScale := fScale;
+  TPolyPathD(Result).FPath := path;
   ChildList.Add(Result);
 end;
 //------------------------------------------------------------------------------

@@ -94,9 +94,10 @@ var
   jt: Clipper.Offset.TJoinType;
 begin
   case joinStyle of
-    jsSquare: jt := jtSquare;
-    jsMiter:  jt :=  jtMiter;
-    jsRound:  jt := jtRound;
+    jsSquare  : jt := jtSquare;
+    jsButt    : jt := jtBevel;
+    jsMiter   : jt := jtMiter;
+    jsRound   : jt := jtRound;
     else if endType = etRound then jt := jtRound
     else jt := jtSquare;
   end;

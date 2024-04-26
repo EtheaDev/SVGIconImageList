@@ -21,7 +21,6 @@ object SVGViewerForm: TSVGViewerForm
     Height = 600
     Align = alLeft
     TabOrder = 0
-    ExplicitHeight = 599
     object ListBox: TListBox
       Left = 1
       Top = 42
@@ -31,7 +30,6 @@ object SVGViewerForm: TSVGViewerForm
       ItemHeight = 13
       TabOrder = 0
       OnClick = ListBoxClick
-      ExplicitHeight = 556
     end
     object OpenPanel: TPanel
       Left = 1
@@ -69,8 +67,6 @@ object SVGViewerForm: TSVGViewerForm
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitLeft = 496
-    ExplicitHeight = 599
     inline FrameViewSkia: TFrameView
       Left = 0
       Top = 300
@@ -78,26 +74,6 @@ object SVGViewerForm: TSVGViewerForm
       Height = 300
       Align = alClient
       TabOrder = 0
-      ExplicitTop = 300
-      ExplicitWidth = 300
-      ExplicitHeight = 299
-      inherited ClientPanel: TPanel
-        Width = 300
-        Height = 300
-        ExplicitWidth = 300
-        ExplicitHeight = 299
-        inherited SVGPaintBox: TPaintBox
-          Width = 298
-          Height = 275
-          ExplicitWidth = 296
-          ExplicitHeight = 276
-        end
-        inherited TitlePanel: TPanel
-          Width = 298
-          Font.Height = -11
-          ExplicitWidth = 298
-        end
-      end
     end
     object ControlPanel: TPanel
       Left = 0
@@ -227,8 +203,6 @@ object SVGViewerForm: TSVGViewerForm
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitWidth = 296
-    ExplicitHeight = 599
     inline FrameViewerD2D: TFrameView
       Left = 0
       Top = 300
@@ -236,26 +210,6 @@ object SVGViewerForm: TSVGViewerForm
       Height = 300
       Align = alClient
       TabOrder = 0
-      ExplicitTop = 300
-      ExplicitWidth = 296
-      ExplicitHeight = 299
-      inherited ClientPanel: TPanel
-        Width = 300
-        Height = 300
-        ExplicitWidth = 296
-        ExplicitHeight = 299
-        inherited SVGPaintBox: TPaintBox
-          Width = 298
-          Height = 275
-          ExplicitWidth = 296
-          ExplicitHeight = 273
-        end
-        inherited TitlePanel: TPanel
-          Width = 298
-          Font.Height = -11
-          ExplicitWidth = 294
-        end
-      end
     end
     inline FrameViewImage32: TFrameView
       Left = 0
@@ -264,25 +218,6 @@ object SVGViewerForm: TSVGViewerForm
       Height = 300
       Align = alTop
       TabOrder = 1
-      ExplicitWidth = 296
-      ExplicitHeight = 300
-      inherited ClientPanel: TPanel
-        Width = 300
-        Height = 300
-        ExplicitWidth = 296
-        ExplicitHeight = 300
-        inherited SVGPaintBox: TPaintBox
-          Width = 298
-          Height = 275
-          ExplicitWidth = 296
-          ExplicitHeight = 273
-        end
-        inherited TitlePanel: TPanel
-          Width = 298
-          Font.Height = -11
-          ExplicitWidth = 294
-        end
-      end
     end
   end
   object OpenDialog1: TOpenDialog

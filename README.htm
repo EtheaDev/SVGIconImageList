@@ -1,0 +1,455 @@
+<style type="text/css">
+code{
+  font-family: "Consolas", monospace;
+}
+pre{
+  border: 1px solid #ddd;
+  border-left: 3px solid #f36d33;
+  overflow: auto;
+  padding: 1em 1.5em;
+  display: block;
+}
+Blockquote{
+  border-left: 3px solid #d0d0d0;
+  padding-left: 0.5em;
+  margin-left:1em;
+}
+Blockquote p{
+  margin: 0;
+}
+table{
+  border:1px solid;
+  border-collapse:collapse;
+}
+th{  padding:5px;
+  border:1px solid;
+}
+td{
+  padding:5px;
+  border:1px solid;
+}
+</style>
+<h1>SVGIconImageList <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg" alt="License"/></a></h1>
+<h2>Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale&hellip;)</h2>
+<h3>Actual official version 4.1.3 (VCL+FMX)</h3>
+<table>
+  <tr>
+    <th>Component</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><img src="./Packages/SVGIconImageCollectionComponentIcon.png" alt="SVGIconImageCollectionComponentIcon.png"/></td>
+    <td><strong>TSVGIconImageCollection</strong> is collection of SVG Images for Delphi to provide a centralized list of images for SVGIconVirtualImageLists (only for VCL)</td>
+  </tr>
+  <tr>
+    <td><img src="./Packages/SVGIconVirtualImageListComponentIcon.png" alt="SVGIconVirtualImageListComponentIcon.png"/></td>
+    <td><strong>TSVGIconVirtualImageList</strong> is a special &ldquo;virtual&rdquo; ImageList for Delphi linked to an SVGIconImageCollection (only for VCL) to simplify use of SVG Icons (resize, opacity, grayscale and more&hellip;)</td>
+  </tr>
+  <tr>
+    <td><img src="./Packages/SVGIconImageComponentIcon.png" alt="SVGIconImageComponentIcon.png"/></td>
+    <td><strong>TSVGIconImage</strong> is an extended Image component for Delphi (VCL+FMX) to show any SVG image directly or included into a an SVGIconImageList with all functionality (stretch, opacity, grayscale and more&hellip;)</td>
+  </tr>
+  <tr>
+    <td><img src="./Packages/SVGIconImageListComponentIcon.png" alt="SVGIconImageListComponentIcon.png"/></td>
+    <td><strong>TSVGIconImageList</strong> is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection: <strong>the VCL component is deprecated</strong>, we recommend to use SVGIconImageCollection + SVGIconVirtualImageList also for older Delphi versions!</td>
+  </tr>
+</table>
+<h2>Very important notice</h2>
+<p>WARNING: From version 4.0, <strong>TSVGIconVirtualImageList</strong> inherits from <strong>TVirtualImageList</strong> (using Delphi 10.3 to latest). For previous Delphi versions <strong>TSVGIconVirtualImageList</strong> inherits from <strong>TSVGIconImageListBase</strong>.</p>
+<p>An important difference is that a TVirtualImageList may use and create only a subset of the images in the collection.</p>
+<p>Although, the standard TVirtualImageList does not have the FixedColor, GrayScale, ApplyToRootOnly and Opacity properties, these properties exist at the TSVGIconImageCollection and they would be reflected on the linked TVirtualImageList, but if you change those properties at collection level, all the VirtualImageList linked changes!</p>
+<p>For this reasons, now TSVGIconVirtualImageList have also FixedColor, GrayScale, ApplyToRootOnly and Opacity properties, so you can setup those properties only at VirtualImageList level, and you can share the same TSVGIconImageCollection from many VirtualImageList with different poperties, as you can see in the new SVGIconVirtualImageListDemo.</p>
+<p>So, if you are using those components from Delphi 10.3, the recommended combination should be <strong>TSVGIconImageCollection + TSVGIconVirtualImageList</strong>.</p>
+<p>Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to &ldquo;True&rdquo;, everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.</p>
+<p>Another feature available from Delphi 10.4 version, is that <strong>TSVGIconImageCollection</strong> inherits from TCustomImageCollection, so you can also use it with the TVirtualImage component and place SVG icons into the TControlList component, as explained <a href="https://github.com/EtheaDev/SVGIconImageList/wiki/TControlList-with-SVGIconImageCollection">here&hellip;</a></p>
+<h2>Choose your preferred SVG engine!</h2>
+<p>There are three implementation:</p>
+<ul>
+<li><p><strong>Native Delphi Image32</strong> (default), uses Image32 library by Angus Johnson</p>
+</li>
+<li><p>Using <strong>Skia4Delphi</strong> library, a cross-platform 2D graphics API based on Google's Skia Graphics Library</p>
+</li>
+<li><p>A wrapper to the native Windows <strong>Direct2D</strong> implementation</p>
+</li>
+</ul>
+<p>You can read more details <a href="https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories">here.</a></p>
+<h2>Performance comparison</h2>
+<p>This table shows the performance of the three rendering engines tested with SVGExplorer, using a significant amount of icons from different sets, rendered at 128x128 pixels.</p>
+<table>
+  <tr>
+    <th align="right">Count</th>
+    <th align="left">Icon set</th>
+    <th align="right">Image32</th>
+    <th align="right">D2D</th>
+    <th align="right">Skia4Delphi</th>
+  </tr>
+  <tr>
+    <td align="right">997</td>
+    <td align="left">Font-Awesome</td>
+    <td align="right">1265ms</td>
+    <td align="right">1453ms</td>
+    <td align="right">1172ms</td>
+  </tr>
+  <tr>
+    <td align="right">654</td>
+    <td align="left">Papirus</td>
+    <td align="right">2750ms<sup>(1)</sup></td>
+    <td align="right">937ms</td>
+    <td align="right">1266ms<sup>(1)</sup></td>
+  </tr>
+  <tr>
+    <td align="right">5366</td>
+    <td align="left">Material-Design</td>
+    <td align="right">11015ms</td>
+    <td align="right">12001ms</td>
+    <td align="right">10688ms</td>
+  </tr>
+</table>
+<p>As you can see, the three engines perform differently depending on the icons and their complexity.</p>
+<p><sup>(1)</sup>Notice that Image32 and Skia4Delphi are the only engines capable of rendering blur effect (that is always slow to calculate): this is the reason of &ldquo;slow&rdquo; performance to render Papirus icons that contains blur effect.</p>
+<h3>Available from Delphi XE3 to Delphi 12 (VCL and FMX Platforms)</h3>
+<p><img src="./Demo/Images/SupportingDelphi.jpg" alt="Delphi 12 Support"/></p>
+<p>Related links: <a href="https://www.embarcadero.com">embarcadero.com</a> - <a href="https://learndelphi.org">learndelphi.org</a></p>
+<p><strong>Sample image of VCL version</strong></p>
+<p><img src="./Demo/Images/Sample.jpg" alt="Sample.jpg"/></p>
+<p><strong>Sample image of FMX (Windows) version</strong></p>
+<p><img src="./Demo/Images/SampleFMX.jpg" alt="SampleFMX.jpg"/></p>
+<p><strong>Sample images of the VCL SVGText-property editor (VCL and FMX)</strong></p>
+<p><img src="./Demo/Images/SVGTextPropertyEditor.jpg" alt="SVGTextPropertyEditor.jpg"/></p>
+<p><img src="./Demo/Images/SVGTextPropertyEditorFMX.jpg" alt="SVGTextPropertyEditorFMX.jpg"/></p>
+<h3>UTILITIES</h3>
+<p>The <a href="https://github.com/EtheaDev/SVGIconImageList/wiki/SVG-Viewer-(VCL)">SVG Viewer Demo</a> is useful to check the rendering quality of the engines available.</p>
+<p>The <a href="https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIconExplorer">SVG Icon Explorer</a> utility is useful to explore and preview your svg image collections.</p>
+<p>You can use <a href="https://github.com/EtheaDev/SVGShellExtensions">SVG Shell Extensions</a> if you want to see your icons directly into Windows Explorer or you want to edit them using a powerful <strong>SVG Text Editor</strong>.</p>
+<h3>DOCUMENTATION</h3>
+<p>Follow the <a href="https://github.com/EtheaDev/SVGIconImageList/wiki">guide in Wiki section</a> to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.</p>
+<h3>RELEASE NOTES</h3>
+<p>19 Apr 2024: version 4.1.3 (VCL+FMX)</p>
+<ul>
+<li>Aligned To latest Image32</li>
+<li>Fixed compilation with MacOSX</li>
+<li>Added support for Delphi 12.1</li>
+</ul>
+<p>08 Jan 2024: version 4.1.2 (VCL+FMX)</p>
+<ul>
+<li>Aligned To latest Image32</li>
+<li>Added copy SVG to Clipboard into &ldquo;Export to png&rdquo; dialog</li>
+<li>Updated Copyrights</li>
+</ul>
+<p>09 Nov 2023: version 4.1.1 (VCL+FMX)</p>
+<ul>
+<li>Aligned To Skia4Delphi 6.0.0</li>
+<li>Added FMX Components to all platform</li>
+<li>Fixed Demos for Delphi 12</li>
+<li>Added SvgDisableEngineHint option</li>
+</ul>
+<p>03 Sep 2023: version 4.1.0 (VCL+FMX)</p>
+<ul>
+<li>Aligned Image32 Library released on 03/09/2023</li>
+<li>Fixed demo (removed &ldquo;obsolete&rdquo; SVGColor uses)</li>
+</ul>
+<p>24 Aug 2023: version 4.0.0 (VCL+FMX)</p>
+<ul>
+<li>Removed old &ldquo;native&rdquo; engine TSVG</li>
+<li>Updated to Skia4Delphi ver. 6.0.0</li>
+<li>TSVGIconVirtualImageList inherits from TVirtualImageList (from D10.3 to actual version).</li>
+<li>Added SVGIconVirtualImageListDemo to test multiple TSVGIconVirtualImageList in same form</li>
+<li>Added support for Delphi 12</li>
+</ul>
+<p>28 Feb 2023: version 3.9.6 (VCL+FMX)</p>
+<ul>
+<li>Updated to Image32 ver. 4.4 (30 Jan 2023)</li>
+<li>Updated to Skia4Delphi ver. 4.1.1 (26 Feb 2023)</li>
+</ul>
+<p>13 Jan 2023: version 3.9.5 (VCL+FMX)</p>
+<ul>
+<li>Updated Copyright 2023</li>
+<li>Updated to Image32 ver. 4.3 (27 Sep 2022)</li>
+<li>Updated to Skia4Delphi ver. 4.0.2</li>
+</ul>
+<p>23 Oct 2022: version 3.9.4 (VCL+FMX)</p>
+<ul>
+<li>FMX Component editor: changed selection for fixed color</li>
+<li>Updated to Image32 ver. 4.3 (27 Sep 2022)</li>
+</ul>
+<p>15 Sep 2022: version 3.9.3 (VCL+FMX)</p>
+<ul>
+<li>Removed W11 Styles from Demo (available in Delphi only by Get-it)</li>
+<li>Updated D11 packages to Delphi 11.2</li>
+</ul>
+<p>28 Aug 2022: version 3.9.2 (VCL+FMX)</p>
+<ul>
+<li>Fixed #240 TSVGGraphic.Assign</li>
+<li>Updated to Image32 ver. 4.2 (28 July 2022)</li>
+<li>Updated to Skia4Delphi 3.4.1 library</li>
+<li>Fixed #241 Alignment from Source and Destination Items (FMX)</li>
+</ul>
+<p>21 Jun 2022: version 3.9.1 (VCL+FMX)</p>
+<ul>
+<li>Added support for other Delphi versions (VCL): <strong>D10 Seattle</strong></li>
+</ul>
+<p>08 May 2022: version 3.8.3 (VCL+FMX)</p>
+<ul>
+<li>Updated to Skia4Delphi 3.4.0 library</li>
+<li>SVGExplorer example moved under &ldquo;Demo&rdquo; folder</li>
+</ul>
+<p>10 Apr 2022: version 3.8.2 (VCL+FMX)</p>
+<ul>
+<li>Updated to Skia4Delphi 3.3.1 llibrary</li>
+<li>Updated to Image32 4.11 library</li>
+</ul>
+<p>29 Mar 2022: version 3.8.1 (VCL+FMX)</p>
+<ul>
+<li>Fixed Aspect-Ratio for Skia engine</li>
+<li>Updated SVGViewer</li>
+<li>Updated Demos</li>
+<li>Alignment to latest Skia4Delphi version</li>
+</ul>
+<p>17 Mar 2022: version 3.8.0 (VCL+FMX)</p>
+<ul>
+<li>Support for Delphi 11.1</li>
+<li>Updated Library suffix for Delphi 10.4 and 11 to (auto)</li>
+</ul>
+<p>09 Mar 2022: version 3.7.0 (VCL+FMX)</p>
+<ul>
+<li>Support for Skia4Delphi 3.2.0 completed</li>
+<li>Removed support for Cairo Engine</li>
+<li>Fixed rendering with Image32</li>
+</ul>
+<p>28 Feb 2022: version 3.6.0 (VCL + FMX)</p>
+<ul>
+<li>Support for Skia4Delphi also in FMX platforms</li>
+</ul>
+<p>26 Feb 2022: version 3.5.2 (VCL+FMX)</p>
+<ul>
+<li>Fixed rendering with FMX-Image32</li>
+</ul>
+<p>23 Feb 2022: version 3.5.1 (VCL+FMX)</p>
+<ul>
+<li>Updated Image32 Library to 4.1.0 version</li>
+<li>Updated support to Skia4Delphi 3.1.0</li>
+</ul>
+<p>19 Feb 2022: version 3.5.0 (VCL+FMX)</p>
+<ul>
+<li>Updated Image32 Library to 4.0.2 version</li>
+<li>Updated support to Skia4Delphi 3.0.3</li>
+<li>Fixed SVGText Editor</li>
+<li>Fixed some Skia4Delphi SVG rendering</li>
+</ul>
+<p>14 Feb 2022: version 3.4.0 (VCL+FMX)</p>
+<ul>
+<li>Updated Image32 Library to 4.0.1 version</li>
+<li>Added support to Skia4Delphi 3.0</li>
+<li>Fixed some Image32 drawing problem</li>
+</ul>
+<p>13 Jan 2022: version 3.3.0 (VCL+FMX)</p>
+<ul>
+<li>Updated Image32 library to 4.0.0 version</li>
+<li>Added a set of playing cards svg examples</li>
+<li>Fixed Image32 drawing problem with &ldquo;playing cards&rdquo;</li>
+</ul>
+<p>24 Nov 2021: version 3.2.0 (VCL+FMX)</p>
+<ul>
+<li>Component Editors uses IDE themes (light, dark&hellip;) and style</li>
+<li>Fixed available components into palette when working with mobile platforms</li>
+</ul>
+<p>05 Nov 2021: version 3.1.1 (VCL+FMX)</p>
+<ul>
+<li>Fixed Image32 drawing problem in FMX</li>
+<li>Added Export to multiple png files to Component Editor</li>
+</ul>
+<p>31 Oct 2021: version 3.1.0 (VCL+FMX)</p>
+<ul>
+<li>Updated Image32 library to 3.4.1 version</li>
+<li>Added Skia4Delphi engine (not complete)</li>
+</ul>
+<p>28 Aug 2021: version 3.0.0 (VCL+FMX)</p>
+<ul>
+<li>Updated Packages for Delphi 11</li>
+<li>Updated some documentation (Images and Wiki)</li>
+</ul>
+<p>24 Aug 2021: version 2.5.0 (VCL+FMX)</p>
+<ul>
+<li>Aligned to Image32 library ver.3.1</li>
+</ul>
+<p>22 Jul 2021: version 2.4.0 (VCL+FMX)</p>
+<ul>
+<li>Updated and aligned to Image32 ver.3 library</li>
+<li>Added packages for Delphi 11 Alexandria</li>
+</ul>
+<p>18 Jul 2021: version 2.3.1 (VCL+FMX)</p>
+<ul>
+<li>Fixed rendering files with color defined by 8 digits</li>
+</ul>
+<p>17 Jul 2021: version 2.3.0 (VCL+FMX)</p>
+<ul>
+<li>Added new engine: Image32 library by Angus Johnson (VCL+FMX)</li>
+<li>Image32 is now the default native Delphi engine</li>
+<li>Added support for Android and iOS platforms (by Image32 engine)</li>
+<li>Added support for backward Delphi versions (from XE3)</li>
+<li>Added demo to compare the four engines (SVGViewer)</li>
+<li>Fixed rendering &ldquo;centered&rdquo; in SVGIconImage for Cairo engine.</li>
+<li>Warning: changed TSVGIconImage component ancestor from TCustomControl to TGraphicControl</li>
+</ul>
+<p>18 Apr 2021: version 2.2.6 (VCL+FMX)</p>
+<ul>
+<li>Added new ApplyFixedColorToRootOnly property</li>
+<li>Added demo for new TControlList component (only for D10.4.2)</li>
+</ul>
+<p>22 Feb 2021: version 2.2.5 (VCL+FMX)</p>
+<ul>
+<li>Added export to PNG option into Component editor</li>
+</ul>
+<p>23 Jan 2021: version 2.2.4 (VCL+FMX)</p>
+<ul>
+<li>Fixed #156 Stretch for SVGIconImage</li>
+<li>Fixed #157 SVGIconImage gets correct image from VirtualImageList</li>
+</ul>
+<p>17 Jan 2021: version 2.2.3 (VCL+FMX)</p>
+<ul>
+<li>Fixed #151 Antialiasing problems</li>
+<li>Fixed settings of different Width and Height into editor</li>
+<li>Fixed preview of icon with different Height and Width into editor</li>
+</ul>
+<p>24 Dec 2020: version 2.2.2 (VCL+FMX)</p>
+<ul>
+<li>Added Width, Height and Zoom property for FMX components</li>
+<li>Redesigned FMX component editor</li>
+<li>Fixed VCL component editor</li>
+</ul>
+<p>08 Dec 2020: version 2.2.1 (VCL+FMX)</p>
+<ul>
+<li>Added 64bit platforms for packages</li>
+<li>Minor fixes (empty except blocks)</li>
+<li>Fixed TSVGIconImage inherited color</li>
+<li>Fixed repaint for FMX version</li>
+</ul>
+<p>23 Sep 2020: version 2.2.0 (VCL+FMX)</p>
+<ul>
+<li>Added &ldquo;Cairo&rdquo; SVG Engine</li>
+<li>Added AntialiasColor to perfect antialias effect</li>
+<li>Added ImageIndex property editor for SVGIconImage</li>
+<li>Added FixedColor and GrayScale to TSVGIconImage component</li>
+</ul>
+<p>16 Sep 2020: version 2.1.1 (VCL) 2.1.0 (FMX)</p>
+<ul>
+<li>Fixed issues (#110, #111, #113)</li>
+<li>Editing SVG text in editor shows errors without losing content</li>
+</ul>
+<p>04 Sep 2020: version 2.1.0 (VCL) 1.5.1 (FMX)</p>
+<ul>
+<li>Added preview for icons when loading svg files</li>
+<li>Fixed many issue (#81, #86, #87, #88, #91, #94, #103&hellip;)</li>
+<li>Refactoring parsing XML to increase performances (using XmlLite)</li>
+</ul>
+<p>26 Aug 2020: version 2.0 (VCL) 1.5.0 (FMX)</p>
+<ul>
+<li>Added factory to choose engine</li>
+<li>Added interface to use alternative Third-party SVG engine</li>
+<li>Redesigned component editor to support Categories for icons</li>
+<li>New support for native VirtualImageList (from D10.3)</li>
+<li>StoreAsText icons to dfm by default (and unique mode)</li>
+<li>Fixed many issues (from #35 to #72)
+Take care of TSVGIconVirtualImageList.Collection renamed to SVGIconVirtualImageList.ImageCollection.</li>
+</ul>
+<p>17 Aug 2020: version 1.9 (VCL+FMX)</p>
+<ul>
+<li>FixedColor changed from TSVGColor to TColor</li>
+<li>Fixed assign FixedColor to icon in component editor</li>
+<li>Updated component editor to use TColorBox</li>
+</ul>
+<p>13 Aug 2020: version 1.8 (VCL+FMX)</p>
+<ul>
+<li>Complete refactoring for full support of High-DPI</li>
+<li>New SVGIconImageCollection component</li>
+<li>New SVGIconVirtualImageList component</li>
+<li>Redesign of SVGIconImageList component and Component Editor</li>
+<li>Demo updated to test multi-monitor with different DPI</li>
+<li>Fixed issue #20: Coordinates in double (PaintTo methods)</li>
+<li>Fixed issue #25: Transform matrix is wrongly parsed</li>
+<li>Fixed issue #26: Error in CalcMartrix</li>
+<li>Fixed issue #27: TSVGRadialGradient.ReadIn does not read the gradientTransform matrix</li>
+<li>Fixed issue #28: Colors should be reversed in TSVGRadialGradient</li>
+<li>Fixed issue #29: Scaling should be based on ViewBox width/height</li>
+<li>Fixed issue #31: Empty svg properties cause exceptions</li>
+<li>Fixed issue #33: &ldquo;fill-rule' presentation attribute is not processed</li>
+<li>Fixed issue #34: Exception text elements cause exceptions</li>
+</ul>
+<p>05 Aug 2020: version 1.7 (VCL+FMX)</p>
+<ul>
+<li>Added DPIChanged method</li>
+<li>Enhanced SVGExplorer</li>
+<li>Fixed issue #20: replaced Double with Single</li>
+<li>Fixed issue #19 and 18#: Load/SaveToStream inefficient and encoding inconsistency</li>
+<li>Fixed issue #17: Wrong conversion from pt to px</li>
+<li>Fixed issue #14: scaling problem</li>
+<li>Fixed issue #11: Incompatible with Drag-Drop of TImageList</li>
+<li>Fixed issue #6: Rendering of some SVG images is incorrect</li>
+</ul>
+<p>15 July 2020: version 1.6 (VCL+FMX)</p>
+<ul>
+<li>Fixed rendering on TButton! (VCL)</li>
+<li>Fixed &ldquo;Apply&rdquo; into ImageEditor (VCL)</li>
+<li>Added reformat XML to ImageEditor (VCL)</li>
+<li>Added utility to explore icons into disk/folder (SVGExplorer)</li>
+<li>Fixed inherited color drawing (SVG)</li>
+<li>Fixed storing properties into dfm in binary mode (VCL)</li>
+<li>Fixed storing for some properties (don't store default values)</li>
+</ul>
+<p>13 June 2020: versione 1.5 (VCL+FMX)</p>
+<ul>
+<li>Added support for DisabledGrayScale and DisabledOpacity as in VirtualImageList</li>
+<li>Fixed drawing disabled icons also with VCLStyles active</li>
+</ul>
+<p>09 June 2020: versione 1.4 (VCL+FMX)</p>
+<ul>
+<li>Added GrayScale and FixedColor to ImageList for every Icons</li>
+<li>Added GrayScale and FixedColor for single Icon</li>
+<li>Added some complex svg demo images</li>
+<li>Updated demos</li>
+</ul>
+<p>06 June 2020: version 1.3 (VCL+FMX)</p>
+<ul>
+<li>Added property editor for TSVGIconImage.SVGText and TSVGIconItem.SVGText</li>
+<li>Fixed some drawing problems with transform attribute</li>
+<li>Fixed rescaling icons when monitor DPI changes</li>
+</ul>
+<p>28 May 2020: version 1.2 (VCL+FMX)</p>
+<ul>
+<li>Complete support of <strong>Delphi 10.4</strong></li>
+<li>Added support for other Delphi versions (VCL): <strong>DXE6</strong>, <strong>DXE8</strong>, <strong>D10.1</strong></li>
+<li>Added position memory of component editor</li>
+<li>Fixed Issue: Icon Editor not keeping added icons</li>
+<li>Fixed Issue: SVG with exponent notation does not parse correctly and affects image display</li>
+</ul>
+<p>25 May 2020: version 1.1 (VCL+FMX)</p>
+<ul>
+<li>Added the component <strong>TSVGIconImageListFMX</strong> with advanced component editor.</li>
+<li>Added the component <strong>TSVGIconImageFMX</strong> to show SVG into a TImage.</li>
+<li>Demos to show how they works.</li>
+<li>Very high performance for building hundreds of icons.</li>
+</ul>
+<p>24 May 2020: first version 1.0 (VCL)</p>
+<ul>
+<li>Added the component <strong>TSVGIconImageList</strong> with advanced component editor.</li>
+<li>Added the component <strong>TSVGIconImage</strong> to show SVG into a TImage.</li>
+<li>Demos to show how they works.</li>
+<li>Very high performance for building hundreds of icons.</li>
+<li>Support from Delphi 10.2 to 10.4 Sydney (other Delphi versions coming soon)</li>
+</ul>
+<h3>THANKS TO</h3>
+<p>These components use the followin libraries:</p>
+<ul>
+<li>SVG library by Martin Walter (Original version (c) 2005, 2008) with license:<br />
+Use of this file is permitted for commercial and non-commercial. Use, as long as the author is credited.<br />
+home page: <a href="http://www.mwcs.de">http://www.mwcs.de</a>  email: martin.walter@mwcs.de<br />
+This library is included in the svg folder of this project.</li>
+<li>Image32 library by <a href="http://www.angusj.com/delphi/image32/Docs/_Body.htm">Angus Johnson</a>
+These files are included in the Image32/Source and Image32/source/Image32_SVG folders</li>
+<li>Skia4Delphi Library by <a href="https://github.com/Skia4Delphi/Skia4Delphi">the autohors</a>
+These files are included in the Skia4Delphi/Source folder</li>
+</ul>
+<p>Many thanks to <strong>Vincent Parrett</strong> and <strong>Kiriakos Vlahos</strong> for their great contibution.</p>
+<p><strong>TSVGIconImageList</strong> and <strong>TSVGIconImage</strong> are similar to <strong>TSVGImageList</strong> and <strong>TSVGImage</strong> included into project: <a href="https://github.com/ekot1/DelphiSVG.git">https://github.com/ekot1/DelphiSVG.git</a>
+but those versions are more efficient in performances, with many fixes added, plus some features like SVGText property, store icons in Text format into dfm, GrayScale and FixedColor, VirtualImageList support and more&hellip;</p>
+<p><strong>TSVGIconImageListFMX</strong> and <strong>TSVGIconImageFMX</strong> are similar to <strong>TIconFontsImageListFMX</strong> and <strong>TIconFontsImage</strong> included into similar project made by Ethea for Icon Fonts: <a href="https://github.com/EtheaDev/IconFontsImageList">https://github.com/EtheaDev/IconFontsImageList</a></p>

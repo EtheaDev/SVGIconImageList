@@ -2,9 +2,9 @@ unit Clipper.RectClip;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Date      :  9 September 2023                                                *
+* Date      :  14 February 2024                                                *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2010-2023                                         *
+* Copyright :  Angus Johnson 2010-2024                                         *
 * Purpose   :  FAST rectangular clipping                                       *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -121,7 +121,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function GetSegmentIntersection(p1: TPoint64;
+function GetSegmentIntersectPt2(p1: TPoint64;
 p2: TPoint64; p3: TPoint64; p4: TPoint64; out ip: TPoint64): Boolean;
 var
   res1, res2, res3, res4: double;
@@ -189,7 +189,7 @@ begin
   end
   else
     // segments must intersect to get here
-    Result := GetIntersectPoint(p1, p2, p3, p4, ip);
+    Result := GetSegmentIntersectPt(p1, p2, p3, p4, ip);
 end;
 //------------------------------------------------------------------------------
 
@@ -201,60 +201,60 @@ begin
   Result := True;
   case loc of
     locLeft:
-      if GetSegmentIntersection(p, p2, rectPath[0], rectPath[3], ip) then
+      if GetSegmentIntersectPt2(p, p2, rectPath[0], rectPath[3], ip) then
         //Result := True
       else if (p.Y < rectPath[0].Y) and
-        GetSegmentIntersection(p, p2, rectPath[0], rectPath[1], ip) then
+        GetSegmentIntersectPt2(p, p2, rectPath[0], rectPath[1], ip) then
           loc := locTop
-      else if GetSegmentIntersection(p, p2, rectPath[2], rectPath[3], ip) then
+      else if GetSegmentIntersectPt2(p, p2, rectPath[2], rectPath[3], ip) then
         loc := locBottom
       else
         Result := False;
 
     locRight:
-      if GetSegmentIntersection(p, p2, rectPath[1], rectPath[2], ip) then
+      if GetSegmentIntersectPt2(p, p2, rectPath[1], rectPath[2], ip) then
         //Result := True
       else if (p.Y < rectPath[0].Y) and
-        GetSegmentIntersection(p, p2, rectPath[0], rectPath[1], ip) then
+        GetSegmentIntersectPt2(p, p2, rectPath[0], rectPath[1], ip) then
           loc := locTop
-      else if GetSegmentIntersection(p, p2, rectPath[2], rectPath[3], ip) then
+      else if GetSegmentIntersectPt2(p, p2, rectPath[2], rectPath[3], ip) then
         loc := locBottom
       else
         Result := False;
 
     locTop:
-      if GetSegmentIntersection(p, p2, rectPath[0], rectPath[1], ip) then
+      if GetSegmentIntersectPt2(p, p2, rectPath[0], rectPath[1], ip) then
         //Result := True
       else if (p.X < rectPath[0].X) and
-        GetSegmentIntersection(p, p2, rectPath[0], rectPath[3], ip) then
+        GetSegmentIntersectPt2(p, p2, rectPath[0], rectPath[3], ip) then
           loc := locLeft
       else if (p.X > rectPath[1].X) and
-        GetSegmentIntersection(p, p2, rectPath[1], rectPath[2], ip) then
+        GetSegmentIntersectPt2(p, p2, rectPath[1], rectPath[2], ip) then
           loc := locRight
       else
         Result := False;
 
     locBottom:
-      if GetSegmentIntersection(p, p2, rectPath[2], rectPath[3], ip) then
+      if GetSegmentIntersectPt2(p, p2, rectPath[2], rectPath[3], ip) then
         //Result := True
       else if (p.X < rectPath[3].X) and
-        GetSegmentIntersection(p, p2, rectPath[0], rectPath[3], ip) then
+        GetSegmentIntersectPt2(p, p2, rectPath[0], rectPath[3], ip) then
           loc := locLeft
       else if (p.X > rectPath[2].X) and
-        GetSegmentIntersection(p, p2, rectPath[1], rectPath[2], ip) then
+        GetSegmentIntersectPt2(p, p2, rectPath[1], rectPath[2], ip) then
           loc := locRight
       else
         Result := False;
 
     else // loc = rInside
     begin
-      if GetSegmentIntersection(p, p2, rectPath[0], rectPath[3], ip) then
+      if GetSegmentIntersectPt2(p, p2, rectPath[0], rectPath[3], ip) then
         loc := locLeft
-      else if GetSegmentIntersection(p, p2, rectPath[0], rectPath[1], ip) then
+      else if GetSegmentIntersectPt2(p, p2, rectPath[0], rectPath[1], ip) then
         loc := locTop
-      else if GetSegmentIntersection(p, p2, rectPath[1], rectPath[2], ip) then
+      else if GetSegmentIntersectPt2(p, p2, rectPath[1], rectPath[2], ip) then
         loc := locRight
-      else if GetSegmentIntersection(p, p2, rectPath[2], rectPath[3], ip) then
+      else if GetSegmentIntersectPt2(p, p2, rectPath[2], rectPath[3], ip) then
         loc := locBottom
       else
         Result := False;
@@ -282,7 +282,7 @@ function GetAdjacentLocation(loc: TLocation; isClockwise: Boolean): TLocation;
 var
   delta: integer;
 begin
-  if isClockwise then delta := 1 else delta := 3;
+  delta := Iif(isClockwise, 1 , 3);
   Result := TLocation((Ord(loc) + delta) mod 4);
 end;
 //------------------------------------------------------------------------------
@@ -291,9 +291,9 @@ function IsClockwise(prev, curr: TLocation;
   const prevPt, currPt, rectMidPt: TPoint64): Boolean;
   {$IFDEF INLINING} inline; {$ENDIF}
 begin
-  if AreOpposites(prev, curr) then
-    Result := CrossProduct(prevPt, rectMidPt, currPt) < 0 else
-    Result := HeadingClockwise(prev, curr);
+  Result := Iif(AreOpposites(prev, curr),
+    CrossProduct(prevPt, rectMidPt, currPt) < 0,
+    HeadingClockwise(prev, curr));
 end;
 //------------------------------------------------------------------------------
 
@@ -517,9 +517,7 @@ var
   cnrIdx: integer;
 begin
   if prev = curr then Exit;
-  if (HeadingClockwise(prev, curr)) then
-    cnrIdx := Ord(prev) else
-    cnrIdx := Ord(curr);
+  cnrIdx := Iif(HeadingClockwise(prev, curr), Ord(prev), Ord(curr));
   Add(fRectPath[cnrIdx]);
 end;
 //------------------------------------------------------------------------------

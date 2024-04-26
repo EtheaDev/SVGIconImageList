@@ -3,9 +3,9 @@ unit Img32.Fmt.BMP;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  12 October 2023                                                 *
+* Date      :  28 March 2024                                                   *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2023                                         *
+* Copyright :  Angus Johnson 2010-2024                                         *
 * Purpose   :  BMP file format extension for TImage32                          *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -487,7 +487,7 @@ begin
     isTopDown := bih.biHeight < 0;
     bih.biHeight := abs(bih.biHeight);
 
-    if (bih.biBitCount < 32) and
+    if //(bih.biBitCount < 32) and
       ((bih.biCompression and BI_BITFIELDS) = BI_BITFIELDS) then
     begin
       stream.Position := bihStart + 40;
@@ -536,16 +536,14 @@ begin
       //read pixels ....
       if stream.Position < bfh.bfOffBits then stream.Position := bfh.bfOffBits;
 
-      if (bih.biBitCount = 32) then
+      if hasValidBitFields then
+        tmp := StreamReadImageWithBitfields(
+          stream, img32.Width, img32.Height, bih.biBitCount, bitfields)
+      else if (bih.biBitCount = 32) then
       begin
         Read(img32.Pixels[0], bih.biWidth * bih.biHeight * sizeof(TColor32));
         if AlphaChannelAllZero(img32) then ResetAlphaChannel(img32);
       end
-
-      else if hasValidBitFields then
-        tmp := StreamReadImageWithBitfields(
-          stream, img32.Width, img32.Height, bih.biBitCount, bitfields)
-
       else if (bih.biCompression = BI_RLE8) or (bih.biCompression = BI_RLE4) then
         tmp := ReadRLE4orRLE8Compression(
           stream, img32.Width, img32.Height, bih.biBitCount, pal)

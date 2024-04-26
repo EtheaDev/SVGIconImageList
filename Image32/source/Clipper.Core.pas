@@ -2,9 +2,9 @@ unit Clipper.Core;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Date      :  17 July 2023                                                    *
+* Date      :  14 February 2024                                                *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2010-2023                                         *
+* Copyright :  Angus Johnson 2010-2024                                         *
 * Purpose   :  Core Clipper Library module                                     *
 *              Contains structures and functions used throughout the library   *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
@@ -64,6 +64,7 @@ type
     function GetWidth: Int64; {$IFDEF INLINING} inline; {$ENDIF}
     function GetHeight: Int64; {$IFDEF INLINING} inline; {$ENDIF}
     function GetIsEmpty: Boolean; {$IFDEF INLINING} inline; {$ENDIF}
+    function GetIsValid: Boolean; {$IFDEF INLINING} inline; {$ENDIF}
     function GetMidPoint: TPoint64; {$IFDEF INLINING} inline; {$ENDIF}
   public
     Left   : Int64;
@@ -78,6 +79,7 @@ type
     property Width: Int64 read GetWidth;
     property Height: Int64 read GetHeight;
     property IsEmpty: Boolean read GetIsEmpty;
+    property IsValid: Boolean read GetIsValid;
     property MidPoint: TPoint64 read GetMidPoint;
   end;
 
@@ -86,6 +88,7 @@ type
     function GetWidth: double; {$IFDEF INLINING} inline; {$ENDIF}
     function GetHeight: double; {$IFDEF INLINING} inline; {$ENDIF}
     function GetIsEmpty: Boolean; {$IFDEF INLINING} inline; {$ENDIF}
+    function GetIsValid: Boolean; {$IFDEF INLINING} inline; {$ENDIF}
     function GetMidPoint: TPointD; {$IFDEF INLINING} inline; {$ENDIF}
   public
     Left   : double;
@@ -99,6 +102,7 @@ type
     property Width: double read GetWidth;
     property Height: double read GetHeight;
     property IsEmpty: Boolean read GetIsEmpty;
+    property IsValid: Boolean read GetIsValid;
     property MidPoint: TPointD read GetMidPoint;
   end;
 
@@ -168,8 +172,8 @@ function DistanceSqr(const pt1, pt2: TPoint64): double; overload;
   {$IFDEF INLINING} inline; {$ENDIF}
 function DistanceSqr(const pt1, pt2: TPointD): double; overload;
   {$IFDEF INLINING} inline; {$ENDIF}
-function DistanceFromLineSqrd(const pt, linePt1, linePt2: TPoint64): double; overload;
-function DistanceFromLineSqrd(const pt, linePt1, linePt2: TPointD): double; overload;
+function PerpendicDistFromLineSqrd(const pt, linePt1, linePt2: TPoint64): double; overload;
+function PerpendicDistFromLineSqrd(const pt, linePt1, linePt2: TPointD): double; overload;
 
 function SegmentsIntersect(const s1a, s1b, s2a, s2b: TPoint64;
   inclusive: Boolean = false): boolean; {$IFDEF INLINING} inline; {$ENDIF}
@@ -311,7 +315,7 @@ procedure AppendPaths(var paths: TPathsD; const extra: TPathsD); overload;
 
 function ArrayOfPathsToPaths(const ap: TArrayOfPaths): TPaths64;
 
-function GetIntersectPoint(const ln1a, ln1b, ln2a, ln2b: TPoint64;
+function GetSegmentIntersectPt(const ln1a, ln1b, ln2a, ln2b: TPoint64;
   out ip: TPoint64): Boolean;
 
 function PointInPolygon(const pt: TPoint64; const polygon: TPath64): TPointInPolygonResult;
@@ -333,8 +337,14 @@ procedure QuickSort(SortList: TPointerList;
 
 procedure CheckPrecisionRange(var precision: integer);
 
+function Iif(eval: Boolean; trueVal, falseVal: Boolean): Boolean; overload;
+function Iif(eval: Boolean; trueVal, falseVal: integer): integer; overload;
+function Iif(eval: Boolean; trueVal, falseVal: Int64): Int64; overload;
+function Iif(eval: Boolean; trueVal, falseVal: double): double; overload;
+
 const
   MaxInt64    = 9223372036854775807;
+  MinInt64    = -MaxInt64;
   MaxCoord    = MaxInt64 div 4;
   MinCoord    = - MaxCoord;
   invalid64   = MaxInt64;
@@ -346,6 +356,11 @@ const
   InvalidPtD :  TPointD = (X: invalidD; Y: invalidD);
 
   NullRectD   : TRectD = (left: 0; top: 0; right: 0; Bottom: 0);
+  InvalidRect64 : TRect64 =
+    (left: invalid64; top: invalid64; right: invalid64; bottom: invalid64);
+  InvalidRectD : TRectD =
+    (left: invalidD; top: invalidD; right: invalidD; bottom: invalidD);
+
   Tolerance   : Double = 1.0E-12;
 
   //https://github.com/AngusJohnson/Clipper2/discussions/564
@@ -375,6 +390,12 @@ end;
 function TRect64.GetIsEmpty: Boolean;
 begin
   result := (bottom <= top) or (right <= left);
+end;
+//------------------------------------------------------------------------------
+
+function TRect64.GetIsValid: Boolean;
+begin
+  result := left <> invalid64;
 end;
 //------------------------------------------------------------------------------
 
@@ -447,6 +468,12 @@ end;
 function TRectD.GetIsEmpty: Boolean;
 begin
   result := (bottom <= top) or (right <= left);
+end;
+//------------------------------------------------------------------------------
+
+function TRectD.GetIsValid: Boolean;
+begin
+  result := left <> invalidD;
 end;
 //------------------------------------------------------------------------------
 
@@ -631,6 +658,34 @@ end;
 
 //------------------------------------------------------------------------------
 // Miscellaneous Functions ...
+//------------------------------------------------------------------------------
+
+function Iif(eval: Boolean; trueVal, falseVal: Boolean): Boolean;
+  {$IFDEF INLINING} inline; {$ENDIF}
+begin
+  if eval then Result := trueVal else Result := falseVal;
+end;
+//------------------------------------------------------------------------------
+
+function Iif(eval: Boolean; trueVal, falseVal: integer): integer;
+  {$IFDEF INLINING} inline; {$ENDIF}
+begin
+  if eval then Result := trueVal else Result := falseVal;
+end;
+//------------------------------------------------------------------------------
+
+function Iif(eval: Boolean; trueVal, falseVal: Int64): Int64;
+  {$IFDEF INLINING} inline; {$ENDIF}
+begin
+  if eval then Result := trueVal else Result := falseVal;
+end;
+//------------------------------------------------------------------------------
+
+function Iif(eval: Boolean; trueVal, falseVal: double): double;
+  {$IFDEF INLINING} inline; {$ENDIF}
+begin
+  if eval then Result := trueVal else Result := falseVal;
+end;
 //------------------------------------------------------------------------------
 
 procedure CheckPrecisionRange(var precision: integer);
@@ -1831,7 +1886,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function DistanceFromLineSqrd(const pt, linePt1, linePt2: TPoint64): double;
+function PerpendicDistFromLineSqrd(const pt, linePt1, linePt2: TPoint64): double;
 var
   a,b,c: double;
 begin
@@ -1842,11 +1897,13 @@ begin
 	b := (linePt2.X - linePt1.X);
 	c := a * linePt1.X + b * linePt1.Y;
 	c := a * pt.x + b * pt.y - c;
-	Result := (c * c) / (a * a + b * b);
+   if (a = 0) and (b = 0) then
+    Result := 0 else
+	  Result := (c * c) / (a * a + b * b);
 end;
 //---------------------------------------------------------------------------
 
-function DistanceFromLineSqrd(const pt, linePt1, linePt2: TPointD): double;
+function PerpendicDistFromLineSqrd(const pt, linePt1, linePt2: TPointD): double;
 var
   a,b,c: double;
 begin
@@ -1854,7 +1911,9 @@ begin
 	b := (linePt2.X - linePt1.X);
 	c := a * linePt1.X + b * linePt1.Y;
 	c := a * pt.x + b * pt.y - c;
-	Result := (c * c) / (a * a + b * b);
+  if (a = 0) and (b = 0) then
+    Result := 0 else
+	  Result := (c * c) / (a * a + b * b);
 end;
 //---------------------------------------------------------------------------
 
@@ -1934,7 +1993,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function GetIntersectPoint(const ln1a, ln1b, ln2a, ln2b: TPoint64;
+function GetSegmentIntersectPt(const ln1a, ln1b, ln2a, ln2b: TPoint64;
   out ip: TPoint64): Boolean;
 var
   dx1,dy1, dx2,dy2, t, cp: double;
@@ -2119,20 +2178,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function PerpendicDistFromLineSqrd(const pt, line1, line2: TPoint64): double; overload;
-var
-  a,b,c,d: double;
-begin
-  a := pt.X - line1.X;
-  b := pt.Y - line1.Y;
-  c := line2.X - line1.X;
-  d := line2.Y - line1.Y;
-  if (c = 0) and (d = 0) then
-    result := 0 else
-    result := Sqr(a * d - c * b) / (c * c + d * d);
-end;
-//------------------------------------------------------------------------------
-
 procedure RDP(const path: TPath64; startIdx, endIdx: integer;
   epsilonSqrd: double; var boolArray: TArrayOfBoolean); overload;
 var
@@ -2159,20 +2204,6 @@ begin
   boolArray[idx] := true;
   if idx > startIdx + 1 then RDP(path, startIdx, idx, epsilonSqrd, boolArray);
   if endIdx > idx + 1 then RDP(path, idx, endIdx, epsilonSqrd, boolArray);
-end;
-//------------------------------------------------------------------------------
-
-function PerpendicDistFromLineSqrd(const pt, line1, line2: TPointD): double; overload;
-var
-  a,b,c,d: double;
-begin
-  a := pt.X - line1.X;
-  b := pt.Y - line1.Y;
-  c := line2.X - line1.X;
-  d := line2.Y - line1.Y;
-  if (c = 0) and (d = 0) then
-    result := 0 else
-    result := Sqr(a * d - c * b) / (c * c + d * d);
 end;
 //------------------------------------------------------------------------------
 

@@ -2,8 +2,8 @@ unit Img32.SVG.PathDesign;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.2                                                             *
-* Date      :  30 May 2022                                                     *
+* Version   :  4.0                                                             *
+* Date      :  10 January 2022                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
@@ -1111,7 +1111,6 @@ var
 begin
   fOwner    := Parent as TSvgPathLayer;
   fSubPath  := subPath;
-  seg := nil;
   for i := 0 to subPath.Count -1 do
   begin
     case subPath[i].segType of

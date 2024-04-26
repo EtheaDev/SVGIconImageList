@@ -8,7 +8,7 @@ object fmExplorerSVG: TfmExplorerSVG
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
-  Font.Name = 'Tahoma'
+  Font.Name = 'Segoe UI'
   Font.Style = []
   ShowHint = True
   OnCreate = FormCreate
@@ -41,7 +41,6 @@ object fmExplorerSVG: TfmExplorerSVG
     Height = 509
     Align = alLeft
     TabOrder = 0
-    ExplicitHeight = 508
     object DirSelection: TDirectoryListBox
       Left = 1
       Top = 41
@@ -50,7 +49,6 @@ object fmExplorerSVG: TfmExplorerSVG
       Align = alClient
       TabOrder = 0
       OnChange = DirSelectionChange
-      ExplicitHeight = 387
     end
     object DrivePanel: TPanel
       Left = 1
@@ -76,7 +74,6 @@ object fmExplorerSVG: TfmExplorerSVG
       Height = 19
       Panels = <>
       SimplePanel = True
-      ExplicitTop = 488
     end
     object TrackBarPanel: TPanel
       Left = 1
@@ -86,11 +83,10 @@ object fmExplorerSVG: TfmExplorerSVG
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 3
-      ExplicitTop = 428
       object Label1: TLabel
         Left = 8
         Top = 5
-        Width = 51
+        Width = 52
         Height = 13
         Caption = 'Icons size:'
       end
@@ -117,8 +113,6 @@ object fmExplorerSVG: TfmExplorerSVG
     Height = 509
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 581
-    ExplicitHeight = 508
     object ImageListLabel: TLabel
       Left = 1
       Top = 42
@@ -154,7 +148,6 @@ object fmExplorerSVG: TfmExplorerSVG
       Height = 41
       Align = alTop
       TabOrder = 0
-      ExplicitWidth = 579
       DesignSize = (
         583
         41)
@@ -167,7 +160,6 @@ object fmExplorerSVG: TfmExplorerSVG
         TabOrder = 0
         TextHint = 'Insert filter with wildcards to search icons by name...'
         OnInvokeSearch = SearchBoxInvokeSearch
-        ExplicitWidth = 562
       end
     end
     object ImageView: TListView
@@ -184,8 +176,6 @@ object fmExplorerSVG: TfmExplorerSVG
       TabOrder = 1
       OnKeyDown = ImageViewKeyDown
       OnSelectItem = ImageViewSelectItem
-      ExplicitWidth = 579
-      ExplicitHeight = 327
     end
     object StatusBar: TStatusBar
       Left = 1
@@ -194,8 +184,6 @@ object fmExplorerSVG: TfmExplorerSVG
       Height = 19
       Panels = <>
       SimplePanel = True
-      ExplicitTop = 488
-      ExplicitWidth = 579
     end
     object paSVGText: TPanel
       Left = 1
@@ -205,8 +193,6 @@ object fmExplorerSVG: TfmExplorerSVG
       Hint = 'SVG Text content'
       Align = alBottom
       TabOrder = 3
-      ExplicitTop = 388
-      ExplicitWidth = 579
       object SVGMemo: TMemo
         Left = 1
         Top = 1
@@ -222,7 +208,6 @@ object fmExplorerSVG: TfmExplorerSVG
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
-        ExplicitWidth = 577
       end
     end
   end
@@ -234,8 +219,6 @@ object fmExplorerSVG: TfmExplorerSVG
     Align = alRight
     TabOrder = 2
     OnResize = paPreviewResize
-    ExplicitLeft = 774
-    ExplicitHeight = 508
     DesignSize = (
       136
       509)
@@ -263,7 +246,6 @@ object fmExplorerSVG: TfmExplorerSVG
       Action = DeleteAction
       Anchors = [akLeft, akRight, akBottom]
       TabOrder = 1
-      ExplicitTop = 477
     end
     object BtRename: TButton
       Left = 5
@@ -273,7 +255,6 @@ object fmExplorerSVG: TfmExplorerSVG
       Action = RenameAction
       Anchors = [akLeft, akRight, akBottom]
       TabOrder = 0
-      ExplicitTop = 446
     end
     object ShowTextCheckBox: TCheckBox
       Left = 6
@@ -286,7 +267,6 @@ object fmExplorerSVG: TfmExplorerSVG
       State = cbChecked
       TabOrder = 2
       OnClick = ShowTextCheckBoxClick
-      ExplicitTop = 419
     end
     object grpFactory: TRadioGroup
       Left = 1

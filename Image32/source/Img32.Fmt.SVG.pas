@@ -3,9 +3,9 @@ unit Img32.Fmt.SVG;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  22 October 2023                                                   *
+* Date      :  11 March 2024                                                   *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2023                                         *
+* Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  SVG file format extension for TImage32                          *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -91,100 +91,7 @@ type
 {$ENDIF}
   end;
 
-function GetImageSize(const filename: string): TSize;
-
-var
-  defaultSvgWidth: integer = 800;
-  defaultSvgHeight: integer = 600;
-
 implementation
-
-function GetImageSize(const filename: string): TSize;
-var
-  i,j, l,t,r,b: integer;
-  s: AnsiString;
-  ms: TMemoryStream;
-
-  function GetValAndIgnoreFracs(var i: integer): integer;
-  begin
-    Result := 0;
-    while (s[i] >= '0') and (s[i] <= '9') do
-    begin
-      Result := Result * 10 + Ord(s[i]) - Ord('0');
-      inc(i);
-    end;
-
-    // ignore fractions
-    if s[i] <> '.' then Exit;
-    inc(i);
-    while (s[i] >= '0') and (s[i] <= '9') do inc(i);
-  end;
-
-begin
-  // this is quick and dirty code that
-  // needs to be made much more reliable
-  FillChar(Result.cx, SizeOf(TSize), 0);
-  if not FileExists(filename) then Exit;
-  ms := TMemoryStream.Create;
-  try
-    ms.LoadFromFile(filename);
-    ConvertUnicodeToUtf8(ms);
-    {$IFDEF UNICODE}
-    s := AnsiStrings.StrPas(ms.Memory);
-    {$ELSE}
-    s := StrPas(ms.Memory);
-    {$ENDIF}
-  finally
-    ms.Free;
-  end;
-  {$IFDEF UNICODE}
-  i := AnsiStrings.PosEx('<svg ', s);
-  {$ELSE}
-  i := Pos('<svg ', s);
-  {$ENDIF}
-  if i < 1 then Exit;
-
-  {$IFDEF UNICODE}
-  j := AnsiStrings.PosEx('>', s, i); //watch out for inside '>'
-  {$ELSE}
-  j := PosEx('>', s, i);
-  {$ENDIF}
-
-  if j < i then Exit;
-  s := Lowercase(Copy(s, i + 5, j - i -5));
-  {$IFDEF UNICODE}
-  i := AnsiStrings.PosEx('width="', s);       //watch out for space before =
-  j := AnsiStrings.PosEx('height="', s);
-  {$ELSE}
-  i := PosEx('width="', s);       //watch out for space before =
-  j := PosEx('height="', s);
-  {$ENDIF}
-  if (i > 0) and (j > 0) then
-  begin
-    inc(i,7);
-    Result.cx := GetValAndIgnoreFracs(i);
-    inc(j,8);
-    Result.cy := GetValAndIgnoreFracs(j);
-  end else
-  begin
-    {$IFDEF UNICODE}
-    i := AnsiStrings.PosEx('viewbox="', s);
-    {$ELSE}
-    i := PosEx('viewbox="', s);
-    {$ENDIF}
-    if i < 1 then Exit;
-    inc(i, 9);
-    l := GetValAndIgnoreFracs(i);
-    while (s[i] <= #32) do inc(i);
-    t := GetValAndIgnoreFracs(i);
-    while (s[i] <= #32) do inc(i);
-    r := GetValAndIgnoreFracs(i);
-    while (s[i] <= #32) do inc(i);
-    b := GetValAndIgnoreFracs(i);
-    Result.cx := r - l;
-    Result.cy := b - t;
-  end;
-end;
 
 //------------------------------------------------------------------------------
 // Three routines used to enumerate a resource type
@@ -463,32 +370,23 @@ function TImageFormat_SVG.LoadFromStream(stream: TStream;
   img32: TImage32; imgIndex: integer = 0): Boolean;
 var
   r: TRectWH;
-  w,h, sx,sy: double;
+  sx: double;
 begin
   with TSvgReader.Create do
   try
     Result := LoadFromStream(stream);
     if not Result then Exit;
-    r := GetViewbox(img32.Width, img32.Height);
 
+    r := RootElement.GetViewbox;
     img32.BeginUpdate;
     try
       if img32.IsEmpty and not r.IsEmpty then
         img32.SetSize(Round(r.Width), Round(r.Height))
       else if not r.IsEmpty then
       begin
-        //then scale the SVG to fit image
-        w := r.Width;
-        h := r.Height;
-        sx := img32.Width / w;
-        sy := img32.Height / h;
-        if sy < sx then sx := sy;
-        if not(SameValue(sx, 1, 0.00001)) then
-        begin
-          w := w * sx;
-          h := h * sx;
-        end;
-        img32.SetSize(Round(w), Round(h));
+        // scale the SVG to best fit the image dimensions
+        sx := GetScaleForBestFit(r.Width, r.Height, img32.Width, img32.Height);
+        img32.SetSize(Round(r.Width * sx), Round(r.Height * sx));
       end
       else
         img32.SetSize(defaultSvgWidth, defaultSvgHeight);

@@ -3,15 +3,11 @@ unit Img32.Transform;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  17 December 2023                                                *
+* Date      :  16 April 2024                                                   *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2021                                         *
-*                                                                              *
+* Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Affine and projective transformation routines for TImage32      *
-*                                                                              *
-* License   :  Use, modification & distribution is subject to                  *
-*              Boost Software License Ver 1                                    *
-*              http://www.boost.org/LICENSE_1_0.txt                            *
+* License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
 
 interface
@@ -19,8 +15,7 @@ interface
 {$I Img32.inc}
 
 uses
-  SysUtils, Classes, Math, Types,
-  Img32, Img32.Vector;
+  SysUtils, Classes, Math, Types, Img32, Img32.Vector;
 
 type
   TMatrixD = array [0..2, 0..2] of double;
@@ -204,15 +199,11 @@ end;
 
 procedure MatrixApply(const matrix: TMatrixD; var rec: TRect);
 var
-  l,t,b,r,tmpX: double;
+  path: TPathD;
 begin
-  tmpX := rec.Left;
-  l := tmpX * matrix[0, 0] + rec.Top * matrix[1, 0] + matrix[2, 0];
-  t := tmpX * matrix[0, 1] + rec.Top * matrix[1, 1] + matrix[2, 1];
-  tmpX := rec.Right;
-  r := tmpX * matrix[0, 0] + rec.Bottom * matrix[1, 0] + matrix[2, 0];
-  b := tmpX * matrix[0, 1] + rec.Bottom * matrix[1, 1] + matrix[2, 1];
-  rec := Rect(RectD(l,t,r,b));
+  path := Rectangle(rec);
+  MatrixApply(matrix, path);
+  rec := GetBounds(path);
 end;
 //------------------------------------------------------------------------------
 
@@ -402,18 +393,19 @@ var
   resampler: TResamplerFunction;
 begin
   Result := NullPoint;
+  if IsIdentityMatrix(matrix) or
+    img.IsEmpty or (img.Resampler = 0) then Exit;
 
-  if img.Resampler = 0 then
-    resampler := nil else
-    resampler := GetResampler(img.Resampler);
-
-  if not Assigned(resampler) or img.IsEmpty or
-    IsIdentityMatrix(matrix) then
-      Exit;
+  resampler := GetResampler(img.Resampler);
+  if not Assigned(resampler) then Exit;
 
   //auto-resize the image so it'll fit transformed image
-  dstRec := GetTransformBounds(img, matrix);
+
+  dstRec := img.Bounds;
+  MatrixApply(matrix, dstRec);
+
   RectWidthHeight(dstRec, newWidth, newHeight);
+
   //auto-translate the image too
   Result := dstRec.TopLeft;
 
@@ -425,15 +417,16 @@ begin
   pc := @tmp[0];
 
   for i := dstRec.Top to + dstRec.Bottom -1 do
+  begin
     for j := dstRec.Left to dstRec.Right -1 do
     begin
-      //convert dest X,Y to src X,Y ...
       x := j; y := i;
       MatrixApply(matrix, x, y);
-      //get weighted pixel (slow)
-      pc^ := resampler(img, Round(x * 256), Round(y * 256));
+      pc^ := resampler(img, x, y);
       inc(pc);
     end;
+  end;
+
   img.BeginUpdate;
   try
     img.SetSize(newWidth, newHeight);
@@ -505,6 +498,36 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure GetSrcCoords(const matrix: TMatrixD; var x, y: double);
+{$IFDEF INLINE} inline; {$ENDIF}
+var
+  zz: double;
+const
+  Q: integer = MaxInt div 256;
+begin
+  //returns coords multiplied by 256 in anticipation of the following
+  //GetWeightedPixel function call which in turn expects the lower 8bits
+  //of the integer coord value to represent a fraction.
+  zz := 1;
+  MatrixMulCoord(matrix, x, y, zz);
+
+  if zz = 0 then
+  begin
+    if x >= 0 then x := Q else x := -MaxDouble;
+    if y >= 0 then y := Q else y := -MaxDouble;
+  end else
+  begin
+    x := x/zz;
+    if x > Q then x := MaxDouble
+    else if x < -Q then x := -MaxDouble;
+
+    y := y/zz;
+    if y > Q then y := MaxDouble
+    else if y < -Q then y := -MaxDouble
+  end;
+end;
+//------------------------------------------------------------------------------
+
 function GetProjectionMatrix(const srcPts, dstPts: TPathD): TMatrixD;
 var
   srcMat, dstMat: TMatrixD;
@@ -526,7 +549,7 @@ function ProjectiveTransform(img: TImage32;
   const srcPts, dstPts: TPathD; const margins: TRect): Boolean;
 var
   w,h,i,j: integer;
-  x,y: integer;
+  x,y: double;
   rec: TRect;
   dstPts2: TPathD;
   mat: TMatrixD;
@@ -549,7 +572,7 @@ begin
   dec(rec.Top, margins.Top);
   inc(rec.Right, margins.Right);
   inc(rec.Bottom, margins.Bottom);
-  dstPts2 := OffsetPath(dstPts, -rec.Left, -rec.Top);
+  dstPts2 := TranslatePath(dstPts, -rec.Left, -rec.Top);
 
   mat := GetProjectionMatrix(srcPts, dstPts2);
   RectWidthHeight(rec, w, h);
@@ -559,7 +582,7 @@ begin
     for j := 0 to w -1 do
     begin
       x := j; y := i;
-      GetSrcCoords256(mat, x, y);
+      GetSrcCoords(mat, x, y);
       pc^ := resampler(img, x, y);
       inc(pc);
     end;
@@ -735,10 +758,10 @@ begin
       if (j > y-1.0) and (j < y + img.Height) then
         if backColoring then
           pc^ := BlendToAlpha(pc^,
-            ReColor(resampler(img, Round(Distances[i]*q) ,Round((j - y)*256)), backColor))
+            ReColor(resampler(img, Distances[i]*q, j - y), backColor))
         else
           pc^ := BlendToAlpha(pc^,
-            resampler(img, Round(Distances[i]*q) ,Round((j - y)*256)));
+            resampler(img, Round(Distances[i]*q), j - y));
       inc(pc, w);
     end;
   end;
@@ -803,10 +826,9 @@ begin
       if (j > x-1.0) and (j < x + img.Width) then
         if backColoring then
           pc^ := BlendToAlpha(pc^,
-            ReColor(resampler(img, Round((j - x) *256), Round(Distances[i]*q)), backColor))
+            ReColor(resampler(img, (j - x), Distances[i]*q), backColor))
         else
-          pc^ := BlendToAlpha(pc^,
-            resampler(img, Round((j - x) *256), Round(Distances[i]*q)));
+          pc^ := BlendToAlpha(pc^, resampler(img, (j - x), Distances[i]*q));
       inc(pc);
     end;
   end;

@@ -2036,7 +2036,7 @@ begin
   end;
   GetGlyphInfo(Ord('G'),glyph, dummy, gm);
   rec := GetBoundsD(glyph);
-  glyph := Img32.Vector.OffsetPath(glyph, -rec.Left, -rec.Top);
+  glyph := Img32.Vector.TranslatePath(glyph, -rec.Left, -rec.Top);
   glyph := Img32.Vector.ScalePath(glyph,
     imgSize/rec.Width, imgSize/rec.Height);
   img := TImage32.Create(imgSize,imgSize);
@@ -2441,7 +2441,7 @@ begin
       with wordList.GetWord(j) do
         if aWord > #32 then
         begin
-          app := OffsetPath(paths, x, y + Ascent);
+          app := TranslatePath(paths, x, y + Ascent);
           pp := MergePathsArray(app);
           AppendPath(Result, pp);
           x := x + width;
@@ -2483,7 +2483,7 @@ begin
       else
         Exit;
     end;
-    Result := OffsetPath(Result, 0, dy);
+    Result := TranslatePath(Result, 0, dy);
   finally
     wl.Free;
   end;
@@ -2552,7 +2552,7 @@ begin
       y := y + yMax  * scale; //yMax = char ascent
       dy := - yMin * scale;   //yMin = char descent
     end;
-    AppendPath(Result, Img32.Vector.OffsetPath( glyphInfo.contours, x + dx, y));
+    AppendPath(Result, TranslatePath( glyphInfo.contours, x + dx, y));
     if text[i] = #32 then
       y := y + dy - interCharSpace else
       y := y + dy + interCharSpace;
@@ -2593,7 +2593,7 @@ begin
         nextX := nextX + prevGlyphKernList[j].kernValue * fScale;
     end;
 
-    currGlyph := OffsetPath(glyphInfo.contours, nextX, y);
+    currGlyph := TranslatePath(glyphInfo.contours, nextX, y);
     dx := glyphInfo.metrics.hmtx.advanceWidth * fScale;
 
     if i = underlineIdx then
@@ -2895,7 +2895,7 @@ begin
       y := y + yMax  * scale; //yMax = char ascent
       dy := - yMin * scale;   //yMin = char descent
     end;
-    glyphs := Img32.Vector.OffsetPath( glyphInfo.contours, x + dx, y);
+    glyphs := TranslatePath( glyphInfo.contours, x + dx, y);
     DrawPolygon(image, glyphs, frNonZero, textColor);
     if text[i] = #32 then
       y := y + dy - interCharSpace else
@@ -3012,7 +3012,7 @@ begin
     pt.X := pathInfo.pt.X + pathInfo.vector.X * dx - rotatePt.X;
     pt.Y := pathInfo.pt.Y + pathInfo.vector.Y * dx - rotatePt.Y;
 
-    tmpPaths := OffsetPath(tmpPaths, pt.X, pt.Y);
+    tmpPaths := TranslatePath(tmpPaths, pt.X, pt.Y);
     AppendPath(Result, tmpPaths);
   end;
 end;

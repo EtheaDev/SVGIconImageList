@@ -3,9 +3,9 @@ unit Img32.SVG.Path;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  14 October 2023                                                   *
+* Date      :  16 March 2024                                                   *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2021                                         *
+* Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
 * Purpose   :  Essential structures and functions to read SVG Path elements    *
 *                                                                              *
@@ -276,7 +276,6 @@ implementation
 resourcestring
   rsSvgPathRangeError = 'TSvgPath.GetPath range error';
   rsSvgSubPathRangeError = 'TSvgSubPath.GetSeg range error';
-  //rsSvgSegmentRangeError = 'TSvgSegment.GetVal range error';
 
 //------------------------------------------------------------------------------
 // Miscellaneous functions ...
@@ -418,22 +417,22 @@ end;
 function TSvgPathSeg.DescaleAndOffset(const pt: TPointD): TPointD;
 begin
   Result := pt;
-  OffsetPoint(Result, -parent.PathOffset.X, -parent.PathOffset.Y);
+  TranslatePoint(Result, -parent.PathOffset.X, -parent.PathOffset.Y);
   Result := ScalePoint(Result, 1/Owner.Scale);
 end;
 //------------------------------------------------------------------------------
 
 function TSvgPathSeg.DescaleAndOffset(const p: TPathD): TPathD;
 begin
-  Result := OffsetPath(p, -parent.PathOffset.X, -parent.PathOffset.Y);
+  Result := TranslatePath(p, -parent.PathOffset.X, -parent.PathOffset.Y);
   Result := ScalePath(Result, 1/Owner.Scale);
 end;
 //------------------------------------------------------------------------------
 
 procedure TSvgPathSeg.Offset(dx, dy: double);
 begin
-  fFirstPt := OffsetPoint(fFirstPt, dx, dy);
-  fCtrlPts := OffsetPath(fCtrlPts, dx, dy);
+  fFirstPt := TranslatePoint(fFirstPt, dx, dy);
+  fCtrlPts := TranslatePath(fCtrlPts, dx, dy);
 end;
 //------------------------------------------------------------------------------
 
@@ -562,9 +561,9 @@ begin
     begin
       dx := ai.startPos.X - startPos.X;
       dy := ai.startPos.Y - startPos.Y;
-      OffsetRect(rec, dx, dy);
+      TranslateRect(rec, dx, dy);
       startPos := ai.startPos;
-      endPos := OffsetPoint(endPos, dx, dy);
+      endPos := TranslatePoint(endPos, dx, dy);
     end;
   end;
   SetCtrlPtsFromArcInfo;
@@ -669,9 +668,9 @@ begin
   inherited;
   with fArcInfo do
   begin
-    OffsetRect(rec, dx, dy);
-    startPos := OffsetPoint(startPos, dx, dy);
-    endPos := OffsetPoint(endPos, dx, dy);
+    TranslateRect(rec, dx, dy);
+    startPos := TranslatePoint(startPos, dx, dy);
+    endPos := TranslatePoint(endPos, dx, dy);
   end;
 end;
 //------------------------------------------------------------------------------
@@ -1287,7 +1286,6 @@ procedure TSvgSubPath.Offset(dx, dy: double);
 var
   i: integer;
 begin
-  //fPathOffset := OffsetPoint(pathOffset, dx,dy); //DON'T DO THIS!
   for i := 0 to High(fSegs) do fSegs[i].Offset(dx, dy);
 end;
 //------------------------------------------------------------------------------
@@ -1592,16 +1590,26 @@ begin
   for i := 0 to Count -1 do
     with fSubPaths[i] do
     begin
-      AppendPath(p, GetFirstPt);
+      AppendToPath(p, GetFirstPt);
       for j := 0 to High(fSegs) do
         AppendPath(p, fSegs[j].fCtrlPts);
     end;
   Result := GetBoundsD(p);
 
   //watch out for straight horizontal or vertical lines
-  if not IsEmptyRect(Result) then Exit;
-  p := Grow(p, nil, 1, jsSquare, 0);
-  Result := GetBoundsD(p);
+  if IsEmptyRect(Result) then
+  begin
+    if Result.Width = 0 then
+    begin
+      Result.Left := Result.Left - 0.5;
+      Result.Right := Result.Left + 1.0;
+    end
+    else if Result.Height = 0 then
+    begin
+      Result.Top := Result.Top - 0.5;
+      Result.Bottom := Result.Top + 1.0;
+    end;
+  end;
 end;
 //------------------------------------------------------------------------------
 

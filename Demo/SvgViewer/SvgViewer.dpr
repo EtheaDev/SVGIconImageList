@@ -10,6 +10,7 @@ uses
 {$R *.res}
 
 begin
+  Application.Title := 'SVG Preview & Engine Comparison - Copyright (c) 2020-2024 Ethea S.r.l.';
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TSVGViewerForm, SVGViewerForm);

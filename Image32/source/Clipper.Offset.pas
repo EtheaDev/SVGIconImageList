@@ -2,9 +2,9 @@ unit Clipper.Offset;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Date      :  24 September 2023                                               *
+* Date      :  14 March 2024                                                   *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2010-2023                                         *
+* Copyright :  Angus Johnson 2010-2024                                         *
 * Purpose   :  Path Offset (Inflate/Shrink)                                    *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -32,13 +32,18 @@ type
   TDeltaCallback64 = function (const path: TPath64;
     const path_norms: TPathD; currIdx, prevIdx: integer): double of object;
 
+  TDoubleArray = array of double;
+  BooleanArray = array of Boolean;
 
   TGroup = class
-	  paths     : TPaths64;
-    reversed  : Boolean;
-	  joinType  : TJoinType;
-	  endType   : TEndType;
-    constructor Create(jt: TJoinType; et: TEndType);
+	  paths         : TPaths64;
+	  joinType      : TJoinType;
+	  endType       : TEndType;
+    reversed      : Boolean;
+    lowestPathIdx : integer;
+    areasList     : TDoubleArray;
+    isHoleList    : BooleanArray;
+    constructor Create(const pathsIn: TPaths64; jt: TJoinType; et: TEndType);
   end;
 
   TClipperOffset = class
@@ -58,9 +63,10 @@ type
     fGroupList    : TListEx;
     fInPath       : TPath64;
     fOutPath      : TPath64;
-    fOutPaths     : TPaths64;
     fOutPathLen   : Integer;
     fSolution     : TPaths64;
+    fSolutionLen  : Integer;
+    fSolutionTree : TPolyTree64;
     fPreserveCollinear  : Boolean;
     fReverseSolution    : Boolean;
     fDeltaCallback64    : TDeltaCallback64;
@@ -80,9 +86,13 @@ type
 
     procedure BuildNormals;
     procedure DoGroupOffset(group: TGroup);
-    procedure OffsetPolygon;
+    procedure OffsetPolygon(isShrinking: Boolean; area_: double);
     procedure OffsetOpenJoined;
     procedure OffsetOpenPath;
+    function CalcSolutionCapacity: integer;
+    procedure UpdateSolution; {$IFDEF INLINING} inline; {$ENDIF}
+
+    function CheckReverseOrientation: Boolean;
     procedure ExecuteInternal(delta: Double);
   public
     constructor Create(miterLimit: double = 2.0;
@@ -118,6 +128,10 @@ implementation
 
 uses
   Math;
+
+resourcestring
+  rsClipper_CoordRangeError =
+    'Offsetting will exceed the valid coordinate range';
 
 const
   TwoPi     : Double = 2 * PI;
@@ -186,21 +200,21 @@ end;
 function GetLowestPolygonIdx(const paths: TPaths64): integer;
 var
   i,j: integer;
-  lp: TPoint64;
-  p: TPath64;
+  botPt: TPoint64;
 begin
 	Result := -1;
-  lp := Point64(0, -MaxInt64);
-	for i := 0 to High(paths) do
-	begin
-		p := paths[i];
-		for j := 0 to High(p) do
-    begin
-      if (p[j].Y < lp.Y) or
-        ((p[j].Y = lp.Y) and (p[j].X >= lp.X)) then Continue;
-      Result := i;
-      lp := p[j];
-    end;
+  botPt := Point64(MaxInt64, MinInt64);
+  for i := 0 to High(paths) do
+  begin
+    for j := 0 to High(paths[i]) do
+      with paths[i][j] do
+      begin
+        if (Y < botPt.Y) or
+          ((Y = botPt.Y) and (X >= botPt.X)) then Continue;
+        result := i;
+        botPt.X := X;
+        botPt.Y := Y;
+      end;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -215,10 +229,48 @@ end;
 // TGroup methods
 //------------------------------------------------------------------------------
 
-constructor TGroup.Create(jt: TJoinType; et: TEndType);
+constructor TGroup.Create(const pathsIn: TPaths64; jt: TJoinType; et: TEndType);
+var
+  i, len: integer;
+  a: double;
+  isJoined: boolean;
+  pb: PBoolean;
 begin
   Self.joinType := jt;
   Self.endType := et;
+
+  isJoined := et in [etPolygon, etJoined];
+  len := Length(pathsIn);
+  SetLength(paths, len);
+  for i := 0 to len -1 do
+    paths[i] := StripDuplicates(pathsIn[i], isJoined);
+
+  reversed := false;
+	SetLength(isHoleList, len);
+	SetLength(areasList, len);
+  if (et = etPolygon) then
+  begin
+    pb := @isHoleList[0];
+    for i := 0 to len -1 do
+    begin
+      a := Area(paths[i]);
+      pb^ := a < 0;
+      inc(pb);
+    end;
+
+    // the lowermost path must be an outer path, so if its orientation is
+    // negative, then flag that the whole group is 'reversed' (so negate
+    // delta etc.) as this is much more efficient than reversing every path.
+	  lowestPathIdx := GetLowestPolygonIdx(pathsIn);
+    reversed := (lowestPathIdx >= 0) and isHoleList[lowestPathIdx];
+    if not reversed then Exit;
+    pb := @isHoleList[0];
+    for i := 0 to len -1 do
+    begin
+      pb^ := not pb^; inc(pb);
+    end;
+  end else
+    lowestPathIdx := -1;
 end;
 
 //------------------------------------------------------------------------------
@@ -253,6 +305,7 @@ begin
     TGroup(fGroupList[i]).Free;
   fGroupList.Clear;
   fSolution := nil;
+  fSolutionLen := 0;
 end;
 //------------------------------------------------------------------------------
 
@@ -274,8 +327,7 @@ var
   group: TGroup;
 begin
   if Length(paths) = 0 then Exit;
-  group := TGroup.Create(joinType, endType);
-  AppendPaths(group.paths, paths);
+  group := TGroup.Create(paths, joinType, endType);
   fGroupList.Add(group);
 end;
 //------------------------------------------------------------------------------
@@ -302,45 +354,38 @@ end;
 
 procedure TClipperOffset.DoGroupOffset(group: TGroup);
 var
-  i,j, len, lowestIdx, steps: Integer;
-  r, stepsPer360, arcTol, area: Double;
+  i,j, len, steps: Integer;
+  r, stepsPer360, arcTol: Double;
   absDelta: double;
+  isShrinking: Boolean;
   rec: TRect64;
-  isJoined: Boolean;
+  pt0: TPoint64;
 begin
+
   if group.endType = etPolygon then
   begin
-    // the lowermost polygon must be an outer polygon. So we can use that as the
-    // designated orientation for outer polygons (needed for tidy-up clipping)
-    lowestIdx := GetLowestPolygonIdx(group.paths);
-    if lowestIdx < 0 then Exit;
-    // nb: don't use the default orientation here ...
-    area := Clipper.Core.Area(group.paths[lowestIdx]);
-    //if area = 0 then Exit; // this is probably unhelpful (#430)
-    group.reversed := (area < 0);
-    if group.reversed then fGroupDelta := -fDelta
-    else fGroupDelta := fDelta;
-  end else
-  begin
-    group.reversed := false;
-    fGroupDelta := Abs(fDelta) * 0.5;
-  end;
+    if (group.lowestPathIdx < 0) then fDelta := Abs(fDelta);
+    fGroupDelta := Iif(group.reversed, -fDelta, fDelta);
+  end
+  else
+    fGroupDelta := Abs(fDelta);
+
+  absDelta := Abs(fGroupDelta);
+
   fJoinType := group.joinType;
   fEndType := group.endType;
 
-  // calculate a sensible number of steps (for 360 deg for the given offset
-  if (not Assigned(fDeltaCallback64) and
-    (group.joinType = jtRound) or (group.endType = etRound)) then
+  if (group.joinType = jtRound) or (group.endType = etRound) then
   begin
-    absDelta := Abs(fGroupDelta);
-		// arcTol - when fArcTolerance is undefined (0), the amount of
-		// curve imprecision that's allowed is based on the size of the
-		// offset (delta). Obviously very large offsets will almost always
-		// require much less precision. See also offset_triginometry2.svg
-    if fArcTolerance > 0.01 then
-      arcTol := Min(absDelta, fArcTolerance) else
-      arcTol := Log10(2 + absDelta) * 0.25; // empirically derived
-    //http://www.angusj.com/clipper2/Docs/Trigonometry.htm
+		// calculate the number of steps required to approximate a circle
+    // (see http://www.angusj.com/clipper2/Docs/Trigonometry.htm)
+		// arcTol - when arc_tolerance_ is undefined (0) then curve imprecision
+    // will be relative to the size of the offset (delta). Obviously very
+    //large offsets will almost always require much less precision.
+    arcTol := Iif(fArcTolerance > 0.01,
+      Min(absDelta, fArcTolerance),
+      Log10(2 + absDelta) * 0.25); // empirically derived
+
     stepsPer360 := Pi / ArcCos(1 - arcTol / absDelta);
 		if (stepsPer360 > absDelta * Pi) then
 			stepsPer360 := absDelta * Pi;  // avoid excessive precision
@@ -350,72 +395,67 @@ begin
     fStepsPerRad := stepsPer360 / TwoPi;
   end;
 
-  fOutPaths := nil;
-  isJoined := fEndType in [etPolygon, etJoined];
   for i := 0 to High(group.paths) do
   begin
-    fInPath := StripDuplicates(group.paths[i], IsJoined);
-    len := Length(fInPath);
-    if (len = 0) or ((len < 3) and (fEndType = etPolygon)) then
-      Continue;
+    isShrinking := (group.endType = etPolygon) and
+      (group.reversed = ((fGroupDelta < 0) = group.isHoleList[i]));
 
+    fInPath := group.paths[i];
     fNorms := nil;
-    fOutPath := nil;
-    fOutPathLen := 0;
+    len := Length(fInPath);
 
 		//if a single vertex then build a circle or a square ...
     if len = 1 then
     begin
       if fGroupDelta < 1 then Continue;
-      absDelta := Abs(fGroupDelta);
+      pt0 := fInPath[0];
+
+      if Assigned(fDeltaCallback64) then
+      begin
+        fGroupDelta := fDeltaCallback64(fInPath, fNorms, 0, 0);
+        if TGroup(fGroupList[0]).reversed then fGroupDelta := -fGroupDelta;
+        absDelta := Abs(fGroupDelta);
+      end;
+
       if (group.endType = etRound) then
       begin
         r := absDelta;
-        with fInPath[0] do
-        begin
-          steps := Ceil(fStepsPerRad * TwoPi); //#617
-          fOutPath := Path64(Ellipse(RectD(X-r, Y-r, X+r, Y+r), steps));
+        steps := Ceil(fStepsPerRad * TwoPi); //#617
+        fOutPath := Path64(Ellipse(
+          RectD(pt0.X-r, pt0.Y-r, pt0.X+r, pt0.Y+r), steps));
 {$IFDEF USINGZ}
-          for j := 0 to high(fOutPath) do
-            fOutPath[j].Z := Z;
+        for j := 0 to high(fOutPath) do
+          fOutPath[j].Z := pt0.Z;
 {$ENDIF}
-        end;
       end else
       begin
         j := Round(absDelta);
-        with fInPath[0] do
-        begin
-          rec := Rect64(X -j, Y -j, X+j, Y+j);
-          fOutPath := rec.AsPath;
+        rec := Rect64(pt0.X -j, pt0.Y -j, pt0.X+j, pt0.Y+j);
+        fOutPath := rec.AsPath;
 {$IFDEF USINGZ}
-          for j := 0 to high(fOutPath) do
-            fOutPath[j].Z := Z;
+        for j := 0 to high(fOutPath) do
+          fOutPath[j].Z := pt0.Z;
 {$ENDIF}
-        end
       end;
-      AppendPath(fOutPaths, fOutPath);
+      UpdateSolution;
       Continue;
-    end else
-    begin
-      if (len = 2) and (group.endType = etJoined) then
-      begin
-        if fJoinType = jtRound then
-          fEndType := etRound else
-          fEndType := etSquare;
-      end;
-      BuildNormals;
+    end; // end of offsetting a single point
 
-      if fEndType = etPolygon then OffsetPolygon
-      else if fEndType = etJoined then OffsetOpenJoined
-      else OffsetOpenPath;
+    if (len = 2) and (group.endType = etJoined) then
+    begin
+      if fJoinType = jtRound then
+        fEndType := etRound else
+        fEndType := etSquare;
     end;
 
-    if fOutPathLen = 0 then Continue;
-    SetLength(fOutPath, fOutPathLen);
-    AppendPath(fOutPaths, fOutPath);
+    BuildNormals;
+    if fEndType = etPolygon then
+      OffsetPolygon(isShrinking, group.areasList[i])
+    else if fEndType = etJoined then
+      OffsetOpenJoined
+    else
+      OffsetOpenPath;
   end;
-  // finally copy the working 'outPaths' to the solution
-  AppendPaths(fSolution, fOutPaths);
 end;
 //------------------------------------------------------------------------------
 
@@ -431,44 +471,57 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TClipperOffset.OffsetPolygon;
+procedure TClipperOffset.UpdateSolution;
+begin
+  if fOutPathLen = 0 then Exit;
+  SetLength(fOutPath, fOutPathLen);
+  fSolution[fSolutionLen] := fOutPath;
+  inc(fSolutionLen);
+  fOutPath := nil;
+  fOutPathLen := 0;
+end;
+//------------------------------------------------------------------------------
+
+function TClipperOffset.CalcSolutionCapacity: integer;
+var
+  i: integer;
+begin
+  Result := 0;
+  for i := 0 to fGroupList.Count -1 do
+    with TGroup(fGroupList[i]) do
+    if endType = etJoined then
+      inc(Result, Length(paths) *2) else
+      inc(Result, Length(paths));
+end;
+//------------------------------------------------------------------------------
+
+procedure TClipperOffset.OffsetPolygon(isShrinking: Boolean; area_: double);
 var
   i,j: integer;
-  a, offsetMinDim: double;
-  rec: TRect64;
 begin
-  //when the path is contracting, make sure
-  //there is sufficient space to do so.                //#593
-  //nb: this will have a small impact on performance
-  a := Area(fInPath);
-  if (a < 0) <> (fGroupDelta < 0) then
-  begin
-    rec := GetBounds(fInPath);
-    offsetMinDim := Abs(fGroupDelta) * 2;
-    if (offsetMinDim >= rec.Width) or (offsetMinDim >= rec.Height) then Exit;
-  end;
-
   j := high(fInPath);
   for i := 0 to high(fInPath) do
     OffsetPoint(i, j);
+
+  // make sure that polygon areas aren't reversing which would indicate
+  // that the polygon has shrunk too far and that it should be discarded.
+  // See also - #593 & #715
+  if isShrinking and (area_ <> 0) and // area = 0.0 when JoinType.Joined
+    ((area_ < 0) <> (Area(fOutPath) < 0)) then Exit;
+
+  UpdateSolution;
 end;
 //------------------------------------------------------------------------------
 
 procedure TClipperOffset.OffsetOpenJoined;
 begin
-  OffsetPolygon;
-  SetLength(fOutPath, fOutPathLen);
-  AppendPath(fOutPaths, fOutPath);
-  fOutPath := nil;
-  fOutPathLen := 0;
+  OffsetPolygon(false, 0);
   fInPath := ReversePath(fInPath);
-
   // Rebuild normals // BuildNormals;
   fNorms := ReversePath(fNorms);
   fNorms := ShiftPath(fNorms, 1);
   fNorms := NegatePath(fNorms);
-
-  OffsetPolygon;
+  OffsetPolygon(true, 0);
 end;
 //------------------------------------------------------------------------------
 
@@ -481,16 +534,28 @@ begin
   if Assigned(fDeltaCallback64) then
     fGroupDelta := fDeltaCallback64(fInPath, fNorms, 0, 0);
 
-  // do the line start cap
-  if Abs(fGroupDelta) < Tolerance then
+  if (Abs(fGroupDelta) < Tolerance) and
+    not Assigned(fDeltaCallback64) then
   begin
-    AddPoint(fInPath[0]);
-  end else
-  case fEndType of
-    etButt: DoBevel(0, 0);
-    etRound: DoRound(0,0, PI);
-    else DoSquare(0, 0);
+    inc(highI);
+    SetLength(fOutPath, highI);
+    Move(fInPath[0], fOutPath, highI + SizeOf(TPointD));
+    fOutPathLen := highI;
+    Exit;
   end;
+
+  // do the line start cap
+  if Assigned(fDeltaCallback64) then
+    fGroupDelta := fDeltaCallback64(fInPath, fNorms, 0, 0);
+
+  if (Abs(fGroupDelta) < Tolerance) then
+    AddPoint(fInPath[0])
+  else
+    case fEndType of
+      etButt: DoBevel(0, 0);
+      etRound: DoRound(0,0, PI);
+      else DoSquare(0, 0);
+    end;
 
   // offset the left side going forward
   k := 0;
@@ -520,19 +585,26 @@ begin
   end;
 
   // offset the left side going back
-  k := 0;
-  for i := highI downto 1 do //and stop at 1!
+  k := highI;
+  for i := highI -1 downto 1 do //and stop at 1!
     OffsetPoint(i, k);
+
+  UpdateSolution;
 end;
 //------------------------------------------------------------------------------
 
 procedure TClipperOffset.ExecuteInternal(delta: Double);
 var
-  i: integer;
+  i,j: integer;
   group: TGroup;
+  pathsReversed: Boolean;
+  fillRule: TFillRule;
+  dummy: TPaths64;
 begin
   fSolution := nil;
+  fSolutionLen := 0;
   if fGroupList.Count = 0 then Exit;
+  SetLength(fSolution, CalcSolutionCapacity);
 
   fMinLenSqrd := 1;
   if abs(delta) < Tolerance then
@@ -541,7 +613,11 @@ begin
     for i := 0 to fGroupList.Count -1 do
     begin
       group := TGroup(fGroupList[i]);
-      AppendPaths(fSolution, group.paths);
+      for j := 0 to High(group.paths) do
+      begin
+        fSolution[fSolutionLen] := group.paths[i];
+        inc(fSolutionLen);
+      end;
     end;
     Exit;
   end;
@@ -558,45 +634,52 @@ begin
     group := TGroup(fGroupList[i]);
     DoGroupOffset(group);
   end;
+  SetLength(fSolution, fSolutionLen);
+
+  pathsReversed := CheckReverseOrientation();
+  if pathsReversed then
+    fillRule := frNegative else
+    fillRule := frPositive;
 
   // clean up self-intersections ...
   with TClipper64.Create do
   try
     PreserveCollinear := fPreserveCollinear;
     // the solution should retain the orientation of the input
-    ReverseSolution :=
-      fReverseSolution <> TGroup(fGroupList[0]).reversed;
+    ReverseSolution := fReverseSolution <> pathsReversed;
     AddSubject(fSolution);
-    if TGroup(fGroupList[0]).reversed then
-      Execute(ctUnion, frNegative, fSolution) else
-      Execute(ctUnion, frPositive, fSolution);
+    if assigned(fSolutionTree) then
+      Execute(ctUnion, fillRule, fSolutionTree, dummy);
+      Execute(ctUnion, fillRule, fSolution);
   finally
     free;
   end;
 end;
 //------------------------------------------------------------------------------
 
+function TClipperOffset.CheckReverseOrientation: Boolean;
+var
+  i: integer;
+begin
+  Result := false;
+  // find the orientation of the first closed path
+  for i := 0 to fGroupList.Count -1 do
+    with TGroup(fGroupList[i]) do
+      if endType = etPolygon then
+      begin
+        Result := reversed;
+        break;
+      end;
+end;
+//------------------------------------------------------------------------------
+
 procedure TClipperOffset.Execute(delta: Double; out solution: TPaths64);
 begin
-  fSolution := nil;
   solution := nil;
-  ExecuteInternal(delta);
+  fSolutionTree := nil;
   if fGroupList.Count = 0 then Exit;
-
-  // clean up self-intersections ...
-  with TClipper64.Create do
-  try
-    PreserveCollinear := fPreserveCollinear;
-    // the solution should retain the orientation of the input
-    ReverseSolution :=
-      fReverseSolution <> TGroup(fGroupList[0]).reversed;
-    AddSubject(fSolution);
-    if TGroup(fGroupList[0]).reversed then
-      Execute(ctUnion, frNegative, solution) else
-      Execute(ctUnion, frPositive, solution);
-  finally
-    free;
-  end;
+  ExecuteInternal(delta);
+  solution := fSolution;
 end;
 //------------------------------------------------------------------------------
 
@@ -608,29 +691,12 @@ end;
 //------------------------------------------------------------------------------
 
 procedure TClipperOffset.Execute(delta: Double; polytree: TPolyTree64);
-var
-  dummy: TPaths64;
 begin
-  fSolution := nil;
   if not Assigned(polytree) then
     Raise EClipper2LibException(rsClipper_PolyTreeErr);
-
+  fSolutionTree := polytree;
+  fSolutionTree.Clear;
   ExecuteInternal(delta);
-
-  // clean up self-intersections ...
-  with TClipper64.Create do
-  try
-    PreserveCollinear := fPreserveCollinear;
-    // the solution should retain the orientation of the input
-    ReverseSolution :=
-      fReverseSolution <> TGroup(fGroupList[0]).reversed;
-    AddSubject(fSolution);
-    if TGroup(fGroupList[0]).reversed then
-      Execute(ctUnion, frNegative, polytree, dummy) else
-      Execute(ctUnion, frPositive, polytree, dummy);
-  finally
-    free;
-  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -718,20 +784,38 @@ begin
   if k = j then
   begin
 		absDelta :=  abs(fGroupDelta);
+{$IFDEF USINGZ}
+		AddPoint(
+      fInPath[j].x - absDelta * fNorms[j].x,
+      fInPath[j].y - absDelta * fNorms[j].y, fInPath[j].z);
+		AddPoint(
+      fInPath[j].x + absDelta * fNorms[j].x,
+      fInPath[j].y + absDelta * fNorms[j].y, fInPath[j].z);
+{$ELSE}
 		AddPoint(
       fInPath[j].x - absDelta * fNorms[j].x,
       fInPath[j].y - absDelta * fNorms[j].y);
 		AddPoint(
       fInPath[j].x + absDelta * fNorms[j].x,
       fInPath[j].y + absDelta * fNorms[j].y);
+{$ENDIF}
   end else
   begin
+{$IFDEF USINGZ}
+		AddPoint(
+      fInPath[j].x + fGroupDelta * fNorms[k].x,
+      fInPath[j].y + fGroupDelta * fNorms[k].y, fInPath[j].z);
+		AddPoint(
+      fInPath[j].x + fGroupDelta * fNorms[j].x,
+      fInPath[j].y + fGroupDelta * fNorms[j].y, fInPath[j].z);
+{$ELSE}
 		AddPoint(
       fInPath[j].x + fGroupDelta * fNorms[k].x,
       fInPath[j].y + fGroupDelta * fNorms[k].y);
 		AddPoint(
       fInPath[j].x + fGroupDelta * fNorms[j].x,
       fInPath[j].y + fGroupDelta * fNorms[j].y);
+{$ENDIF}
   end;
 end;
 //------------------------------------------------------------------------------
@@ -827,9 +911,9 @@ begin
     // when fDeltaCallback64 is assigned, fGroupDelta won't be constant,
     // so we'll need to do the following calculations for *every* vertex.
     absDelta := Abs(fGroupDelta);
-    if fArcTolerance > 0.01 then
-      arcTol := Min(absDelta, fArcTolerance) else
-      arcTol := Log10(2 + absDelta) * 0.25; // empirically derived
+    arcTol := Iif(fArcTolerance > 0.01,
+      Min(absDelta, fArcTolerance),
+      Log10(2 + absDelta) * 0.25); // empirically derived
     //http://www.angusj.com/clipper2/Docs/Trigonometry.htm
     stepsPer360 := Pi / ArcCos(1 - arcTol / absDelta);
 		if (stepsPer360 > absDelta * Pi) then
@@ -864,7 +948,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TClipperOffset.OffsetPoint(j: Integer; var k: integer);
+  procedure TClipperOffset.OffsetPoint(j: Integer; var k: integer);
 var
   sinA, cosA: Double;
 begin
@@ -897,7 +981,7 @@ begin
   end;
 
   //test for concavity first (#593)
-  if (cosA > -0.99) and (sinA * fGroupDelta < 0) then
+  if (cosA > -0.999) and (sinA * fGroupDelta < 0) then
   begin
     // is concave
     AddPoint(GetPerpendic(fInPath[j], fNorms[k], fGroupDelta));
@@ -906,20 +990,21 @@ begin
     AddPoint(fInPath[j]); // (#405)
     AddPoint(GetPerpendic(fInPath[j], fNorms[j], fGroupDelta));
   end
-  else if (cosA > 0.999) then
-    // almost straight - less than 2.5 degree (#424, #526)
-    DoMiter(j, k, cosA)
+  else if (cosA > 0.999) and (fJoinType <> jtRound) then
+  begin
+    // almost straight - less than 2.5 degree (#424, #482, #526 & #724)
+    DoMiter(j, k, cosA);
+  end
   else if (fJoinType = jtMiter) then
   begin
-    // miter unless the angle is so acute the miter would exceeds ML
+		// miter unless the angle is sufficiently acute to exceed ML
     if (cosA > fTmpLimit -1) then DoMiter(j, k, cosA)
     else DoSquare(j, k);
   end
-  else if (cosA > 0.99) or (fJoinType = jtBevel) then
-		// ie > 2.5 deg (see above) but less than ~8 deg ( acos(0.99) )
-    DoBevel(j, k)
   else if (fJoinType = jtRound) then
     DoRound(j, k, ArcTan2(sinA, cosA))
+  else if (fJoinType = jtBevel) then
+    DoBevel(j, k)
   else
     DoSquare(j, k);
 
