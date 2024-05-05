@@ -3,9 +3,9 @@ unit Img32.Panels;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  26 March 2023                                                   *
+* Date      :  24 April 2024                                                   *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2021                                         *
+* Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Component that displays images on a TPanel descendant           *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -484,7 +484,7 @@ var
   h,w: integer;
 begin
   if IsEmpty then Exit;
-  fScale := 1;
+  //fScale := 1;
   fScrollbarHorz.srcOffset := 0;
   fScrollbarVert.srcOffset := 0;
   rec := GetInnerClientRect;

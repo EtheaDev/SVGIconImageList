@@ -3,7 +3,7 @@ unit Img32;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  16 April 2024                                                   *
+* Date      :  25 April 2024                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  The core module of the Image32 library                          *
@@ -479,7 +479,9 @@ type
   function ClampByte(val: Integer): byte; overload; {$IFDEF INLINE} inline; {$ENDIF}
   function ClampByte(val: double): byte; overload; {$IFDEF INLINE} inline; {$ENDIF}
   function ClampRange(val, min, max: Integer): Integer; overload;
+    {$IFDEF INLINE} inline; {$ENDIF}
   function ClampRange(val, min, max: double): double; overload;
+    {$IFDEF INLINE} inline; {$ENDIF}
   function IncPColor32(pc: Pointer; cnt: Integer): PColor32;
 
   procedure NormalizeAngle(var angle: double; tolerance: double = Pi/360);
@@ -547,7 +549,7 @@ var
   rNearestResampler : integer;
   rBilinearResampler: integer;
   rBicubicResampler : integer;
-
+  rWeightedBilinear : integer;
   DefaultResampler: Integer = 0;
 
   //Both MulTable and DivTable are used in blend functions
@@ -1980,7 +1982,7 @@ begin
 
   BlockNotify;
   try
-    if fResampler = 0 then
+    if fResampler <= rNearestResampler then
       NearestNeighborResize(newWidth, newHeight)
     else
       ResamplerResize(newWidth, newHeight);
@@ -2007,16 +2009,15 @@ begin
   //get scaled X & Y values once only (storing them in lookup arrays) ...
   SetLength(scaledXi, newWidth);
   for x := 0 to newWidth -1 do
-    scaledXi[x] := Floor(x * fWidth / newWidth);
+    scaledXi[x] := Trunc(x * fWidth / newWidth);
   SetLength(scaledYi, newHeight);
   for y := 0 to newHeight -1 do
-    scaledYi[y] := Floor(y * fHeight / newHeight);
+    scaledYi[y] := Trunc(y * fHeight / newHeight);
 
   pc := @tmp[0];
   for y := 0 to newHeight - 1 do
   begin
     srcY := scaledYi[y];
-    if (srcY < 0) or (srcY >= fHeight) then Continue;
     for x := 0 to newWidth - 1 do
     begin
       pc^ := fPixels[scaledXi[x] + srcY * fWidth];

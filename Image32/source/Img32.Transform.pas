@@ -3,7 +3,7 @@ unit Img32.Transform;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  16 April 2024                                                   *
+* Date      :  30 April 2024                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Affine and projective transformation routines for TImage32      *
@@ -36,12 +36,15 @@ type
   procedure MatrixApply(const matrix: TMatrixD; var rec: TRectD); overload;
   procedure MatrixApply(const matrix: TMatrixD; var path: TPathD); overload;
   procedure MatrixApply(const matrix: TMatrixD; var paths: TPathsD); overload;
+  procedure MatrixApply(const matrix: TMatrixD;
+    img: TImage32; scaleAdjust: Boolean = false); overload;
+
   function  MatrixInvert(var matrix: TMatrixD): Boolean;
 
-  //MatrixSkew: dx represents the delta offset of an X coordinate as a
-  //fraction of its Y coordinate, and likewise for dy. For example, if dx = 0.1
-  //and dy = 0, and the matrix is applied to the coordinate [20,15], then the
-  //transformed coordinate will become [20 + (15 * 0.1),10], ie [21.5,10].
+  // MatrixSkew: dx represents the delta offset of an X coordinate as a
+  // fraction of its Y coordinate, and likewise for dy. Example: if dx = 0.1
+  // and dy = 0, and the matrix is applied to the coordinate [20,15], then the
+  // transformed coordinate will become [20 + (15 * 0.1),10], ie [21.5,10].
   procedure MatrixSkew(var matrix: TMatrixD; angleX, angleY: double);
   procedure MatrixScale(var matrix: TMatrixD; scale: double); overload;
   procedure MatrixScale(var matrix: TMatrixD; scaleX, scaleY: double); overload;
@@ -49,10 +52,18 @@ type
     const center: TPointD; angRad: double);
   procedure MatrixTranslate(var matrix: TMatrixD; dx, dy: double);
 
-  //AffineTransformImage: automagically resizes and translates the image
-  function AffineTransformImage(img: TImage32; matrix: TMatrixD): TPoint;
+  // The following MatrixExtract routines assume here is no skew
+  procedure MatrixExtractScale(const mat: TMatrixD; out sx, sy: double);
+  procedure MatrixExtractTranslation(const mat: TMatrixD; out dx, dy: double);
+  procedure MatrixExtractRotation(const mat: TMatrixD; out angle: double);
 
-  //ProjectiveTransform:
+  // AffineTransformImage: will automagically translate the image
+  // Note: "scaleAdjust" prevents antialiasing extending way outside of images
+  // when they are being enlarged significantly and rotated concurrently
+  function AffineTransformImage(img: TImage32; matrix: TMatrixD;
+    scaleAdjust: Boolean = false): TPoint;
+
+  // ProjectiveTransform:
   //  srcPts, dstPts => each path must contain 4 points
   //  margins => the margins around dstPts (in the dest. projective).
   //  Margins are only meaningful when srcPts are inside the image.
@@ -100,6 +111,8 @@ const
   IdentityMatrix: TMatrixD = ((1, 0, 0),(0, 1, 0),(0, 0, 1));
 
 implementation
+
+uses Img32.Resamplers;
 
 resourcestring
   rsInvalidScale   = 'Invalid matrix scaling factor (0)';
@@ -261,6 +274,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure MatrixApply(const matrix: TMatrixD;
+  img: TImage32; scaleAdjust: Boolean);
+begin
+  AffineTransformImage(img, matrix, scaleAdjust);
+end;
+//------------------------------------------------------------------------------
+
 function MatrixMultiply(const modifier, matrix: TMatrixD): TMatrixD;
 var
   i, j: Integer;
@@ -367,6 +387,36 @@ begin
   m[0, 1] := tan(angleY);
   matrix := MatrixMultiply(m, matrix);
 end;
+//------------------------------------------------------------------------------
+
+procedure MatrixExtractScale(const mat: TMatrixD; out sx, sy: double);
+begin
+  sx := Sqrt(Sqr(mat[0,0]) + Sqr(mat[0,1]));
+  sy := Sqrt(Sqr(mat[1,0]) + Sqr(mat[1,1]));
+end;
+//------------------------------------------------------------------------------
+
+procedure MatrixExtractTranslation(const mat: TMatrixD; out dx, dy: double);
+begin
+  dx := mat[2,0];
+  dy := mat[2,1];
+end;
+//------------------------------------------------------------------------------
+
+procedure MatrixExtractRotation(const mat: TMatrixD; out angle: double);
+var
+  sx, sy: double;
+  mat2: TMatrixD;
+begin
+  MatrixExtractScale(mat, sx, sy);
+  mat2 := mat;
+  mat2[0,0] := mat2[0,0] / sx;
+  mat2[0,1] := mat2[0,1] / sx;
+  mat2[1,0] := mat2[1,0] / sy;
+  mat2[1,1] := mat2[1,1] / sy;
+
+  angle := ArcCos(mat2[0,0]);
+end;
 
 //------------------------------------------------------------------------------
 // Affine Transformation
@@ -382,15 +432,21 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function AffineTransformImage(img: TImage32; matrix: TMatrixD): TPoint;
+function AffineTransformImage(img: TImage32; matrix: TMatrixD;
+  scaleAdjust: Boolean): TPoint;
 var
   i, j: integer;
   newWidth, newHeight: integer;
-  x,y: double;
+  sx, sy, x,y: double;
+  xLimLo, yLimLo, xLimHi, yLimHi: double;
   pc: PColor32;
   tmp: TArrayOfColor32;
   dstRec: TRect;
   resampler: TResamplerFunction;
+{$IFDEF USE_DOWNSAMPLER_AUTOMATICALLY}
+  rx: double;
+  useBoxDownsampler: Boolean;
+{$ENDIF}
 begin
   Result := NullPoint;
   if IsIdentityMatrix(matrix) or
@@ -403,8 +459,30 @@ begin
 
   dstRec := img.Bounds;
   MatrixApply(matrix, dstRec);
-
   RectWidthHeight(dstRec, newWidth, newHeight);
+
+  MatrixExtractScale(matrix, sx, sy);
+{$IFDEF USE_DOWNSAMPLER_AUTOMATICALLY}
+  if (sx < 1.0) and (sy < 1.0) then
+  begin
+    //only use box downsampling when downsizing
+    MatrixExtractRotation(matrix, rx);
+    useBoxDownsampler := (rx = 0);
+  end else
+    useBoxDownsampler := false;
+
+  if useBoxDownsampler then
+  begin
+    BoxDownSampling(img, sx, sy);
+    Exit;
+  end;
+{$ENDIF}
+
+  if scaleAdjust then
+  begin
+    sx := Max(1, sx * 0.5);
+    sy := Max(1, sy * 0.5);
+  end;
 
   //auto-translate the image too
   Result := dstRec.TopLeft;
@@ -415,14 +493,25 @@ begin
 
   SetLength(tmp, newWidth * newHeight);
   pc := @tmp[0];
+  xLimLo := -0.5/sx;
+  xLimHi := img.Width + 0.5/sx;
+  yLimLo := -0.5/sy;
+  yLimHi := img.Height + 0.5/sy;
 
-  for i := dstRec.Top to + dstRec.Bottom -1 do
+  for i := dstRec.Top to dstRec.Bottom -1 do
   begin
     for j := dstRec.Left to dstRec.Right -1 do
     begin
       x := j; y := i;
       MatrixApply(matrix, x, y);
-      pc^ := resampler(img, x, y);
+
+      if (x <= xLimLo) or (x >= xLimHi) or (y <= yLimLo) or (y >= yLimHi) then
+        pc^ := clNone32
+      else
+        // nb: -0.5 below is needed to properly center the transformed image
+        // (and this is most obviously needed when there is large scaling)
+        pc^ := resampler(img, x - 0.5, y - 0.5);
+
       inc(pc);
     end;
   end;
@@ -550,6 +639,7 @@ function ProjectiveTransform(img: TImage32;
 var
   w,h,i,j: integer;
   x,y: double;
+  xLimLo, yLimLo, xLimHi, yLimHi: double;
   rec: TRect;
   dstPts2: TPathD;
   mat: TMatrixD;
@@ -574,6 +664,11 @@ begin
   inc(rec.Bottom, margins.Bottom);
   dstPts2 := TranslatePath(dstPts, -rec.Left, -rec.Top);
 
+  xLimLo := -0.5;
+  xLimHi := img.Width + 0.5;
+  yLimLo := -0.5;
+  yLimHi := img.Height + 0.5;
+
   mat := GetProjectionMatrix(srcPts, dstPts2);
   RectWidthHeight(rec, w, h);
   SetLength(tmp, w * h);
@@ -583,7 +678,11 @@ begin
     begin
       x := j; y := i;
       GetSrcCoords(mat, x, y);
-      pc^ := resampler(img, x, y);
+
+      if (x <= xLimLo) or (x >= xLimHi) or (y <= yLimLo) or (y >= yLimHi) then
+        pc^ := clNone32
+      else
+        pc^ := resampler(img, x -0.5, y -0.5);
       inc(pc);
     end;
   img.SetSize(w, h);
@@ -709,7 +808,8 @@ function SplineVertTransform(img: TImage32; const topSpline: TPathD;
   splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean;
 var
   i,j, w,h, len: integer;
-  y, q: double;
+  x,y, yy, q: double;
+  yLimLo, yLimHi: double;
   distances: TArrayOfDouble;
   pc: PColor32;
   rec: TRect;
@@ -746,29 +846,34 @@ begin
   backColor := backColor and $00FFFFFF;
 
   distances := GetCumulativeDistances(topPath);
-  q := img.Width * 256 / distances[High(distances)];;
+  q := img.Width / distances[High(distances)];
+
+  yLimLo := -0.5;
+  yLimHi := img.Height + 0.5;
+
   for i := 0 to len -1 do
   begin
     pc := @tmp[Round(topPath[i].X)-rec.Left];
     backColoring := allowBackColoring and (prevX >= topPath[i].X);
     prevX := topPath[i].X;
-    y := topPath[i].Y;
+    yy := topPath[i].Y;
     for j := rec.top to rec.bottom -1 do
     begin
-      if (j > y-1.0) and (j < y + img.Height) then
-        if backColoring then
-          pc^ := BlendToAlpha(pc^,
-            ReColor(resampler(img, Distances[i]*q, j - y), backColor))
-        else
-          pc^ := BlendToAlpha(pc^,
-            resampler(img, Round(Distances[i]*q), j - y));
+      x := Distances[i]*q;
+      y := j - yy;
+      if (y < yLimLo) or (y > yLimHi) then
+        // do nothing !
+      else if backColoring then
+        pc^ := BlendToAlpha(pc^, ReColor(resampler(img, x -0.5, y -0.5), backColor))
+      else
+        pc^ := BlendToAlpha(pc^, resampler(img, x -0.5, y -0.5));
       inc(pc, w);
     end;
   end;
 
   img.BeginUpdate;
   img.SetSize(w,h);
-  Move(tmp[0], img.Pixels[0], img.Width * img.Height * SizeOf(TColor32));
+  Move(tmp[0], img.Pixels[0], w*h * SizeOf(TColor32));
   img.EndUpdate;
 end;
 //------------------------------------------------------------------------------
@@ -777,7 +882,8 @@ function SplineHorzTransform(img: TImage32; const leftSpline: TPathD;
   splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean;
 var
   i,j, len, w,h: integer;
-  x, q, prevY: double;
+  x,y, xx, q, prevY: double;
+  xLimLo, xLimHi: double;
   leftPath: TPathD;
   distances: TArrayOfDouble;
   rec: TRect;
@@ -814,21 +920,28 @@ begin
   backColor :=   backColor and $00FFFFFF;
 
   distances := GetCumulativeDistances(leftPath);
-  q := img.Height * 256 / distances[High(distances)];;
+  q := img.Height / distances[High(distances)];;
+  xLimLo := -0.5;
+  xLimHi := img.Width + 0.5;
+
   for i := 0 to len -1 do
   begin
     pc := @tmp[Round(leftPath[i].Y - rec.Top) * w];
     backColoring := allowBackColoring and (prevY >= leftPath[i].Y);
     prevY := leftPath[i].Y;
-    x := leftPath[i].X;
+    xx := leftPath[i].X;
+    y := Distances[i]*q;
     for j := rec.left to rec.right -1 do
     begin
-      if (j > x-1.0) and (j < x + img.Width) then
-        if backColoring then
-          pc^ := BlendToAlpha(pc^,
-            ReColor(resampler(img, (j - x), Distances[i]*q), backColor))
-        else
-          pc^ := BlendToAlpha(pc^, resampler(img, (j - x), Distances[i]*q));
+      x := j - xx;
+
+      if (x < xLimLo) or (x > xLimHi) then
+        // do nothing !
+      else if backColoring then
+        pc^ := BlendToAlpha(pc^, ReColor(resampler(img, x -0.5, y -0.5), backColor))
+      else
+        pc^ := BlendToAlpha(pc^, resampler(img, x -0.5, y -0.5));
+
       inc(pc);
     end;
   end;

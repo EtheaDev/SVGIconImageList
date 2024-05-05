@@ -256,7 +256,6 @@ type
     //fMatrix: allows combining any number of scaling & rotating ops.
     fMatrix       : TMatrixD;
     fRotating     : Boolean;
-    //fSavedMidPt   : TPointD;
     fPreScaleSize : TSize;
     fAutoHitTest  : Boolean;
     procedure DoAutoHitTest;
@@ -274,7 +273,6 @@ type
 
     property  AutoSetHitTestMask: Boolean read fAutoHitTest write fAutoHitTest;
     property  MasterImage: TImage32 read fMasterImg;
-    //property  Matrix: TMatrixD read fMatrix;
   end;
 
   TButtonDesignerLayer32 = class;
@@ -1192,7 +1190,6 @@ begin
   end;
 
   //merge redraw all children
-  childImg := nil;
   for i := 0 to ChildCount -1 do
   begin
     childLayer := Child[i];
@@ -1818,7 +1815,8 @@ begin
     try
       Image.Assign(MasterImage);
       //apply any prior transformations
-      AffineTransformImage(Image, fMatrix);
+      Image.Resampler := rWeightedBilinear;
+      AffineTransformImage(Image, fMatrix, true); // assumes no skew
       //cropping is very important with rotation
       SymmetricCropTransparent(Image);
       w := Ceil(newBounds.Right) - Floor(newBounds.Left);
@@ -1867,7 +1865,8 @@ begin
     mat := fMatrix;
     pt := PointD(PivotPt.X - fLeft, PivotPt.Y - fTop);
     MatrixRotate(mat, pt, Angle);
-    AffineTransformImage(Image, mat);
+    Image.Resampler := rWeightedBilinear;
+    AffineTransformImage(Image, mat, true); // assumes no skew
   finally
     Image.UnblockNotify;
   end;

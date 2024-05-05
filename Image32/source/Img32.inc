@@ -1,7 +1,23 @@
-//NO_STORAGE is experimental 
-//Allows file system storage of layered objects etc 
-//Must be disabled to compile the experimental 'CtrlDemo' in Examples
+// While "storage" is still technically experimental,
+// it does allow file system storage of layered objects etc 
+// Comment out the following preprocessor define if you do wish to 
+// use storage (eg to compile the experimental 'CtrlDemo' in Examples).
 {$DEFINE NO_STORAGE}   
+
+// Image downsampling occurs when images are reduced in size, and the default downsampling  
+// function is 'BoxDownSampling'. When downsampling, this function generally produces much
+// clearer images than general purpose resamplers (which are much better at upsampling,
+// and doing other affine transformations). However, if for some reason you do wish to use 
+// a general purpose resampler while downsampling, then disable this define.
+{$DEFINE USE_DOWNSAMPLER_AUTOMATICALLY}
+
+// The SimplifyPath and SimplifyPaths functions have changed. Specifically the last 
+// parameter has changed from IsOpenPath to IsClosedPath, though the default has also 
+// changed from false to true which should minimise any inconvenience. This change was 
+// made to remove an inconsistency with other functions that all contain an IsClosedPath 
+// parameter. However, if this change is going to create havoc for some reason, then 
+// the following (somewhat temporary) define can be enabled.
+{.$DEFINE USE_OLD_SIMPLIFYPATHS}
 
 //USING_VCL_LCL - using either Delphi Visual Component Library or Lazarus Component Library
 //is required if using the TImage32Panel component

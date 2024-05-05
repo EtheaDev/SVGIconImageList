@@ -3,7 +3,7 @@ unit Img32.Vector;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  16 March 2024                                                   *
+* Date      :  2 May 2024                                                      *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -203,6 +203,9 @@ type
   function ScaleRect(const rec: TRectD; scale: double): TRectD; overload;
   function ScaleRect(const rec: TRect; sx, sy: double): TRect; overload;
   function ScaleRect(const rec: TRectD; sx, sy: double): TRectD; overload;
+
+  function ScalePathToFit(const path: TPathD; const rec: TRect): TPathD;
+  function ScalePathsToFit(const paths: TPathsD; const rec: TRect): TPathsD;
 
   function ReversePath(const path: TPathD): TPathD; overload;
   function ReversePath(const paths: TPathsD): TPathsD; overload;
@@ -716,44 +719,27 @@ end;
 
 function GetRotatedRectBounds(const rec: TRect; angle: double): TRect;
 var
-  sinA, cosA: double;
-  w,h, recW, recH: integer;
-  mp: TPoint;
+  p: TPathD;
+  mp: TPointD;
 begin
-  NormalizeAngle(angle);
+  p := Rectangle(rec);
+  mp := PointD((rec.Left + rec.Right)/2, (rec.Top + rec.Bottom)/2);
   if angle <> 0 then
-  begin
-    GetSinCos(angle, sinA, cosA); //the sign of the angle isn't important
-    sinA := Abs(sinA); cosA := Abs(cosA);
-    RectWidthHeight(rec, recW, recH);
-    w := Ceil((recW *cosA + recH *sinA) /2);
-    h := Ceil((recW *sinA + recH *cosA) /2);
-    mp := MidPoint(rec);
-    Result := Rect(mp.X - w, mp.Y - h, mp.X + w, mp.Y +h);
-  end
-  else
-    Result := rec;
+    p := RotatePath(p, mp, angle);
+  Result := GetBounds(p);
 end;
 //------------------------------------------------------------------------------
 
 function GetRotatedRectBounds(const rec: TRectD; angle: double): TRectD;
 var
-  sinA, cosA: double;
-  w,h: double;
+  p: TPathD;
   mp: TPointD;
 begin
-  NormalizeAngle(angle);
+  p := Rectangle(rec);
+  mp := PointD((rec.Left + rec.Right)/2, (rec.Top + rec.Bottom)/2);
   if angle <> 0 then
-  begin
-    GetSinCos(angle, sinA, cosA); //the sign of the angle isn't important
-    sinA := Abs(sinA); cosA := Abs(cosA);
-    w := (rec.Width *cosA + rec.Height *sinA) /2;
-    h := (rec.Width *sinA + rec.Height *cosA) /2;
-    mp := rec.MidPoint;
-    Result := RectD(mp.X - w, mp.Y - h, mp.X + w, mp.Y +h);
-  end
-  else
-    Result := rec;
+    p := RotatePath(p, mp, angle);
+  Result := GetBoundsD(p);
 end;
 //------------------------------------------------------------------------------
 
@@ -1288,6 +1274,42 @@ begin
   Result.Top := Result.Top * sy;
   Result.Right := Result.Right * sx;
   Result.Bottom := Result.Bottom * sy;
+end;
+//------------------------------------------------------------------------------
+
+function ScalePathToFit(const path: TPathD; const rec: TRect): TPathD;
+var
+  pathWidth, pathHeight, outHeight, outWidth: integer;
+  pathBounds: TRect;
+  scale: double;
+begin
+  pathBounds := GetBounds(path);
+  RectWidthHeight(pathBounds, pathWidth, pathHeight);
+  RectWidthHeight(rec, outWidth, outHeight);
+  Result := TranslatePath(path,
+    rec.Left - pathBounds.Left, rec.Top - pathBounds.Top);
+  if outWidth / pathWidth < outHeight / pathHeight then
+    scale := outWidth / pathWidth else
+    scale := outHeight / pathHeight;
+  Result := ScalePath(Result, scale, scale);
+end;
+//------------------------------------------------------------------------------
+
+function ScalePathsToFit(const paths: TPathsD; const rec: TRect): TPathsD;
+var
+  pathWidth, pathHeight, outHeight, outWidth: integer;
+  pathBounds: TRect;
+  scale: double;
+begin
+  pathBounds := GetBounds(paths);
+  RectWidthHeight(pathBounds, pathWidth, pathHeight);
+  RectWidthHeight(rec, outWidth, outHeight);
+  Result := TranslatePath(paths,
+    rec.Left - pathBounds.Left, rec.Top - pathBounds.Top);
+  if outWidth / pathWidth < outHeight / pathHeight then
+    scale := outWidth / pathWidth else
+    scale := outHeight / pathHeight;
+  Result := ScalePath(Result, scale, scale);
 end;
 //------------------------------------------------------------------------------
 
