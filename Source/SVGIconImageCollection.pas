@@ -139,6 +139,7 @@ implementation
 
 uses
   System.SysUtils
+  , VCL.Controls
   , {$IFDEF DXE4+}System.Messaging{$ELSE}SVGMessaging{$ENDIF};
 
 { TSVGIconImageCollection }
@@ -526,5 +527,14 @@ begin
 
   LSVG.PaintTo(ACanvas.Handle, TRectF.Create(ARect), AProportional);
 end;
+
+initialization
+
+{$IF NOT DEFINED(CLR)}
+  StartClassGroup(VCL.Controls.TControl);
+  ActivateClassGroup(VCL.Controls.TControl);
+  GroupDescendentsWith(TSVGIconImageCollection, VCL.Controls.TControl);
+{$ENDIF}
+
 
 end.
