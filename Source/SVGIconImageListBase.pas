@@ -48,7 +48,7 @@ uses
   SvgInterfaces;
 
 const
-  SVGIconImageListVersion = '4.1.4';
+  SVGIconImageListVersion = '4.1.5';
   DEFAULT_SIZE = 16;
 
 type
@@ -186,6 +186,15 @@ begin
       FFixedColor := TSVGIconImageListBase(Source).FFixedColor;
       FAntiAliasColor := TSVGIconImageListBase(Source).FAntiAliasColor;
       FGrayScale := TSVGIconImageListBase(Source).FGrayScale;
+      FApplyFixedColorToRootOnly := TSVGIconImageListBase(Source).FApplyFixedColorToRootOnly;
+      FAntiAliasColor := TSVGIconImageListBase(Source).FAntiAliasColor;
+      FDisabledGrayScale := TSVGIconImageListBase(Source).FDisabledGrayScale;
+      FDisabledOpacity := TSVGIconImageListBase(Source).FDisabledOpacity;
+      {$IFDEF HiDPISupport}
+      {$IFNDEF D10_4+}
+      FScaled := TSVGIconImageListBase(Source).FScaled;
+      {$ENDIF}
+      {$ENDIF}
       DoAssign(Source);
     finally
      EndUpdate;

@@ -3,9 +3,9 @@ unit Img32.Fmt.BMP;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  28 March 2024                                                   *
+* Date      :  8 May 2024                                                      *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2010-2024                                         *
+* Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  BMP file format extension for TImage32                          *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -729,6 +729,7 @@ var
   pc: PColor32;
   pb: PByte;
 begin
+  //rowSize = img32.Width *3 then rounded up to a multiple of 4
   rowSize := GetRowSize(24, img32.Width);
   delta := rowSize - (img32.Width *3);
   totalBytes := rowSize * img32.Height;
@@ -758,7 +759,6 @@ var
   UsesAlpha: Boolean;
   pals: TArrayOfColor32;
   tmp: TImage32;
-  writeValue: TTriColor32;
 begin
   //write everything except a BMP file header because some streams
   //(eg resource streams) don't need a file header
@@ -825,10 +825,9 @@ begin
       end;
     24:
       begin
-        bih.bV4V4Compression := BI_BITFIELDS;
         stream.Write(bih, bih.bV4Size);
-        writeValue := MakeBitfields;
-        stream.Write(writeValue, SizeOf(TTriColor32));
+        // nb: BI_BITFIELDS only used in 16bpp and 32bpp formats
+        // See BITMAPINFOHEADER structure
         StreamWrite24BitImage(tmp, stream);
       end
     else

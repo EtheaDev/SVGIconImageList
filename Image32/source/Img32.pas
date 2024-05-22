@@ -3,7 +3,7 @@ unit Img32;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  25 April 2024                                                   *
+* Date      :  7 May 2024                                                      *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  The core module of the Image32 library                          *
@@ -1075,7 +1075,7 @@ begin
   Result.biHeight := height;
   Result.biPlanes := 1;
   Result.biBitCount := 32;
-  Result.biSizeImage := width * height * SizeOf(TColor32);
+  Result.biSizeImage := width * Abs(height) * SizeOf(TColor32);
   Result.biCompression := BI_RGB;
 end;
 //------------------------------------------------------------------------------
@@ -2539,7 +2539,7 @@ begin
   try
     RectWidthHeight(srcRect, w,h);
     SetSize(w, h);
-    bi := Get32bitBitmapInfoHeader(w, h);
+    bi := Get32bitBitmapInfoHeader(w, -h); // -h => avoids need to flip image
     dc := GetDC(0);
     memDc := CreateCompatibleDC(dc);
     try
@@ -2559,7 +2559,7 @@ begin
       ReleaseDc(0, dc);
     end;
     if IsBlank then SetAlpha(255);
-    FlipVertical;
+    //FlipVertical;
   finally
     EndUpdate;
   end;
@@ -2586,12 +2586,12 @@ end;
 procedure TImage32.CopyToDc(const srcRect, dstRect: TRect;
   dstDc: HDC; transparent: Boolean = true);
 var
-  i, x,y, wSrc ,hSrc, wDest, hDest: integer;
+  i, x,y, wSrc ,hSrc, wDest, hDest, wBytes: integer;
   rec: TRect;
   bi: TBitmapInfoHeader;
   bm, oldBm: HBitmap;
   dibBits: Pointer;
-  pc: PARGB;
+  pDst, pSrc: PARGB;
   memDc: HDC;
   isTransparent: Boolean;
   bf: BLENDFUNCTION;
@@ -2616,11 +2616,15 @@ begin
 
     try
       //copy Image to dibBits (with vertical flip)
-      pc := dibBits;
+      wBytes := wSrc * SizeOf(TColor32);
+      pDst := dibBits;
+      pSrc := PARGB(PixelRow[rec.Bottom -1]);
+      inc(pSrc, rec.Left);
       for i := rec.Bottom -1 downto rec.Top do
       begin
-        Move(Pixels[i * Width + rec.Left], pc^, wSrc * SizeOf(TColor32));
-        inc(pc, wSrc);
+        Move(pSrc^, pDst^, wBytes);
+        dec(pSrc, Width);
+        inc(pDst, wSrc);
       end;
 
       oldBm := SelectObject(memDC, bm);
@@ -2628,17 +2632,17 @@ begin
       begin
 
         //premultiplied alphas are required when alpha blending
-        pc := dibBits;
+        pDst := dibBits;
         for i := 0 to wSrc * hSrc -1 do
         begin
-          if pc.A > 0 then
+          if pDst.A > 0 then
           begin
-            pc.R  := MulTable[pc.R, pc.A];
-            pc.G  := MulTable[pc.G, pc.A];
-            pc.B  := MulTable[pc.B, pc.A];
+            pDst.R  := MulTable[pDst.R, pDst.A];
+            pDst.G  := MulTable[pDst.G, pDst.A];
+            pDst.B  := MulTable[pDst.B, pDst.A];
           end else
-            pc.Color := 0;
-          inc(pc);
+            pDst.Color := 0;
+          inc(pDst);
         end;
 
         bf.BlendOp := AC_SRC_OVER;
@@ -2648,10 +2652,13 @@ begin
         AlphaBlend(dstDc, x,y, wDest,hDest, memDC, 0,0, wSrc,hSrc, bf);
       end
       else if (wDest = wSrc) and (hDest = hSrc) then
+      begin
         BitBlt(dstDc, x,y, wSrc, hSrc, memDc, 0,0, SRCCOPY)
-      else
+      end else
+      begin
+        SetStretchBltMode(dstDc, COLORONCOLOR);
         StretchBlt(dstDc, x,y, wDest, hDest, memDc, 0,0, wSrc,hSrc, SRCCOPY);
-
+      end;
       SelectObject(memDC, oldBm);
     finally
       DeleteObject(bm);

@@ -3,7 +3,7 @@ unit Img32.Extra;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  2 May 2024                                                      *
+* Date      :  11 May 2024                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Miscellaneous routines that don't belong in other modules.      *
@@ -646,13 +646,12 @@ begin
   try
     for i := rec.Top to rec.Bottom -1 do
     begin
-      pc := img.PixelRow[i];
-      inc(pc, rec.Left);
+      pc := @img.Pixels[i * img.Width + rec.Left];
       hatch := Odd(i div hatchSize);
       for j := rec.Left to rec.Right -1 do
       begin
         if (j + 1) mod hatchSize = 0 then hatch := not hatch;
-        pc^ := BlendToOpaque(pc^, colors[hatch]);
+        pc^ := BlendToOpaque(colors[hatch], pc^);
        inc(pc);
       end;
     end;
