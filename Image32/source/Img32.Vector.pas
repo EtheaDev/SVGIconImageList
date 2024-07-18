@@ -2,8 +2,8 @@ unit Img32.Vector;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.4                                                             *
-* Date      :  2 May 2024                                                      *
+* Version   :  4.5                                                             *
+* Date      :  21 June 2024                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -159,11 +159,11 @@ type
 
   //GetDashPath: Returns a polyline (not polygons)
   function GetDashedPath(const path: TPathD;
-    closed: Boolean; const pattern: TArrayOfInteger;
+    closed: Boolean; const pattern: TArrayOfDouble;
     patternOffset: PDouble): TPathsD;
 
   function GetDashedOutLine(const path: TPathD;
-    closed: Boolean; const pattern: TArrayOfInteger;
+    closed: Boolean; const pattern: TArrayOfDouble;
     patternOffset: PDouble; lineWidth: double;
     joinStyle: TJoinStyle; endStyle: TEndStyle): TPathsD;
 
@@ -477,6 +477,12 @@ resourcestring
 
 const
   BuffSize = 64;
+
+{$IFDEF CPUX86}
+const
+  // Use faster Trunc for x86 code in this unit.
+  Trunc: function(Value: Double): Integer = __Trunc;
+{$ENDIF CPUX86}
 
 //------------------------------------------------------------------------------
 // TSizeD
@@ -2583,11 +2589,12 @@ var
   steps : double;
 begin
   Result := nil;
-  path := StripNearDuplicates(line, 0.5, false);
+  path := StripNearDuplicates(line, 0.1, false);
   len := length(path);
-  if len = 0 then Exit;
-  if delta < MinStrokeWidth then
-    delta := MinStrokeWidth;
+  if (len = 0) or (delta <= 0) then Exit;
+  // don't specify a minimum delta as this path may be scaled later
+//  if delta < MinStrokeWidth then
+//    delta := MinStrokeWidth;
   delta := delta * 0.5;
 
   if len = 1 then
@@ -2733,7 +2740,7 @@ begin
             Ellipse(RectD(x-lwDiv2, y-lwDiv2, x+lwDiv2, y+lwDiv2)));
       end else
       begin
-        p := StripNearDuplicates(lines[i], 0.25, true);
+        p := StripNearDuplicates(lines[i], 0.1, true);
         if Length(p) = 2 then AppendToPath(p, p[0]);
         AppendPath(Result,
           GrowClosedLine(p, lineWidth, joinStyle, miterLimOrRndScale));
@@ -3310,12 +3317,13 @@ end;
 //------------------------------------------------------------------------------
 
 function GetDashedPath(const path: TPathD;
-  closed: Boolean; const pattern: TArrayOfInteger;
+  closed: Boolean; const pattern: TArrayOfDouble;
   patternOffset: PDouble): TPathsD;
 var
   i, highI, paIdx: integer;
   vecs, path2, dash: TPathD;
-  patCnt, patLen: integer;
+  patCnt: integer;
+  patLen: double;
   dashCapacity, dashCnt, ptsCapacity, ptsCnt: integer;
   segLen, residualPat, patOff: double;
   filling: Boolean;
@@ -3369,7 +3377,7 @@ begin
     patOff := patternOffset^;
   patLen := 0;
   for i := 0 to patCnt -1 do
-    inc(patLen, pattern[i]);
+    patLen := patLen + pattern[i];
   if patOff < 0 then
   begin
     patOff := patLen + patOff;
@@ -3427,7 +3435,7 @@ end;
 //------------------------------------------------------------------------------
 
 function GetDashedOutLine(const path: TPathD;
-  closed: Boolean; const pattern: TArrayOfInteger;
+  closed: Boolean; const pattern: TArrayOfDouble;
   patternOffset: PDouble; lineWidth: double;
   joinStyle: TJoinStyle; endStyle: TEndStyle): TPathsD;
 var

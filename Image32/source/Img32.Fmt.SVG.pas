@@ -3,7 +3,7 @@ unit Img32.Fmt.SVG;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  11 March 2024                                                   *
+* Date      :  16 March 2024                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  SVG file format extension for TImage32                          *
@@ -380,16 +380,24 @@ begin
     r := RootElement.GetViewbox;
     img32.BeginUpdate;
     try
-      if img32.IsEmpty and not r.IsEmpty then
-        img32.SetSize(Round(r.Width), Round(r.Height))
+      if img32.IsEmpty then
+      begin
+        with RootElement do
+          if Width.IsValid and Height.IsValid then
+            img32.SetSize(
+              Round(Width.GetValue(defaultSvgWidth, 0)),
+              Round(Height.GetValue(defaultSvgHeight, 0)))
+          else if not r.IsEmpty then
+            img32.SetSize(Round(r.Width), Round(r.Height))
+          else
+            img32.SetSize(defaultSvgWidth, defaultSvgHeight);
+      end
       else if not r.IsEmpty then
       begin
         // scale the SVG to best fit the image dimensions
         sx := GetScaleForBestFit(r.Width, r.Height, img32.Width, img32.Height);
         img32.SetSize(Round(r.Width * sx), Round(r.Height * sx));
-      end
-      else
-        img32.SetSize(defaultSvgWidth, defaultSvgHeight);
+      end;
 
       //draw the SVG image to fit inside the canvas
       DrawImage(img32, True);

@@ -3,7 +3,7 @@ unit Img32.Transform;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  30 April 2024                                                   *
+* Date      :  17 July 2024                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Affine and projective transformation routines for TImage32      *
@@ -22,11 +22,15 @@ type
 
   //Matrix functions
   function IsIdentityMatrix(const matrix: TMatrixD): Boolean;
-  function IsValidMatrix(const matrix: TMatrixD): Boolean;
+  function IsValidMatrix(const matrix: TMatrixD): Boolean; {$IFDEF INLINE} inline; {$ENDIF}
   function Matrix(const m00, m01, m02, m10, m11, m12, m20, m21, m22: double): TMatrixD;
   function MatrixDeterminant(const matrix: TMatrixD): double;
   function MatrixAdjugate(const matrix: TMatrixD): TMatrixD;
-  function MatrixMultiply(const modifier, matrix: TMatrixD): TMatrixD;
+  function  MatrixInvert(var matrix: TMatrixD): Boolean;
+
+  // Note: Matrix multiplication IS NOT commutative hence ...
+  procedure MatrixMultiply(var matrix1: TMatrixD; const matrix2: TMatrixD);
+  procedure MatrixMultiply2(const matrix1: TMatrixD; var matrix2: TMatrixD);
 
   procedure MatrixApply(const matrix: TMatrixD;
     var x, y: double); overload; {$IFDEF INLINE} inline; {$ENDIF}
@@ -37,49 +41,55 @@ type
   procedure MatrixApply(const matrix: TMatrixD; var path: TPathD); overload;
   procedure MatrixApply(const matrix: TMatrixD; var paths: TPathsD); overload;
   procedure MatrixApply(const matrix: TMatrixD;
-    img: TImage32; scaleAdjust: Boolean = false); overload;
+    img: TImage32; scaleAdjust: Boolean = false); overload; {$IFDEF INLINE} inline; {$ENDIF}
+  procedure MatrixApply(const matrix: TMatrixD;
+    img, targetImg: TImage32; scaleAdjust: Boolean = false); overload; {$IFDEF INLINE} inline; {$ENDIF}
 
-  function  MatrixInvert(var matrix: TMatrixD): Boolean;
-
-  // MatrixSkew: dx represents the delta offset of an X coordinate as a
-  // fraction of its Y coordinate, and likewise for dy. Example: if dx = 0.1
-  // and dy = 0, and the matrix is applied to the coordinate [20,15], then the
-  // transformed coordinate will become [20 + (15 * 0.1),10], ie [21.5,10].
   procedure MatrixSkew(var matrix: TMatrixD; angleX, angleY: double);
+
   procedure MatrixScale(var matrix: TMatrixD; scale: double); overload;
   procedure MatrixScale(var matrix: TMatrixD; scaleX, scaleY: double); overload;
-  procedure MatrixRotate(var matrix: TMatrixD;
-    const center: TPointD; angRad: double);
+
+  procedure MatrixRotate(var matrix: TMatrixD; angRad: double); overload;
+  procedure MatrixRotate(var matrix: TMatrixD; const center: TPointD; angRad: double); overload;
+
   procedure MatrixTranslate(var matrix: TMatrixD; dx, dy: double);
 
   // The following MatrixExtract routines assume here is no skew
-  procedure MatrixExtractScale(const mat: TMatrixD; out sx, sy: double);
+  procedure MatrixExtractScale(const mat: TMatrixD; out scale: double); overload;
+  procedure MatrixExtractScale(const mat: TMatrixD; out X, Y: double); overload;
   procedure MatrixExtractTranslation(const mat: TMatrixD; out dx, dy: double);
   procedure MatrixExtractRotation(const mat: TMatrixD; out angle: double);
+  // MatrixExtractAll - except skew :)
+  function MatrixExtractAll(const mat: TMatrixD; out angle: double;
+    out scale, trans: TPointD): Boolean;
 
   // AffineTransformImage: will automagically translate the image
-  // Note: "scaleAdjust" prevents antialiasing extending way outside of images
-  // when they are being enlarged significantly and rotated concurrently
+  // Note: when the "scaleAdjust" parameter is enabled, it prevents antialiasing
+  // from extending way outside of images when they are being enlarged
+  // significantly (> 2 times) and rotated concurrently
   function AffineTransformImage(img: TImage32; matrix: TMatrixD;
-    scaleAdjust: Boolean = false): TPoint;
+    scaleAdjust: Boolean = false): TPoint; overload; {$IFDEF INLINE} inline; {$ENDIF}
+  function AffineTransformImage(img, targetImg: TImage32; matrix: TMatrixD;
+    scaleAdjust: Boolean = false): TPoint; overload;
 
   // ProjectiveTransform:
   //  srcPts, dstPts => each path must contain 4 points
   //  margins => the margins around dstPts (in the dest. projective).
   //  Margins are only meaningful when srcPts are inside the image.
   function ProjectiveTransform(img: TImage32;
-    const srcPts, dstPts: TPathD; const margins: TRect): Boolean;
+    const srcPts, dstPts: TPathD; const margins: TRect): Boolean; overload; {$IFDEF INLINE} inline; {$ENDIF}
+  function ProjectiveTransform(img, targetImg: TImage32;
+    const srcPts, dstPts: TPathD; const margins: TRect): Boolean; overload;
 
   function SplineVertTransform(img: TImage32; const topSpline: TPathD;
-    splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean;
+    splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean; overload; {$IFDEF INLINE} inline; {$ENDIF}
+  function SplineVertTransform(img, targetImg: TImage32; const topSpline: TPathD;
+    splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean; overload;
   function SplineHorzTransform(img: TImage32; const leftSpline: TPathD;
-    splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean;
-
-  function ExtractAngleFromMatrix(const mat: TMatrixD): double;
-  function ExtractScaleFromMatrix(const mat: TMatrixD): TSizeD;
-  function ExtractAvgScaleFromMatrix(const mat: TMatrixD): double;
-  procedure ExtractAllFromMatrix(const mat: TMatrixD;
-    out angle: double; out scale, skew, trans: TPointD);
+    splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean; overload; {$IFDEF INLINE} inline; {$ENDIF}
+  function SplineHorzTransform(img, targetImg: TImage32; const leftSpline: TPathD;
+    splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean; overload;
 
 type
   PWeightedColor = ^TWeightedColor;
@@ -94,10 +104,12 @@ type
   public
     procedure Reset; overload; {$IFDEF INLINE} inline; {$ENDIF}
     procedure Reset(c: TColor32; w: Integer = 1); overload; {$IFDEF INLINE} inline; {$ENDIF}
-    procedure Add(c: TColor32; w: Integer = 1); overload;
+    procedure Add(c: TColor32; w: Integer); overload;
+    procedure Add(c: TColor32); overload; {$IFDEF INLINE} inline; {$ENDIF}
     procedure Add(const other: TWeightedColor); overload;
       {$IFDEF INLINE} inline; {$ENDIF}
-    procedure Subtract(c: TColor32; w: Integer =1); overload;
+    procedure Subtract(c: TColor32; w: Integer); overload;
+    procedure Subtract(c: TColor32); overload; {$IFDEF INLINE} inline; {$ENDIF}
     procedure Subtract(const other: TWeightedColor); overload;
       {$IFDEF INLINE} inline; {$ENDIF}
     procedure AddWeight(w: Integer); {$IFDEF INLINE} inline; {$ENDIF}
@@ -116,6 +128,18 @@ uses Img32.Resamplers;
 
 resourcestring
   rsInvalidScale   = 'Invalid matrix scaling factor (0)';
+
+const
+  DivOneByXTableSize = 65536;
+
+{$IFDEF CPUX86}
+  // Use faster Trunc for x86 code in this unit.
+  Trunc: function(Value: Double): Integer = __Trunc;
+{$ENDIF CPUX86}
+
+var
+  // DivOneByXTable[x] = 1/x
+  DivOneByXTable: array[0 .. DivOneByXTableSize -1] of Double;
 
 //------------------------------------------------------------------------------
 // Matrix functions
@@ -214,6 +238,7 @@ procedure MatrixApply(const matrix: TMatrixD; var rec: TRect);
 var
   path: TPathD;
 begin
+  if not IsValidMatrix(matrix) then Exit;
   path := Rectangle(rec);
   MatrixApply(matrix, path);
   rec := GetBounds(path);
@@ -224,6 +249,7 @@ procedure MatrixApply(const matrix: TMatrixD; var rec: TRectD);
 var
   path: TPathD;
 begin
+  if not IsValidMatrix(matrix) then Exit;
   path := Rectangle(rec);
   MatrixApply(matrix, path);
   rec := GetBoundsD(path);
@@ -237,7 +263,8 @@ var
   pp: PPointD;
 begin
   len := Length(path);
-  if (len = 0) or IsIdentityMatrix(matrix) then Exit;
+  if (len = 0) or IsIdentityMatrix(matrix) or
+    not IsValidMatrix(matrix) then Exit;
   pp := @path[0];
   for i := 0 to len -1 do
   begin
@@ -255,8 +282,8 @@ var
   tmpX: double;
   pp: PPointD;
 begin
-  if not Assigned(paths) or IsIdentityMatrix(matrix) then
-    Exit;
+  if not Assigned(paths) or IsIdentityMatrix(matrix) or
+    not IsValidMatrix(matrix) then Exit;
 
   for i := 0 to High(paths) do
   begin
@@ -281,16 +308,40 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function MatrixMultiply(const modifier, matrix: TMatrixD): TMatrixD;
+procedure MatrixApply(const matrix: TMatrixD;
+  img, targetImg: TImage32; scaleAdjust: Boolean);
+begin
+  AffineTransformImage(img, targetImg, matrix, scaleAdjust);
+end;
+//------------------------------------------------------------------------------
+
+procedure MatrixMultiply(var matrix1: TMatrixD; const matrix2: TMatrixD);
 var
   i, j: Integer;
+  m: TMatrixD;
 begin
   for i := 0 to 2 do
     for j := 0 to 2 do
-      Result[i, j] :=
-        (modifier[0, j] * matrix[i, 0]) +
-        (modifier[1, j] * matrix[i, 1]) +
-        (modifier[2, j] * matrix[i, 2]);
+      m[i, j] :=
+        (matrix1[i, 0] * matrix2[0, j]) +
+        (matrix1[i, 1] * matrix2[1, j]) +
+        (matrix1[i, 2] * matrix2[2, j]);
+  matrix1 := m;
+end;
+//------------------------------------------------------------------------------
+
+procedure MatrixMultiply2(const matrix1: TMatrixD; var matrix2: TMatrixD);
+var
+  i, j: Integer;
+  m: TMatrixD;
+begin
+  for i := 0 to 2 do
+    for j := 0 to 2 do
+      m[i, j] :=
+        (matrix1[i, 0] * matrix2[0, j]) +
+        (matrix1[i, 1] * matrix2[1, j]) +
+        (matrix1[i, 2] * matrix2[2, j]);
+  matrix2 := m;
 end;
 //------------------------------------------------------------------------------
 
@@ -305,7 +356,7 @@ begin
   if ValueAlmostOne(scaleX) and ValueAlmostOne(scaleY) then Exit;
   m[0, 0] := scaleX;
   m[1, 1] := scaleY;
-  matrix := MatrixMultiply(m, matrix);
+  MatrixMultiply(matrix, m);
 end;
 //------------------------------------------------------------------------------
 
@@ -316,28 +367,49 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure MatrixRotate(var matrix: TMatrixD;
-  const center: TPointD; angRad: double);
+procedure MatrixRotate(var matrix: TMatrixD; const center: TPointD; angRad: double);
 var
   m: TMatrixD;
   sinA, cosA: double;
-  origOffset: Boolean;
+begin
+  if (center.X <> 0) or (center.Y <> 0) then
+  begin
+    NormalizeAngle(angRad);
+    if angRad = 0 then Exit;
+    if ClockwiseRotationIsAnglePositive then
+      angRad := -angRad; //negated angle because of inverted Y-axis.
+    m := IdentityMatrix;
+    MatrixTranslate(matrix, -center.X, -center.Y);
+    GetSinCos(angRad, sinA, cosA);
+    m := IdentityMatrix;
+    m[0, 0] := cosA;   m[1, 0] := sinA;
+    m[0, 1] := -sinA;  m[1, 1] := cosA;
+    MatrixMultiply(matrix, m);
+    MatrixTranslate(matrix, center.X, center.Y);
+  end else
+    MatrixRotate(matrix, angRad);
+
+end;
+//------------------------------------------------------------------------------
+
+procedure MatrixRotate(var matrix: TMatrixD; angRad: double);
+var
+  m: TMatrixD;
+  sinA, cosA: double;
 begin
   NormalizeAngle(angRad);
   if angRad = 0 then Exit;
   if ClockwiseRotationIsAnglePositive then
     angRad := -angRad; //negated angle because of inverted Y-axis.
   m := IdentityMatrix;
-  origOffset := (center.X <> 0) or (center.Y <> 0);
-  if origOffset then MatrixTranslate(matrix, -center.X, -center.Y);
   GetSinCos(angRad, sinA, cosA);
   m := IdentityMatrix;
   m[0, 0] := cosA;   m[1, 0] := sinA;
   m[0, 1] := -sinA;  m[1, 1] := cosA;
-  matrix := MatrixMultiply(m, matrix);
-  if origOffset then MatrixTranslate(matrix, center.X, center.Y);
+  MatrixMultiply(matrix, m);
 end;
 //------------------------------------------------------------------------------
+
 
 procedure MatrixTranslate(var matrix: TMatrixD; dx, dy: double);
 var
@@ -347,7 +419,7 @@ begin
   m := IdentityMatrix;
   m[2, 0] := dx;
   m[2, 1] := dy;
-  matrix := MatrixMultiply(m, matrix);
+  MatrixMultiply(matrix, m);
 end;
 //------------------------------------------------------------------------------
 
@@ -385,14 +457,25 @@ begin
   m := IdentityMatrix;
   m[1, 0] := tan(angleX);
   m[0, 1] := tan(angleY);
-  matrix := MatrixMultiply(m, matrix);
+  MatrixMultiply(matrix, m);
 end;
 //------------------------------------------------------------------------------
 
-procedure MatrixExtractScale(const mat: TMatrixD; out sx, sy: double);
+procedure MatrixExtractScale(const mat: TMatrixD; out X, Y: double);
 begin
-  sx := Sqrt(Sqr(mat[0,0]) + Sqr(mat[0,1]));
-  sy := Sqrt(Sqr(mat[1,0]) + Sqr(mat[1,1]));
+  // https://stackoverflow.com/a/32125700/359538
+  X := Sqrt(Sqr(mat[0,0]) + Sqr(mat[0,1]));
+  //Y := Sqrt(Sqr(mat[1,0]) + Sqr(mat[1,1]));
+  Y := Abs((mat[0,0] * mat[1,1] - mat[1,0] * mat[0,1]) / X);
+end;
+//------------------------------------------------------------------------------
+
+procedure MatrixExtractScale(const mat: TMatrixD; out scale: double);
+var
+  x,y: double;
+begin
+  MatrixExtractScale(mat, x, y);
+  scale := Average(x,y);
 end;
 //------------------------------------------------------------------------------
 
@@ -404,19 +487,49 @@ end;
 //------------------------------------------------------------------------------
 
 procedure MatrixExtractRotation(const mat: TMatrixD; out angle: double);
-var
-  sx, sy: double;
-  mat2: TMatrixD;
 begin
-  MatrixExtractScale(mat, sx, sy);
-  mat2 := mat;
-  mat2[0,0] := mat2[0,0] / sx;
-  mat2[0,1] := mat2[0,1] / sx;
-  mat2[1,0] := mat2[1,0] / sy;
-  mat2[1,1] := mat2[1,1] / sy;
-
-  angle := ArcCos(mat2[0,0]);
+  angle := ArcTan2(mat[0,1], mat[0,0]);
 end;
+//------------------------------------------------------------------------------
+
+function MatrixExtractAll(const mat: TMatrixD;
+  out angle: double; out scale, trans: TPointD): Boolean;
+var
+  m00, m01, m10, m11: double;
+begin
+  m00 := mat[0][0]; m10 := mat[1][0];
+  m01 := mat[0][1]; m11 := mat[1][1];
+  trans.X := mat[2][0];
+  trans.Y := mat[2][1];
+
+  angle := 0;
+  scale := PointD(1,1);
+
+  Result := (m00 <> 0) or (m01 <> 0);
+  if not Result then Exit;
+
+  angle := ArcTan2(m01, m00);
+  // https://stackoverflow.com/a/32125700/359538
+  scale.X := Sqrt(Sqr(mat[0,0]) + Sqr(mat[0,1]));
+  scale.Y := (m00 * m11 - m10 * m01) / scale.X;
+end;
+//------------------------------------------------------------------------------
+
+{$IFDEF USE_DOWNSAMPLER_AUTOMATICALLY}
+function CanUseBoxDownsampler(const mat: TMatrixD; sx, sy: double): Boolean;
+begin
+  // If the matrix looks like this after removing the scale,
+  // the box downsampler can be used.
+  //  cos(0)  -sin(0)  tx          1   0   tx
+  //  sin(0)   cos(0)  ty    =>    0   1   ty
+  //  0        0       1           0   0   1
+
+  Result := (mat[0,0]/sx = 1) and (mat[0,1]/sx = 0) and
+            (mat[1,0]/sy = 0) and (mat[1,1]/sy = 1) and
+            (mat[2,0]    = 0) and (mat[2,1]    = 0) and
+            (mat[2,2]    = 1);
+end;
+{$ENDIF USE_DOWNSAMPLER_AUTOMATICALLY}
 
 //------------------------------------------------------------------------------
 // Affine Transformation
@@ -434,6 +547,13 @@ end;
 
 function AffineTransformImage(img: TImage32; matrix: TMatrixD;
   scaleAdjust: Boolean): TPoint;
+begin
+  Result := AffineTransformImage(img, img, matrix, scaleAdjust);
+end;
+//------------------------------------------------------------------------------
+
+function AffineTransformImage(img, targetImg: TImage32; matrix: TMatrixD;
+  scaleAdjust: Boolean): TPoint;
 var
   i, j: integer;
   newWidth, newHeight: integer;
@@ -444,16 +564,23 @@ var
   dstRec: TRect;
   resampler: TResamplerFunction;
 {$IFDEF USE_DOWNSAMPLER_AUTOMATICALLY}
-  rx: double;
   useBoxDownsampler: Boolean;
 {$ENDIF}
 begin
   Result := NullPoint;
   if IsIdentityMatrix(matrix) or
-    img.IsEmpty or (img.Resampler = 0) then Exit;
+    img.IsEmpty or (targetImg.Resampler = 0) then
+  begin
+    if targetImg <> img then targetImg.Assign(img);
+    Exit;
+  end;
 
-  resampler := GetResampler(img.Resampler);
-  if not Assigned(resampler) then Exit;
+  resampler := GetResampler(targetImg.Resampler);
+  if not Assigned(resampler) then
+  begin
+    if targetImg <> img then targetImg.Assign(img);
+    Exit;
+  end;
 
   //auto-resize the image so it'll fit transformed image
 
@@ -466,14 +593,13 @@ begin
   if (sx < 1.0) and (sy < 1.0) then
   begin
     //only use box downsampling when downsizing
-    MatrixExtractRotation(matrix, rx);
-    useBoxDownsampler := (rx = 0);
+    useBoxDownsampler := CanUseBoxDownsampler(matrix, sx, sy);
   end else
     useBoxDownsampler := false;
 
   if useBoxDownsampler then
   begin
-    BoxDownSampling(img, sx, sy);
+    BoxDownSampling(img, targetImg, sx, sy);
     Exit;
   end;
 {$ENDIF}
@@ -489,7 +615,11 @@ begin
 
   //starting with the result pixel coords, reverse lookup
   //the fractional coordinates in the untransformed image
-  if not MatrixInvert(matrix) then Exit;
+  if not MatrixInvert(matrix) then
+  begin
+    if targetImg <> img then targetImg.Assign(img);
+    Exit;
+  end;
 
   SetLength(tmp, newWidth * newHeight);
   pc := @tmp[0];
@@ -516,13 +646,7 @@ begin
     end;
   end;
 
-  img.BeginUpdate;
-  try
-    img.SetSize(newWidth, newHeight);
-    Move(tmp[0], img.Pixels[0], newWidth * newHeight * sizeOf(TColor32));
-  finally
-    img.EndUpdate;
-  end;
+  targetImg.AssignPixelArray(tmp, newWidth, newHeight);
 end;
 
 //------------------------------------------------------------------------------
@@ -543,15 +667,15 @@ end;
 
 function BasisToPoints(x1, y1, x2, y2, x3, y3, x4, y4: double): TMatrixD;
 var
-  m, m2: TMatrixD;
+  m2: TMatrixD;
   z4: double;
 begin
-  m := Matrix(x1, x2, x3, y1, y2, y3, 1,  1,  1);
-  m2 := MatrixAdjugate(m);
+  Result := Matrix(x1, x2, x3, y1, y2, y3, 1,  1,  1);
+  m2 := MatrixAdjugate(Result);
   z4 := 1;
   MatrixMulCoord(m2, x4, y4, z4);
   m2 := Matrix(x4, 0, 0, 0, y4, 0, 0, 0, z4);
-  Result := MatrixMultiply(m2, m);
+  MatrixMultiply(Result, m2);
 end;
 //------------------------------------------------------------------------------
 
@@ -619,22 +743,29 @@ end;
 
 function GetProjectionMatrix(const srcPts, dstPts: TPathD): TMatrixD;
 var
-  srcMat, dstMat: TMatrixD;
+  dstMat: TMatrixD;
 begin
   if (length(srcPts) <> 4) or (length(dstPts) <> 4) then
   begin
     Result := IdentityMatrix;
     Exit;
   end;
-  srcMat := BasisToPoints(srcPts[0].X, srcPts[0].Y,
+  Result := BasisToPoints(srcPts[0].X, srcPts[0].Y,
     srcPts[1].X, srcPts[1].Y, srcPts[2].X, srcPts[2].Y, srcPts[3].X, srcPts[3].Y);
   dstMat := BasisToPoints(dstPts[0].X, dstPts[0].Y,
     dstPts[1].X, dstPts[1].Y, dstPts[2].X, dstPts[2].Y, dstPts[3].X, dstPts[3].Y);
-  Result := MatrixMultiply(MatrixAdjugate(dstMat), srcMat);
+  MatrixMultiply(Result, MatrixAdjugate(dstMat));
 end;
 //------------------------------------------------------------------------------
 
 function ProjectiveTransform(img: TImage32;
+  const srcPts, dstPts: TPathD; const margins: TRect): Boolean;
+begin
+  Result := ProjectiveTransform(img, img, srcPts, dstPts, margins);
+end;
+//------------------------------------------------------------------------------
+
+function ProjectiveTransform(img, targetImg: TImage32;
   const srcPts, dstPts: TPathD; const margins: TRect): Boolean;
 var
   w,h,i,j: integer;
@@ -649,13 +780,17 @@ var
 begin
   //https://math.stackexchange.com/a/339033/384709
 
-  if img.Resampler = 0 then
+  if targetImg.Resampler = 0 then
     resampler := nil else
-    resampler := GetResampler(img.Resampler);
+    resampler := GetResampler(targetImg.Resampler);
 
   Result := Assigned(resampler) and not img.IsEmpty and
     (Length(dstPts) = 4) and IsPathConvex(dstPts);
-  if not Result then Exit;
+  if not Result then
+  begin
+    if targetImg <> img then targetImg.Assign(img);
+    Exit;
+  end;
 
   rec := GetBounds(dstPts);
   dec(rec.Left, margins.Left);
@@ -685,8 +820,10 @@ begin
         pc^ := resampler(img, x -0.5, y -0.5);
       inc(pc);
     end;
-  img.SetSize(w, h);
-  Move(tmp[0], img.PixelBase^, w * h * sizeOf(TColor32));
+
+  targetImg.BlockNotify;
+  targetImg.AssignPixelArray(tmp, w, h);
+  targetImg.UnblockNotify;
 end;
 
 //------------------------------------------------------------------------------
@@ -806,6 +943,13 @@ end;
 
 function SplineVertTransform(img: TImage32; const topSpline: TPathD;
   splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean;
+begin
+  Result := SplineVertTransform(img, img, topSpline, splineType, backColor, offset);
+end;
+//------------------------------------------------------------------------------
+
+function SplineVertTransform(img, targetImg: TImage32; const topSpline: TPathD;
+  splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean;
 var
   i,j, w,h, len: integer;
   x,y, yy, q: double;
@@ -820,9 +964,9 @@ var
   backColoring, allowBackColoring: Boolean;
 begin
   offset := NullPoint;
-  if img.Resampler = 0 then
+  if targetImg.Resampler = 0 then
     resampler := nil else
-    resampler := GetResampler(img.Resampler);
+    resampler := GetResampler(targetImg.Resampler);
 
   //convert the top spline control points into a flattened path
   if splineType = stQuadratic then
@@ -832,7 +976,11 @@ begin
   rec := GetBounds(topPath);
   //return false if the spline is invalid or there's no vertical transformation
   Result := Assigned(resampler) and not IsEmptyRect(rec);
-  if not Result then Exit;
+  if not Result then
+  begin
+    if targetImg <> img then targetImg.Assign(img);
+    Exit;
+  end;
 
   offset := rec.TopLeft;
   topPath := InterpolatePathForX(topPath);
@@ -871,14 +1019,21 @@ begin
     end;
   end;
 
-  img.BeginUpdate;
-  img.SetSize(w,h);
-  Move(tmp[0], img.Pixels[0], w*h * SizeOf(TColor32));
-  img.EndUpdate;
+  // tmp was creates with "(w+1)*h". We take advantage of the
+  // memory manager's inplace shrink.
+  SetLength(tmp, w * h);
+  targetImg.AssignPixelArray(tmp, w, h);
 end;
 //------------------------------------------------------------------------------
 
 function SplineHorzTransform(img: TImage32; const leftSpline: TPathD;
+  splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean;
+begin
+  Result := SplineHorzTransform(img, img, leftSpline, splineType, backColor, offset);
+end;
+//------------------------------------------------------------------------------
+
+function SplineHorzTransform(img, targetImg: TImage32; const leftSpline: TPathD;
   splineType: TSplineType; backColor: TColor32; out offset: TPoint): Boolean;
 var
   i,j, len, w,h: integer;
@@ -894,9 +1049,9 @@ var
 begin
   offset := NullPoint;
 
-  if img.Resampler = 0 then
+  if targetImg.Resampler = 0 then
     resampler := nil else
-    resampler := GetResampler(img.Resampler);
+    resampler := GetResampler(targetImg.Resampler);
 
   //convert the left spline control points into a flattened path
   if splineType = stQuadratic then
@@ -906,7 +1061,11 @@ begin
 
   //return false if the spline is invalid or there's no horizontal transformation
   Result := Assigned(resampler) and not IsEmptyRect(rec);
-  if not Result then Exit;
+  if not Result then
+  begin
+    if targetImg <> img then targetImg.Assign(img);
+    Exit;
+  end;
 
   offset := rec.TopLeft;
   leftPath := InterpolatePathForY(leftPath);
@@ -946,10 +1105,20 @@ begin
     end;
   end;
 
-  img.BeginUpdate;
-  img.SetSize(w,h);
-  Move(tmp[0], img.Pixels[0], img.Width * img.Height * SizeOf(TColor32));
-  img.EndUpdate;
+  // tmp was creates with "w*(h+1)". We take advantage of the
+  // memory manager's inplace shrink.
+  SetLength(tmp, w * h);
+  targetImg.AssignPixelArray(tmp, w, h);
+end;
+
+//------------------------------------------------------------------------------
+// Miscellaneous WeightedColor function
+//------------------------------------------------------------------------------
+
+function LimitByte(val: Cardinal): byte; {$IFDEF INLINE} inline; {$ENDIF}
+begin
+  if val > 255 then result := 255
+  else result := val;
 end;
 
 //------------------------------------------------------------------------------
@@ -968,7 +1137,7 @@ end;
 
 procedure TWeightedColor.Reset(c: TColor32; w: Integer);
 var
-  a: Integer;
+  a: Cardinal;
   argb: TARGB absolute c;
 begin
   fAddCount := w;
@@ -1010,6 +1179,21 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure TWeightedColor.Add(c: TColor32);
+// Optimized for w=1
+var
+  a: Cardinal;
+begin
+  inc(fAddCount);
+  a := Byte(c shr 24);
+  if a = 0 then Exit;
+  inc(fAlphaTot, a);
+  inc(fColorTotB, (a * Byte(c)));
+  inc(fColorTotG, (a * Byte(c shr 8)));
+  inc(fColorTotR, (a * Byte(c shr 16)));
+end;
+//------------------------------------------------------------------------------
+
 procedure TWeightedColor.Add(const other: TWeightedColor);
 begin
   inc(fAddCount, other.fAddCount);
@@ -1035,6 +1219,21 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure TWeightedColor.Subtract(c: TColor32);
+// Optimized for w=1
+var
+  a: Cardinal;
+begin
+  dec(fAddCount);
+  a := Byte(c shr 24);
+  if a = 0 then Exit;
+  dec(fAlphaTot, a);
+  dec(fColorTotB, (a * Byte(c)));
+  dec(fColorTotG, (a * Byte(c shr 8)));
+  dec(fColorTotR, (a * Byte(c shr 16)));
+end;
+//------------------------------------------------------------------------------
+
 procedure TWeightedColor.Subtract(const other: TWeightedColor);
 begin
   dec(fAddCount, other.fAddCount);
@@ -1047,128 +1246,55 @@ end;
 
 function TWeightedColor.GetColor: TColor32;
 var
-  invAlpha: double;
-  res: TARGB absolute Result;
+  oneDivAlphaTot: double;
+  alpha: Integer;
 begin
+  result := clNone32;
   if (fAlphaTot <= 0) or (fAddCount <= 0) then
-  begin
-    result := clNone32;
     Exit;
-  end;
-  res.A := Min(255, (fAlphaTot  + (fAddCount shr 1)) div fAddCount);
-  //nb: alpha weighting is applied to colors when added,
-  //so we now need to div by fAlphaTot here ...
-  invAlpha := 1/fAlphaTot;
-  res.R := ClampByte(fColorTotR * invAlpha);
-  res.G := ClampByte(fColorTotG * invAlpha);
-  res.B := ClampByte(fColorTotB * invAlpha);
+  {$IFDEF CPUX86}
+  if fAlphaTot and $FFFFFFFF80000000 = 0 then // small, so can avoid _lldiv call
+    alpha := (Cardinal(fAlphaTot) + (Cardinal(fAddCount) shr 1)) div
+      Cardinal(fAddCount)
+  else
+  {$ENDIF CPUX86}
+    alpha := (fAlphaTot + (Cardinal(fAddCount) shr 1)) div Cardinal(fAddCount);
+
+  result := TColor32(Min(255, alpha)) shl 24;
+  // alpha weighting has been applied to color channels, so div by fAlphaTot
+  if fAlphaTot < DivOneByXTableSize then // use precalculated 1/X values
+    oneDivAlphaTot := DivOneByXTable[fAlphaTot]
+  else
+    oneDivAlphaTot := 1/fAlphaTot;
+
+  // 1. Skip zero calculations.
+  // 2. LimitByte(Integer): Values can't be less than 0, so don't use ClampByte.
+  // 3. x86: Round expects the value in the st(0)/xmm1 FPU register.
+  //         Thus we need to do the calculation and Round call in one expression.
+  //         Otherwise the compiler will use a temporary double variable on
+  //         the stack that will cause unnecessary store and load operations.
+  if fColorTotB <> 0 then
+    result := result or LimitByte(System.Round(fColorTotB * oneDivAlphaTot));
+  if fColorTotG <> 0 then
+    result := result or LimitByte(System.Round(fColorTotG * oneDivAlphaTot)) shl 8;
+  if fColorTotR <> 0 then
+    result := result or LimitByte(System.Round(fColorTotR * oneDivAlphaTot)) shl 16;
 end;
 
 //------------------------------------------------------------------------------
+// Initialization
 //------------------------------------------------------------------------------
 
-procedure ExtractAllFromMatrix(const mat: TMatrixD; out angle: double;
-  out scale, skew, trans: TPointD);
+procedure MakeDivOneByXTable;
 var
-  a,b,c,d,e,f: double;
-  delta, r,s: double;
+  i: Integer;
 begin
-  a := mat[0][0]; b := mat[1][0];
-  c := mat[0][1]; d := mat[1][1];
-  e := mat[2][0]; f := mat[2][1];
-
-  delta := a * d - b * c;
-  trans := PointD(e,f);
-  angle := 0;
-  scale := PointD(1,1);
-  skew := NullPointD;
-
-  if (a <> 0) or (b <> 0) then
-  begin
-    r := Sqrt(a * a + b * b);
-	  angle :=  ArcCos(a / r);
-	  if b < 0 then angle := -angle;
-    scale.X	:= r;
-	  scale.Y	:= delta / r;
-    skew.X	:= ArcTan((a * c + b * d) / (r * r));
-  end
-  else if (c <> 0) or (d <> 0) then
-  begin
-    s := Sqrt(c * c + d * d);
-    if d > 0 then
-      angle := Angle90 - ArcCos(-c / s) else
-	  angle := Angle90 + ArcCos(c / s);
-    scale.X := delta / s;
-    scale.Y := s;
-    skew.Y  := ArcTan((a * c + b * d) / (s * s));
-  end;
-  angle := -angle;
-  NormalizeAngle(angle);
+  DivOneByXTable[0] := 0; // NaN
+  for i := 1 to High(DivOneByXTable) do
+    DivOneByXTable[i] := 1/i;
 end;
-//------------------------------------------------------------------------------
 
-function ExtractAngleFromMatrix(const mat: TMatrixD): double;
-var
-  a,b,c,d: double;
-  r,s: double;
-begin
-  a := mat[0][0]; b := mat[1][0];
-  c := mat[0][1]; d := mat[1][1];
-
-  if (a <> 0) or (b <> 0) then
-  begin
-    r := Sqrt(a * a + b * b);
-	  Result :=  ArcCos(a / r);
-	  if b < 0 then Result := -Result;
-  end
-  else if (c <> 0) or (d <> 0) then
-  begin
-    s := Sqrt(c * c + d * d);
-    if d > 0 then
-      Result := Angle90 - ArcCos(-c / s) else
-	  Result := Angle90 + ArcCos(c / s);
-  end else
-  begin
-    Result := InvalidD; //error
-    Exit;
-  end;
-  Result := -Result;
-  NormalizeAngle(Result);
-end;
-//------------------------------------------------------------------------------
-
-function ExtractScaleFromMatrix(const mat: TMatrixD): TSizeD;
-var
-  a,b,c,d: double;
-  delta, q: double;
-begin
-  a := mat[0][0]; b := mat[1][0];
-  c := mat[0][1]; d := mat[1][1];
-
-  delta := a * d - b * c;
-  if (a <> 0) or (b <> 0) then
-  begin
-    q := Sqrt(a * a + b * b);
-    Result.cx	:= q;
-	  Result.cy	:= delta / q;
-  end
-  else if (c <> 0) or (d <> 0) then
-  begin
-    q := Sqrt(c * c + d * d);
-    Result.cx := delta / q;
-    Result.cy := q;
-  end else
-    Result := SizeD(0.0, 0.0);
-end;
-//------------------------------------------------------------------------------
-
-function ExtractAvgScaleFromMatrix(const mat: TMatrixD): double;
-var
-  scale: TSizeD;
-begin
-  scale := ExtractScaleFromMatrix(mat);
-  Result := Average(Abs(scale.cx), Abs(scale.cy));
-end;
-//------------------------------------------------------------------------------
+initialization
+  MakeDivOneByXTable;
 
 end.

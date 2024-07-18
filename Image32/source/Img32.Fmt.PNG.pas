@@ -107,13 +107,91 @@ end;
 //------------------------------------------------------------------------------
 {$ELSE}
 
+procedure CopyLineWithAlpha(dst: PARGB; srcAlpha, srcColor: PByte; Width: Integer);
+type
+  PARGBStaticArray = ^TARGBStaticArray;
+  TARGBStaticArray = array[0..3] of TARGB;
+var
+  j: Integer;
+begin
+  j := Width;
+
+  // Copy 4 Pixels at a time.
+  // Instead of ">= 4" we need ">= 5" here. Otherwise the code would
+  // read a byte from the last srcColor (3 bytes per pixel) that doesn't exist
+  while j >= 5 do
+  begin
+    // Read and mask the 4 bytes from srcColor because it has only 3 bytes per pixel
+    // and replace the alpha channel
+    PARGBStaticArray(dst)[0].Color := (PColor32(@srcColor[0])^ and $00FFFFFF) or (srcAlpha[0] shl 24);
+    PARGBStaticArray(dst)[1].Color := (PColor32(@srcColor[3])^ and $00FFFFFF) or (srcAlpha[1] shl 24);
+    PARGBStaticArray(dst)[2].Color := (PColor32(@srcColor[6])^ and $00FFFFFF) or (srcAlpha[2] shl 24);
+    PARGBStaticArray(dst)[3].Color := (PColor32(@srcColor[9])^ and $00FFFFFF) or (srcAlpha[3] shl 24);
+
+    inc(srcColor, 3 * 4);
+    inc(srcAlpha, 4);
+    inc(dst, 4);
+    dec(j, 4);
+  end;
+
+  // Copy the remaining pixels by accessing only the 3 bytes per pixel.
+  while j > 0 do
+  begin
+    dst.Color := {A:} (srcAlpha^ shl 24) or
+                 {B:} (srcColor[0]) or
+                 {G:} (srcColor[1] shl 8) or
+                 {R:} (srcColor[2] shl 16);
+    inc(srcColor, 3);
+    inc(srcAlpha);
+    inc(dst);
+    dec(j);
+  end;
+end;
+
+procedure CopyLineWithoutAlpha(dst: PARGB; srcColor: PByte; Width: Integer);
+type
+  PARGBStaticArray = ^TARGBStaticArray;
+  TARGBStaticArray = array[0..3] of TARGB;
+var
+  j: Integer;
+begin
+  j := Width;
+
+  // Copy 4 Pixels at a time
+  // Instead of ">= 4" we need ">= 5" here. Otherwise the code would
+  // read a byte from the last srcColor (3 bytes per pixel) that doesn't exist
+  while j >= 5 do
+  begin
+    // Replace the alpha channel with 255
+    PARGBStaticArray(dst)[0].Color := PColor32(@srcColor[0])^ or $FF000000;
+    PARGBStaticArray(dst)[1].Color := PColor32(@srcColor[3])^ or $FF000000;
+    PARGBStaticArray(dst)[2].Color := PColor32(@srcColor[6])^ or $FF000000;
+    PARGBStaticArray(dst)[3].Color := PColor32(@srcColor[9])^ or $FF000000;
+
+    inc(srcColor, 3 * 4);
+    inc(dst, 4);
+    dec(j, 4);
+  end;
+
+  // Copy the remaining pixels by accessing only the 3 bytes per pixel.
+  while j > 0 do
+  begin
+    dst.Color := {A:} $FF000000 or
+                 {B:} (srcColor[0]) or
+                 {G:} (srcColor[1] shl 8) or
+                 {R:} (srcColor[2] shl 16);
+    inc(srcColor, 3);
+    inc(dst);
+    dec(j);
+  end;
+end;
+
 function TImageFormat_PNG.LoadFromStream(stream: TStream;
   img32: TImage32; imgIndex: integer): Boolean;
 var
   i,j         : integer;
   png         : TPngImage;
   dst         : PARGB;
-  srcAlpha    : PByte;
   srcColor    : PByte;
   palentries  : array[0..255] of TPaletteEntry;
   usingPal    : Boolean;
@@ -156,25 +234,10 @@ begin
         (png.Header.ColorType = COLOR_RGBALPHA) or
           (png.Header.ColorType = COLOR_GRAYSCALEALPHA) then
       begin
-        srcAlpha := PByte(png.AlphaScanline[i]);
-        for j := 0 to img32.Width -1 do
-        begin
-          dst.A := srcAlpha^; inc(srcAlpha);
-          dst.B := srcColor^; inc(srcColor);
-          dst.G := srcColor^; inc(srcColor);
-          dst.R := srcColor^; inc(srcColor);
-          inc(dst);
-        end
+        CopyLineWithAlpha(dst, PByte(png.AlphaScanline[i]), srcColor, img32.Width);
       end else
       begin
-        for j := 0 to img32.Width -1 do
-        begin
-          dst.A := 255;
-          dst.B := srcColor^; inc(srcColor);
-          dst.G := srcColor^; inc(srcColor);
-          dst.R := srcColor^; inc(srcColor);
-          inc(dst);
-        end;
+        CopyLineWithoutAlpha(dst, srcColor, img32.Width);
       end;
 
     end;

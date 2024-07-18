@@ -3,7 +3,7 @@ unit Img32.Extra;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  11 May 2024                                                     *
+* Date      :  3 July 2024                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Miscellaneous routines that don't belong in other modules.      *
@@ -1221,7 +1221,11 @@ begin
       inc(s, w); inc(s2, w); inc(d, w);
     end;
   end;
-  Move(tmp2[0], img.PixelBase^, w * h * sizeOf(TColor32));
+
+  img.BlockNotify;
+  img.AssignPixelArray(tmp2, w, h);
+  img.UnblockNotify;
+
   if intensity < 1 then Exit;
   if intensity > 10 then
     intensity := 10; // range = 1-10
@@ -2047,7 +2051,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function Clamp(val, endVal: integer): integer; inline;
+function Clamp(val, endVal: integer): integer;
+  {$IFDEF INLINE} inline; {$ENDIF}
 begin
   if val < 0 then Result := 0
   else if val >= endVal then Result := endVal -1
@@ -2055,7 +2060,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function ModEx(val, endVal: integer): integer; inline;
+function ModEx(val, endVal: integer): integer;
+  {$IFDEF INLINE} inline; {$ENDIF}
 begin
   Result := val mod endVal;
   if Result < 0 then Result := endVal + Result;
@@ -2079,7 +2085,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure Append(var path: TPathD; const pt: TPointD); inline;
+procedure Append(var path: TPathD; const pt: TPointD);
+  {$IFDEF INLINE} inline; {$ENDIF}
 var
   len: integer;
 begin

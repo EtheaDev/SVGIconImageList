@@ -774,7 +774,7 @@ var
   inDrawRegion: Boolean;
 begin
   rec := GetInnerClientRect;
-  inDrawRegion := PtInRect(rec, Types.Point(X,Y));
+  inDrawRegion := Windows.PtInRect(rec, Types.Point(X,Y));
   if inDrawRegion and
     not (fScrollbarHorz.MouseDown or fScrollbarVert.MouseDown) then
   begin

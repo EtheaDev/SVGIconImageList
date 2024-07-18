@@ -3,7 +3,7 @@ unit Img32.Resamplers;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  2 May 2024                                                      *
+* Date      :  3 July 2024                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  For image transformations (scaling, rotating etc.)              *
@@ -17,6 +17,10 @@ interface
 uses
   SysUtils, Classes, Math, Img32;
 
+// Premultiplies the alpha channel into the color channels from pSrc and stores
+// it into pDst. pSrc and pDst can be the same pointer.
+procedure PremultiplyAlpha(pSrc, pDst: PARGB; count: nativeint); overload;
+
 // BoxDownSampling: As the name implies, is only intended for image
 // down-sampling (ie shrinking images) where it performs a little better
 // than other resamplers which tend toward pixelation. Nevertheless, this
@@ -26,6 +30,14 @@ uses
 procedure BoxDownSampling(Image: TImage32; scale: double); overload;
 procedure BoxDownSampling(Image: TImage32; scaleX, scaleY: double); overload;
 procedure BoxDownSampling(Image: TImage32; newWidth, newHeight: Integer); overload;
+procedure BoxDownSampling(Image, TargetImage: TImage32; scale: double); overload;
+procedure BoxDownSampling(Image, TargetImage: TImage32; scaleX, scaleY: double); overload;
+procedure BoxDownSampling(Image, TargetImage: TImage32; newWidth, newHeight: Integer); overload;
+
+procedure NearestNeighborResize(Image: TImage32; newWidth, newHeight: Integer); overload;
+procedure NearestNeighborResize(Image, TargetImage: TImage32; newWidth, newHeight: Integer); overload;
+procedure ResamplerResize(Image: TImage32; newWidth, newHeight: Integer); overload;
+procedure ResamplerResize(Image, TargetImage: TImage32; newWidth, newHeight: Integer); overload;
 
 // The following general purpose resamplers are registered below:
 // function NearestResampler(img: TImage32; x, y: double): TColor32;
@@ -510,6 +522,118 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+
+{$RANGECHECKS OFF} // negative index usage for Delphi 7-2007
+procedure PremultiplyAlpha(pSrc, pDst: PARGB; count: nativeint);
+type
+  {$IFDEF SUPPORTS_POINTERMATH}
+    {$POINTERMATH ON}
+  PStaticColor32Array = ^TColor32;
+    {$POINTERMATH OFF}
+  {$ELSE}
+  PStaticColor32Array = ^TStaticColor32Array;
+  TStaticColor32Array = array[0..MaxInt div SizeOf(TColor32) - 1] of TColor32;
+  {$ENDIF}
+var
+  a: byte;
+  tab: PByteArray;
+  c: TColor32;
+  s, d: PStaticColor32Array;
+begin
+  if count = 0 then exit;
+
+  // Use negative index trick
+  inc(pSrc, count);
+  inc(pDst, count);
+  count := -count;
+
+  // This function is optmized with the assumption that if a pixel has a certain
+  // alpha channel, then the propability that the following pixels have the same
+  // alpha channel, is very high.
+
+  c := PStaticColor32Array(pSrc)[count];
+  a := c shr 24;
+  while True do
+  begin
+    case a of
+      0: // Special handling for 0 => color becomes black
+        begin
+          // Win32: Load stack variable into CPU register
+          s := PStaticColor32Array(pSrc);
+          d := PStaticColor32Array(pDst);
+          while True do
+          begin
+            d[count] := 0;
+            inc(count);
+            if count = 0 then exit;
+            c := s[count];
+            a := c shr 24;
+            if a <> 0 then break;
+          end;
+        end;
+
+      255: // Special handling for 255 => no color change
+        begin
+          // Win32: Load stack variable into CPU register
+          s := PStaticColor32Array(pSrc);
+          d := PStaticColor32Array(pDst);
+          if s = d then // if source=dest, we can skip writing to d
+          begin
+            while True do
+            begin
+              //d[count] := c; // skip the write
+              inc(count);
+              if count = 0 then exit;
+              c := s[count];
+              a := c shr 24;
+              if a <> 255 then break;
+            end;
+          end
+          else
+          begin
+            while True do
+            begin
+              d[count] := c;
+              inc(count);
+              if count = 0 then exit;
+              c := s[count];
+              a := c shr 24;
+              if a <> 255 then break;
+            end;
+          end;
+        end;
+
+    else
+      // Premultiply the alpha channel
+
+      // Win32: Load stack variable into CPU register
+      s := PStaticColor32Array(pSrc);
+      // Win32: This line "breaks" Delphi's register allocator
+      //d := PStaticColor32Array(pDst);
+      while True do
+      begin
+        tab := @MulTable[a];
+        c := (c and $FF000000) or
+             (tab[Byte(c shr 16)] shl 16) or
+             (tab[Byte(c shr  8)] shl  8) or
+             (tab[Byte(c       )]       );
+        //d[count] := c;
+        PStaticColor32Array(pDst)[count] := c;
+        inc(count);
+        if count = 0 then exit;
+        c := s[count];
+        a := c shr 24;
+        if (a = 0) or (a = 255) then break;
+      end;
+    end;
+  end;
+end;
+{$IFDEF RANGECHECKS_ENABLED}
+{$RANGECHECKS ON}
+{$ENDIF RANGECHECKS_ENABLED}
+
+//------------------------------------------------------------------------------
 // BoxDownSampling and related functions
 //------------------------------------------------------------------------------
 
@@ -579,21 +703,39 @@ end;
 
 procedure BoxDownSampling(Image: TImage32; scaleX, scaleY: double);
 begin
-  BoxDownSampling(Image,
-    Max(1, Integer(Round(Image.Width * scaleX))),
-    Max(1, Integer(Round(Image.Height * scaleY))));
+  BoxDownSampling(Image, Image, scaleX, scaleY);
 end;
 //------------------------------------------------------------------------------
 
 procedure BoxDownSampling(Image: TImage32; scale: double);
 begin
-  BoxDownSampling(Image,
+  BoxDownSampling(Image, Image, scale);
+end;
+//------------------------------------------------------------------------------
+
+procedure BoxDownSampling(Image: TImage32; newWidth, newHeight: Integer);
+begin
+  BoxDownSampling(Image, Image, newWidth, newHeight);
+end;
+//------------------------------------------------------------------------------
+
+procedure BoxDownSampling(Image, TargetImage: TImage32; scaleX, scaleY: double);
+begin
+  BoxDownSampling(Image, TargetImage,
+    Max(1, Integer(Round(Image.Width * scaleX))),
+    Max(1, Integer(Round(Image.Height * scaleY))));
+end;
+//------------------------------------------------------------------------------
+
+procedure BoxDownSampling(Image, TargetImage: TImage32; scale: double);
+begin
+  BoxDownSampling(Image, TargetImage,
     Max(1, Integer(Round(Image.Width * scale))),
     Max(1, Integer(Round(Image.Height * scale))));
 end;
 //------------------------------------------------------------------------------
 
-procedure BoxDownSampling(Image: TImage32; newWidth, newHeight: Integer);
+procedure BoxDownSampling(Image, TargetImage: TImage32; newWidth, newHeight: Integer);
 var
   x,y, x256,y256,xx256,yy256: Integer;
   sx,sy: double;
@@ -626,11 +768,73 @@ begin
     y256 := yy256;
   end;
 
-  Image.BeginUpdate;
-  Image.SetSize(newWidth, newHeight);
-  Move(tmp[0], Image.Pixels[0], newWidth * newHeight * SizeOf(TColor32));
-  Image.EndUpdate;
+  TargetImage.AssignPixelArray(tmp, newWidth, newHeight);
 end;
+//------------------------------------------------------------------------------
+
+procedure NearestNeighborResize(Image: TImage32; newWidth, newHeight: Integer);
+begin
+  NearestNeighborResize(Image, Image, newWidth, newHeight);
+end;
+//------------------------------------------------------------------------------
+
+procedure NearestNeighborResize(Image, TargetImage: TImage32; newWidth, newHeight: Integer);
+var
+  x, y, offset: Integer;
+  scaledXi, scaledYi: TArrayOfInteger;
+  tmp: TArrayOfColor32;
+  pc: PColor32;
+  pixels: TArrayOfColor32;
+begin
+  //this NearestNeighbor code is slightly more efficient than
+  //the more general purpose one in Img32.Resamplers
+
+  if (newWidth = Image.Width) and (newHeight = Image.Height) then
+  begin
+    if TargetImage <> Image then TargetImage.Assign(Image);
+    Exit;
+  end;
+  SetLength(tmp, newWidth * newHeight);
+
+  //get scaled X & Y values once only (storing them in lookup arrays) ...
+  SetLength(scaledXi, newWidth);
+  for x := 0 to newWidth -1 do
+    scaledXi[x] := Trunc(x * Image.Width / newWidth);
+  SetLength(scaledYi, newHeight);
+  for y := 0 to newHeight -1 do
+    scaledYi[y] := Trunc(y * Image.Height / newHeight);
+
+  pc := @tmp[0];
+  pixels := Image.Pixels;
+  for y := 0 to newHeight - 1 do
+  begin
+    offset := scaledYi[y] * Image.Width;
+    for x := 0 to newWidth - 1 do
+    begin
+      pc^ := pixels[scaledXi[x] + offset];
+      inc(pc);
+    end;
+  end;
+
+  TargetImage.AssignPixelArray(tmp, newWidth, newHeight);
+end;
+//------------------------------------------------------------------------------
+
+procedure ResamplerResize(Image: TImage32; newWidth, newHeight: Integer);
+begin
+  ResamplerResize(Image, Image, newWidth, newHeight);
+end;
+//------------------------------------------------------------------------------
+
+procedure ResamplerResize(Image, TargetImage: TImage32; newWidth, newHeight: Integer);
+var
+  mat: TMatrixD;
+begin
+  mat := IdentityMatrix;
+  MatrixScale(mat, newWidth/Image.Width, newHeight/Image.Height);
+  AffineTransformImage(Image, TargetImage, mat);
+end;
+
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 

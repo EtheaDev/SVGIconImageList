@@ -2,8 +2,8 @@ unit Img32.SVG.Core;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.4                                                             *
-* Date      :  13 March 2024                                                   *
+* Version   :  4.5                                                             *
+* Date      :  17 July 2024                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -225,10 +225,11 @@ type
   function IsNumPending(var c: PUTF8Char;
     endC: PUTF8Char; ignoreComma: Boolean): Boolean;
   function UTF8StringToColor32(const value: UTF8String; var color: TColor32): Boolean;
-  function MakeDashArray(const dblArray: TArrayOfDouble; scale: double): TArrayOfInteger;
+  function ScaleDashArray(const dblArray: TArrayOfDouble; scale: double): TArrayOfDouble;
   function Match(c: PUTF8Char; const compare: UTF8String): Boolean; overload;
   function Match(const compare1, compare2: UTF8String): Boolean; overload;
   function ToUTF8String(var c: PUTF8Char; endC: PUTF8Char): UTF8String;
+  function ToTrimmedUTF8String(var c: PUTF8Char; endC: PUTF8Char): UTF8String;
 
   //special parsing functions //////////////////////////////////////////
   procedure ParseStyleElementContent(const value: UTF8String; stylesList: TClassStylesList);
@@ -846,21 +847,25 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function AllTrim(var name: UTF8String): Boolean;
+function ToTrimmedUTF8String(var c: PUTF8Char; endC: PUTF8Char): UTF8String;
 var
-  i, len: integer;
+  len: integer;
+  start: PUTF8Char;
 begin
-  len := Length(name);
-  i := 0;
-  while (len > 0) and (name[1] <= space) do
+  start := c;
+  c := endC;
+  if endC > start then
   begin
-    inc(i); dec(len);
+    // trim left
+    while (start < endC) and (start^ <= #32) do Inc(start);
+    // trim right
+    while (endC > start) and (endC[-1] <= #32) do Dec(endC);
   end;
-  if i > 0 then Delete(name, 1, i);
-  Result := len > 0;
-  if not Result then Exit;
-  while name[len] <= space do dec(len);
-  SetLength(name, len);
+
+  len := endC - start;
+  SetLength(Result, len);
+  if len = 0 then Exit;
+  Move(start^, Result[1], len * SizeOf(UTF8Char));
 end;
 //------------------------------------------------------------------------------
 
@@ -1004,7 +1009,7 @@ begin
             MatrixSkew(mat, 0, DegToRad(values[0]));
          end;
     end;
-    Result := MatrixMultiply(Result, mat);
+    MatrixMultiply2(mat, Result);
   end;
 end;
 //------------------------------------------------------------------------------
@@ -1296,28 +1301,21 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function MakeDashArray(const dblArray: TArrayOfDouble; scale: double): TArrayOfInteger;
+function ScaleDashArray(const dblArray: TArrayOfDouble; scale: double): TArrayOfDouble;
 var
   i, len: integer;
-  dist: double;
 begin
-  dist := 0;
   len := Length(dblArray);
   SetLength(Result, len);
-  for i := 0 to len -1 do
-  begin
-    Result[i] := Ceil(dblArray[i] * scale);
-    dist := Result[i] + dist;
-  end;
+  if len = 0 then Exit;
 
-  if dist = 0 then
-  begin
-    Result := nil;
-  end
-  else if Odd(len) then
+  for i := 0 to len -1 do
+    Result[i] := dblArray[i] * scale;
+
+  if Odd(len) then
   begin
     SetLength(Result, len *2);
-    Move(Result[0], Result[len], len * SizeOf(integer));
+    Move(Result[0], Result[len], len * SizeOf(double));
   end;
 end;
 //------------------------------------------------------------------------------
@@ -1389,11 +1387,13 @@ begin
     c2 := c;
     while (c < endC) and (c^ <> '}') do inc(c);
     if (c = endC) then break;
-    aStyle := ToUTF8String(c2, c);
-
-    //finally, for each class name add (or append) this style
-    for i := 0 to High(names) do
-      stylesList.AddAppendStyle(names[i], aStyle);
+    aStyle := ToTrimmedUTF8String(c2, c);
+    if aStyle <> '' then
+    begin
+      //finally, for each class name add (or append) this style
+      for i := 0 to High(names) do
+        stylesList.AddAppendStyle(names[i], aStyle);
+    end;
     names := nil;
     len := 0; cap := 0;
     inc(c);
@@ -1608,8 +1608,7 @@ begin
     c2 := c;
     inc(c);
     while (c < endC) and (c^ <> ';') do inc(c);
-    styleVal := ToUTF8String(c2, c);
-    AllTrim(styleVal);
+    styleVal := ToTrimmedUTF8String(c2, c);
     inc(c);
 
     new(attrib);
@@ -2037,8 +2036,8 @@ end;
 
 procedure TValue.Init;
 begin
-  rawVal      := InvalidD;
-  unitType          := utNumber;
+  rawVal   := InvalidD;
+  unitType := utNumber;
 end;
 //------------------------------------------------------------------------------
 

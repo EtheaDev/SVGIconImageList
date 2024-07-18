@@ -447,6 +447,7 @@ var
 begin
   len := Length(fInPath);
   SetLength(fNorms, len);
+  if len = 0 then Exit;
   for i := 0 to len-2 do
     fNorms[i] := GetUnitNormal(fInPath[i], fInPath[i+1]);
   fNorms[len -1] := GetUnitNormal(fInPath[len -1], fInPath[0]);

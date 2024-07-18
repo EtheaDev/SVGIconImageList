@@ -2,8 +2,8 @@ unit Img32.SVG.Reader;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.4                                                             *
-* Date      :  23 March 2024                                                   *
+* Version   :  4.5                                                             *
+* Date      :  17 July 2024                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -105,6 +105,8 @@ type
     procedure Draw(image: TImage32; drawDat: TDrawData); override;
   public
     function  GetViewbox: TRectWH;
+    function  Width     : TValue;
+    function  Height    : TValue;
   end;
 
   TSvgReader = class
@@ -200,19 +202,22 @@ type
 
   TImageElement = class(TBaseElement)
   private
-    refEl: UTF8String;
+    fRefEl: UTF8String;
+    fImage: TImage32;
   protected
     procedure Draw(image: TImage32; drawDat: TDrawData); override;
+  public
+    destructor Destroy; override;
   end;
 
   //-------------------------------------
 
   TShapeElement = class(TBaseElement)
-  private
-    procedure SimpleDrawFill(const paths: TPathsD;
-      fillRule: TFillRule; color: TColor32);
-    procedure SimpleDrawStroke(const paths: TPathsD; width: double;
-      joinStyle: TJoinStyle; endStyle: TEndStyle; color: TColor32);
+//  private
+//    procedure SimpleDrawFill(const paths: TPathsD;
+//      fillRule: TFillRule; color: TColor32);
+//    procedure SimpleDrawStroke(const paths: TPathsD; width: double;
+//      joinStyle: TJoinStyle; endStyle: TEndStyle; color: TColor32);
   protected
     hasPaths    : Boolean;
     drawPathsO  : TPathsD; //open only
@@ -246,7 +251,7 @@ type
     callerUse: TBaseElement;
     function ValidateNonRecursion(el: TBaseElement): Boolean;
   protected
-    refEl: UTF8String;
+    fRefEl: UTF8String;
     procedure GetPaths(const drawDat: TDrawData); override;
     procedure Draw(img: TImage32; drawDat: TDrawData); override;
   end;
@@ -421,6 +426,7 @@ type
     procedure AssignTo(other: TBaseElement);  virtual;
     function PrepareRenderer(renderer: TCustomGradientRenderer;
       drawDat: TDrawData): Boolean; virtual;
+    procedure AddColorStopsToRenderer(renderer: TCustomGradientRenderer);
   end;
 
   TRadGradElement = class(TGradientElement)
@@ -498,8 +504,11 @@ type
   TFeImageElement  = class(TFeBaseElement)
   private
     refEl: UTF8String;
+    fImage: TImage32;
   protected
     procedure Apply; override;
+  public
+    destructor Destroy; override;
   end;
 
   TCompositeOp = (coOver, coIn, coOut, coAtop, coXOR, coArithmetic);
@@ -742,7 +751,7 @@ begin
       drawDat.fontInfo.baseShift := fontInfo.baseShift;
 
     if not IsIdentityMatrix(matrix) then
-      drawDat.matrix := MatrixMultiply(drawDat.matrix, matrix);
+      MatrixMultiply2(matrix, drawDat.matrix);
   end;
 end;
 //------------------------------------------------------------------------------
@@ -762,8 +771,7 @@ begin
       Result := false
     else if (strokeEl <> '') then
       Result := ((strokeWidth.rawVal = InvalidD) or (strokeWidth.rawVal > 0))
-    else if (strokeColor = clNone32) or
-        ((strokeColor = clInvalid) and (strokeWidth.rawVal = InvalidD)) then
+    else if (strokeColor = clNone32) or (strokeColor = clInvalid) then
       Result := false
     else
       Result := ((strokeWidth.rawVal = InvalidD) or (strokeWidth.rawVal > 0));
@@ -868,66 +876,102 @@ end;
 function TrimSpaces(const s: UTF8String): UTF8String;
 var
   i, j, len: integer;
+  dst: PUTF8Char;
 begin
   len := Length(s);
   SetLength(Result, len);
+  dst := PUTF8Char(Pointer(Result));
   j := 0;
   for i := 1 to len do
     if s[i] > #32 then
     begin
+      dst[j] := s[i];
       inc(j);
-      Result[j] := s[i];
     end;
-  SetLength(Result, j);
+  if j <> len then
+    SetLength(Result, j);
 end;
 //------------------------------------------------------------------------------
 
-function DrawRefElImage(const refEl: UTF8String;
-  image: TImage32; dstRec: TRect): Boolean;
+procedure ReadRefElImage(const refEl: UTF8String; out img: TImage32);
 var
   len, offset: integer;
   s: UTF8String;
   ms: TMemoryStream;
-  img: TImage32;
+  c: PUTF8Char;
 begin
-  Result := false;
+  img := nil;
+
   // unfortunately white spaces are sometimes found inside encoded base64
   s := TrimSpaces(refEl);
-
   len := Length(s);
+
   // currently only accepts **embedded** images
   if (len = 0) then Exit;
-  if Match(@s[1], 'data:image/jpg;base64,') then offset := 22
-  else if Match(@s[1], 'data:image/jpeg;base64,') then offset := 23
-  else if Match(@s[1], 'data:image/png;base64,') then offset := 22
-  else if Match(@s[1], 'data:img/jpg;base64,') then offset := 20
-  else if Match(@s[1], 'data:img/jpeg;base64,') then offset := 21
-  else if Match(@s[1], 'data:img/png;base64,') then offset := 20
+
+  c := PUTF8Char(s);
+  if not Match(c, 'data:image/') then Exit;
+
+  if Match(@c[11], 'jpg;base64,') then offset := 22
+  else if Match(@c[11], 'jpeg;base64,') then offset := 23
+  else if Match(@c[11], 'png;base64,') then offset := 22
+  else if Match(@c[11], 'jpg;base64,') then offset := 20
+  else if Match(@c[11], 'jpeg;base64,') then offset := 21
+  else if Match(@c[11], 'png;base64,') then offset := 20
   else Exit;
 
   ms := TMemoryStream.Create;
-  img := TImage32.Create;
   try
-    if not Base64Decode(@s[offset +1], len -offset, ms) or
-      not img.LoadFromStream(ms) then Exit;
-    image.Copy(img, img.Bounds, dstRec);
+    if not Base64Decode(@c[offset], len -offset, ms) then Exit;
+    img := TImage32.Create;
+    if not img.LoadFromStream(ms) then
+    begin
+      FreeAndNil(img);
+      Exit;
+    end;
   finally
     ms.Free;
-    img.Free;
   end;
-  Result := true;
+end;
+
+//------------------------------------------------------------------------------
+// TImageElement
+//------------------------------------------------------------------------------
+
+destructor TImageElement.Destroy;
+begin
+  if Assigned(fImage) then fImage.Free;
+  inherited Destroy;
 end;
 //------------------------------------------------------------------------------
 
 procedure TImageElement.Draw(image: TImage32; drawDat: TDrawData);
 var
   dstRecD: TRectD;
+  tmp: TImage32;
 begin
   dstRecD := Self.elRectWH.GetRectD(0,0);
-  drawDat.matrix := MatrixMultiply(drawDat.matrix, fDrawData.matrix);
+  MatrixMultiply2(fDrawData.matrix, drawDat.matrix);
 
   MatrixApply(drawDat.matrix, dstRecD);
-  DrawRefElImage(refEl, image, Rect(dstRecD));
+
+  if (fRefEl <> '') and not Assigned(fImage) then
+  begin
+    ReadRefElImage(fRefEl, fImage);
+    fRefEl := ''; // ie avoid reloading fImage
+  end;
+
+  if fImage <> nil then
+  begin
+    tmp := TImage32.Create();
+    try
+      tmp.AssignSettings(fImage);
+      MatrixApply(drawDat.matrix, fImage, tmp);
+      image.Copy(tmp, tmp.Bounds, Rect(dstRecD));
+    finally
+      tmp.Free;
+    end;
+  end;
 end;
 
 //------------------------------------------------------------------------------
@@ -1026,9 +1070,9 @@ var
   el: TBaseElement;
   dx, dy: double;
 begin
-  if Assigned(drawPathsF) or (refEl = '') then Exit;
+  if Assigned(drawPathsF) or (fRefEl = '') then Exit;
 
-  el := FindRefElement(refEl);
+  el := FindRefElement(fRefEl);
   if not Assigned(el) or not (el is TShapeElement) then Exit;
   with TShapeElement(el) do
   begin
@@ -1072,7 +1116,7 @@ procedure TUseElement.Draw(img: TImage32; drawDat: TDrawData);
 var
   el: TBaseElement;
   s, dx, dy: double;
-  scale, scale2: TSizeD;
+  scale, scale2: TPointD;
   mat: TMatrixD;
 begin
 
@@ -1082,11 +1126,11 @@ begin
   callerUse := drawDat.useEl;
   drawDat.useEl := self;
 
-  el := FindRefElement(refEl);
+  el := FindRefElement(fRefEl);
   if not Assigned(el) then Exit;
 
   UpdateDrawInfo(drawDat, self); //nb: <use> attribs override el's.
-  scale := ExtractScaleFromMatrix(drawDat.matrix);
+  MatrixExtractScale(drawDat.matrix, scale.X, scale.Y);
 
   if elRectWH.left.IsValid then dx := elRectWH.left.rawVal else dx := 0;
   if elRectWH.top.IsValid  then dy := elRectWH.top.rawVal  else dy := 0;
@@ -1095,7 +1139,7 @@ begin
   begin
     mat := IdentityMatrix;
     MatrixTranslate(mat, dx, dy);
-    drawDat.matrix := MatrixMultiply(drawDat.matrix, mat);
+    MatrixMultiply2(mat, drawDat.matrix);
   end;
 
   if el is TSymbolElement then
@@ -1107,13 +1151,13 @@ begin
         //scale the symbol according to its width and height attributes
         if elRectWH.width.IsValid and elRectWH.height.IsValid then
         begin
-          scale2.cx := elRectWH.width.rawVal / viewboxWH.Width;
-          scale2.cy := elRectWH.height.rawVal / viewboxWH.Height;
-          if scale2.cy < scale2.cx then s := scale2.cy else s := scale2.cx;
+          scale2.X := elRectWH.width.rawVal / viewboxWH.Width;
+          scale2.Y := elRectWH.height.rawVal / viewboxWH.Height;
+          if scale2.Y < scale2.X then s := scale2.Y else s := scale2.X;
           //the following 3 lines will scale without translating
           mat := IdentityMatrix;
           MatrixScale(mat, s, s);
-          drawDat.matrix := MatrixMultiply(drawDat.matrix, mat);
+          MatrixMultiply2(mat, drawDat.matrix);
           drawDat.bounds := RectD(0,0,viewboxWH.Width, viewboxWH.Height);
         end;
 
@@ -1126,28 +1170,28 @@ begin
             dy := -Top/Height * self.elRectWH.height.rawVal;
 
             //scale <symbol> proportionally to fill the <use> element
-            scale2.cx := self.elRectWH.width.rawVal / Width;
-            scale2.cy := self.elRectWH.height.rawVal / Height;
-            if scale2.cy < scale2.cx then s := scale2.cy else s := scale2.cx;
+            scale2.X := self.elRectWH.width.rawVal / Width;
+            scale2.Y := self.elRectWH.height.rawVal / Height;
+            if scale2.Y < scale2.X then s := scale2.Y else s := scale2.X;
           end;
 
           mat := IdentityMatrix;
           MatrixScale(mat, s, s);
           MatrixTranslate(mat, dx, dy);
-          drawDat.matrix := MatrixMultiply(drawDat.matrix, mat);
+          MatrixMultiply2(mat, drawDat.matrix);
 
           //now center after scaling
-          if scale2.cx > scale2.cy then
+          if scale2.X > scale2.Y then
           begin
-            if scale2.cx > 1 then
+            if scale2.X > 1 then
             begin
               s := (self.elRectWH.width.rawVal - viewboxWH.Width) * 0.5;
-              MatrixTranslate(drawDat.matrix, s * scale.cx, 0);
+              MatrixTranslate(drawDat.matrix, s * scale.X, 0);
             end;
-          end else if scale2.cy > 1 then
+          end else if scale2.Y > 1 then
           begin
             s := (self.elRectWH.height.rawVal - viewboxWH.Height) * 0.5;
-            MatrixTranslate(drawDat.matrix, 0, s * scale.cy);
+            MatrixTranslate(drawDat.matrix, 0, s * scale.Y);
           end;
 
         end;
@@ -1276,6 +1320,33 @@ begin
   end;
   Result := Length(stops) > 0;
 end;
+//------------------------------------------------------------------------------
+
+procedure TGradientElement.AddColorStopsToRenderer(renderer: TCustomGradientRenderer);
+var
+  i, hiStops: Integer;
+begin
+  hiStops := High(stops);
+  if (hiStops = 0) or (renderer = nil) then Exit;
+
+  // If vector boundary-stops are implicit, then boundary
+  // and adjacent inner stop (explicit) should have the
+  // same color
+  if stops[0].offset > 0 then
+    with stops[0] do
+      renderer.InsertColorStop(offset, color);
+
+  for i := 1 to hiStops -1 do
+    with stops[i] do
+      renderer.InsertColorStop(offset, color);
+
+  // If vector boundary-stops are implicit, then boundary
+  // and adjacent inner stop (explicit) should have the
+  // same color
+  if stops[hiStops].offset < 1 then
+    with stops[hiStops] do
+      renderer.InsertColorStop(offset, color);
+end;
 
 //------------------------------------------------------------------------------
 // TRadGradElement
@@ -1307,9 +1378,9 @@ end;
 function TRadGradElement.PrepareRenderer(renderer: TCustomGradientRenderer;
   drawDat: TDrawData): Boolean;
 var
-  i, hiStops: integer;
+  hiStops: integer;
   cp, fp, r: TPointD;
-  scale, scale2: TSizeD;
+  scale, scale2: TPointD;
   rec2, rec3: TRectD;
 begin
   inherited PrepareRenderer(renderer, drawDat);
@@ -1331,9 +1402,9 @@ begin
     r.X := rec2.Width * 0.5;
     r.Y := rec2.Height * 0.5;
   end;
-  scale := ExtractScaleFromMatrix(drawDat.matrix);
-  scale2 := ExtractScaleFromMatrix(fDrawData.matrix);
-  r := ScalePoint(r, scale.cx * scale2.cx, scale.cy * scale2.cy);
+  MatrixExtractScale(drawDat.matrix, scale.X, scale.Y);
+  MatrixExtractScale(fDrawData.matrix, scale2.X, scale2.Y);
+  r := ScalePoint(r, scale.X * scale2.X, scale.Y * scale2.Y);
 
   if C.IsValid then
   begin
@@ -1363,9 +1434,7 @@ begin
   begin
     SetParameters(Rect(rec3), Point(fp),
       stops[0].color, stops[hiStops].color, spreadMethod);
-    for i := 1 to hiStops -1 do
-      with stops[i] do
-        renderer.InsertColorStop(offset, color);
+    AddColorStopsToRenderer(renderer);
   end;
 end;
 
@@ -1398,7 +1467,7 @@ function TLinGradElement.PrepareRenderer(
   renderer: TCustomGradientRenderer; drawDat: TDrawData): Boolean;
 var
   pt1, pt2: TPointD;
-  i, hiStops: integer;
+  hiStops: integer;
   rec2: TRectD;
 begin
   inherited PrepareRenderer(renderer, drawDat);
@@ -1453,9 +1522,7 @@ begin
 
     SetParameters(pt1, pt2, stops[0].color,
       stops[hiStops].color, spreadMethod);
-    for i := 1 to hiStops -1 do
-      with stops[i] do
-        renderer.InsertColorStop(offset, color);
+    AddColorStopsToRenderer(renderer);
   end;
 end;
 
@@ -1665,7 +1732,7 @@ procedure TFilterElement.Apply(img: TImage32;
 var
   i: integer;
 begin
-  fScale := ExtractAvgScaleFromMatrix(matrix);
+  MatrixExtractScale(matrix, fScale);
   fFilterBounds := filterBounds;
   Types.IntersectRect(fObjectBounds, fObjectBounds, img.Bounds);
   fSrcImg := img;
@@ -1775,10 +1842,23 @@ end;
 // TFeImageElement
 //------------------------------------------------------------------------------
 
+destructor TFeImageElement.Destroy;
+begin
+  fImage.Free;
+  inherited Destroy;
+end;
+//------------------------------------------------------------------------------
+
 procedure TFeImageElement.Apply;
 begin
   if GetSrcAndDst then
-    DrawRefElImage(refEl, dstImg, dstRec);
+  begin
+    if refEl <> '' then
+      ReadRefElImage(refEl, fImage); // also clears refEl
+
+    if fImage <> nil then
+      dstImg.Copy(fImage, fImage.Bounds, dstRec);
+  end;
 end;
 
 //------------------------------------------------------------------------------
@@ -2271,7 +2351,7 @@ begin
         drawDat.filterElRef := '';
         with TFilterElement(filterEl) do
         begin
-          fScale := ExtractAvgScaleFromMatrix(DrawData.matrix);
+          MatrixExtractScale(DrawData.matrix, fScale);
           clipRec := GetAdjustedBounds(clipRec);
         end;
       end;
@@ -2326,7 +2406,7 @@ end;
 procedure TShapeElement.DrawMarkers(img: TImage32; drawDat: TDrawData);
 var
   i,j: integer;
-  sw: double;
+  scale, sw: double;
   markerEl: TBaseElement;
   markerPaths: TPathsD;
   pt1, pt2: TPointD;
@@ -2347,8 +2427,8 @@ begin
       sw := GetValue(drawDat.fontInfo.size, GetRelFracLimit)
     else sw := GetValueXY(drawDat.bounds, GetRelFracLimit);
 
-  MatrixScale(di.matrix, sw * ExtractAvgScaleFromMatrix(drawDat.matrix));
-
+  MatrixExtractScale(drawDat.matrix, scale);
+  MatrixScale(di.matrix, sw * scale);
   if (fDrawData.markerStart <> '') then
   begin
     markerEl := FindRefElement(fDrawData.markerStart);
@@ -2454,16 +2534,11 @@ begin
   end
   else if drawDat.fillColor = clInvalid then
   begin
-    if fReader.RecordSimpleDraw then
-      SimpleDrawFill(fillPaths, drawDat.fillRule, clBlack32);
     DrawPolygon(img, fillPaths, drawDat.fillRule, clBlack32);
   end
   else
     with drawDat do
     begin
-      if fReader.RecordSimpleDraw then
-        SimpleDrawFill(fillPaths, fillRule,
-          MergeColorAndOpacity(fillColor, fillOpacity));
       DrawPolygon(img, fillPaths, fillRule,
         MergeColorAndOpacity(fillColor, fillOpacity));
     end;
@@ -2473,60 +2548,87 @@ end;
 procedure TShapeElement.DrawStroke(img: TImage32;
   drawDat: TDrawData; isClosed: Boolean);
 var
-  dashOffset, scaledStrokeWidth, roundingScale: double;
-  dashArray: TArrayOfInteger;
-  scale: Double;
+  i: integer;
+  dashOffset, sw: double;
+  dashArray: TArrayOfDouble;
+  lim, scale: Double;
   strokeClr: TColor32;
   strokePaths: TPathsD;
   refEl: TBaseElement;
   endStyle: TEndStyle;
   joinStyle: TJoinStyle;
   bounds: TRectD;
+  paths: TPathsD;
 begin
-  if isClosed then
-  begin
-    strokePaths := MatrixApply(drawPathsC, drawDat.matrix);
-    endStyle := esPolygon;
-  end else
-  begin
-    strokePaths := MatrixApply(drawPathsO, drawDat.matrix);
-    if fDrawData.strokeCap = esPolygon then
-      endStyle := esButt else
-      endStyle := fDrawData.strokeCap;
-  end;
-  if not Assigned(strokePaths) then Exit;
-  joinStyle := fDrawData.strokeJoin;
-  if drawDat.strokeColor = clCurrent then
-    drawDat.strokeColor := fReader.currentColor;
 
-  scale := ExtractAvgScaleFromMatrix(drawDat.matrix);
+  MatrixExtractScale(drawDat.matrix, scale);
+  joinStyle := fDrawData.strokeJoin;
+
   bounds := fReader.userSpaceBounds;
   with drawDat.strokeWidth do
   begin
     if not IsValid then
-      scaledStrokeWidth := scale
+      sw := 1
     else if HasFontUnits then
-      scaledStrokeWidth :=
-        GetValue(drawDat.fontInfo.size, GetRelFracLimit) * scale
+      sw := GetValue(drawDat.fontInfo.size, GetRelFracLimit)
     else
-      scaledStrokeWidth := GetValueXY(bounds, 0) * scale;
+      sw := GetValueXY(bounds, 0);
   end;
-  roundingScale := scale;
+
+  if joinStyle = jsMiter then
+    lim := drawDat.strokeMitLim else
+    lim := scale;
+
+  if drawDat.strokeColor = clCurrent then
+    drawDat.strokeColor := fReader.currentColor;
 
   if Length(drawDat.dashArray) > 0 then
-    dashArray := MakeDashArray(drawDat.dashArray, scale) else
+    dashArray := ScaleDashArray(drawDat.dashArray, scale) else
     dashArray := nil;
+  dashOffset := drawDat.dashOffset;
 
   with drawDat do
     strokeClr := MergeColorAndOpacity(strokeColor, strokeOpacity);
 
-  if Assigned(dashArray) then
+  if isClosed then
   begin
-    dashOffset := drawDat.dashOffset * scale;
-    DrawDashedLine(img, strokePaths, dashArray,
-      @dashOffset, scaledStrokeWidth, strokeClr, endStyle);
-  end
-  else if (drawDat.strokeEl <> '') then
+    if not Assigned(drawPathsC) then Exit;
+    if Assigned(dashArray) then
+    begin
+      if joinStyle = jsRound then
+        endStyle := esRound else
+        endStyle := esButt;
+      dashArray := ScaleDashArray(drawDat.dashArray, 1);  // ie. don't scale yet!
+      strokePaths := nil;
+      for i := 0 to High(drawPathsC) do
+      begin
+        paths := GetDashedPath(drawPathsC[i], true, dashArray, @dashOffset);
+        AppendPath(strokePaths, paths);
+      end;
+      strokePaths := RoughOutline(strokePaths, sw, joinStyle, endStyle, lim);
+    end else
+    begin
+      endStyle := esPolygon;
+      strokePaths := RoughOutline(drawPathsC, sw, joinStyle, endStyle, lim);
+    end;
+  end else
+  begin
+    if not Assigned(drawPathsO) then Exit;
+    if fDrawData.strokeCap = esPolygon then
+      endStyle := esButt else
+      endStyle := fDrawData.strokeCap;
+    if Assigned(dashArray) then
+    begin
+      strokePaths := MatrixApply(drawPathsO, drawDat.matrix);
+      DrawDashedLine(img, strokePaths, dashArray,
+        @dashOffset, sw * scale, strokeClr, endStyle);
+      Exit;
+    end;
+    strokePaths := RoughOutline(drawPathsO, sw, joinStyle, endStyle, lim);
+  end;
+  strokePaths := MatrixApply(strokePaths, drawDat.matrix);
+
+  if (drawDat.strokeEl <> '') then
   begin
     refEl := FindRefElement(drawDat.strokeEl);
     if not Assigned(refEl) then Exit;
@@ -2535,67 +2637,25 @@ begin
     begin
       with TRadGradElement(refEl) do
         PrepareRenderer(fReader.RadGradRenderer, drawDat);
-      DrawLine(img, strokePaths, scaledStrokeWidth,
-        fReader.RadGradRenderer, endStyle, joinStyle, roundingScale);
+      DrawPolygon(img, strokePaths, frNonZero, fReader.RadGradRenderer);
     end
     else if refEl is TLinGradElement then
     begin
       with TLinGradElement(refEl) do
         PrepareRenderer(fReader.LinGradRenderer, drawDat);
-      DrawLine(img, strokePaths, scaledStrokeWidth,
-        fReader.LinGradRenderer, endStyle, joinStyle, roundingScale);
+      DrawPolygon(img, strokePaths, frNonZero, fReader.LinGradRenderer);
     end
     else if refEl is TPatternElement then
       with TPatternElement(refEl) do
       begin
         PrepareRenderer(imgRenderer, drawDat);
-        DrawLine(img, strokePaths,  scaledStrokeWidth,
-          imgRenderer, endStyle, joinStyle, roundingScale);
+        DrawLine(img, strokePaths,  1, imgRenderer, esPolygon, joinStyle, scale);
+        DrawPolygon(img, strokePaths, frNonZero, imgRenderer);
       end;
-  end
-  else if (joinStyle = jsMiter) then
-  begin
-    if fReader.RecordSimpleDraw then
-      SimpleDrawStroke(strokePaths, scaledStrokeWidth,
-        joinStyle, endStyle, strokeClr);
-    DrawLine(img, strokePaths, scaledStrokeWidth,
-      strokeClr, endStyle, joinStyle, drawDat.strokeMitLim);
   end else
   begin
-    if fReader.RecordSimpleDraw then
-      SimpleDrawStroke(strokePaths, scaledStrokeWidth,
-        joinStyle, endStyle, strokeClr);
-    DrawLine(img, strokePaths, scaledStrokeWidth,
-      strokeClr, endStyle, joinStyle, roundingScale);
+    DrawPolygon(img, strokePaths, frNonZero, strokeClr);
   end;
-end;
-//------------------------------------------------------------------------------
-
-procedure TShapeElement.SimpleDrawFill(const paths: TPathsD;
-  fillRule: TFillRule; color: TColor32);
-var
-  sdd: PSimpleDrawData;
-begin
-  if TARGB(color).A < 128 then Exit;
-  new(sdd);
-  sdd.paths := CopyPaths(paths);
-  sdd.fillRule := fillRule;
-  sdd.color := color or $FF000000;
-  fReader.SimpleDrawList.Add(sdd);
-end;
-//------------------------------------------------------------------------------
-
-procedure TShapeElement.SimpleDrawStroke(const paths: TPathsD;
-  width: double; joinStyle: TJoinStyle; endStyle: TEndStyle; color: TColor32);
-var
-  sdd: PSimpleDrawData;
-begin
-  if TARGB(color).A < 128 then Exit;
-  new(sdd);
-  sdd.paths := InflatePaths(paths, width, joinStyle, ClipperEndType(endStyle));
-  sdd.fillRule := frNonZero;
-  sdd.color := color or $FF000000;
-  fReader.SimpleDrawList.Add(sdd);
 end;
 
 //------------------------------------------------------------------------------
@@ -2648,7 +2708,7 @@ var
   path: TPathD;
 begin
   if Assigned(drawPathsC) or Assigned(drawPathsO) then inherited;
-  scalePending := ExtractAvgScaleFromMatrix(drawDat.matrix);
+  MatrixExtractScale(drawDat.matrix, scalePending);
   for i := 0 to fSvgPaths.Count -1 do
   begin
     Flatten(i, scalePending, path, isClosed);
@@ -2806,7 +2866,7 @@ begin
   if not radius.IsValid then Exit;
   r := radius.GetValueXY(drawDat.bounds, GetRelFracLimit);
   pt := centerPt.GetPoint(drawDat.bounds, GetRelFracLimit);
-  scalePending := ExtractAvgScaleFromMatrix(drawDat.matrix);
+  MatrixExtractScale(drawDat.matrix, scalePending);
   rec := RectD(pt.X -r, pt.Y -r, pt.X +r, pt.Y +r);
   path := Ellipse(rec, scalePending);
   AppendPath(drawPathsC, path);
@@ -2851,7 +2911,7 @@ begin
   centPt := centerPt.GetPoint(drawDat.bounds, GetRelFracLimit);
   with centPt do
     rec := RectD(X -rad.X, Y -rad.Y, X +rad.X, Y +rad.Y);
-  scalePending := ExtractAvgScaleFromMatrix(drawDat.matrix);
+  MatrixExtractScale(drawDat.matrix, scalePending);
   path := Ellipse(rec, scalePending);
   AppendPath(drawPathsC, path);
   drawPathsF := drawPathsC;
@@ -3411,7 +3471,7 @@ begin
   begin
     l := refPt.X.rawVal;
     t := refPt.Y.rawVal;
-    scale := ExtractAvgScaleFromMatrix(mat);
+    MatrixExtractScale(mat, scale);
     MatrixTranslate(mat, -l * scale, -t * scale);
   end;
 
@@ -3503,11 +3563,11 @@ var
   rec   : TRectD;
   mat   : TMatrixD;
   sx,sy : double;
-  scale: TSizeD;
+  scale : TPointD;
 begin
   Result := false;
 
-  scale := ExtractScaleFromMatrix(drawDat.matrix);
+  MatrixExtractScale(drawDat.matrix, scale.X, scale.Y);
 
   if units = hUserSpaceOnUse then
     rec := fReader.userSpaceBounds else
@@ -3536,13 +3596,13 @@ begin
     Exit;
 
   renderer.Image.SetSize(
-    Round(recWH.Width * scale.cx),
-    Round(recWH.Height * scale.cy));
+    Round(recWH.Width * scale.X),
+    Round(recWH.Height * scale.Y));
 
   Result := true;
 
   mat := IdentityMatrix;
-  MatrixScale(mat, scale.cx * sx, scale.cy * sy);
+  MatrixScale(mat, scale.X * sx, scale.Y * sy);
 
   if (refEl <> '') then
   begin
@@ -3602,6 +3662,18 @@ begin
     viewboxWH.height := elRectWH.height.GetValue(defaultSvgHeight, 0);
   end;
   Result := viewboxWH;
+end;
+//------------------------------------------------------------------------------
+
+function TSvgElement.Width: TValue;
+begin
+  Result := elRectWH.Width;
+end;
+//------------------------------------------------------------------------------
+
+function TSvgElement.Height: TValue;
+begin
+  Result := elRectWH.Height;
 end;
 
 //------------------------------------------------------------------------------
@@ -3759,9 +3831,9 @@ begin
     hFeImage:
       TFeImageElement(el).refEl := ExtractRef(value);
     hImage:
-      TImageElement(el).refEl := ExtractRef(value);
+      TImageElement(el).fRefEl := ExtractRef(value);
     hUse:
-      TUseElement(el).refEl := ExtractRef(value);
+      TUseElement(el).fRefEl := ExtractRef(value);
     hTextPath:
       TTextPathElement(el).pathEl := ExtractRef(value);
     else if el is TFillElement then
@@ -4154,7 +4226,7 @@ begin
   if Match(PUTF8Char(value), 'url(') then
     aOwnerEl.fDrawData.strokeEl := ExtractRef(value)
   else if Match(PUTF8Char(value), 'currentcolor') then
-    // do nothing
+    aOwnerEl.fDrawData.strokeColor := clCurrent
   else
     UTF8StringToColor32(value, aOwnerEl.fDrawData.strokeColor);
 end;
@@ -4230,7 +4302,7 @@ end;
 procedure Transform_Attrib(aOwnerEl: TBaseElement; const value: UTF8String);
 begin
   with aOwnerEl.fDrawData do
-    matrix := MatrixMultiply(matrix, ParseTransform(value));
+    MatrixMultiply2(ParseTransform(value), matrix);
 end;
 //------------------------------------------------------------------------------
 
@@ -4260,7 +4332,7 @@ begin
   if not (aOwnerEl is TGradientElement) then Exit;
   mat := ParseTransform(value);
   with aOwnerEl.fDrawData do
-    matrix := MatrixMultiply(matrix, mat);
+    MatrixMultiply2(mat, matrix);
 end;
 //------------------------------------------------------------------------------
 

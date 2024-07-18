@@ -1017,6 +1017,11 @@ begin
   GetMem(v, sizeof(TVertex) * totalVerts);
   vertexList.Add(v);
 
+  {$IF not defined(FPC) and (CompilerVersion <= 26.0)}
+  // Delphi 7-XE5 have a problem with "continue" and the
+  // code analysis, marking "ascending" as "not initialized"
+  ascending := False;
+  {$IFEND}
   for i := 0 to High(paths) do
   begin
     len := Length(paths[i]);
