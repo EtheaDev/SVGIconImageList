@@ -1194,8 +1194,12 @@ end;
 
 function TOpenPictureDialogSvg.Execute(ParentWnd: HWND): Boolean;
 begin
+  {$IFDEF OldPictureDialog}
   Template := 'DLGTEMPLATE';
   Result := DoExecute(@GetOpenFileName, ParentWnd);
+  {$ELSE}
+  Result := inherited Execute(ParentWnd);
+  {$ENDIF}
 end;
 
 procedure TOpenPictureDialogSvg.DoSelectionChange;
