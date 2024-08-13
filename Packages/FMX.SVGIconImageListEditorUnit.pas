@@ -150,8 +150,11 @@ uses
   , Winapi.Windows
   , Winapi.shellApi
   , Xml.XMLDoc
+  {$IFDEF Image32_SVGEngine}
+  , Img32.SVG.Core
+  {$ENDIF}
   , System.Math
-  , Img32.SVG.Core;
+  ;
 
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);

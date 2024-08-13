@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{25059111-8F77-429C-A2F2-CB529411BC99}</ProjectGuid>
+        <ProjectGuid>{CA7632FE-2EC3-4AC0-9CC7-D83EF27A531A}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
         <Projects Include="SVGImage32Package.dproj">

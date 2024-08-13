@@ -49,7 +49,7 @@
         <DCC_K>false</DCC_K>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;System;Xml;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <SanitizedProjectName>SVGIconImageList</SanitizedProjectName>
         <DCC_Description>Ethea SVGIconImageList VCL components</DCC_Description>
@@ -57,13 +57,12 @@
         <DllSuffix>_DXE7</DllSuffix>
         <DCC_UnitSearchPath>..\..\Image32\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
+        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -89,7 +88,6 @@
         </DelphiCompile>
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="VclSmp.dcp"/>
-        <DCCReference Include="SVGImage32Package.dcp"/>
         <DCCReference Include="vclimg.dcp"/>
         <DCCReference Include="..\..\Source\SVGIconImage.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageList.pas"/>
@@ -98,22 +96,19 @@
         <DCCReference Include="..\..\Source\SVGIconItems.pas"/>
         <DCCReference Include="..\..\Source\SVGIconVirtualImageList.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageListBase.pas"/>
-        <DCCReference Include="..\..\Source\D2DSVGFactory.pas"/>
-        <DCCReference Include="..\..\Source\Winapi.D2DMissing.pas"/>
-        <DCCReference Include="..\..\Source\Image32SVGFactory.pas"/>
         <DCCReference Include="..\..\Source\SVGInterfaces.pas"/>
         <DCCReference Include="..\..\Source\dlgExportPNG.pas">
             <Form>ExportToPNGDialog</Form>
         </DCCReference>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
-            <CfgParent>Base</CfgParent>
-        </BuildConfiguration>
-        <BuildConfiguration Include="Release">
-            <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>

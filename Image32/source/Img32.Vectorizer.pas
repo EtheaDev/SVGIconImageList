@@ -93,7 +93,7 @@ var
   i, len: integer;
 begin
   len := GetVertexCount(pt);
-  SetLength(Result, len);
+  NewPointDArray(Result, len, True);
   for i := 0 to len -1 do
   begin
     Result[i] := PointD(pt.X, pt.Y);

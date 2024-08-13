@@ -42,7 +42,7 @@ Uses
   , FMX.Objects
   , FMX.ImageSVG
   , System.Skia       
-  , Skia.FMX;
+  , FMX.Skia;
 
 type
   TFmxImageSkiaSVG = class(TFmxImageSVG)
@@ -79,8 +79,8 @@ begin
   inherited;
   //GrayScale and FixedColor
   FSvg.GrayScale := GrayScale;
-  if not GrayScale and (FixedColor <> TColors.SysNone) and
-    (FixedColor <> TColors.SysNone) then
+  if not GrayScale and (FixedColor <> TAlphaColorRec.Null) and
+    (FixedColor <> TAlphaColorRec.Null) then
     FSvg.OverrideColor := FixedColor
   else
     FSvg.OverrideColor := Default(TAlphaColor);
@@ -135,7 +135,6 @@ procedure TFmxImageSkiaSVG.PaintToBitmap(ABitmap: TBitmap;
   const AZoom: Integer = 100; const KeepAspectRatio: Boolean = True);
 var
   LWidth, LHeight: Integer;
-  LAbsoluteScale: TPointF;
 begin
   Assert(Assigned(FSvg));
   Assert(Assigned(ABitmap));
@@ -146,7 +145,6 @@ begin
   ABitmap.SkiaDraw(
     procedure(const ACanvas: ISkCanvas)
     var
-      LAbsoluteScale: TPointF;
       LDestRect: TRectF;
     begin
       LDestRect := RectF(0, 0, LWidth, LHeight);

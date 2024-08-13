@@ -123,7 +123,9 @@ uses
   , SVGIconImageListBase
   , SVGIconImageList
   , SVGIconItems
+  {$IFDEF Image32_SVGEngine}
   , Img32.Panels
+  {$ENDIF}
   , SVGIconVirtualImageList
   , SVGIconImageCollection
   , SVGIconImageListEditorUnit

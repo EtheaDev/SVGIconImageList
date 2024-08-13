@@ -741,13 +741,13 @@ var
   sx,sy: double;
   tmp: TArrayOfColor32;
   pc: PColor32;
-  scaledX: array of Integer;
+  scaledX: TArrayOfInteger;
 begin
   sx := Image.Width/newWidth * 256;
   sy := Image.Height/newHeight * 256;
-  SetLength(tmp, newWidth * newHeight);
+  NewColor32Array(tmp, newWidth * newHeight, True);
 
-  SetLength(scaledX, newWidth +1); //+1 for fractional overrun
+  NewIntegerArray(scaledX, newWidth, True);
   for x := 0 to newWidth -1 do
     scaledX[x] := Round((x+1) * sx);
 
@@ -794,13 +794,13 @@ begin
     if TargetImage <> Image then TargetImage.Assign(Image);
     Exit;
   end;
-  SetLength(tmp, newWidth * newHeight);
+  NewColor32Array(tmp, newWidth * newHeight, True);
 
   //get scaled X & Y values once only (storing them in lookup arrays) ...
-  SetLength(scaledXi, newWidth);
+  NewIntegerArray(scaledXi, newWidth, True);
   for x := 0 to newWidth -1 do
     scaledXi[x] := Trunc(x * Image.Width / newWidth);
-  SetLength(scaledYi, newHeight);
+  NewIntegerArray(scaledYi, newHeight, True);
   for y := 0 to newHeight -1 do
     scaledYi[y] := Trunc(y * Image.Height / newHeight);
 

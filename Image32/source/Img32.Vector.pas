@@ -3,7 +3,7 @@ unit Img32.Vector;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.5                                                             *
-* Date      :  21 June 2024                                                    *
+* Date      :  26 July 2024                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -220,6 +220,10 @@ type
   procedure AppendPath(var paths: TPathsD; const extra: TPathsD); overload;
   procedure AppendPath(var ppp: TArrayOfPathsD; const extra: TPathsD); overload;
 
+  // ConcatPaths concats multiple paths. It skips the start-point
+  // of a path, if it matches the previous path's end-point.
+  procedure ConcatPaths(var dstPath: TPathD; const paths: TPathsD);
+
   function GetAngle(const origin, pt: TPoint): double; overload;
   function GetAngle(const origin, pt: TPointD): double; overload;
   function GetAngle(const a, b, c: TPoint): double; overload;
@@ -249,6 +253,7 @@ type
 
   //function MakePath(const pts: array of integer): TPathD; overload;
   function MakePath(const pts: array of double): TPathD; overload;
+  function MakePath(const pt: TPointD): TPathD; overload;
 
   function GetBounds(const path: TPathD): TRect; overload;
   function GetBounds(const paths: TPathsD): TRect; overload;
@@ -479,7 +484,6 @@ const
   BuffSize = 64;
 
 {$IFDEF CPUX86}
-const
   // Use faster Trunc for x86 code in this unit.
   Trunc: function(Value: Double): Integer = __Trunc;
 {$ENDIF CPUX86}
@@ -665,7 +669,7 @@ var
   i,j, len: integer;
 begin
   len := length(path);
-  SetLength(Result, len);
+  NewPointDArray(Result, len, True);
   if len = 0 then Exit;
   Result[0] := path[0];
   j := 0;
@@ -948,7 +952,7 @@ var
   i, len: integer;
 begin
   len := Length(ints);
-  SetLength(Result, len);
+  NewIntegerArray(Result, len, True);
   for i := 0 to len -1 do Result[i] := ints[i];
 end;
 //------------------------------------------------------------------------------
@@ -1149,7 +1153,7 @@ var
   i, len: integer;
 begin
   len := length(path);
-  setLength(result, len);
+  NewPointDArray(result, len, True);
   for i := 0 to len -1 do
   begin
     result[i].x := path[i].x + dx;
@@ -1207,7 +1211,7 @@ begin
   end else
   begin
     len := length(path);
-    setLength(result, len);
+    NewPointDArray(result, len, True);
     for i := 0 to len -1 do
     begin
       result[i].x := path[i].x * sx;
@@ -1324,7 +1328,7 @@ var
   i, highI: integer;
 begin
   highI := High(path);
-  SetLength(result, highI +1);
+  NewPointDArray(result, highI +1, True);
   for i := 0 to highI do
     result[i] := path[highI -i];
 end;
@@ -1347,7 +1351,7 @@ var
 begin
   len := Length(path);
   len2 := Max(0, len - 2);
-  setLength(Result, len + len2);
+  NewPointDArray(Result, len + len2, True);
   if len = 0 then Exit;
   Move(path[0], Result[0], len * SizeOf(TPointD));
   if len2 = 0 then Exit;
@@ -1362,7 +1366,7 @@ var
   pt: TPointD;
 begin
   len := length(path);
-  setLength(result, len);
+  NewPointDArray(result, len, True);
   if len = 0 then Exit;
   pt := path[0];
   //skip duplicates
@@ -1400,7 +1404,7 @@ var
   last: TPointD;
 begin
   highI := High(path);
-  setLength(result, highI+1);
+  NewPointDArray(result, highI+1, True);
   if highI < 0 then Exit;
 
   last := NullPointD;
@@ -1842,7 +1846,7 @@ var
 begin
   len := length(path);
   if (len > 0) and PointsEqual(pt, path[len -1]) then Exit;
-  setLength(path, len + 1);
+  SetLengthUninit(path, len + 1);
   path[len] := pt;
 end;
 //------------------------------------------------------------------------------
@@ -1855,7 +1859,7 @@ begin
   len2 := length(path2);
   if len2 = 0 then Exit;
   if (len1 > 0) and PointsEqual(path2[0], path1[len1 -1]) then dec(len1);
-  setLength(path1, len1 + len2);
+  SetLengthUninit(path1, len1 + len2);
   Move(path2[0], path1[len1], len2 * SizeOf(TPointD));
 end;
 //------------------------------------------------------------------------------
@@ -1865,7 +1869,7 @@ var
   len: integer;
 begin
   len := length(path);
-  SetLength(path, len +1);
+  SetLengthUninit(path, len +1);
   path[len] := extra;
 end;
 //------------------------------------------------------------------------------
@@ -1909,6 +1913,46 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure ConcatPaths(var dstPath: TPathD; const paths: TPathsD);
+var
+  i, len, pathLen, offset: integer;
+begin
+  // calculate the length of the final array
+  len := 0;
+  for i := 0 to high(paths) do
+  begin
+    pathLen := Length(paths[i]);
+    if pathLen > 0 then
+    begin
+      // Skip the start-point if is matches the previous path's end-point
+      if (i > 0) and PointsEqual(paths[i][0], paths[i -1][high(paths[i -1])]) then
+        dec(pathLen);
+      inc(len, pathLen);
+    end;
+  end;
+  SetLengthUninit(dstPath, len);
+
+  // fill the array
+  len := 0;
+  for i := 0 to high(paths) do
+  begin
+    pathLen := Length(paths[i]);
+    if pathLen > 0 then
+    begin
+      offset := 0;
+      // Skip the start-point if is matches the previous path's end-point
+      if (i > 0) and PointsEqual(paths[i][0], paths[i -1][high(paths[i -1])]) then
+      begin
+        dec(pathLen);
+        offset := 1;
+      end;
+      Move(paths[i][offset], dstPath[len], pathLen * SizeOf(TPointD));
+      inc(len, pathLen);
+    end;
+  end;
+end;
+//------------------------------------------------------------------------------
+
 procedure RotatePoint(var pt: TPointD;
   const focalPoint: TPointD; sinA, cosA: double);
 var
@@ -1927,7 +1971,9 @@ var
   sinA, cosA: double;
 begin
   if angleRad = 0 then Exit;
-  if not ClockwiseRotationIsAnglePositive then angleRad := -angleRad;
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  angleRad := -angleRad;
+{$ENDIF}
   GetSinCos(angleRad, sinA, cosA);
   RotatePoint(pt, focalPoint, sinA, cosA);
 end;
@@ -1939,7 +1985,7 @@ var
   i: integer;
   x,y: double;
 begin
-  SetLength(Result, length(path));
+  NewPointDArray(Result, length(path), True);
   for i := 0 to high(path) do
   begin
     x := path[i].X - focalPoint.X;
@@ -1960,7 +2006,9 @@ begin
     Result := path;
     Exit;
   end;
-  if not ClockwiseRotationIsAnglePositive then angleRads := -angleRads;
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  angleRads := -angleRads;
+{$ENDIF}
   GetSinCos(angleRads, sinA, cosA);
   Result := RotatePathInternal(path, focalPoint, sinA, cosA);
 end;
@@ -1977,8 +2025,9 @@ begin
   if not IsValid(angleRads) then Exit;
   NormalizeAngle(angleRads);
   if angleRads = 0 then Exit;
-  if not ClockwiseRotationIsAnglePositive then
-    angleRads := -angleRads;
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  angleRads := -angleRads;
+{$ENDIF}
   GetSinCos(angleRads, sinA, cosA);
   SetLength(Result, length(paths));
   if IsValid(focalPoint) then
@@ -2006,7 +2055,9 @@ begin
     else result := angle180;
   end else
     result := arctan2(y, x); //range between -Pi and Pi
-  if not ClockwiseRotationIsAnglePositive then Result := -Result;
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  Result := -Result;
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
@@ -2027,7 +2078,9 @@ begin
     else result := angle180;
   end else
     result := arctan2(y, x); //range between -Pi and Pi
-  if not ClockwiseRotationIsAnglePositive then Result := -Result;
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  Result := -Result;
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
@@ -2042,7 +2095,9 @@ begin
   dp := (ab.x * bc.x + ab.y * bc.y);
   cp := (ab.x * bc.y - ab.y * bc.x);
   Result := arctan2(cp, dp); //range between -Pi and Pi
-  if not ClockwiseRotationIsAnglePositive then Result := -Result;
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  Result := -Result;
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
@@ -2057,7 +2112,9 @@ begin
   dp := (ab.x * bc.x + ab.y * bc.y);
   cp := (ab.x * bc.y - ab.y * bc.x);
   Result := arctan2(cp, dp); //range between -Pi and Pi
-  if not ClockwiseRotationIsAnglePositive then Result := -Result;
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  Result := -Result;
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
@@ -2165,7 +2222,7 @@ var
     if resCnt >= resCap then
     begin
       inc(resCap, 64);
-      setLength(result, resCap);
+      SetLengthUninit(result, resCap);
     end;
     result[resCnt] := pt;
     inc(resCnt);
@@ -2427,7 +2484,7 @@ var
     if resCnt >= resCap then
     begin
       inc(resCap, 64);
-      setLength(result, resCap);
+      SetLengthUninit(result, resCap);
     end;
     result[resCnt] := pt;
     inc(resCnt);
@@ -2756,7 +2813,7 @@ end;
 
 function Rectangle(const rec: TRect): TPathD;
 begin
-  setLength(Result, 4);
+  NewPointDArray(Result, 4, True);
   with rec do
   begin
     result[0] := PointD(left, top);
@@ -2769,7 +2826,7 @@ end;
 
 function Rectangle(const rec: TRectD): TPathD;
 begin
-  setLength(Result, 4);
+  NewPointDArray(Result, 4, True);
   with rec do
   begin
     result[0] := PointD(left, top);
@@ -2782,7 +2839,7 @@ end;
 
 function Rectangle(l, t, r, b: double): TPathD;
 begin
-  setLength(Result, 4);
+  NewPointDArray(Result, 4, True);
   result[0] := PointD(l, t);
   result[1] := PointD(r, t);
   result[2] := PointD(r, b);
@@ -2871,7 +2928,7 @@ begin
   end;
   magic.X := radius.X * magicC;
   magic.Y := radius.Y * magicC;
-  SetLength(Corners, 4);
+  NewPointDArray(Corners, 4, True);
   with rec do
   begin
     corners[0] := PointD(Right, Top);
@@ -2879,10 +2936,10 @@ begin
     corners[2] := PointD(Left, Bottom);
     corners[3] := TopLeft;
   end;
-  SetLength(Result, 1);
+  NewPointDArray(Result, 1, True);
   Result[0].X := corners[3].X + radius.X;
   Result[0].Y := corners[3].Y;
-  SetLength(bezPts, 4);
+  NewPointDArray(bezPts, 4, True);
   for i := 0 to High(corners) do
   begin
     for j := 0 to 3 do bezPts[j] := corners[i];
@@ -3017,7 +3074,7 @@ begin
     steps := Round(CalcRoundingSteps(rec.width + rec.height));
   GetSinCos(2 * Pi / Steps, sinA, cosA);
   delta.x := cosA; delta.y := sinA;
-  SetLength(Result, Steps);
+  NewPointDArray(Result, Steps, True);
   Result[0] := PointD(centre.X + radius.X, centre.Y);
   for i := 1 to steps -1 do
   begin
@@ -3078,7 +3135,7 @@ begin
   if rec2.IsEmpty then
     p2 := Ellipse(rec, points*2) else
     p2 := Ellipse(rec2, points*2);
-  SetLength(Result, points*2);
+  NewPointDArray(Result, points*2, True);
   for i := 0 to points -1 do
   begin
     Result[i*2] := p[i];
@@ -3100,7 +3157,7 @@ begin
   else points := points * 2;
   GetSinCos(2 * Pi / points, sinA, cosA);
   delta.x := cosA; delta.y := sinA;
-  SetLength(Result, points);
+  NewPointDArray(Result, points, True);
   Result[0] := PointD(focalPt.X + innerRadius, focalPt.Y);
   for i := 1 to points -1 do
   begin
@@ -3130,11 +3187,12 @@ begin
   Result := nil;
   if (endAngle = startAngle) or IsEmptyRect(rec) then Exit;
   if scale <= 0 then scale := 4.0;
-  if not ClockwiseRotationIsAnglePositive then
-  begin
-    startAngle := -startAngle;
-    endAngle := -endAngle;
-  end;
+
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  startAngle := -startAngle;
+  endAngle := -endAngle;
+{$ENDIF}
+
   NormalizeAngle(startAngle, qtrDeg);
   NormalizeAngle(endAngle, qtrDeg);
   with rec do
@@ -3149,7 +3207,7 @@ begin
   steps := Round(CalcRoundingSteps((rec.width + rec.height)/2 * scale));
   steps := steps div 2; /////////////////////////////////
   if steps < 2 then steps := 2;
-  SetLength(Result, Steps +1);
+  NewPointDArray(Result, Steps +1, True);
   //angle of the first step ...
   GetSinCos(startAngle, deltaY, deltaX);
   Result[0].X := centre.X + radius.X * deltaX;
@@ -3174,7 +3232,7 @@ var
 begin
   result := Arc(rec, StartAngle, EndAngle, scale);
   len := length(result);
-  setLength(result, len +1);
+  SetLengthUninit(result, len +1);
   result[len] := PointD((rec.Left + rec.Right)/2, (rec.Top + rec.Bottom)/2);
 end;
 //------------------------------------------------------------------------------
@@ -3196,7 +3254,7 @@ begin
       Exit;
     asSimple:
       begin
-        setLength(result, 3);
+        NewPointDArray(result, 3, True);
         basePt := TranslatePoint(arrowTip, -unitVec.X * size, -unitVec.Y * size);
         result[0] := arrowTip;
         result[1] := TranslatePoint(basePt, -unitVec.Y * sDiv50, unitVec.X * sDiv50);
@@ -3204,7 +3262,7 @@ begin
       end;
     asFancy:
       begin
-        setLength(result, 4);
+        NewPointDArray(result, 4, True);
         basePt := TranslatePoint(arrowTip,
           -unitVec.X * sDiv120, -unitVec.Y * sDiv120);
         result[0] := TranslatePoint(basePt, -unitVec.Y *sDiv50, unitVec.X *sDiv50);
@@ -3214,7 +3272,7 @@ begin
       end;
     asDiamond:
       begin
-        setLength(result, 4);
+        NewPointDArray(result, 4, True);
         basePt := TranslatePoint(arrowTip, -unitVec.X * sDiv60, -unitVec.Y * sDiv60);
         result[0] := arrowTip;
         result[1] := TranslatePoint(basePt, -unitVec.Y * sDiv50, unitVec.X * sDiv50);
@@ -3229,7 +3287,7 @@ begin
       end;
     asTail:
       begin
-        setLength(result, 6);
+        NewPointDArray(result, 6, True);
         basePt := TranslatePoint(arrowTip, -unitVec.X * sDiv60, -unitVec.Y * sDiv60);
         result[0] := TranslatePoint(arrowTip, -unitVec.X * sDiv50, -unitVec.Y * sDiv50);
         result[1] := TranslatePoint(arrowTip, -unitVec.Y * sDiv40, unitVec.X * sDiv40);
@@ -3530,7 +3588,7 @@ var
   len: integer;
 begin
   len := Length(p);
-  SetLength(Result, len +1);
+  NewPointDArray(Result, len +1, True);
   Result[0] := pt;
   if len > 0 then Move(p[0], Result[1], len * SizeOf(TPointD));
 end;
@@ -3541,7 +3599,7 @@ var
   len: integer;
 begin
   len := Length(p);
-  SetLength(Result, len +2);
+  NewPointDArray(Result, len +2, True);
   Result[0] := pt1;
   Result[1] := pt2;
   if len > 0 then Move(p[0], Result[2], len * SizeOf(TPointD));
@@ -3579,7 +3637,7 @@ begin
   if (highI < 2) or Odd(highI) then
     raise Exception.Create(rsInvalidQBezier);
   if tolerance <= 0.0 then tolerance := BezierTolerance;
-  setLength(Result, 1);
+  NewPointDArray(Result, 1, True);
   Result[0] := pts[0];
   for i := 0 to (highI div 2) -1 do
   begin
@@ -3607,7 +3665,7 @@ var
     if resultCnt = resultLen then
     begin
       inc(resultLen, BuffSize);
-      setLength(result, resultLen);
+      SetLengthUninit(result, resultLen);
     end;
     result[resultCnt] := pt;
     inc(resultCnt);
@@ -3678,7 +3736,7 @@ begin
   if (len < 3) or (len mod 3 <> 0) then
     raise Exception.Create(rsInvalidCBezier);
   if tolerance <= 0.0 then tolerance := BezierTolerance;
-  setLength(Result, 1);
+  NewPointDArray(Result, 1, True);
   Result[0] := path[0];
   for i := 0 to (len div 3) -1 do
   begin
@@ -3718,7 +3776,7 @@ var
     if resultCnt = resultLen then
     begin
       inc(resultLen, BuffSize);
-      setLength(result, resultLen);
+      SetLengthUninit(result, resultLen);
     end;
     result[resultCnt] := pt;
     inc(resultCnt);
@@ -3782,7 +3840,7 @@ var
   len: integer;
 begin
   len := Length(pts);
-  SetLength(p, len + 2);
+  NewPointDArray(p, len + 2, True);
   p[0] := startPt;
   p[1] := ReflectPoint(priorCtrlPt, startPt);
   if len > 0 then
@@ -3800,7 +3858,7 @@ var
     if resultCnt = resultLen then
     begin
       inc(resultLen, BuffSize);
-      setLength(result, resultLen);
+      SetLengthUninit(result, resultLen);
     end;
     result[resultCnt] := pt;
     inc(resultCnt);
@@ -3813,10 +3871,7 @@ var
     if (abs(p1.x + p3.x - 2*p2.x) + abs(p2.x + p4.x - 2*p3.x) +
       abs(p1.y + p3.y - 2*p2.y) + abs(p2.y + p4.y - 2*p3.y)) < tolerance then
     begin
-      if resultCnt = length(result) then
-        setLength(result, length(result) +BuffSize);
-      result[resultCnt] := p4;
-      inc(resultCnt);
+      AddPoint(p4);
     end else
     begin
       p12.X := (p1.X + p2.X) / 2;
@@ -3870,7 +3925,7 @@ var
   len: integer;
 begin
   len := Length(pts);
-  SetLength(p, len + 2);
+  NewPointDArray(p, len + 2, True);
   p[0] := startPt;
   p[1] := ReflectPoint(priorCtrlPt, startPt);
   if len > 0 then
@@ -3888,7 +3943,7 @@ var
     if resultCnt = resultLen then
     begin
       inc(resultLen, BuffSize);
-      setLength(result, resultLen);
+      SetLengthUninit(result, resultLen);
     end;
     result[resultCnt] := pt;
     inc(resultCnt);
@@ -3943,25 +3998,29 @@ end;
 
 function MakePath(const pts: array of double): TPathD;
 var
-  i, j, len: Integer;
+  i, len: Integer;
   x,y: double;
 begin
   Result := nil;
   len := length(pts) div 2;
   if len = 0 then Exit;
-  setlength(Result, len);
+  NewPointDArray(Result, len, True);
   Result[0].X := pts[0];
   Result[0].Y := pts[1];
-  j := 0;
   for i := 1 to len -1 do
   begin
     x := pts[i*2];
     y := pts[i*2 +1];
-    inc(j);
-    Result[j].X := x;
-    Result[j].Y := y;
+    Result[i].X := x;
+    Result[i].Y := y;
   end;
-  setlength(Result, j+1);
+end;
+//------------------------------------------------------------------------------
+
+function MakePath(const pt: TPointD): TPathD;
+begin
+  SetLengthUninit(Result, 1);
+  Result[0] := pt;
 end;
 //------------------------------------------------------------------------------
 

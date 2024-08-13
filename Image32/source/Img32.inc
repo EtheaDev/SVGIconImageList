@@ -4,10 +4,13 @@
 // use storage (eg to compile the experimental 'CtrlDemo' in Examples).
 {$DEFINE NO_STORAGE}   
 
-// Image downsampling occurs when images are reduced in size, and the default downsampling  
+// default rotation direction is clockwise with positive angles
+{.$DEFINE CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+
+// Image downsampling occurs when images are reduced in size, and the default downsampling
 // function is 'BoxDownSampling'. When downsampling, this function generally produces much
 // clearer images than general purpose resamplers (which are much better at upsampling,
-// and doing other affine transformations). However, if for some reason you do wish to use 
+// and doing other affine transformations). However, if for some reason you do wish to use
 // a general purpose resampler while downsampling, then disable this define.
 {$DEFINE USE_DOWNSAMPLER_AUTOMATICALLY}
 

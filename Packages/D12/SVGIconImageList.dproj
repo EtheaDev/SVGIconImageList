@@ -45,6 +45,12 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Cfg_2_Win32>true</Cfg_2_Win32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_DcuOutput>..\..\Lib\D12\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
@@ -63,6 +69,7 @@
         <DllSuffix>$(Auto)</DllSuffix>
         <DCC_UnitSearchPath>..\..\Image32\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
+        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
@@ -72,9 +79,6 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64x)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -99,7 +103,6 @@
         </DelphiCompile>
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="VclSmp.dcp"/>
-        <DCCReference Include="SVGImage32Package.dcp"/>
         <DCCReference Include="vclwinx.dcp"/>
         <DCCReference Include="..\..\Source\SVGIconImage.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageList.pas"/>
@@ -108,9 +111,6 @@
         <DCCReference Include="..\..\Source\SVGIconItems.pas"/>
         <DCCReference Include="..\..\Source\SVGIconVirtualImageList.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageListBase.pas"/>
-        <DCCReference Include="..\..\Source\D2DSVGFactory.pas"/>
-        <DCCReference Include="..\..\Source\Winapi.D2DMissing.pas"/>
-        <DCCReference Include="..\..\Source\Image32SVGFactory.pas"/>
         <DCCReference Include="..\..\Source\SVGInterfaces.pas"/>
         <DCCReference Include="..\..\Source\dlgExportPNG.pas">
             <Form>ExportToPNGDialog</Form>

@@ -3,7 +3,7 @@ unit Img32.Extra;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  3 July 2024                                                     *
+* Date      :  26 July 2024                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Miscellaneous routines that don't belong in other modules.      *
@@ -538,7 +538,9 @@ var
 begin
   rec := GetBounds(polygons);
   if IsEmptyRect(rec) or (depth < 1) then Exit;
-  if not ClockwiseRotationIsAnglePositive then angleRads := -angleRads;
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  angleRads := -angleRads;
+{$ENDIF}
   NormalizeAngle(angleRads);
   GetSinCos(angleRads, y, x);
   depth := depth * 0.5;
@@ -554,7 +556,7 @@ begin
     DrawPolygon(shadowImg, shadowPolys, fillRule, color);
     FastGaussianBlur(shadowImg, shadowImg.Bounds, blurSize, 1);
     if cutoutInsideShadow then EraseInsidePaths(shadowImg, polys, fillRule);
-    img.CopyBlend(shadowImg, shadowImg.Bounds, rec, BlendToAlpha);
+    img.CopyBlend(shadowImg, shadowImg.Bounds, rec, BlendToAlphaLine);
   finally
     shadowImg.Free;
   end;
@@ -590,7 +592,7 @@ begin
     DrawPolygon(glowImg, glowPolys, fillRule, color);
     FastGaussianBlur(glowImg, glowImg.Bounds, blurRadius, 2);
     glowImg.ScaleAlpha(4);
-    img.CopyBlend(glowImg, glowImg.Bounds, rec, BlendToAlpha);
+    img.CopyBlend(glowImg, glowImg.Bounds, rec, BlendToAlphaLine);
   finally
     glowImg.Free;
   end;
@@ -676,7 +678,7 @@ var
 begin
   img.Clear(fillColor);
   w := img.Width; h := img.Height;
-  SetLength(path, 2);
+  NewPointDArray(path, 2, True);
   if minorInterval > 0 then
   begin
     x := minorInterval;
@@ -895,7 +897,7 @@ begin
     path := Ellipse(cutoutRec);
     radGrad.SetParameters(rect3, clBlack32, clNone32);
     DrawPolygon(mask, path, frNonZero, radGrad);
-    cutout.CopyBlend(mask, mask.Bounds, cutout.Bounds, BlendMask);
+    cutout.CopyBlend(mask, mask.Bounds, cutout.Bounds, BlendMaskLine);
     // now remove red from the cutout
     RemoveColor(cutout, clRed32);
     // finally replace the cutout ...
@@ -935,7 +937,7 @@ begin
   try
     p := TranslatePath(path, -outsideBounds.Left, -outsideBounds.top);
     DrawPolygon(mask, p, fillRule, clBlack32);
-    img.CopyBlend(mask, mask.Bounds, outsideBounds, BlendMask);
+    img.CopyBlend(mask, mask.Bounds, outsideBounds, BlendMaskLine);
   finally
     mask.Free;
   end;
@@ -955,7 +957,7 @@ begin
   try
     pp := TranslatePath(paths, -outsideBounds.Left, -outsideBounds.top);
     DrawPolygon(mask, pp, fillRule, clBlack32);
-    img.CopyBlend(mask, mask.Bounds, outsideBounds, BlendMask);
+    img.CopyBlend(mask, mask.Bounds, outsideBounds, BlendMaskLine);
   finally
     mask.Free;
   end;
@@ -986,7 +988,9 @@ var
 begin
   rec := GetBounds(polygons);
   if IsEmptyRect(rec) then Exit;
-  if not ClockwiseRotationIsAnglePositive then angleRads := -angleRads;
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  angleRads := -angleRads;
+{$ENDIF}
   GetSinCos(angleRads, y, x);
   paths := TranslatePath(polygons, -rec.Left, -rec.Top);
   RectWidthHeight(rec, w, h);
@@ -999,7 +1003,7 @@ begin
       EraseInsidePaths(tmp, paths2, fillRule);
       FastGaussianBlur(tmp, tmp.Bounds, Round(blurRadius), 0);
       EraseOutsidePaths(tmp, paths, fillRule, tmp.Bounds);
-      img.CopyBlend(tmp, tmp.Bounds, rec, BlendToAlpha);
+      img.CopyBlend(tmp, tmp.Bounds, rec, BlendToAlphaLine);
     end;
     if GetAlpha(colorDk) > 0 then
     begin
@@ -1008,7 +1012,7 @@ begin
       EraseInsidePaths(tmp, paths2, fillRule);
       FastGaussianBlur(tmp, tmp.Bounds, Round(blurRadius), 0);
       EraseOutsidePaths(tmp, paths, fillRule, tmp.Bounds);
-      img.CopyBlend(tmp, tmp.Bounds, rec, BlendToAlpha);
+      img.CopyBlend(tmp, tmp.Bounds, rec, BlendToAlphaLine);
     end;
   finally
     tmp.Free;
@@ -1087,7 +1091,7 @@ begin
   case buttonShape of
     bsDiamond:
       begin
-        SetLength(Result, 4);
+        NewPointDArray(Result, 4, True);
         for i := 0 to 3 do Result[i] := pt;
         Result[0].X := Result[0].X -radius;
         Result[1].Y := Result[1].Y -radius;
@@ -1198,8 +1202,8 @@ var
 begin
   w := img.Width; h := img.Height;
   if w * h = 0 then Exit;
-  SetLength(tmp, w * h);
-  SetLength(tmp2, w * h);
+  NewColor32Array(tmp, w * h);
+  NewColor32Array(tmp2, w * h);
   s := img.PixelRow[0]; d := @tmp[0];
   for j := 0 to h-1 do
   begin
@@ -1750,7 +1754,7 @@ begin
   end;
   if highI +1 < minLen then Exit;
   if not isClosedPath then first := @srArray[0];
-  SetLength(Result, highI +1);
+  NewPointDArray(Result, highI +1, True);
   for i := 0 to HighI do
   begin
     Result[i] := first.pt;
@@ -1873,7 +1877,7 @@ begin
   end;
 
   if highI < 2 then Exit;
-  SetLength(Result, highI +1);
+  NewPointDArray(Result, highI +1, True);
   for i := 0 to HighI do
   begin
     Result[i] := current.pt;
@@ -1921,7 +1925,7 @@ begin
   len := Length(path);
   if len < 3 then Exit;
 
-  SetLength(Result, len *3 +1);
+  NewPointDArray(Result, len *3 +1, True);
   prev := len-1;
   SetLength(pl, len);
   SetLength(unitVecs, len);
@@ -1994,7 +1998,7 @@ begin
   len := Length(path);
   if len < 3 then Exit;
 
-  SetLength(Result, len *3 +1);
+  NewPointDArray(Result, len *3 +1);
   prev := len-1;
   SetLength(pl, len);
   SetLength(unitVecs, len);
@@ -2091,7 +2095,7 @@ var
   len: integer;
 begin
   len := Length(path);
-  SetLength(path, len +1);
+  SetLengthUninit(path, len +1);
   path[len] := pt;
 end;
 //------------------------------------------------------------------------------
@@ -2239,7 +2243,7 @@ var
   i, wl, wu, m: integer;
   wIdeal, mIdeal: double;
 begin
-  SetLength(Result, boxCnt);
+  NewIntegerArray(Result, boxCnt, True);
   wIdeal := Sqrt((12*stdDev*stdDev/boxCnt)+1); // Ideal averaging filter width
   wl := Floor(wIdeal); if not Odd(wl) then dec(wl);
   mIdeal :=
@@ -2265,7 +2269,7 @@ procedure BoxBlurH(var src, dst: TArrayOfColor32; w,h, stdDev: integer);
 var
   i,j, ti, li, ri, re, ovr: integer;
   fv, val: TWeightedColor;
-  ce: TColor32;
+  lastColor: TColor32;
 begin
   ovr := Max(0, stdDev - w);
   for i := 0 to h -1 do
@@ -2274,7 +2278,7 @@ begin
     li := ti;
     ri := ti +stdDev;
     re := ti +w -1; // idx of last pixel in row
-    ce := src[re];  // color of last pixel in row
+    lastColor := src[re];  // color of last pixel in row
     fv.Reset(src[ti]);
     val.Reset(src[ti], stdDev +1);
     for j := 0 to stdDev -1 - ovr do
@@ -2283,7 +2287,7 @@ begin
     for j := 0 to stdDev do
     begin
       if ri > re then
-        val.Add(ce) else
+        val.Add(lastColor) else
         val.Add(src[ri]);
       inc(ri);
       val.Subtract(fv);
@@ -2291,22 +2295,30 @@ begin
         dst[ti] := val.Color;
       inc(ti);
     end;
-    for j := stdDev +1 to w - stdDev -1 do
+
+    // Skip "val.Color" calculation if both for-loops are skipped anyway
+    if (ti <= re) or (w > stdDev*2 + 1) then
     begin
-      if ri <= re then
+      lastColor := val.Color;
+      for j := stdDev +1 to w - stdDev -1 do
       begin
-        val.Add(src[ri]); inc(ri);
-        val.Subtract(src[li]); inc(li);
+        if ri <= re then
+        begin
+          if val.AddSubtract(src[ri], src[li]) then
+            lastColor := val.Color;
+          inc(ri);
+          inc(li);
+        end;
+        dst[ti] := lastColor; inc(ti);
       end;
-      dst[ti] := val.Color; inc(ti);
-    end;
-    while ti <= re do
-    begin
-      if ti > re then Break;
-      val.Add(clNone32);
-      val.Subtract(src[li]); inc(li);
-      dst[ti] := val.Color;
-      inc(ti);
+      while ti <= re do
+      begin
+        if val.AddNoneSubtract(src[li]) then
+          lastColor := val.Color;
+        inc(li);
+        dst[ti] := lastColor;
+        inc(ti);
+      end;
     end;
   end;
 end;
@@ -2316,7 +2328,7 @@ procedure BoxBlurV(var src, dst: TArrayOfColor32; w, h, stdDev: integer);
 var
   i,j, ti, li, ri, re, ovr: integer;
   fv, val: TWeightedColor;
-  ce: TColor32;
+  lastColor: TColor32;
 begin
   ovr := Max(0, stdDev - h);
   for i := 0 to w -1 do
@@ -2325,7 +2337,7 @@ begin
     li := ti;
     ri := ti + stdDev * w;
     re := ti +w *(h-1); // idx of last pixel in column
-    ce := src[re];      // color of last pixel in column
+    lastColor := src[re];      // color of last pixel in column
     fv.Reset(src[ti]);
     val.Reset(src[ti], stdDev +1);
     for j := 0 to stdDev -1 -ovr do
@@ -2334,7 +2346,7 @@ begin
     for j := 0 to stdDev do
     begin
       if ri > re then
-        val.Add(ce) else
+        val.Add(lastColor) else
         val.Add(src[ri]);
       inc(ri, w);
       val.Subtract(fv);
@@ -2342,21 +2354,30 @@ begin
         dst[ti] := val.Color;
       inc(ti, w);
     end;
-    for j := stdDev +1 to h - stdDev -1 do
+
+    // Skip "val.Color" calculation if both for-loops are skipped anyway
+    if (ti <= re) or (h > stdDev*2 + 1) then
     begin
-      if ri <= re then
+      lastColor := val.Color;
+      for j := stdDev +1 to h - stdDev -1 do
       begin
-        val.Add(src[ri]); inc(ri, w);
-        val.Subtract(src[li]); inc(li, w);
+        if ri <= re then
+        begin
+          if val.AddSubtract(src[ri], src[li]) then
+            lastColor := val.Color;
+          inc(ri, w);
+          inc(li, w);
+        end;
+        dst[ti] := lastColor; inc(ti, w);
       end;
-      dst[ti] := val.Color; inc(ti, w);
-    end;
-    while ti <= re do
-    begin
-      val.Add(clNone32);
-      val.Subtract(src[li]); inc(li, w);
-      dst[ti] := val.Color;
-      inc(ti, w);
+      while ti <= re do
+      begin
+        if val.AddNoneSubtract(src[li]) then
+          lastColor := val.Color;
+        inc(li, w);
+        dst[ti] := lastColor;
+        inc(ti, w);
+      end;
     end;
   end;
 end;
@@ -2380,8 +2401,8 @@ begin
   RectWidthHeight(rec2, w, h);
   if (Min(w, h) < 2) or ((stdDevX < 1) and (stdDevY < 1)) then Exit;
   len := w * h;
-  SetLength(src, len);
-  SetLength(dst, len);
+  NewColor32Array(src, len, True); // content is overwritten in BoxBlurH
+  NewColor32Array(dst, len, True);
   if blurFullImage then
   begin
     // copy the entire image into 'dst'

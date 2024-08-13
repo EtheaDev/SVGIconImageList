@@ -107,6 +107,8 @@ type
     function Add: TSVGIconItem;
     procedure Assign(Source: TPersistent); override;
     function GetIconByName(const AIconName: string): TSVGIconItem;
+    function LoadFromFile(const AFileName: string;
+      out AImageName: string): TSVGIconItem;
     function LoadFromFiles(const AFileNames: TStrings; const AAppend: Boolean = True): Integer;
     property Items[Index: Integer]: TSVGIconItem read GetItem write SetItem; default;
   end;
@@ -379,9 +381,26 @@ begin
   Result := TSVGIconItem(inherited GetItem(Index));
 end;
 
+function TSVGIconItems.LoadFromFile(const AFileName: string;
+  out AImageName: string): TSVGIconItem;
+var
+  LSVG: ISVG;
+begin
+  Result := nil;
+  if FileExists(AFileName) then
+  begin
+    LSVG := GlobalSVGFactory.NewSvg;
+    LSVG.LoadFromFile(AFileName);
+    Result := Add;
+    Result.IconName := ChangeFileExt(ExtractFileName(AFileName), '');
+    Result.SVG := LSVG;
+    AImageName := Result.Name;
+  end;
+end;
+
 function TSVGIconItems.LoadFromFiles(const AFileNames: TStrings;
   const AAppend: Boolean): Integer;
-Var
+var
   LIndex: Integer;
   LSVG: ISVG;
   LFileName: string;

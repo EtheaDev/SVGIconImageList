@@ -3,7 +3,7 @@ unit Img32.Transform;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  17 July 2024                                                    *
+* Date      :  11 August 2024                                                  *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Affine and projective transformation routines for TImage32      *
@@ -22,7 +22,9 @@ type
 
   //Matrix functions
   function IsIdentityMatrix(const matrix: TMatrixD): Boolean;
-  function IsValidMatrix(const matrix: TMatrixD): Boolean; {$IFDEF INLINE} inline; {$ENDIF}
+  {$IFDEF INLINE} inline; {$ENDIF}
+  function IsValidMatrix(const matrix: TMatrixD): Boolean;
+  {$IFDEF INLINE} inline; {$ENDIF}
   function Matrix(const m00, m01, m02, m10, m11, m12, m20, m21, m22: double): TMatrixD;
   function MatrixDeterminant(const matrix: TMatrixD): double;
   function MatrixAdjugate(const matrix: TMatrixD): TMatrixD;
@@ -112,6 +114,8 @@ type
     procedure Subtract(c: TColor32); overload; {$IFDEF INLINE} inline; {$ENDIF}
     procedure Subtract(const other: TWeightedColor); overload;
       {$IFDEF INLINE} inline; {$ENDIF}
+    function AddSubtract(addC, subC: TColor32): Boolean; {$IFDEF INLINE} inline; {$ENDIF}
+    function AddNoneSubtract(c: TColor32): Boolean; {$IFDEF INLINE} inline; {$ENDIF}
     procedure AddWeight(w: Integer); {$IFDEF INLINE} inline; {$ENDIF}
     property AddCount: Integer read fAddCount;
     property Color: TColor32 read GetColor;
@@ -130,7 +134,7 @@ resourcestring
   rsInvalidScale   = 'Invalid matrix scaling factor (0)';
 
 const
-  DivOneByXTableSize = 65536;
+  DivOneByXTableSize = 1024;
 
 {$IFDEF CPUX86}
   // Use faster Trunc for x86 code in this unit.
@@ -146,16 +150,10 @@ var
 //------------------------------------------------------------------------------
 
 function IsIdentityMatrix(const matrix: TMatrixD): Boolean;
-var
-  i,j: integer;
-const
-  matVal: array [boolean] of double = (0.0, 1.0);
 begin
-  result := false;
-  for i := 0 to 2 do
-    for j := 0 to 2 do
-      if matrix[i][j] <> matVal[j=i] then Exit;
-  Result := true;
+  result := (matrix[0,0] = 1) and (matrix[0,1] = 0) and (matrix[0,2] = 0) and
+    (matrix[1,0] = 0) and (matrix[1,1] = 1) and (matrix[1,2] = 0) and
+    (matrix[2,0] = 0) and (matrix[2,1] = 0) and (matrix[2,2] = 1);
 end;
 //------------------------------------------------------------------------------
 
@@ -367,17 +365,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure MatrixRotate(var matrix: TMatrixD; const center: TPointD; angRad: double);
+procedure MatrixRotate(var matrix: TMatrixD;
+  const center: TPointD; angRad: double);
 var
   m: TMatrixD;
   sinA, cosA: double;
 begin
-  if (center.X <> 0) or (center.Y <> 0) then
+  if not PointsEqual(center, NullPointD) then
   begin
     NormalizeAngle(angRad);
     if angRad = 0 then Exit;
-    if ClockwiseRotationIsAnglePositive then
-      angRad := -angRad; //negated angle because of inverted Y-axis.
+{$IFNDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+    angRad := -angRad; //negated angle because of inverted Y-axis.
+{$ENDIF}
     m := IdentityMatrix;
     MatrixTranslate(matrix, -center.X, -center.Y);
     GetSinCos(angRad, sinA, cosA);
@@ -386,9 +386,9 @@ begin
     m[0, 1] := -sinA;  m[1, 1] := cosA;
     MatrixMultiply(matrix, m);
     MatrixTranslate(matrix, center.X, center.Y);
-  end else
-    MatrixRotate(matrix, angRad);
-
+  end
+  else
+    MatrixRotate(matrix, angRad)
 end;
 //------------------------------------------------------------------------------
 
@@ -399,8 +399,9 @@ var
 begin
   NormalizeAngle(angRad);
   if angRad = 0 then Exit;
-  if ClockwiseRotationIsAnglePositive then
+{$IFNDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
     angRad := -angRad; //negated angle because of inverted Y-axis.
+{$ENDIF}
   m := IdentityMatrix;
   GetSinCos(angRad, sinA, cosA);
   m := IdentityMatrix;
@@ -519,15 +520,24 @@ end;
 function CanUseBoxDownsampler(const mat: TMatrixD; sx, sy: double): Boolean;
 begin
   // If the matrix looks like this after removing the scale,
-  // the box downsampler can be used.
+  // the box downsampler can be used. (only translation and scaling)
   //  cos(0)  -sin(0)  tx          1   0   tx
   //  sin(0)   cos(0)  ty    =>    0   1   ty
   //  0        0       1           0   0   1
 
+{
   Result := (mat[0,0]/sx = 1) and (mat[0,1]/sx = 0) and
             (mat[1,0]/sy = 0) and (mat[1,1]/sy = 1) and
             (mat[2,0]    = 0) and (mat[2,1]    = 0) and
             (mat[2,2]    = 1);
+}
+
+  // We can skip the divisions, because m/s is only zero if m is zero
+  // and m/s=1 is the same as m=s
+  Result := (SameValue(mat[0,0], sx)) and (mat[0,1] = 0) and
+            (mat[1,0] = 0)            and (SameValue(mat[1,1], sy)) and
+            (mat[2,0] = 0)            and (mat[2,1] = 0) and
+            (mat[2,2] = 1);
 end;
 {$ENDIF USE_DOWNSAMPLER_AUTOMATICALLY}
 
@@ -621,7 +631,7 @@ begin
     Exit;
   end;
 
-  SetLength(tmp, newWidth * newHeight);
+  NewColor32Array(tmp, newWidth * newHeight, True);
   pc := @tmp[0];
   xLimLo := -0.5/sx;
   xLimHi := img.Width + 0.5/sx;
@@ -806,7 +816,7 @@ begin
 
   mat := GetProjectionMatrix(srcPts, dstPts2);
   RectWidthHeight(rec, w, h);
-  SetLength(tmp, w * h);
+  NewColor32Array(tmp, w * h, True);
   pc := @tmp[0];
   for i :=  0 to h -1 do
     for j := 0 to w -1 do
@@ -850,7 +860,7 @@ begin
     if x1 = x2 then Exit;
     dydx := (pt2.Y - pt1.Y)/(pt2.X - pt1.X);
     xo := x1 -pt1.X;
-    SetLength(Result, x2-x1);
+    NewPointDArray(Result, x2-x1, True);
     for i:= 0 to x2 - x1 -1 do
     begin
       Result[i].X := x1 +i;
@@ -863,7 +873,7 @@ begin
     if x1 = x2 then Exit;
     dydx := (pt2.Y - pt1.Y)/(pt2.X - pt1.X);
     xo := x1 -pt1.X;
-    SetLength(Result, x1-x2);
+    NewPointDArray(Result, x1-x2, True);
     for i:= 0 to x1 - x2 -1 do
     begin
       Result[i].X := x1 -i;
@@ -886,7 +896,7 @@ begin
     if y1 = y2 then Exit;
     dxdy := (pt2.X - pt1.X)/(pt2.Y - pt1.Y);
     yo := y1 -pt1.Y;
-    SetLength(Result, y2-y1);
+    NewPointDArray(Result, y2-y1, True);
     for i:= 0 to y2 - y1 -1 do
     begin
       Result[i].Y := y1 +i;
@@ -899,7 +909,7 @@ begin
     if y1 = y2 then Exit;
     dxdy := (pt2.X - pt1.X)/(pt2.Y - pt1.Y);
     yo := y1 -pt1.Y;
-    SetLength(Result, y1-y2);
+    NewPointDArray(Result, y1-y2, True);
     for i:= 0 to y1 - y2 -1 do
     begin
       Result[i].Y := y1 -i;
@@ -987,7 +997,7 @@ begin
   len := Length(topPath);
   inc(rec.Bottom, img.Height);
   RectWidthHeight(rec, w, h);
-  SetLength(tmp, (w+1) * h);
+  NewColor32Array(tmp, (w+1) * h, False);
 
   prevX := topPath[0].X;
   allowBackColoring := GetAlpha(backColor) > 2;
@@ -1072,7 +1082,7 @@ begin
   len := Length(leftPath);
   inc(rec.Right, img.Width);
   RectWidthHeight(rec, w, h);
-  SetLength(tmp, w * (h+1));
+  NewColor32Array(tmp, w * (h+1), False);
 
   prevY := leftPath[0].Y;
   allowBackColoring := GetAlpha(backColor) > 2;
@@ -1138,10 +1148,9 @@ end;
 procedure TWeightedColor.Reset(c: TColor32; w: Integer);
 var
   a: Cardinal;
-  argb: TARGB absolute c;
 begin
   fAddCount := w;
-  a := w * argb.A;
+  a := w * Byte(c shr 24);
   if a = 0 then
   begin
     fAlphaTot := 0;
@@ -1151,9 +1160,9 @@ begin
   end else
   begin
     fAlphaTot := a;
-    fColorTotB := (a * argb.B);
-    fColorTotG := (a * argb.G);
-    fColorTotR := (a * argb.R);
+    fColorTotB := (a * Byte(c));
+    fColorTotG := (a * Byte(c shr 8));
+    fColorTotR := (a * Byte(c shr 16));
   end;
 end;
 //------------------------------------------------------------------------------
@@ -1244,6 +1253,58 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function TWeightedColor.AddSubtract(addC, subC: TColor32): Boolean;
+var
+  a: Cardinal;
+begin
+  // add+subtract => fAddCount stays the same
+
+  // skip identical colors
+  Result := False;
+  if addC = subC then Exit;
+
+  a := Byte(addC shr 24);
+  if a > 0 then
+  begin
+    inc(fAlphaTot, a);
+    inc(fColorTotB, (a * Byte(addC)));
+    inc(fColorTotG, (a * Byte(addC shr 8)));
+    inc(fColorTotR, (a * Byte(addC shr 16)));
+    Result := True;
+  end;
+
+  a := Byte(subC shr 24);
+  if a > 0 then
+  begin
+    dec(fAlphaTot, a);
+    dec(fColorTotB, (a * Byte(subC)));
+    dec(fColorTotG, (a * Byte(subC shr 8)));
+    dec(fColorTotR, (a * Byte(subC shr 16)));
+    Result := True;
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function TWeightedColor.AddNoneSubtract(c: TColor32): Boolean;
+var
+  a: Cardinal;
+begin
+  // add+subtract => fAddCount stays the same
+
+  a := Byte(c shr 24);
+  if a > 0 then
+  begin
+    dec(fAlphaTot, a);
+    dec(fColorTotB, (a * Byte(c)));
+    dec(fColorTotG, (a * Byte(c shr 8)));
+    dec(fColorTotR, (a * Byte(c shr 16)));
+    Result := True;
+  end
+  else
+    Result := False;
+end;
+//------------------------------------------------------------------------------
+
 function TWeightedColor.GetColor: TColor32;
 var
   oneDivAlphaTot: double;
@@ -1262,10 +1323,10 @@ begin
 
   result := TColor32(Min(255, alpha)) shl 24;
   // alpha weighting has been applied to color channels, so div by fAlphaTot
+
   if fAlphaTot < DivOneByXTableSize then // use precalculated 1/X values
-    oneDivAlphaTot := DivOneByXTable[fAlphaTot]
-  else
-    oneDivAlphaTot := 1/fAlphaTot;
+    oneDivAlphaTot := DivOneByXTable[fAlphaTot] else
+    oneDivAlphaTot := 1/(fAlphaTot);
 
   // 1. Skip zero calculations.
   // 2. LimitByte(Integer): Values can't be less than 0, so don't use ClampByte.
@@ -1273,11 +1334,11 @@ begin
   //         Thus we need to do the calculation and Round call in one expression.
   //         Otherwise the compiler will use a temporary double variable on
   //         the stack that will cause unnecessary store and load operations.
-  if fColorTotB <> 0 then
+  if fColorTotB > 0 then
     result := result or LimitByte(System.Round(fColorTotB * oneDivAlphaTot));
-  if fColorTotG <> 0 then
+  if fColorTotG > 0 then
     result := result or LimitByte(System.Round(fColorTotG * oneDivAlphaTot)) shl 8;
-  if fColorTotR <> 0 then
+  if fColorTotR > 0 then
     result := result or LimitByte(System.Round(fColorTotR * oneDivAlphaTot)) shl 16;
 end;
 

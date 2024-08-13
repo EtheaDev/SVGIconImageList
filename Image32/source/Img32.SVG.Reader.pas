@@ -89,7 +89,7 @@ type
     //GetRelFracLimit: ie when to assume untyped vals are relative vals
     function  GetRelFracLimit: double; virtual;
     procedure Draw(image: TImage32; drawDat: TDrawData); virtual;
-    procedure DrawChildren(image: TImage32; drawDat: TDrawData); virtual;
+    procedure DrawChildren(image: TImage32; const drawDat: TDrawData);
   public
     constructor Create(parent: TBaseElement; svgEl: TSvgTreeEl); virtual;
     destructor  Destroy; override;
@@ -845,7 +845,7 @@ begin
     for i := 0 to len -1 do
     begin
       len2 := Length(paths[i]);
-      SetLength(Result[i], len2);
+      NewPointDArray(Result[i], len2, True);
       if len2 = 0 then Continue;
       pp := @paths[i][0];
       rr := @Result[i][0];
@@ -1017,7 +1017,7 @@ begin
           EraseOutsidePaths(tmpImg, clipPaths, frNonZero, clipRec) else
           EraseOutsidePaths(tmpImg, clipPaths, fDrawData.fillRule, clipRec);
       end;
-      image.CopyBlend(tmpImg, clipRec, clipRec, BlendToAlpha);
+      image.CopyBlend(tmpImg, clipRec, clipRec, BlendToAlphaLine);
     finally
       tmpImg.Free;
     end;
@@ -1035,7 +1035,7 @@ begin
     try
       DrawChildren(tmpImg, drawDat);
       TMaskElement(maskEl).ApplyMask(tmpImg, drawDat);
-      image.CopyBlend(tmpImg, clipRec, clipRec, BlendToAlpha);
+      image.CopyBlend(tmpImg, clipRec, clipRec, BlendToAlphaLine);
     finally
       tmpImg.Free;
     end;
@@ -1234,7 +1234,7 @@ begin
   tmpImg := TImage32.Create(img.Width, img.Height);
   try
     DrawChildren(tmpImg, drawDat);
-    img.CopyBlend(tmpImg, maskRec, maskRec, BlendBlueChannel);
+    img.CopyBlend(tmpImg, maskRec, maskRec, BlendBlueChannelLine);
   finally
     tmpImg.Free;
   end;
@@ -1832,8 +1832,8 @@ begin
 
   srcImg2 := pfe.GetNamedImage(in2);
   srcRec2 := GetBounds(srcImg2);
-  dstImg2.CopyBlend(srcImg2, srcRec2, dstRec2, BlendToAlpha);
-  dstImg2.CopyBlend(srcImg,  srcRec,  dstRec2, BlendToAlpha);
+  dstImg2.CopyBlend(srcImg2, srcRec2, dstRec2, BlendToAlphaLine);
+  dstImg2.CopyBlend(srcImg,  srcRec,  dstRec2, BlendToAlphaLine);
   if dstImg = srcImg then
     dstImg.Copy(dstImg2, dstRec2, dstRec);
 end;
@@ -1942,24 +1942,24 @@ begin
     coIn:
       begin
         dstImg2.Copy(srcImg, srcRec, dstRec2);
-        dstImg2.CopyBlend(srcImg2,  srcRec2,  dstRec2, BlendMask);
+        dstImg2.CopyBlend(srcImg2,  srcRec2,  dstRec2, BlendMaskLine);
       end;
     coOut:
       begin
         dstImg2.Copy(srcImg, srcRec, dstRec2);
-        dstImg2.CopyBlend(srcImg2,  srcRec2,  dstRec2, BlendInvertedMask);
+        dstImg2.CopyBlend(srcImg2,  srcRec2,  dstRec2, BlendInvertedMaskLine);
       end;
     coAtop:
       begin
         dstImg2.Copy(srcImg2, srcRec2, dstRec2);
-        dstImg2.CopyBlend(srcImg,  srcRec,  dstRec2, BlendToAlpha);
-        dstImg2.CopyBlend(srcImg2,  srcRec2,  dstRec2, BlendMask);
+        dstImg2.CopyBlend(srcImg,  srcRec,  dstRec2, BlendToAlphaLine);
+        dstImg2.CopyBlend(srcImg2,  srcRec2,  dstRec2, BlendMaskLine);
       end;
     coXOR:
       begin
         dstImg2.Copy(srcImg2, srcRec2, dstRec2);
-        dstImg2.CopyBlend(srcImg, srcRec, dstRec2, BlendToAlpha);
-        dstImg2.CopyBlend(srcImg2,  srcRec2,  dstRec2, BlendInvertedMask);
+        dstImg2.CopyBlend(srcImg, srcRec, dstRec2, BlendToAlphaLine);
+        dstImg2.CopyBlend(srcImg2,  srcRec2,  dstRec2, BlendInvertedMaskLine);
       end;
     coArithmetic:
       begin
@@ -1968,8 +1968,8 @@ begin
       end;
     else     //coOver
       begin
-        dstImg2.CopyBlend(srcImg2, srcRec2, dstRec2, BlendToAlpha);
-        dstImg2.CopyBlend(srcImg,  srcRec,  dstRec2, BlendToAlpha);
+        dstImg2.CopyBlend(srcImg2, srcRec2, dstRec2, BlendToAlphaLine);
+        dstImg2.CopyBlend(srcImg,  srcRec,  dstRec2, BlendToAlphaLine);
       end;
   end;
   if (dstImg <> dstImg2) then
@@ -2075,7 +2075,7 @@ begin
   if stdDev > 0 then
     FastGaussianBlur(dstImg, dstRec,
       Ceil(stdDev *0.75 * ParentFilterEl.fScale) , 1);
-  dstImg.CopyBlend(dropShadImg, dropShadImg.Bounds, dstRec, BlendToAlpha);
+  dstImg.CopyBlend(dropShadImg, dropShadImg.Bounds, dstRec, BlendToAlphaLine);
 end;
 
 //------------------------------------------------------------------------------
@@ -2142,7 +2142,7 @@ begin
       begin
         if not GetSrcAndDst then Continue;
         if Assigned(tmpImg) then
-          tmpImg.CopyBlend(srcImg, srcRec, tmpImg.Bounds, BlendToAlpha)
+          tmpImg.CopyBlend(srcImg, srcRec, tmpImg.Bounds, BlendToAlphaLine)
         else if srcImg = pfe.fSrcImg then
           tmpImg := pfe.GetNamedImage(SourceImage)
         else
@@ -2396,7 +2396,7 @@ begin
     end;
 
   if usingTempImage and (img <> image) then
-    image.CopyBlend(img, clipRec2, clipRec2, BlendToAlpha);
+    image.CopyBlend(img, clipRec2, clipRec2, BlendToAlphaLine);
 
   //todo: enable "paint-order" to change filled/stroked/marker paint order
   if HasMarkers then DrawMarkers(img, drawDat);
@@ -2804,7 +2804,7 @@ end;
 constructor TLineElement.Create(parent: TBaseElement; svgEl: TSvgTreeEl);
 begin
   inherited;
-  SetLength(path, 2);
+  NewPointDArray(path, 2, True);
   path[0] := NullPointD; path[1] := NullPointD;
 end;
 //------------------------------------------------------------------------------
@@ -3502,7 +3502,7 @@ end;
 
 procedure TMarkerElement.SetEndPoint(const pt: TPointD; angle: double);
 begin
-  SetLength(fPoints, 1);
+  NewPointDArray(fPoints, 1, True);
   fPoints[0] := pt;
   self.angle := angle;
 end;
@@ -3723,7 +3723,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TBaseElement.DrawChildren(image: TImage32; drawDat: TDrawData);
+procedure TBaseElement.DrawChildren(image: TImage32; const drawDat: TDrawData);
 var
   i: integer;
 begin

@@ -1,6 +1,7 @@
 package SVGIconImageListFMX;
 
 {$R *.res}
+{$INCLUDE ..\..\Source\SVGIconImageList.inc}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -31,13 +32,25 @@ package SVGIconImageListFMX;
 {$IMPLICITBUILD OFF}
 
 requires
-  fmx,
-  SVGImage32Package;
+  fmx
+  {$IFDEF Image32_SVGEngine}
+  , SVGImage32Package
+  {$ENDIF}
+  {$IFDEF Skia_SVGEngine}
+  , Skia.Package.FMX
+  , Skia.Package.RTL
+  {$ENDIF}
+  ;
 
 contains
-  Img32.FMX in '..\..\Image32\Source\Img32.FMX.pas',
   FMX.ImageSVG in '..\..\Source\FMX.ImageSVG.pas',
+  {$IFDEF Image32_SVGEngine}
+  Img32.FMX in '..\..\Image32\Source\Img32.FMX.pas',
   FMX.Image32SVG in '..\..\Source\FMX.Image32SVG.pas',
+  {$ENDIF}
+  {$IFDEF Skia_SVGEngine}
+  FMX.ImageSkiaSVG in '..\..\Source\FMX.ImageSkiaSVG.pas',
+  {$ENDIF}
   FMX.SVGIconImageList in '..\..\Source\FMX.SVGIconImageList.pas',
   FMX.SVGIconImage in '..\..\Source\FMX.SVGIconImage.pas';
 

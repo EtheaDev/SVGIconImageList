@@ -3,7 +3,7 @@ unit Img32.Layers;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.5                                                             *
-* Date      :  3 July 2024                                                     *
+* Date      :  26 July 2024                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Layered images support                                          *
@@ -1259,7 +1259,7 @@ begin
           TranslateRect(rec2,
             Floor(childLayer.fOuterMargin -childLayer.Left -fOuterMargin),
             Floor(childLayer.fOuterMargin -childLayer.Top -fOuterMargin));
-          childImg2.CopyBlend(fClipImage, rec, rec2, BlendMask);
+          childImg2.CopyBlend(fClipImage, rec, rec2, BlendMaskLine);
         end;
       end else
         childImg2 := childImg;
@@ -1905,8 +1905,9 @@ var
   rec2: TRectD;
 begin
   //startingZeroOffset: default = 0 (ie 3 o'clock)
-  if not ClockwiseRotationIsAnglePositive then
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
     startingZeroOffset := -startingZeroOffset;
+{$ENDIF}
   fZeroOffset := startingZeroOffset;
 
   if buttonSize <= 0 then buttonSize := DefaultButtonSize;
@@ -2376,7 +2377,7 @@ var
   mp: TPointD;
 begin
   mp := MidPoint(rec);
-  SetLength(Result, 4);
+  NewPointDArray(Result, 4, True);
   Result[0] := PointD(mp.X, rec.Top);
   Result[1] := PointD(rec.Right, mp.Y);
   Result[2] := PointD(mp.X, rec.Bottom);
@@ -2461,7 +2462,7 @@ begin
   group := TSizingGroupLayer32(movedButton.Parent);
   with group do
   begin
-    SetLength(path, ChildCount);
+    NewPointDArray(path, ChildCount, True);
     for i := 0 to ChildCount -1 do
       path[i] := Child[i].MidPoint;
   end;

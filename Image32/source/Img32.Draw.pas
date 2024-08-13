@@ -313,10 +313,6 @@ const
 {$ENDIF CPUX86}
 
 type
-  {$IF not declared(NativeInt)}
-  NativeInt = Integer;
-  {$IFEND}
-
   {$IFDEF SUPPORTS_POINTERMATH}
   // Works for Delphi 2009 and newer. For FPC it is a requirement,
   // otherwise 32bit and 64bit code behave differently for negative
@@ -1690,7 +1686,7 @@ begin
     fColorsCnt := Ceil(dy + dxdy * (fEndPt.X - fStartPt.X));
     MakeColorGradient(fGradientColors, fColorsCnt, fColors);
     // get a list of perpendicular offsets for each
-    SetLength(fPerpendicOffsets, ImgWidth);
+    NewIntegerArray(fPerpendicOffsets, ImgWidth, True);
     // from an imaginary line that's through fStartPt and perpendicular to
     // the gradient line, get a list of Y offsets for each X in image width
     for i := 0 to ImgWidth -1 do
@@ -1715,7 +1711,7 @@ begin
 
     fColorsCnt := Ceil(dx + dydx * (fEndPt.Y - fStartPt.Y));
     MakeColorGradient(fGradientColors, fColorsCnt, fColors);
-    SetLength(fPerpendicOffsets, ImgHeight);
+    NewIntegerArray(fPerpendicOffsets, ImgHeight, True);
     // from an imaginary line that's through fStartPt and perpendicular to
     // the gradient line, get a list of X offsets for each Y in image height
     for i := 0 to ImgHeight -1 do
@@ -1926,11 +1922,13 @@ begin
           ellipsePt.X := (-qb -qs)/(2 * qa) else
           ellipsePt.X := (-qb +qs)/(2 * qa);
         ellipsePt.Y := m * ellipsePt.X + c;
-        dist := Hypot(pt.X - fFocusPt.X, pt.Y - fFocusPt.Y);
-        dist2 := Hypot(ellipsePt.X - fFocusPt.X, ellipsePt.Y - fFocusPt.Y);
+
+        // Use sqr'ed distances (Sqrt(a^2+b^2)/Sqrt(x^2+y^2) => Sqrt((a^2+b^2)/(x^2+y^2))
+        dist := Sqr(pt.X - fFocusPt.X) + Sqr(pt.Y - fFocusPt.Y);
+        dist2 := Sqr(ellipsePt.X - fFocusPt.X) + Sqr(ellipsePt.Y - fFocusPt.Y);
         if dist2 = 0 then
           q := 1 else
-          q := dist/ dist2;
+          q := Sqrt(dist/dist2);
       end else
         q := 1; //shouldn't happen :)
     end;
@@ -2109,7 +2107,7 @@ var
   lines: TPathsD;
 begin
   setLength(lines, 1);
-  setLength(lines[0], 2);
+  NewPointDArray(lines[0], 2, True);
   lines[0][0] := pt1;
   lines[0][1] := pt2;
   DrawLine(img, lines, lineWidth, color, esRound);
@@ -2473,7 +2471,7 @@ begin
       cr.Free;
     end;
     ApplyClearType(tmpImg, color, backColor);
-    img.CopyBlend(tmpImg, tmpImg.Bounds, rec, BlendToAlpha);
+    img.CopyBlend(tmpImg, tmpImg.Bounds, rec, BlendToAlphaLine);
   finally
     tmpImg.Free;
   end;

@@ -176,6 +176,8 @@
                     <Source Name="MainSource">SVGIconImageListFMX.dpk</Source>
                 </Source>
                 <Excluded_Packages/>
+                <WelcomePageFile Path="..\..\README.htm"/>
+                <WelcomePageFolder/>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Android">False</Platform>

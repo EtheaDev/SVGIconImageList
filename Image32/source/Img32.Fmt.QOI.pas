@@ -132,7 +132,7 @@ begin
     inc(src, stream.Position);
   end else
   begin
-    SetLength(srcTmp, size);
+    NewByteArray(srcTmp, size, True);
     stream.Read(srcTmp[0], size);
     src := @srcTmp[0];
   end;

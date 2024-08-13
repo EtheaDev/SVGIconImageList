@@ -81,6 +81,7 @@
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="vclimg.dcp"/>
         <DCCReference Include="..\..\Image32\source\Img32.pas"/>
+        <DCCReference Include="..\..\Image32\source\Img32.Fmt.BMP.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.Panels.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.Fmt.PNG.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.CQ.pas"/>

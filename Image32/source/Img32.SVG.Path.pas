@@ -56,6 +56,7 @@ type
     fCtrlPts  : TPathD;
     fExtend   : integer;
   protected
+    procedure Changed; {$IFDEF INLINE} inline; {$ENDIF}
     function GetFlattened: TPathD; virtual;
     procedure GetFlattenedInternal; virtual; abstract;
     procedure Scale(value: double); virtual;
@@ -410,14 +411,14 @@ begin
   begin
     fCtrlPts := ScalePath(fCtrlPts, value);
     fFirstPt := ScalePoint(fFirstPt, value);
+    Changed;
   end;
 end;
 //------------------------------------------------------------------------------
 
 function TSvgPathSeg.DescaleAndOffset(const pt: TPointD): TPointD;
 begin
-  Result := pt;
-  TranslatePoint(Result, -parent.PathOffset.X, -parent.PathOffset.Y);
+  Result := TranslatePoint(pt, -parent.PathOffset.X, -parent.PathOffset.Y);
   Result := ScalePoint(Result, 1/Owner.Scale);
 end;
 //------------------------------------------------------------------------------
@@ -433,12 +434,14 @@ procedure TSvgPathSeg.Offset(dx, dy: double);
 begin
   fFirstPt := TranslatePoint(fFirstPt, dx, dy);
   fCtrlPts := TranslatePath(fCtrlPts, dx, dy);
+  Changed;
 end;
 //------------------------------------------------------------------------------
 
 procedure TSvgPathSeg.SetCtrlPts(const pts: TPathD);
 begin
   fCtrlPts := pts;
+  Changed;
 end;
 //------------------------------------------------------------------------------
 
@@ -458,9 +461,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure TSvgPathSeg.Changed;
+begin
+  if fFlatPath <> nil then
+    fFlatPath := nil; // DynArrayClear
+end;
+//------------------------------------------------------------------------------
+
 function TSvgPathSeg.GetFlattened: TPathD;
 begin
-  GetFlattenedInternal;
+  if fFlatPath = nil then
+    GetFlattenedInternal;
   Result := fFlatPath;
 end;
 //------------------------------------------------------------------------------
@@ -502,9 +513,13 @@ begin
   //if the image has been rendered previously at a lower resolution, then
   //redo the flattening otherwise curves my look very rough.
   if (pendingScale < Parent.fPendingScale) then
+  begin
     pendingScale := Parent.fPendingScale;
+    Changed;
+  end;
 
-  GetFlattenedInternal;
+  if fFlatPath = nil then
+    GetFlattenedInternal;
   Result := fFlatPath;
 end;
 //------------------------------------------------------------------------------
@@ -567,6 +582,7 @@ begin
     end;
   end;
   SetCtrlPtsFromArcInfo;
+  Changed;
 end;
 //------------------------------------------------------------------------------
 
@@ -610,13 +626,14 @@ end;
 
 procedure TSvgASegment.SetCtrlPtsFromArcInfo;
 begin
-  SetLength(fCtrlPts, 5);
+  NewPointDArray(fCtrlPts, 5, True);
   with fArcInfo do
   begin
     fCtrlPts[0] := startPos;
     GetRectBtnPoints(fCtrlPts[1], fCtrlPts[2], fCtrlPts[3]);
     fCtrlPts[4] := endPos;
   end;
+  Changed;
 end;
 //------------------------------------------------------------------------------
 
@@ -660,12 +677,13 @@ end;
 procedure TSvgASegment.ReverseArc;
 begin
   fArcInfo.sweepClockW := not fArcInfo.sweepClockW;
+  Changed;
 end;
 //------------------------------------------------------------------------------
 
 procedure TSvgASegment.Offset(dx, dy: double);
 begin
-  inherited;
+  inherited; // calls Changed
   with fArcInfo do
   begin
     TranslateRect(rec, dx, dy);
@@ -678,7 +696,7 @@ end;
 procedure TSvgASegment.Scale(value: Double);
 begin
   if (value = 0) or (value = 1) then Exit;
-  inherited;
+  inherited; // calls Changed
   with fArcInfo do
   begin
     rec := ScaleRect(rec, value);
@@ -690,7 +708,7 @@ end;
 
 procedure TSvgASegment.SetCtrlPts(const ctrlPts: TPathD);
 begin
-  //SetCtrlPtsFromArcInfo;
+  //SetCtrlPtsFromArcInfo; // calls Changed
 end;
 //------------------------------------------------------------------------------
 
@@ -753,7 +771,7 @@ var
   i, len: integer;
 begin
   len := Length(fCtrlPts) div 3;
-  SetLength(Result, len);
+  NewPointDArray(Result, len, True);
   for i := 0 to High(Result) do
     Result[i] := fCtrlPts[i*3 +2];
 end;
@@ -872,7 +890,7 @@ var
   i, len: integer;
 begin
   len := Length(fCtrlPts) div 2;
-  SetLength(Result, len);
+  NewPointDArray(Result, len, True);
   for i := 0 to High(Result) do
     Result[i] := fCtrlPts[i*2+1];
 end;
@@ -937,7 +955,7 @@ var
   i, len: integer;
 begin
   len := Length(fCtrlPts) div 2;
-  SetLength(Result, len);
+  NewPointDArray(Result, len, True);
   for i := 0 to High(Result) do
     Result[i] := fCtrlPts[i*2+1];
 end;
@@ -1073,13 +1091,17 @@ end;
 function TSvgSubPath.GetFlattenedPath(pendingScale: double): TPathD;
 var
   i: integer;
+  flattenedPaths: TPathsD;
 begin
   if pendingScale <= 0 then pendingScale := 1.0;
   if (pendingScale > fPendingScale) then
     fPendingScale := pendingScale;
+
   Result := nil;
+  SetLength(flattenedPaths, Length(fSegs));
   for i := 0 to High(fSegs) do
-    AppendPath(Result, fSegs[i].GetFlattened);
+    flattenedPaths[i] := fSegs[i].GetFlattened;
+  ConcatPaths(Result, flattenedPaths);
 end;
 //------------------------------------------------------------------------------
 
@@ -1102,6 +1124,7 @@ begin
   end;
   fSegs[i] := Result;
   Result.fCtrlPts := pts;
+  Result.fFlatPath := nil;
   if Result is TSvgCurvedSeg then
     TSvgCurvedSeg(Result).pendingScale := fPendingScale;
 end;
@@ -1125,7 +1148,7 @@ begin
     rectAngle := angle;
     sweepClockW := isClockwise;
   end;
-  Result.SetCtrlPtsFromArcInfo;
+  Result.SetCtrlPtsFromArcInfo; // calls Changed
 end;
 //------------------------------------------------------------------------------
 
@@ -1179,7 +1202,7 @@ begin
   SetLength(fSegs, i+1);
   Result := TSvgZSegment.Create(self, i, endPt);
   fSegs[i] := Result;
-  SetLength(Result.fCtrlPts, 1);
+  NewPointDArray(Result.fCtrlPts, 1, True);
   Result.fCtrlPts[0] := firstPt;
   isClosed := true;
 end;
@@ -1213,7 +1236,7 @@ function TSvgSubPath.GetSimplePath: TPathD;
 var
   i: integer;
 begin
-  Result := Img32.Vector.MakePath([GetFirstPt.X, GetFirstPt.Y]);
+  Result := Img32.Vector.MakePath(GetFirstPt);
   for i := 0 to High(fSegs) do
     AppendPath(Result, fSegs[i].GetOnPathCtrlPts);
 end;
@@ -1390,7 +1413,7 @@ var
     if ptCnt = ptCap then
     begin
       inc(ptCap, 8);
-      setLength(pts, ptCap);
+      SetLengthUninit(pts, ptCap);
     end;
     pts[ptCnt] := pt;
     inc(ptCnt);
