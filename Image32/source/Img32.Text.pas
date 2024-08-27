@@ -3,9 +3,9 @@ unit Img32.Text;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  19 May 2023                                                     *
+* Date      :  18 August 2024                                                  *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2023                                         *
+* Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  TrueType fonts for TImage32 (without Windows dependencies)      *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -1925,7 +1925,7 @@ begin
           pt2 := pathsEx[i][0] else
           pt2 := pathsEx[i][j+1];
         bez := FlattenQBezier(pathsEx[i][j-1].pt, pathsEx[i][j].pt, pt2.pt);
-        AppendPath(Result[i], bez);
+        ConcatPaths(Result[i], bez);
       end;
     end;
   end;
@@ -2871,9 +2871,10 @@ var
   glyphs: TPathsD;
   glyphInfo: PGlyphInfo;
   dx, dy, scale: double;
+  cr: TCustomRenderer;
 begin
   Result := y;
-  if not assigned(font) or not font.IsValidFont then Exit;
+  if not assigned(font) or not font.IsValidFont or (text = '') then Exit;
 
   xxMax := 0;
   for i := 1 to Length(text) do
@@ -2885,21 +2886,28 @@ begin
          xxMax := xMax;
   end;
 
-  scale := font.Scale;
-  for i := 1 to Length(text) do
-  begin
-    glyphInfo := font.GetCharInfo(ord(text[i]));
-    with glyphInfo.metrics.glyf do
+  if image.AntiAliased then
+    cr := TColorRenderer.Create(textColor) else
+    cr := TAliasedColorRenderer.Create(textColor);
+  try
+    scale := font.Scale;
+    for i := 1 to Length(text) do
     begin
-      dx :=  (xxMax - xMax) * 0.5 * scale;
-      y := y + yMax  * scale; //yMax = char ascent
-      dy := - yMin * scale;   //yMin = char descent
+      glyphInfo := font.GetCharInfo(ord(text[i]));
+      with glyphInfo.metrics.glyf do
+      begin
+        dx :=  (xxMax - xMax) * 0.5 * scale;
+        y := y + yMax  * scale; //yMax = char ascent
+        dy := - yMin * scale;   //yMin = char descent
+      end;
+      glyphs := TranslatePath( glyphInfo.contours, x + dx, y);
+      DrawPolygon(image, glyphs, frNonZero, cr);
+      if text[i] = #32 then
+        y := y + dy - interCharSpace else
+        y := y + dy + interCharSpace;
     end;
-    glyphs := TranslatePath( glyphInfo.contours, x + dx, y);
-    DrawPolygon(image, glyphs, frNonZero, textColor);
-    if text[i] = #32 then
-      y := y + dy - interCharSpace else
-      y := y + dy + interCharSpace;
+  finally
+    cr.Free;
   end;
   Result := y;
 end;

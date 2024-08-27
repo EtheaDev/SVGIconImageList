@@ -2,7 +2,7 @@
 
 ## Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 4.1.7 (VCL+FMX)
+### Actual official version 4.1.8 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -90,6 +90,10 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/IconFontsImageList](https://github.com/EtheaDev/IconFontsImageList)
 
 ### RELEASE NOTES
+27 Aug 2024: version 4.1.8 (VCL+FMX)
+- Aligned to Image32 4.5 Version of 18 August 2024
+- Fixed rendering with Opacity for Skia4Delphi and D2D Engines
+
 13 Aug 2024: version 4.1.7 (VCL+FMX)
 - Updated packages for compilation with Skia4Delphi (defined by SVGIconImageList.inc)
 - Fixed uses for skia unit

@@ -2272,7 +2272,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-
 procedure TImage32.Assign(src: TImage32);
 begin
   if assigned(src) then
@@ -2287,15 +2286,17 @@ begin
   try
     dst.AssignSettings(Self);
     try
-      dst.SetSize(Width, Height);
-      if (Width > 0) and (Height > 0) then
-        move(fPixels[0], dst.fPixels[0], Width * Height * SizeOf(TColor32));
+      dst.fPixels := System.Copy(fPixels, 0, Length(fPixels));
+      dst.fWidth := fWidth;
+      dst.fHeight := fHeight;
+      dst.Resized;
     except
       dst.SetSize(0,0);
     end;
   finally
     dst.EndUpdate;
   end;
+  dst.fColorCount := fColorCount; // dst.EndUpdate called ResetColorCount
 end;
 //------------------------------------------------------------------------------
 
@@ -3640,51 +3641,43 @@ end;
 
 procedure TImage32.SetRGB(rgbColor: TColor32);
 var
-  rgb: TARGB absolute rgbColor;
-  r,g,b: Byte;
   i: Integer;
-  pc: PARGB;
+  pc: PColor32;
+  c: TColor32;
 begin
   //this method leaves the alpha channel untouched
   if IsEmpty then Exit;
-  r := rgb.R; g := rgb.G; b := rgb.B;
-  pc := PARGB(PixelBase);
-  for i := 0 to Width * Height -1 do
-    if pc.A = 0 then
-    begin
-      pc.Color := 0;
-      inc(pc);
-    end else
-    begin
-      pc.R := r;
-      pc.G := g;
-      pc.B := b;
-      inc(pc);
-    end;
+
+  pc := PixelBase;
+  rgbColor := rgbColor and $00FFFFFF;
+  for i := 0 to Width * Height - 1 do
+  begin
+    c := pc^;
+    if c and $FF000000 = 0 then
+      pc^ := 0 else
+      pc^ := c and $FF000000 or rgbColor;
+    inc(pc);
+  end;
   Changed;
 end;
 //------------------------------------------------------------------------------
 
 procedure TImage32.SetRGB(rgbColor: TColor32; rec: TRect);
 var
-  rgb: TARGB absolute rgbColor;
-  r,g,b: Byte;
   i,j, dx: Integer;
-  pc: PARGB;
+  pc: PColor32;
 begin
   Types.IntersectRect(rec, rec, bounds);
   if IsEmptyRect(rec) then Exit;
-  r := rgb.R; g := rgb.G; b := rgb.B;
-  pc := PARGB(PixelBase);
+  rgbColor := rgbColor and $00FFFFFF;
+  pc := PixelBase;
   inc(pc, rec.Left);
   dx := Width - RectWidth(rec);
   for i := rec.Top to rec.Bottom -1 do
   begin
     for j := rec.Left to rec.Right -1 do
     begin
-      pc.R := r;
-      pc.G := g;
-      pc.B := b;
+      pc^ := pc^ and $FF000000 or rgbColor;
       inc(pc);
     end;
     inc(pc, dx);

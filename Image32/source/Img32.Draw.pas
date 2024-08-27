@@ -65,26 +65,49 @@ type
     property PixelSize: integer read fPixelSize;
   end;
 
-  TColorRenderer = class(TCustomRenderer)
+  TCustomColorRenderer = class(TCustomRenderer)
   private
-    fAlpha: Byte;
     fColor: TColor32;
   protected
-    procedure RenderProc(x1, x2, y: integer; alpha: PByte); override;
-    function Initialize(targetImage: TImage32): Boolean; override;
+    property Color: TColor32 read fColor write fColor;
   public
-    constructor Create(color: TColor32 = clNone32);
-    procedure SetColor(value: TColor32);
+    procedure SetColor(value: TColor32); virtual;
   end;
 
-  TAliasedColorRenderer = class(TCustomRenderer)
+  TColorRenderer = class(TCustomColorRenderer)
   private
-    fColor: TColor32;
+    fAlpha: Byte;
+  protected
+    procedure RenderProc(x1, x2, y: integer; alpha: PByte); override;
+    function Initialize(targetImage: TImage32): Boolean; override;
+  public
+    constructor Create(color: TColor32 = clNone32);
+    procedure SetColor(value: TColor32); override;
+  end;
+
+  TAliasedColorRenderer = class(TCustomColorRenderer)
   protected
     function Initialize(targetImage: TImage32): Boolean; override;
     procedure RenderProc(x1, x2, y: integer; alpha: PByte); override;
   public
     constructor Create(color: TColor32 = clNone32);
+  end;
+
+  // TCustomColorRendererCache is used to not create ColorRenderer
+  // objects for every DrawPolygon/DrawLine function call. The color
+  // of the TCustomColorRenderer will be changed by the DrawPolygon/
+  // DrawLine method.
+  TCustomColorRendererCache = class(TObject)
+  private
+    fColorRenderer: TColorRenderer;
+    fAliasedColorRenderer: TAliasedColorRenderer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function GetColorRenderer(color: TColor32): TColorRenderer;
+
+    property ColorRenderer: TColorRenderer read fColorRenderer;
+    property AliasedColorRenderer: TAliasedColorRenderer read fAliasedColorRenderer;
   end;
 
   TEraseRenderer = class(TCustomRenderer)
@@ -217,11 +240,20 @@ type
     endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto;
     miterLimit: double = 2); overload;
   procedure DrawLine(img: TImage32;
+    const line: TPathD; lineWidth: double; color: TColor32;
+    rendererCache: TCustomColorRendererCache;
+    endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto;
+    miterLimit: double = 2); overload;
+  procedure DrawLine(img: TImage32;
     const line: TPathD; lineWidth: double; renderer: TCustomRenderer;
     endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto;
     miterLimit: double = 2); overload;
   procedure DrawLine(img: TImage32; const lines: TPathsD;
     lineWidth: double; color: TColor32;
+    endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto;
+    miterLimit: double = 2); overload;
+  procedure DrawLine(img: TImage32; const lines: TPathsD;
+    lineWidth: double; color: TColor32; rendererCache: TCustomColorRendererCache;
     endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto;
     miterLimit: double = 2); overload;
   procedure DrawLine(img: TImage32; const lines: TPathsD;
@@ -239,11 +271,13 @@ type
   procedure DrawDashedLine(img: TImage32; const line: TPathD;
     dashPattern: TArrayOfDouble; patternOffset: PDouble;
     lineWidth: double; color: TColor32;
-    endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto); overload;
+    endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto;
+    rendererCache: TCustomColorRendererCache = nil); overload;
   procedure DrawDashedLine(img: TImage32; const lines: TPathsD;
     dashPattern: TArrayOfDouble; patternOffset: PDouble;
     lineWidth: double; color: TColor32; endStyle: TEndStyle;
-    joinStyle: TJoinStyle = jsAuto); overload;
+    joinStyle: TJoinStyle = jsAuto;
+    rendererCache: TCustomColorRendererCache = nil); overload;
   procedure DrawDashedLine(img: TImage32; const line: TPathD;
     dashPattern: TArrayOfDouble; patternOffset: PDouble;
     lineWidth: double; renderer: TCustomRenderer; endStyle: TEndStyle;
@@ -268,6 +302,9 @@ type
     fillRule: TFillRule; renderer: TCustomRenderer); overload;
   procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
     fillRule: TFillRule; color: TColor32); overload;
+  procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
+    fillRule: TFillRule; color: TColor32;
+    rendererCache: TCustomColorRendererCache); overload;
   procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
     fillRule: TFillRule; renderer: TCustomRenderer); overload;
 
@@ -1327,6 +1364,15 @@ begin
 end;
 
 // ------------------------------------------------------------------------------
+// TCustomColorRenderer
+// ------------------------------------------------------------------------------
+
+procedure TCustomColorRenderer.SetColor(value: TColor32);
+begin
+  fColor := value;
+end;
+
+// ------------------------------------------------------------------------------
 // TColorRenderer
 // ------------------------------------------------------------------------------
 
@@ -1491,13 +1537,40 @@ procedure TAliasedColorRenderer.RenderProc(x1, x2, y: integer; alpha: PByte);
 var
   i: integer;
   dst: PColor32;
+  c: TColor32;
 begin
   dst := GetDstPixel(x1,y);
+  c := fColor; // copy fColor to local variable
   for i := x1 to x2 do
   begin
-    if Ord(alpha^) > 127 then dst^ := fColor; //ie no blending
+    if Ord(alpha^) > 127 then dst^ := c; //ie no blending
     inc(dst); inc(alpha);
   end;
+end;
+
+// ------------------------------------------------------------------------------
+// TCustomColorRendererCache
+// ------------------------------------------------------------------------------
+
+constructor TCustomColorRendererCache.Create;
+begin
+  inherited Create;
+  fColorRenderer := TColorRenderer.Create;
+  fAliasedColorRenderer := TAliasedColorRenderer.Create;
+end;
+// ------------------------------------------------------------------------------
+
+destructor TCustomColorRendererCache.Destroy;
+begin
+  fColorRenderer.Free;
+  fAliasedColorRenderer.Free;
+end;
+// ------------------------------------------------------------------------------
+
+function TCustomColorRendererCache.GetColorRenderer(color: TColor32): TColorRenderer;
+begin
+  Result := fColorRenderer;
+  Result.SetColor(color);
 end;
 
 // ------------------------------------------------------------------------------
@@ -2127,6 +2200,19 @@ end;
 // ------------------------------------------------------------------------------
 
 procedure DrawLine(img: TImage32; const line: TPathD; lineWidth: double;
+  color: TColor32; rendererCache: TCustomColorRendererCache;
+  endStyle: TEndStyle; joinStyle: TJoinStyle; miterLimit: double);
+var
+  lines: TPathsD;
+begin
+  setLength(lines, 1);
+  lines[0] := line;
+  DrawLine(img, lines, lineWidth, color, rendererCache, endStyle, joinStyle,
+    miterLimit);
+end;
+// ------------------------------------------------------------------------------
+
+procedure DrawLine(img: TImage32; const line: TPathD; lineWidth: double;
   renderer: TCustomRenderer; endStyle: TEndStyle; joinStyle: TJoinStyle;
   miterLimit: double);
 var
@@ -2153,24 +2239,36 @@ procedure DrawLine(img: TImage32; const lines: TPathsD;
   lineWidth: double; color: TColor32;
   endStyle: TEndStyle; joinStyle: TJoinStyle; miterLimit: double);
 var
-  lines2: TPathsD;
-  cr: TCustomRenderer;
+  cr: TCustomColorRenderer;
 begin
   if not assigned(lines) then exit;
-  if (lineWidth < MinStrokeWidth) then lineWidth := MinStrokeWidth;
-  lines2 := RoughOutline(lines, lineWidth, joinStyle, endStyle, miterLimit);
 
   if img.AntiAliased then
     cr := TColorRenderer.Create(color) else
     cr := TAliasedColorRenderer.Create(color);
   try
-    if cr.Initialize(img) then
-    begin
-      Rasterize(lines2, img.bounds, frNonZero, cr);
-      cr.NotifyChange;
-    end;
+    DrawLine(img, lines, lineWidth, cr, endStyle, joinStyle, miterLimit);
   finally
     cr.free;
+  end;
+end;
+// ------------------------------------------------------------------------------
+
+procedure DrawLine(img: TImage32; const lines: TPathsD;
+  lineWidth: double; color: TColor32; rendererCache: TCustomColorRendererCache;
+  endStyle: TEndStyle; joinStyle: TJoinStyle; miterLimit: double);
+var
+  cr: TCustomColorRenderer;
+begin
+  if not assigned(lines) then exit;
+  if rendererCache = nil then
+    DrawLine(img, lines, lineWidth, color, endStyle, joinStyle, miterLimit)
+  else
+  begin
+    if img.AntiAliased then
+      cr := rendererCache.ColorRenderer else
+      cr := rendererCache.AliasedColorRenderer;
+    DrawLine(img, lines, lineWidth, cr, endStyle, joinStyle, miterLimit);
   end;
 end;
 // ------------------------------------------------------------------------------
@@ -2218,7 +2316,8 @@ end;
 
 procedure DrawDashedLine(img: TImage32; const line: TPathD;
   dashPattern: TArrayOfDouble; patternOffset: PDouble; lineWidth: double;
-  color: TColor32; endStyle: TEndStyle; joinStyle: TJoinStyle);
+  color: TColor32; endStyle: TEndStyle; joinStyle: TJoinStyle;
+  rendererCache: TCustomColorRendererCache);
 var
   lines: TPathsD;
   cr: TColorRenderer;
@@ -2246,7 +2345,10 @@ begin
       endStyle := esButt;
   end;
   lines := RoughOutline(lines, lineWidth, joinStyle, endStyle);
-  cr := TColorRenderer.Create(color);
+
+  if rendererCache = nil then
+    cr := TColorRenderer.Create(color) else
+    cr := rendererCache.GetColorRenderer(color);
   try
     if cr.Initialize(img) then
     begin
@@ -2254,21 +2356,24 @@ begin
       cr.NotifyChange;
     end;
   finally
-    cr.free;
+    if rendererCache = nil then
+      cr.free;
   end;
 end;
 // ------------------------------------------------------------------------------
 
 procedure DrawDashedLine(img: TImage32; const lines: TPathsD;
   dashPattern: TArrayOfDouble; patternOffset: PDouble; lineWidth: double;
-  color: TColor32; endStyle: TEndStyle; joinStyle: TJoinStyle);
+  color: TColor32; endStyle: TEndStyle; joinStyle: TJoinStyle;
+  rendererCache: TCustomColorRendererCache);
 var
   i: integer;
 begin
   if not assigned(lines) then exit;
   for i := 0 to high(lines) do
     DrawDashedLine(img, lines[i],
-      dashPattern, patternOffset, lineWidth, color, endStyle, joinStyle);
+      dashPattern, patternOffset, lineWidth, color, endStyle, joinStyle,
+      rendererCache);
 end;
 // ------------------------------------------------------------------------------
 
@@ -2399,6 +2504,30 @@ begin
     end;
   finally
     cr.free;
+  end;
+end;
+// ------------------------------------------------------------------------------
+
+procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
+  fillRule: TFillRule; color: TColor32;
+  rendererCache: TCustomColorRendererCache);
+var
+  cr: TCustomColorRenderer;
+begin
+  if not assigned(polygons) then exit;
+  if rendererCache = nil then
+    DrawPolygon(img, polygons, fillRule, color)
+  else
+  begin
+    if img.AntiAliased then
+      cr := rendererCache.ColorRenderer else
+      cr := rendererCache.AliasedColorRenderer;
+    cr.SetColor(color);
+    if cr.Initialize(img) then
+    begin
+      Rasterize(polygons, img.bounds, fillRule, cr);
+      cr.NotifyChange;
+    end;
   end;
 end;
 // ------------------------------------------------------------------------------

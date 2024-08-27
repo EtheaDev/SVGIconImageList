@@ -332,7 +332,8 @@ Var
   Root: ID2D1SvgElement;
 begin
   Result := 1;
-  if Assigned(fSvgDoc) then begin
+  if Assigned(fSvgDoc) then
+  begin
     fSvgDoc.GetRoot(Root);
     if Assigned(Root) then
       Root.GetAttributeValue('opacity', D2D1_SVG_ATTRIBUTE_POD_TYPE_FLOAT,
@@ -404,9 +405,12 @@ begin
   end;
   if FOpacity <> 1.0 then
   begin
-    if Assigned(Root) then
+    if Assigned(fSvgDoc) then
+    begin
+      fSvgDoc.GetRoot(Root);
       Root.SetAttributeValue('opacity', D2D1_SVG_ATTRIBUTE_POD_TYPE_FLOAT,
         @fOpacity, SizeOf(fOpacity));
+    end;
   end;
   //FixedColor
   if (FFixedColor <> TColors.SysDefault) and Assigned(fSvgDoc) then

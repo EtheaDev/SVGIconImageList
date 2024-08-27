@@ -320,8 +320,8 @@ var
       FSvg.OverrideColor := Default(TAlphaColor);
     end;
 
-    //Render SVG
-    FSvg.Render(LSurface.Canvas, LDestRect, FOpacity);
+    //Render SVG with Opacity = 1 because the Opacity is used into AlphaBlend
+    FSvg.Render(LSurface.Canvas, LDestRect, 1);
     FDrawCached := True;
   end;
 

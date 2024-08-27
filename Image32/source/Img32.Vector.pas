@@ -3,7 +3,7 @@ unit Img32.Vector;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.5                                                             *
-* Date      :  26 July 2024                                                    *
+* Date      :  18 August 2024                                                  *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -214,15 +214,16 @@ type
 
   procedure AppendPoint(var path: TPathD; const extra: TPointD);
 
-  procedure AppendToPath(var path: TPathD; const pt: TPointD); overload;
-  procedure AppendPath(var path1: TPathD; const path2: TPathD); overload;
+  // AppendPath - adds TPathD & TPathsD objects to the end of
+  // TPathsD (or TArrayOfPathsD) objects
   procedure AppendPath(var paths: TPathsD; const extra: TPathD); overload;
   procedure AppendPath(var paths: TPathsD; const extra: TPathsD); overload;
   procedure AppendPath(var ppp: TArrayOfPathsD; const extra: TPathsD); overload;
 
-  // ConcatPaths concats multiple paths. It skips the start-point
-  // of a path, if it matches the previous path's end-point.
-  procedure ConcatPaths(var dstPath: TPathD; const paths: TPathsD);
+  // ConcatPaths - concats multiple paths into a single path.
+  // It also avoids point duplicates where path joins
+  procedure ConcatPaths(var dstPath: TPathD; const path: TPathD); overload;
+  procedure ConcatPaths(var dstPath: TPathD; const paths: TPathsD); overload;
 
   function GetAngle(const origin, pt: TPoint): double; overload;
   function GetAngle(const origin, pt: TPointD): double; overload;
@@ -1840,30 +1841,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure AppendToPath(var path: TPathD; const pt: TPointD);
-var
-  len: integer;
-begin
-  len := length(path);
-  if (len > 0) and PointsEqual(pt, path[len -1]) then Exit;
-  SetLengthUninit(path, len + 1);
-  path[len] := pt;
-end;
-//------------------------------------------------------------------------------
-
-procedure AppendPath(var path1: TPathD; const path2: TPathD);
-var
-  len1, len2: integer;
-begin
-  len1 := length(path1);
-  len2 := length(path2);
-  if len2 = 0 then Exit;
-  if (len1 > 0) and PointsEqual(path2[0], path1[len1 -1]) then dec(len1);
-  SetLengthUninit(path1, len1 + len2);
-  Move(path2[0], path1[len1], len2 * SizeOf(TPointD));
-end;
-//------------------------------------------------------------------------------
-
 procedure AppendPoint(var path: TPathD; const extra: TPointD);
 var
   len: integer;
@@ -1874,8 +1851,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure AppendPath(var paths: TPathsD;
-  const extra: TPathD);
+procedure AppendPath(var paths: TPathsD; const extra: TPathD);
 var
   len1, len2: integer;
 begin
@@ -1887,8 +1863,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure AppendPath(var paths: TPathsD;
-  const extra: TPathsD);
+procedure AppendPath(var paths: TPathsD; const extra: TPathsD);
 var
   i, len1, len2: integer;
 begin
@@ -1910,6 +1885,22 @@ begin
   if Assigned(extra) then
     AppendPath(ppp[len], extra) else
     ppp[len] := nil;
+end;
+//------------------------------------------------------------------------------
+
+procedure ConcatPaths(var dstPath: TPathD; const path: TPathD); overload;
+var
+  len, pathLen: integer;
+begin
+  // calculate the length of the final array
+  len := Length(dstPath);
+  pathLen := Length(path);
+  if pathLen = 0 then Exit;
+  // Avoid point duplicates where paths join
+  if (len > 0) and PointsEqual(dstPath[len -1], path[0]) then dec(len);
+  // fill the array
+  SetLengthUninit(dstPath, len + pathLen);
+  Move(path[0], dstPath[len], pathLen * SizeOf(TPointD));
 end;
 //------------------------------------------------------------------------------
 
@@ -2798,7 +2789,7 @@ begin
       end else
       begin
         p := StripNearDuplicates(lines[i], 0.1, true);
-        if Length(p) = 2 then AppendToPath(p, p[0]);
+        if Length(p) = 2 then AppendPoint(p, p[0]);
         AppendPath(Result,
           GrowClosedLine(p, lineWidth, joinStyle, miterLimOrRndScale));
       end;
@@ -2973,7 +2964,7 @@ begin
           bezPts[2].Y := bezPts[3].Y + magic.Y;
         end;
     end;
-    AppendPath(Result, FlattenCBezier(bezPts));
+    ConcatPaths(Result, FlattenCBezier(bezPts));
   end;
 end;
 //------------------------------------------------------------------------------
@@ -3649,7 +3640,7 @@ begin
     end else
     begin
       p := FlattenQBezier(pts[i*2], pts[i*2+1], pts[i*2+2], tolerance);
-      AppendPath(Result, Copy(p, 1, Length(p) -1));
+      ConcatPaths(Result, Copy(p, 1, Length(p) -1));
     end;
   end;
 end;
@@ -3749,7 +3740,7 @@ begin
     begin
       p := FlattenCBezier(path[i*3], path[i*3+1],
         path[i*3+2], path[i*3+3], tolerance);
-      AppendPath(Result, Copy(p, 1, Length(p) -1));
+      ConcatPaths(Result, Copy(p, 1, Length(p) -1));
     end;
   end;
 end;

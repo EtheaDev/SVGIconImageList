@@ -2,7 +2,7 @@ unit Clipper.Core;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Date      :  3 May 2024                                                      *
+* Date      :  12 August 2024                                                  *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2024                                         *
 * Purpose   :  Core Clipper Library module                                     *
@@ -18,12 +18,16 @@ uses
   SysUtils, Classes, Math;
 
 type
+{$IFDEF USINGZ}
+    Ztype   = type double;//Int64;//
+    PZtype  = ^Ztype;
+{$ENDIF}
 
   PPoint64  = ^TPoint64;
   TPoint64  = record
     X, Y: Int64;
 {$IFDEF USINGZ}
-    Z: Int64;
+    Z: Ztype;
 {$ENDIF}
   end;
 
@@ -31,7 +35,7 @@ type
   TPointD   = record
     X, Y: double;
 {$IFDEF USINGZ}
-    Z: Int64;
+    Z: Ztype;
 {$ENDIF}
   end;
 
@@ -154,8 +158,7 @@ function IsPositive(const path: TPath64): Boolean; overload;
 function IsPositive(const path: TPathD): Boolean; overload;
   {$IFDEF INLINING} inline; {$ENDIF}
 
-function IsCollinear(const pt1, pt2, pt3: TPoint64): Boolean;
-  {$IFDEF INLINING} inline; {$ENDIF}
+function IsCollinear(const pt1, sharedPt, pt2: TPoint64): Boolean;
 
 function CrossProduct(const pt1, pt2, pt3: TPoint64): double; overload;
   {$IFDEF INLINING} inline; {$ENDIF}
@@ -187,11 +190,11 @@ function PointsNearEqual(const pt1, pt2: TPointD; distanceSqrd: double): Boolean
   {$IFDEF INLINING} inline; {$ENDIF}
 
 {$IFDEF USINGZ}
-function Point64(const X, Y: Int64; Z: Int64 = 0): TPoint64; overload;
+function Point64(const X, Y: Int64; Z: ZType = 0): TPoint64; overload;
 {$IFDEF INLINING} inline; {$ENDIF}
-function Point64(const X, Y: Double; Z: Int64 = 0): TPoint64; overload;
+function Point64(const X, Y: Double; Z: ZType = 0): TPoint64; overload;
 {$IFDEF INLINING} inline; {$ENDIF}
-function PointD(const X, Y: Double; Z: Int64 = 0): TPointD; overload;
+function PointD(const X, Y: Double; Z: ZType = 0): TPointD; overload;
 {$IFDEF INLINING} inline; {$ENDIF}
 {$ELSE}
 function Point64(const X, Y: Int64): TPoint64; overload; {$IFDEF INLINING} inline; {$ENDIF}
@@ -1384,7 +1387,7 @@ end;
 //------------------------------------------------------------------------------
 
 {$IFDEF USINGZ}
-function Point64(const X, Y: Int64; Z: Int64): TPoint64;
+function Point64(const X, Y: Int64; Z: ZType): TPoint64;
 begin
   Result.X := X;
   Result.Y := Y;
@@ -1392,7 +1395,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function Point64(const X, Y: Double; Z: Int64): TPoint64;
+function Point64(const X, Y: Double; Z: ZType): TPoint64;
 begin
   Result.X := Round(X);
   Result.Y := Round(Y);
@@ -1400,7 +1403,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function PointD(const X, Y: Double; Z: Int64): TPointD;
+function PointD(const X, Y: Double; Z: ZType): TPointD;
 begin
   Result.X := X;
   Result.Y := Y;
@@ -1864,16 +1867,70 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-{$OVERFLOWCHECKS OFF}
-function IsCollinear(const pt1, pt2, pt3: TPoint64): Boolean;
-var
-  a,b: Int64;
+function TriSign(val: Int64): integer; // returns 0, 1 or -1
+{$IFDEF INLINING} inline; {$ENDIF}
 begin
-  a := (pt2.X - pt1.X) * (pt3.Y - pt2.Y);
-  b := (pt2.Y - pt1.Y) * (pt3.X - pt2.X);
-  result := a = b;
+  if (val < 0) then Result := -1
+  else if (val > 1) then Result := 1
+  else Result := 0;
 end;
-{$OVERFLOWCHECKS ON}
+//------------------------------------------------------------------------------
+
+type
+  TMultiplyUInt64Result = record
+    lo64: UInt64;
+    hi64 : UInt64;
+  end;
+
+function MultiplyUInt64(a, b: UInt64): TMultiplyUInt64Result; // #834, #835
+{$IFDEF INLINING} inline; {$ENDIF}
+var
+  x1, x2, x3: UInt64;
+begin
+  x1 := (a and $FFFFFFFF) * (b and $FFFFFFFF);
+  x2 := (a shr 32) * (b and $FFFFFFFF) + (x1 shr 32);
+  x3 := (a and $FFFFFFFF) * (b shr 32) + (x2 and $FFFFFFFF);
+  Result.lo64 := ((x3 and $FFFFFFFF) shl 32) or (x1 and $FFFFFFFF);
+  Result.hi64 := hi(a shr 32) * (b shr 32) + (x2 shr 32) + (x3 shr 32);
+end;
+//------------------------------------------------------------------------------
+
+function ProductsAreEqual(a, b, c, d: Int64): Boolean;
+var
+  absA,absB,absC,absD: UInt64;
+  absAB, absCD       : TMultiplyUInt64Result;
+  signAB, signCD     : integer;
+begin
+  // nb: unsigned values will be needed for CalcOverflowCarry()
+  absA := UInt64(Abs(a));
+  absB := UInt64(Abs(b));
+  absC := UInt64(Abs(c));
+  absD := UInt64(Abs(d));
+
+  absAB := MultiplyUInt64(absA, absB);
+  absCD := MultiplyUInt64(absC, absD);
+
+  // nb: it's important to differentiate 0 values here from other values
+  signAB := TriSign(a) * TriSign(b);
+  signCD := TriSign(c) * TriSign(d);
+
+  Result := (absAB.lo64 = absCD.lo64) and
+    (absAB.hi64 = absCD.hi64) and (signAB = signCD);
+end;
+//------------------------------------------------------------------------------
+
+function IsCollinear(const pt1, sharedPt, pt2: TPoint64): Boolean;
+var
+  a,b,c,d: Int64;
+begin
+  a := sharedPt.X - pt1.X;
+  b := pt2.Y - sharedPt.Y;
+  c := sharedPt.Y - pt1.Y;
+  d := pt2.X - sharedPt.X;
+  // When checking for collinearity with very large coordinate values
+  // then ProductsAreEqual is more accurate than using CrossProduct.
+  Result := ProductsAreEqual(a, b, c, d);
+end;
 //------------------------------------------------------------------------------
 
 function CrossProduct(const pt1, pt2, pt3: TPoint64): double;

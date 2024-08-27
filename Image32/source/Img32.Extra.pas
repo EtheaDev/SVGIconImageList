@@ -3,7 +3,7 @@ unit Img32.Extra;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.4                                                             *
-* Date      :  26 July 2024                                                    *
+* Date      :  18 August 2024                                                  *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Miscellaneous routines that don't belong in other modules.      *
@@ -107,7 +107,8 @@ procedure EraseInsidePaths(img: TImage32;
 procedure EraseOutsidePath(img: TImage32; const path: TPathD;
   fillRule: TFillRule; const outsideBounds: TRect);
 procedure EraseOutsidePaths(img: TImage32; const paths: TPathsD;
-  fillRule: TFillRule; const outsideBounds: TRect);
+  fillRule: TFillRule; const outsideBounds: TRect;
+  rendererCache: TCustomColorRendererCache = nil); overload;
 
 procedure Draw3D(img: TImage32; const polygon: TPathD;
   fillRule: TFillRule; height, blurRadius: double;
@@ -345,7 +346,7 @@ begin
   p := path;
   if closePath and not PointsNearEqual(p[0], p[highI], 0.01) then
   begin
-    AppendToPath(p, p[0]);
+    AppendPoint(p, p[0]);
     inc(highI);
   end;
   for i := 1 to highI do
@@ -675,47 +676,60 @@ procedure GridBackground(img: TImage32; majorInterval, minorInterval: integer;
 var
   i, x,y, w,h: integer;
   path: TPathD;
+  cr: TCustomColorRenderer;
 begin
   img.Clear(fillColor);
   w := img.Width; h := img.Height;
   NewPointDArray(path, 2, True);
-  if minorInterval > 0 then
-  begin
-    x := minorInterval;
-    path[0] := PointD(x, 0); path[1] := PointD(x, h);;
-    for i := 1 to (w div minorInterval) do
+
+  if img.AntiAliased then
+    cr := TColorRenderer.Create(minColor) else
+    cr := TAliasedColorRenderer.Create(minColor);
+  try
+    if minorInterval > 0 then
     begin
-      Img32.Draw.DrawLine(img, path, 1, minColor, esSquare);
-      path[0].X := path[0].X + minorInterval;
-      path[1].X := path[1].X + minorInterval;
+      //cr.SetColor(minColor);
+
+      x := minorInterval;
+      path[0] := PointD(x, 0); path[1] := PointD(x, h);;
+      for i := 1 to (w div minorInterval) do
+      begin
+        Img32.Draw.DrawLine(img, path, 1, cr, esSquare);
+        path[0].X := path[0].X + minorInterval;
+        path[1].X := path[1].X + minorInterval;
+      end;
+      y := minorInterval;
+      path[0] := PointD(0, y); path[1] := PointD(w, y);
+      for i := 1 to (h div minorInterval) do
+      begin
+        Img32.Draw.DrawLine(img, path, 1, cr, esSquare);
+        path[0].Y := path[0].Y + minorInterval;
+        path[1].Y := path[1].Y + minorInterval;
+      end;
     end;
-    y := minorInterval;
-    path[0] := PointD(0, y); path[1] := PointD(w, y);
-    for i := 1 to (h div minorInterval) do
+    if majorInterval > minorInterval then
     begin
-      Img32.Draw.DrawLine(img, path, 1, minColor, esSquare);
-      path[0].Y := path[0].Y + minorInterval;
-      path[1].Y := path[1].Y + minorInterval;
+      cr.SetColor(majColor);
+
+      x := majorInterval;
+      path[0] := PointD(x, 0); path[1] := PointD(x, h);;
+      for i := 1 to (w div majorInterval) do
+      begin
+        Img32.Draw.DrawLine(img, path, 1, cr, esSquare);
+        path[0].X := path[0].X + majorInterval;
+        path[1].X := path[1].X + majorInterval;
+      end;
+      y := majorInterval;
+      path[0] := PointD(0, y); path[1] := PointD(w, y);
+      for i := 1 to (h div majorInterval) do
+      begin
+        Img32.Draw.DrawLine(img, path, 1, cr, esSquare);
+        path[0].Y := path[0].Y + majorInterval;
+        path[1].Y := path[1].Y + majorInterval;
+      end;
     end;
-  end;
-  if majorInterval > minorInterval then
-  begin
-    x := majorInterval;
-    path[0] := PointD(x, 0); path[1] := PointD(x, h);;
-    for i := 1 to (w div majorInterval) do
-    begin
-      Img32.Draw.DrawLine(img, path, 1, majColor, esSquare);
-      path[0].X := path[0].X + majorInterval;
-      path[1].X := path[1].X + majorInterval;
-    end;
-    y := majorInterval;
-    path[0] := PointD(0, y); path[1] := PointD(w, y);
-    for i := 1 to (h div majorInterval) do
-    begin
-      Img32.Draw.DrawLine(img, path, 1, majColor, esSquare);
-      path[0].Y := path[0].Y + majorInterval;
-      path[1].Y := path[1].Y + majorInterval;
-    end;
+  finally
+    cr.Free;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -945,7 +959,8 @@ end;
 //------------------------------------------------------------------------------
 
 procedure EraseOutsidePaths(img: TImage32; const paths: TPathsD;
-  fillRule: TFillRule; const outsideBounds: TRect);
+  fillRule: TFillRule; const outsideBounds: TRect;
+  rendererCache: TCustomColorRendererCache);
 var
   mask: TImage32;
   pp: TPathsD;
@@ -956,7 +971,7 @@ begin
   mask := TImage32.Create(w, h);
   try
     pp := TranslatePath(paths, -outsideBounds.Left, -outsideBounds.top);
-    DrawPolygon(mask, pp, fillRule, clBlack32);
+    DrawPolygon(mask, pp, fillRule, clBlack32, rendererCache);
     img.CopyBlend(mask, mask.Bounds, outsideBounds, BlendMaskLine);
   finally
     mask.Free;
