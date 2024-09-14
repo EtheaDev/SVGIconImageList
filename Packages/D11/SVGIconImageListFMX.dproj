@@ -149,10 +149,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="fmx.dcp"/>
-        <DCCReference Include="SVGImage32Package.dcp"/>
-        <DCCReference Include="..\..\Image32\Source\Img32.FMX.pas"/>
         <DCCReference Include="..\..\Source\FMX.ImageSVG.pas"/>
-        <DCCReference Include="..\..\Source\FMX.Image32SVG.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImageList.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImage.pas"/>
         <BuildConfiguration Include="Base">

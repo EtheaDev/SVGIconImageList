@@ -108,7 +108,7 @@ procedure EraseOutsidePath(img: TImage32; const path: TPathD;
   fillRule: TFillRule; const outsideBounds: TRect);
 procedure EraseOutsidePaths(img: TImage32; const paths: TPathsD;
   fillRule: TFillRule; const outsideBounds: TRect;
-  rendererCache: TCustomColorRendererCache = nil); overload;
+  rendererCache: TCustomRendererCache = nil); overload;
 
 procedure Draw3D(img: TImage32; const polygon: TPathD;
   fillRule: TFillRule; height, blurRadius: double;
@@ -938,43 +938,86 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure EraseOutsideRect(img: TImage32; const r, outsideBounds: TRect);
+begin
+  // Fill the parts, that are in outsideBounds but not in r with zeros
+
+  // whole top block
+  if r.Top > outsideBounds.Top then
+    img.FillRect(Rect(outsideBounds.Left, outsideBounds.Top, outsideBounds.Right, r.Top - 1), 0);
+  // whole bottom block
+  if r.Bottom < outsideBounds.Bottom then
+    img.FillRect(Rect(outsideBounds.Left, r.Bottom + 1, outsideBounds.Right, outsideBounds.Bottom), 0);
+
+  // remaining left block
+  if r.Left > outsideBounds.Left then
+    img.FillRect(Rect(outsideBounds.Left, r.Top, r.Left - 1, r.Bottom), 0);
+  // remaining right block
+  if r.Right < outsideBounds.Right then
+    img.FillRect(Rect(r.Right + 1, r.Top, outsideBounds.Right, r.Bottom), 0);
+end;
+//------------------------------------------------------------------------------
+
 procedure EraseOutsidePath(img: TImage32; const path: TPathD;
   fillRule: TFillRule; const outsideBounds: TRect);
 var
-  mask: TImage32;
-  p: TPathD;
-  w,h: integer;
+  w, h: integer;
+  renderer: TMaskRenderer;
+  r: TRect;
+  polygons: TPathsD;
 begin
   if not assigned(path) then Exit;
-  RectWidthHeight(outsideBounds, w,h);
-  mask := TImage32.Create(w, h);
+  RectWidthHeight(outsideBounds, w, h);
+  if (w <= 0) or (h <= 0)  then Exit;
+
+  // We can skip the costly polygon rasterization if the path is
+  // a rectangle
+  if (fillRule in [frEvenOdd, frNonZero]) and IsSimpleRectanglePath(path, r) then
+  begin
+    EraseOutsideRect(img, r, outsideBounds);
+    Exit;
+  end;
+
+  renderer := TMaskRenderer.Create;
   try
-    p := TranslatePath(path, -outsideBounds.Left, -outsideBounds.top);
-    DrawPolygon(mask, p, fillRule, clBlack32);
-    img.CopyBlend(mask, mask.Bounds, outsideBounds, BlendMaskLine);
+    SetLength(polygons, 1);
+    polygons[0] := path;
+    Rasterize(img, polygons, outsideBounds, fillRule, renderer);
   finally
-    mask.Free;
+    renderer.Free;
   end;
 end;
 //------------------------------------------------------------------------------
 
 procedure EraseOutsidePaths(img: TImage32; const paths: TPathsD;
   fillRule: TFillRule; const outsideBounds: TRect;
-  rendererCache: TCustomColorRendererCache);
+  rendererCache: TCustomRendererCache);
 var
-  mask: TImage32;
-  pp: TPathsD;
-  w,h: integer;
+  w, h: integer;
+  renderer: TMaskRenderer;
+  r: TRect;
 begin
   if not assigned(paths) then Exit;
-  RectWidthHeight(outsideBounds, w,h);
-  mask := TImage32.Create(w, h);
+  RectWidthHeight(outsideBounds, w, h);
+  if (w <= 0) or (h <= 0)  then Exit;
+
+  // We can skip the costly polygon rasterization if the path is
+  // a rectangle.
+  if (fillRule in [frEvenOdd, frNonZero]) and IsSimpleRectanglePath(paths, r) then
+  begin
+    EraseOutsideRect(img, r, outsideBounds);
+    Exit;
+  end;
+
+  if rendererCache = nil then
+    renderer := TMaskRenderer.Create
+  else
+    renderer := rendererCache.MaskRenderer;
   try
-    pp := TranslatePath(paths, -outsideBounds.Left, -outsideBounds.top);
-    DrawPolygon(mask, pp, fillRule, clBlack32, rendererCache);
-    img.CopyBlend(mask, mask.Bounds, outsideBounds, BlendMaskLine);
+    Rasterize(img, paths, outsideBounds, fillRule, renderer);
   finally
-    mask.Free;
+    if rendererCache = nil then
+      renderer.Free;
   end;
 end;
 //------------------------------------------------------------------------------

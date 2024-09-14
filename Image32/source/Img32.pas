@@ -1269,6 +1269,8 @@ end;
 {$RANGECHECKS OFF} // negative array index is used
 
 procedure BlendMaskLine(bgColor, alphaMask: PColor32; width: nativeint);
+label
+  SkipNone32;
 var
   a: byte;
 begin
@@ -1283,6 +1285,13 @@ begin
   // common values.
   while width < 0 do
   begin
+    // MulTable[0, fgA] -> 0, if bgColor is already 0 => skip
+    while PStaticARGBArray(bgColor)[width].Color = 0 do
+    begin
+SkipNone32:
+      inc(width);
+      if width = 0 then exit;
+    end;
     a := PStaticARGBArray(bgColor)[width].A;
     // MulTable[0, fgA] -> 0 => replace color with 0
     while a = 0 do
@@ -1290,6 +1299,8 @@ begin
       PStaticColor32Array(bgColor)[width] := 0;
       inc(width);
       if width = 0 then exit;
+      if PStaticARGBArray(bgColor)[width].Color = 0 then
+        goto SkipNone32;
       a := PStaticARGBArray(bgColor)[width].A;
     end;
     // MulTable[255, fgA] -> fgA => replace alpha with fgA
@@ -3707,12 +3718,15 @@ procedure TImage32.ReduceOpacity(opacity: Byte);
 var
   i: Integer;
   c: PARGB;
+  a: Byte;
 begin
   if opacity = 255 then Exit;
   c := PARGB(PixelBase);
   for i := 0 to Width * Height -1 do
   begin
-    c.A := MulTable[c.A, opacity];
+    a := c.A;
+    if a <> 0 then
+      c.A := MulTable[a, opacity];
     inc(c);
   end;
   Changed;
@@ -3723,19 +3737,24 @@ procedure TImage32.ReduceOpacity(opacity: Byte; rec: TRect);
 var
   i,j, rw: Integer;
   c: PARGB;
+  a: Byte;
+  lineOffsetInBytes: integer;
 begin
   Types.IntersectRect(rec, rec, bounds);
   if IsEmptyRect(rec) then Exit;
   rw := RectWidth(rec);
   c := @Pixels[rec.Top * Width + rec.Left];
-  for i := rec.Top to rec.Bottom -1 do
+  lineOffsetInBytes := (Width - rw) * SizeOf(TARGB);
+  for i := rec.Top to rec.Bottom - 1 do
   begin
     for j := 1 to rw do
     begin
-      c.A := MulTable[c.A, opacity];
+      a := c.A;
+      if a <> 0 then
+        c.A := MulTable[a, opacity];
       inc(c);
     end;
-    inc(c, Width - rw);
+    inc(PByte(c), lineOffsetInBytes);
   end;
   Changed;
 end;

@@ -120,7 +120,7 @@ type
     fClassStyles      : TClassStylesList;
     fLinGradRenderer  : TLinearGradientRenderer;
     fRadGradRenderer  : TSvgRadialGradientRenderer;
-    fCustomColorRendererCache: TCustomColorRendererCache;
+    fCustomRendererCache: TCustomRendererCache;
     fRootElement      : TSvgElement;
     fFontCache        : TFontCache;
     fUsePropScale     : Boolean;
@@ -1016,9 +1016,9 @@ begin
       begin
         if fDrawData.fillRule = frNegative then
           EraseOutsidePaths(tmpImg, clipPaths, frNonZero, clipRec,
-            fReader.fCustomColorRendererCache) else
+            fReader.fCustomRendererCache) else
           EraseOutsidePaths(tmpImg, clipPaths, fDrawData.fillRule, clipRec,
-            fReader.fCustomColorRendererCache);
+            fReader.fCustomRendererCache);
       end;
       image.CopyBlend(tmpImg, clipRec, clipRec, BlendToAlphaLine);
     finally
@@ -2122,7 +2122,7 @@ begin
 
   // FastGaussianBlur is a very good approximation and also very much faster.
   // Empirically stdDev * PI/4 more closely emulates other renderers.
-  FastGaussianBlur(dstImg, dstRec, Ceil(stdDev * PI/4 * ParentFilterEl.fScale));
+  FastGaussianBlur(dstImg, dstRec, Ceil(stdDev * (PI/4) * ParentFilterEl.fScale));
 end;
 
 //------------------------------------------------------------------------------
@@ -2395,9 +2395,9 @@ begin
     begin
       if fDrawData.fillRule = frNegative then
         EraseOutsidePaths(img, clipPaths, frNonZero, clipRec2,
-          fReader.fCustomColorRendererCache) else
+          fReader.fCustomRendererCache) else
         EraseOutsidePaths(img, clipPaths, fDrawData.fillRule, clipRec2,
-          fReader.fCustomColorRendererCache);
+          fReader.fCustomRendererCache);
     end;
 
   if usingTempImage and (img <> image) then
@@ -2540,14 +2540,14 @@ begin
   else if drawDat.fillColor = clInvalid then
   begin
     DrawPolygon(img, fillPaths, drawDat.fillRule, clBlack32,
-      fReader.fCustomColorRendererCache);
+      fReader.fCustomRendererCache);
   end
   else
     with drawDat do
     begin
       DrawPolygon(img, fillPaths, fillRule,
         MergeColorAndOpacity(fillColor, fillOpacity),
-        fReader.fCustomColorRendererCache);
+        fReader.fCustomRendererCache);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -2629,7 +2629,7 @@ begin
       strokePaths := MatrixApply(drawPathsO, drawDat.matrix);
       DrawDashedLine(img, strokePaths, dashArray,
         @dashOffset, sw * scale, strokeClr, endStyle, jsAuto,
-        fReader.fCustomColorRendererCache);
+        fReader.fCustomRendererCache);
       Exit;
     end;
     strokePaths := RoughOutline(drawPathsO, sw, joinStyle, endStyle, lim);
@@ -2662,7 +2662,7 @@ begin
       end;
   end else
   begin
-    DrawPolygon(img, strokePaths, frNonZero, strokeClr, fReader.fCustomColorRendererCache);
+    DrawPolygon(img, strokePaths, frNonZero, strokeClr, fReader.fCustomRendererCache);
   end;
 end;
 
@@ -4902,7 +4902,7 @@ begin
   fClassStyles        := TClassStylesList.Create;
   fLinGradRenderer  := TLinearGradientRenderer.Create;
   fRadGradRenderer  := TSvgRadialGradientRenderer.Create;
-  fCustomColorRendererCache := TCustomColorRendererCache.Create;
+  fCustomRendererCache := TCustomRendererCache.Create;
   fIdList             := TStringList.Create;
   fIdList.Duplicates  := dupIgnore;
   fIdList.CaseSensitive := false;
@@ -4925,7 +4925,7 @@ begin
 
   fLinGradRenderer.Free;
   fRadGradRenderer.Free;
-  fCustomColorRendererCache.Free;
+  fCustomRendererCache.Free;
   FreeAndNil(fFontCache);
   fSimpleDrawList.Free;
 

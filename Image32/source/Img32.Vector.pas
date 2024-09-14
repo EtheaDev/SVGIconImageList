@@ -275,6 +275,11 @@ type
 
   function IsClockwise(const path: TPathD): Boolean;
 
+  // IsSimpleRectanglePath returns true if the specified path has only one polygon
+  // with 4 points that describe a rectangle.
+  function IsSimpleRectanglePath(const paths: TPathsD; var R: TRect): Boolean; overload;
+  function IsSimpleRectanglePath(const path: TPathD; var R: TRect): Boolean; overload;
+
   function Area(const path: TPathD): Double; overload;
 
   function RectsEqual(const rec1, rec2: TRect): Boolean;
@@ -788,6 +793,63 @@ end;
 function IsClockwise(const path: TPathD): Boolean;
 begin
   Result := Area(path) > 0;
+end;
+//------------------------------------------------------------------------------
+
+function IsSimpleRectanglePath(const path: TPathD; var R: TRect): Boolean;
+type
+  TLastMatch = (lmX, lmY);
+var
+  i: Integer;
+  lastMatch: TLastMatch;
+begin
+  Result := False;
+  // If we have a single path with 4 points, it could be a rectangle
+  if Length(path) = 4 then
+  begin
+    // For a rectangle the X and Y coordinates of the points alternate
+    // in being equal
+    if path[0].X = path[3].X then
+      lastMatch := lmX
+    else if path[0].Y = path[3].Y then
+      lastMatch := lmY
+    else
+      Exit;
+
+    R.Left := Trunc(path[0].X);
+    R.Top := Trunc(path[0].Y);
+    R.Right := Ceil(path[0].X);
+    R.Bottom := Ceil(path[0].Y);
+    for i := 1 to 3 do
+    begin
+      case lastMatch of
+        lmY: // now the X-coordinates must be equal
+          begin
+            if path[i].X <> path[i - 1].X then Exit;
+            lastMatch := lmX;
+            R.Top := Min(R.Top, Trunc(path[i].Y));
+            R.Bottom := Max(R.Bottom, Ceil(path[i].Y));
+          end;
+        lmX: // now the Y-coordinates must be equal
+          begin
+            if path[i].Y <> path[i - 1].Y then Exit;
+            lastMatch := lmY;
+            R.Left := Min(R.Left, Trunc(path[i].X));
+            R.Right := Max(R.Right, Ceil(path[i].X));
+          end;
+      end;
+    end;
+    Result := True;
+  end;
+end;
+
+//------------------------------------------------------------------------------
+function IsSimpleRectanglePath(const paths: TPathsD; var R: TRect): Boolean;
+begin
+  if (Length(paths) = 1) and (Length(paths[0]) = 4) then
+    Result := IsSimpleRectanglePath(paths[0], r)
+  else
+    Result := False;
 end;
 //------------------------------------------------------------------------------
 
@@ -1915,7 +1977,7 @@ begin
     pathLen := Length(paths[i]);
     if pathLen > 0 then
     begin
-      // Skip the start-point if is matches the previous path's end-point
+      // Skip the start-point if it matches the previous path's end-point
       if (i > 0) and PointsEqual(paths[i][0], paths[i -1][high(paths[i -1])]) then
         dec(pathLen);
       inc(len, pathLen);
@@ -1931,14 +1993,19 @@ begin
     if pathLen > 0 then
     begin
       offset := 0;
-      // Skip the start-point if is matches the previous path's end-point
+      // Skip the start-point if it matches the previous path's end-point
       if (i > 0) and PointsEqual(paths[i][0], paths[i -1][high(paths[i -1])]) then
       begin
         dec(pathLen);
         offset := 1;
       end;
-      Move(paths[i][offset], dstPath[len], pathLen * SizeOf(TPointD));
-      inc(len, pathLen);
+      // Skip if we have a path with only one point and that point also matches
+      // the previous path's end-point.
+      if pathLen > 0 then
+      begin
+        Move(paths[i][offset], dstPath[len], pathLen * SizeOf(TPointD));
+        inc(len, pathLen);
+      end;
     end;
   end;
 end;

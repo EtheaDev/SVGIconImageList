@@ -59,6 +59,17 @@ type
     // RenderProc: x & y refer to pixel coords in the destination image and
     // where x1 is the start (and left) and x2 is the end of the render
     procedure RenderProc(x1, x2, y: integer; alpha: PByte); virtual; abstract;
+    // RenderProcSkip: is called for every skipped line block if
+    // SupportsRenderProcSkip=True and the Rasterize() function skips scanlines.
+    procedure RenderProcSkip(const skippedRect: TRect); virtual;
+    // SetClipRect is called by the Rasterize() function with the
+    // rasterization clipRect. The default implementation does nothing.
+    procedure SetClipRect(const clipRect: TRect); virtual;
+    // If SupportsRenderProcSkip returns True the Rasterize() function
+    // will call RenderProcSkip() for every scanline where it didn't have
+    // anything to rasterize.
+    function SupportsRenderProcSkip: Boolean; virtual;
+
     property ImgWidth: integer read fImgWidth;
     property ImgHeight: integer read fImgHeight;
     property ImgBase: Pointer read fImgBase;
@@ -93,14 +104,27 @@ type
     constructor Create(color: TColor32 = clNone32);
   end;
 
-  // TCustomColorRendererCache is used to not create ColorRenderer
+  // TMaskRenderer masks all pixels inside the clipRect area
+  // where the alpha[]-array is zero.
+  TMaskRenderer = class(TCustomRenderer)
+  private
+    fClipRect: TRect;
+  protected
+    procedure SetClipRect(const clipRect: TRect); override;
+    procedure RenderProc(x1, x2, y: integer; alpha: PByte); override;
+    procedure RenderProcSkip(const skippedRect: TRect); override;
+    function SupportsRenderProcSkip: Boolean; override;
+  end;
+
+  // TCustomRendererCache is used to not create Renderer
   // objects for every DrawPolygon/DrawLine function call. The color
   // of the TCustomColorRenderer will be changed by the DrawPolygon/
   // DrawLine method.
-  TCustomColorRendererCache = class(TObject)
+  TCustomRendererCache = class(TObject)
   private
     fColorRenderer: TColorRenderer;
     fAliasedColorRenderer: TAliasedColorRenderer;
+    fMaskRenderer: TMaskRenderer;
   public
     constructor Create;
     destructor Destroy; override;
@@ -108,6 +132,7 @@ type
 
     property ColorRenderer: TColorRenderer read fColorRenderer;
     property AliasedColorRenderer: TAliasedColorRenderer read fAliasedColorRenderer;
+    property MaskRenderer: TMaskRenderer read fMaskRenderer;
   end;
 
   TEraseRenderer = class(TCustomRenderer)
@@ -241,7 +266,7 @@ type
     miterLimit: double = 2); overload;
   procedure DrawLine(img: TImage32;
     const line: TPathD; lineWidth: double; color: TColor32;
-    rendererCache: TCustomColorRendererCache;
+    rendererCache: TCustomRendererCache;
     endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto;
     miterLimit: double = 2); overload;
   procedure DrawLine(img: TImage32;
@@ -253,7 +278,7 @@ type
     endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto;
     miterLimit: double = 2); overload;
   procedure DrawLine(img: TImage32; const lines: TPathsD;
-    lineWidth: double; color: TColor32; rendererCache: TCustomColorRendererCache;
+    lineWidth: double; color: TColor32; rendererCache: TCustomRendererCache;
     endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto;
     miterLimit: double = 2); overload;
   procedure DrawLine(img: TImage32; const lines: TPathsD;
@@ -272,12 +297,12 @@ type
     dashPattern: TArrayOfDouble; patternOffset: PDouble;
     lineWidth: double; color: TColor32;
     endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto;
-    rendererCache: TCustomColorRendererCache = nil); overload;
+    rendererCache: TCustomRendererCache = nil); overload;
   procedure DrawDashedLine(img: TImage32; const lines: TPathsD;
     dashPattern: TArrayOfDouble; patternOffset: PDouble;
     lineWidth: double; color: TColor32; endStyle: TEndStyle;
     joinStyle: TJoinStyle = jsAuto;
-    rendererCache: TCustomColorRendererCache = nil); overload;
+    rendererCache: TCustomRendererCache = nil); overload;
   procedure DrawDashedLine(img: TImage32; const line: TPathD;
     dashPattern: TArrayOfDouble; patternOffset: PDouble;
     lineWidth: double; renderer: TCustomRenderer; endStyle: TEndStyle;
@@ -304,7 +329,7 @@ type
     fillRule: TFillRule; color: TColor32); overload;
   procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
     fillRule: TFillRule; color: TColor32;
-    rendererCache: TCustomColorRendererCache); overload;
+    rendererCache: TCustomRendererCache); overload;
   procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
     fillRule: TFillRule; renderer: TCustomRenderer); overload;
 
@@ -339,7 +364,9 @@ type
     const mask: TArrayOfByte; color: TColor32 = clBlack32);
 
   procedure Rasterize(const paths: TPathsD;
-    const clipRec: TRect; fillRule: TFillRule; renderer: TCustomRenderer);
+    const clipRec: TRect; fillRule: TFillRule; renderer: TCustomRenderer); overload;
+  procedure Rasterize(img: TImage32; const paths: TPathsD;
+    const clipRec: TRect; fillRule: TFillRule; renderer: TCustomRenderer); overload;
 
 implementation
 
@@ -1237,16 +1264,28 @@ var
   scanlines: TArrayOfScanline;
   fragments: PFragment;
   scanline: PScanline;
+  skippedScanlines: integer;
+  skipRenderer: boolean;
 
   // FPC generates wrong code if "count" isn't NativeInt
   FillByteBuffer: procedure(byteBuffer: PByte; windingAccum: PDouble; count: nativeint);
 begin
   // See also https://nothings.org/gamedev/rasterize/
   if not assigned(renderer) then Exit;
-  Types.IntersectRect(clipRec2, clipRec, GetBounds(paths));
-  if IsEmptyRect(clipRec2) then Exit;
+  renderer.SetClipRect(clipRec);
+  skipRenderer := renderer.SupportsRenderProcSkip;
 
-  paths2 := TranslatePath(paths, -clipRec2.Left, -clipRec2.Top);
+  Types.IntersectRect(clipRec2, clipRec, GetBounds(paths));
+  if IsEmptyRect(clipRec2) then
+  begin
+    if skipRenderer then renderer.RenderProcSkip(clipRec);
+    Exit;
+  end;
+
+  if (clipRec2.Left = 0) and (clipRec2.Top = 0) then
+    paths2 := paths
+  else
+    paths2 := TranslatePath(paths, -clipRec2.Left, -clipRec2.Top);
 
   // Delphi's Round() function is *much* faster than Trunc(),
   // and even a little faster than Trunc() above (except
@@ -1280,16 +1319,35 @@ begin
 {$ENDIF}
         FillByteBuffer := FillByteBufferNegative;
       else
+        if skipRenderer then renderer.RenderProcSkip(clipRec);
         Exit;
     end;
 
+    // Notify the renderer about the parts at the top
+    // that we didn't touch.
+    if skipRenderer and (clipRec2.Top > clipRec.Top) then
+    begin
+      renderer.RenderProcSkip(Rect(clipRec.Left, clipRec.Top,
+                                   clipRec.Right, clipRec2.Top - 1));
+    end;
+
+    skippedScanlines := 0;
     scanline := @scanlines[0];
     for i := 0 to high(scanlines) do
     begin
       if scanline.fragCnt = 0 then
       begin
         inc(scanline);
+        if skipRenderer then inc(skippedScanlines);
         Continue;
+      end;
+
+      // If we have skipped some scanlines, we must notify the renderer.
+      if skipRenderer and (skippedScanlines > 0) then
+      begin
+        renderer.RenderProcSkip(Rect(clipRec.Left, clipRec2.Top + i - skippedScanlines,
+                                     clipRec.Right, clipRec2.Top + i - 1));
+        skippedScanlines := 0;
       end;
 
       // process each scanline to fill the winding count accumulation buffer
@@ -1310,10 +1368,32 @@ begin
 
       inc(scanline);
     end;
+
+    // Notify the renderer about the last skipped scanlines
+    if skipRenderer then
+    begin
+      clipRec2.Bottom := clipRec2.top + High(scanlines) - skippedScanlines;
+      if clipRec2.Bottom < clipRec.Bottom then
+      begin
+        renderer.RenderProcSkip(Rect(clipRec.Left, clipRec2.Bottom + 1,
+                                     clipRec.Right, clipRec.Bottom));
+      end;
+    end;
   finally
     // cleanup and deallocate memory
     FreeMem(fragments);
     FreeMem(byteBuffer);
+  end;
+end;
+// ------------------------------------------------------------------------------
+
+procedure Rasterize(img: TImage32; const paths: TPathsD;
+  const clipRec: TRect; fillRule: TFillRule; renderer: TCustomRenderer);
+begin
+  if renderer.Initialize(img) then
+  begin
+    Rasterize(paths, clipRec, fillRule, renderer);
+    renderer.NotifyChange;
   end;
 end;
 
@@ -1361,6 +1441,24 @@ begin
   end;
   Result := fCurrLinePtr;
   inc(PByte(Result), x * fPixelSize);
+end;
+// ------------------------------------------------------------------------------
+
+procedure TCustomRenderer.SetClipRect(const clipRect: TRect);
+begin
+  // default: do nothing
+end;
+// ------------------------------------------------------------------------------
+
+procedure TCustomRenderer.RenderProcSkip(const skippedRect: TRect);
+begin
+  // default: do nothing
+end;
+// ------------------------------------------------------------------------------
+
+function TCustomRenderer.SupportsRenderProcSkip: Boolean;
+begin
+  Result := False;
 end;
 
 // ------------------------------------------------------------------------------
@@ -1549,25 +1647,121 @@ begin
 end;
 
 // ------------------------------------------------------------------------------
-// TCustomColorRendererCache
+// TMaskRenderer
 // ------------------------------------------------------------------------------
 
-constructor TCustomColorRendererCache.Create;
+procedure TMaskRenderer.SetClipRect(const clipRect: TRect);
+begin
+  fClipRect := clipRect;
+  // clipping to the image size
+  if fClipRect.Left < 0 then fClipRect.Left := 0;
+  if fClipRect.Top < 0 then fClipRect.Top := 0;
+  if fClipRect.Right > fImgWidth then fClipRect.Right := fImgWidth;
+  if fClipRect.Bottom > fImgHeight then fClipRect.Bottom := fImgHeight;
+end;
+// ------------------------------------------------------------------------------
+
+procedure TMaskRenderer.RenderProc(x1, x2, y: integer; alpha: PByte);
+var
+  p: PColor32;
+  i: integer;
+begin
+  // CopyBlend excludes ClipRect.Right/Bottom, so we also
+  // need to exclude it.
+  if (y < fClipRect.Top) or (y >= fClipRect.Bottom) then Exit;
+  if x2 >= fClipRect.Right then x2 := fClipRect.Right - 1;
+
+  if x1 < fClipRect.Left then
+  begin
+    inc(alpha, fClipRect.Left - x1);
+    x1 := fClipRect.Left;
+  end;
+
+  p := GetDstPixel(fClipRect.Left, y);
+
+  // Clear the area before x1 (inside OutsideBounds)
+  FillChar(p^, (x1 - fClipRect.Left) * SizeOf(TColor32), 0);
+  inc(p, x1 - fClipRect.Left);
+
+  // Fill the area between x1 and x2
+  for i := x1 to x2 do
+  begin
+    if p^ <> 0 then
+    begin
+      if Ord(alpha^) = 0 then
+        p^ := 0
+      else if Ord(alpha^) <> 255 then
+        p^ := BlendMask(p^, Ord(alpha^) shl 24);
+    end;
+    inc(p);
+    inc(alpha);
+  end;
+
+  // Clear the area after x2 (inside OutsideBounds)
+  FillChar(p^, (fClipRect.Right - (x2 + 1)) * SizeOf(TColor32), 0);
+end;
+// ------------------------------------------------------------------------------
+
+procedure TMaskRenderer.RenderProcSkip(const skippedRect: TRect);
+var
+  i, h, w: integer;
+  p: PColor32;
+  r: TRect;
+begin
+  r := skippedRect;
+  if r.Left < fClipRect.Left then r.Left := fClipRect.Left;
+  if r.Top < fClipRect.Top then r.Top := fClipRect.Top;
+  // CopyBlend excludes ClipRect.Right/Bottom, so we also
+  // need to exclude it.
+  if r.Right >= fClipRect.Right then r.Right := fClipRect.Right - 1;
+  if r.Bottom >= fClipRect.Bottom then r.Bottom := fClipRect.Bottom - 1;
+
+  if r.Right < r.Left then Exit;
+  if r.Bottom < r.Top then Exit;
+
+  w := r.Right - r.Left + 1;
+  h := r.Bottom - r.Top + 1;
+  p := GetDstPixel(r.Left, r.Top);
+  if w = fImgWidth then
+    FillChar(p^, w * h * SizeOf(TColor32), 0)
+  else
+  begin
+    for i := 1 to h do
+    begin
+      FillChar(p^, w * SizeOf(TColor32), 0);
+      inc(p, fImgWidth);
+    end;
+  end;
+end;
+
+// ------------------------------------------------------------------------------
+function TMaskRenderer.SupportsRenderProcSkip: Boolean;
+begin
+  Result := True;
+end;
+
+// ------------------------------------------------------------------------------
+// TCustomRendererCache
+// ------------------------------------------------------------------------------
+
+constructor TCustomRendererCache.Create;
 begin
   inherited Create;
   fColorRenderer := TColorRenderer.Create;
   fAliasedColorRenderer := TAliasedColorRenderer.Create;
+  fMaskRenderer := TMaskRenderer.Create;
 end;
 // ------------------------------------------------------------------------------
 
-destructor TCustomColorRendererCache.Destroy;
+destructor TCustomRendererCache.Destroy;
 begin
   fColorRenderer.Free;
   fAliasedColorRenderer.Free;
+  fMaskRenderer.Free;
 end;
 // ------------------------------------------------------------------------------
 
-function TCustomColorRendererCache.GetColorRenderer(color: TColor32): TColorRenderer;
+function TCustomRendererCache.GetColorRenderer(color: TColor32): TColorRenderer;
 begin
   Result := fColorRenderer;
   Result.SetColor(color);
@@ -2200,7 +2394,7 @@ end;
 // ------------------------------------------------------------------------------
 
 procedure DrawLine(img: TImage32; const line: TPathD; lineWidth: double;
-  color: TColor32; rendererCache: TCustomColorRendererCache;
+  color: TColor32; rendererCache: TCustomRendererCache;
   endStyle: TEndStyle; joinStyle: TJoinStyle; miterLimit: double);
 var
   lines: TPathsD;
@@ -2255,7 +2449,7 @@ end;
 // ------------------------------------------------------------------------------
 
 procedure DrawLine(img: TImage32; const lines: TPathsD;
-  lineWidth: double; color: TColor32; rendererCache: TCustomColorRendererCache;
+  lineWidth: double; color: TColor32; rendererCache: TCustomRendererCache;
   endStyle: TEndStyle; joinStyle: TJoinStyle; miterLimit: double);
 var
   cr: TCustomColorRenderer;
@@ -2283,11 +2477,7 @@ begin
   if (not assigned(lines)) or (not assigned(renderer)) then exit;
   if (lineWidth < MinStrokeWidth) then lineWidth := MinStrokeWidth;
   lines2 := RoughOutline(lines, lineWidth, joinStyle, endStyle, miterLimit);
-  if renderer.Initialize(img) then
-  begin
-    Rasterize(lines2, img.bounds, frNonZero, renderer);
-    renderer.NotifyChange;
-  end;
+  Rasterize(img, lines2, img.bounds, frNonZero, renderer);
 end;
 // ------------------------------------------------------------------------------
 
@@ -2303,11 +2493,7 @@ begin
   lines2 := RoughOutline(lines, lineWidth, joinStyle, endStyle, 2);
   ir := TInverseRenderer.Create;
   try
-    if ir.Initialize(img) then
-    begin
-      Rasterize(lines2, img.bounds, frNonZero, ir);
-      ir.NotifyChange;
-    end;
+    Rasterize(img, lines2, img.bounds, frNonZero, ir);
   finally
     ir.free;
   end;
@@ -2317,7 +2503,7 @@ end;
 procedure DrawDashedLine(img: TImage32; const line: TPathD;
   dashPattern: TArrayOfDouble; patternOffset: PDouble; lineWidth: double;
   color: TColor32; endStyle: TEndStyle; joinStyle: TJoinStyle;
-  rendererCache: TCustomColorRendererCache);
+  rendererCache: TCustomRendererCache);
 var
   lines: TPathsD;
   cr: TColorRenderer;
@@ -2350,11 +2536,7 @@ begin
     cr := TColorRenderer.Create(color) else
     cr := rendererCache.GetColorRenderer(color);
   try
-    if cr.Initialize(img) then
-    begin
-      Rasterize(lines, img.bounds, frNonZero, cr);
-      cr.NotifyChange;
-    end;
+    Rasterize(img, lines, img.bounds, frNonZero, cr);
   finally
     if rendererCache = nil then
       cr.free;
@@ -2365,7 +2547,7 @@ end;
 procedure DrawDashedLine(img: TImage32; const lines: TPathsD;
   dashPattern: TArrayOfDouble; patternOffset: PDouble; lineWidth: double;
   color: TColor32; endStyle: TEndStyle; joinStyle: TJoinStyle;
-  rendererCache: TCustomColorRendererCache);
+  rendererCache: TCustomRendererCache);
 var
   i: integer;
 begin
@@ -2393,11 +2575,7 @@ begin
   lines := GetDashedPath(line, endStyle = esPolygon, dashPattern, patternOffset);
   if Length(lines) = 0 then Exit;
   lines := RoughOutline(lines, lineWidth, joinStyle, endStyle);
-  if renderer.Initialize(img) then
-  begin
-    Rasterize(lines, img.bounds, frNonZero, renderer);
-    renderer.NotifyChange;
-  end;
+  Rasterize(img, lines, img.bounds, frNonZero, renderer);
 end;
 // ------------------------------------------------------------------------------
 
@@ -2434,11 +2612,7 @@ begin
   lines := RoughOutline(lines, lineWidth, joinStyle, endStyle);
   renderer := TInverseRenderer.Create;
   try
-    if renderer.Initialize(img) then
-    begin
-      Rasterize(lines, img.bounds, frNonZero, renderer);
-      renderer.NotifyChange;
-    end;
+    Rasterize(img, lines, img.bounds, frNonZero, renderer);
   finally
     renderer.Free;
   end;
@@ -2479,11 +2653,7 @@ begin
   if (not assigned(polygon)) or (not assigned(renderer)) then exit;
   setLength(polygons, 1);
   polygons[0] := polygon;
-  if renderer.Initialize(img) then
-  begin
-    Rasterize(polygons, img.Bounds, fillRule, renderer);
-    renderer.NotifyChange;
-  end;
+  Rasterize(img, polygons, img.Bounds, fillRule, renderer);
 end;
 // ------------------------------------------------------------------------------
 
@@ -2497,11 +2667,7 @@ begin
     cr := TColorRenderer.Create(color) else
     cr := TAliasedColorRenderer.Create(color);
   try
-    if cr.Initialize(img) then
-    begin
-      Rasterize(polygons, img.bounds, fillRule, cr);
-      cr.NotifyChange;
-    end;
+    Rasterize(img, polygons, img.bounds, fillRule, cr);
   finally
     cr.free;
   end;
@@ -2510,7 +2676,7 @@ end;
 
 procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
   fillRule: TFillRule; color: TColor32;
-  rendererCache: TCustomColorRendererCache);
+  rendererCache: TCustomRendererCache);
 var
   cr: TCustomColorRenderer;
 begin
@@ -2523,11 +2689,7 @@ begin
       cr := rendererCache.ColorRenderer else
       cr := rendererCache.AliasedColorRenderer;
     cr.SetColor(color);
-    if cr.Initialize(img) then
-    begin
-      Rasterize(polygons, img.bounds, fillRule, cr);
-      cr.NotifyChange;
-    end;
+    Rasterize(img, polygons, img.bounds, fillRule, cr);
   end;
 end;
 // ------------------------------------------------------------------------------
@@ -2536,11 +2698,7 @@ procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
   fillRule: TFillRule; renderer: TCustomRenderer);
 begin
   if (not assigned(polygons)) or (not assigned(renderer)) then exit;
-  if renderer.Initialize(img) then
-  begin
-    Rasterize(polygons, img.bounds, fillRule, renderer);
-    renderer.NotifyChange;
-  end;
+  Rasterize(img, polygons, img.bounds, fillRule, renderer);
 end;
 // ------------------------------------------------------------------------------
 
@@ -2564,11 +2722,7 @@ begin
   if not assigned(polygons) then exit;
   cr := TInverseRenderer.Create;
   try
-    if cr.Initialize(img) then
-    begin
-      Rasterize(polygons, img.bounds, fillRule, cr);
-      cr.NotifyChange;
-    end;
+    Rasterize(img, polygons, img.bounds, fillRule, cr);
   finally
     cr.free;
   end;
@@ -2594,8 +2748,7 @@ begin
     tmpPolygons := ScalePath(tmpPolygons, 3, 1);
     cr := TColorRenderer.Create(clBlack32);
     try
-      if cr.Initialize(tmpImg) then
-        Rasterize(tmpPolygons, tmpImg.bounds, fillRule, cr);
+      Rasterize(tmpImg, tmpPolygons, tmpImg.bounds, fillRule, cr);
     finally
       cr.Free;
     end;
@@ -2626,11 +2779,7 @@ var
 begin
   er := TEraseRenderer.Create;
   try
-    if er.Initialize(img) then
-    begin
-      Rasterize(polygons, img.bounds, fillRule, er);
-      er.NotifyChange;
-    end;
+    Rasterize(img, polygons, img.bounds, fillRule, er);
   finally
     er.Free;
   end;

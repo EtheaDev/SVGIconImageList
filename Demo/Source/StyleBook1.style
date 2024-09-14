@@ -1,0 +1,397 @@
+object TStyleContainer
+  object TLayout
+    StyleName = 'ListBoxItem1Style1'
+    Align = Center
+    Size.Width = 150.000000000000000000
+    Size.Height = 32.000000000000000000
+    Size.PlatformDefault = False
+    Visible = False
+    TabOrder = 38
+    object TGlyph
+      StyleName = 'glyphstyle'
+      Margins.Left = 2.000000000000000000
+      Margins.Top = 1.000000000000000000
+      Margins.Right = 2.000000000000000000
+      Margins.Bottom = 1.000000000000000000
+      Align = Left
+      Size.Width = 32.000000000000000000
+      Size.Height = 32.000000000000000000
+      Size.PlatformDefault = False
+    end
+    object TActiveStyleTextObject
+      StyleName = 'text'
+      Align = Client
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 1.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 1.000000000000000000
+      Size.Width = 144.000000000000000000
+      Size.Height = 30.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Text'
+      TextSettings.WordWrap = False
+      TextSettings.HorzAlign = Leading
+      ShadowVisible = False
+      ActiveTrigger = Selected
+      ActiveColor = claBlack
+    end
+    object TCheckBox
+      StyleName = 'check'
+      Align = Left
+      CanFocus = False
+      DisableFocusEffect = True
+      Size.Width = 20.000000000000000000
+      Size.Height = 19.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'ListBoxItem1Style1CheckBoxStyle1'
+      Visible = False
+    end
+    object TLayout
+      StyleName = 'accessorymore'
+      Align = MostRight
+      Size.Width = 22.000000000000000000
+      Size.Height = 44.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      object TActiveStyleObject
+        Align = Center
+        SourceLookup = 'Windows 10 Desktopstyle.png'
+        Size.Width = 11.000000000000000000
+        Size.Height = 16.000000000000000000
+        Size.PlatformDefault = False
+        WrapMode = Center
+        ActiveTrigger = Selected
+        ActiveLink = <
+          item
+            SourceRect.Left = 135.000000000000000000
+            SourceRect.Top = 358.000000000000000000
+            SourceRect.Right = 146.000000000000000000
+            SourceRect.Bottom = 374.000000000000000000
+          end
+          item
+            Scale = 1.500000000000000000
+            SourceRect.Left = 202.000000000000000000
+            SourceRect.Top = 537.000000000000000000
+            SourceRect.Right = 218.000000000000000000
+            SourceRect.Bottom = 561.000000000000000000
+          end
+          item
+            Scale = 2.000000000000000000
+            SourceRect.Left = 270.000000000000000000
+            SourceRect.Top = 716.000000000000000000
+            SourceRect.Right = 292.000000000000000000
+            SourceRect.Bottom = 748.000000000000000000
+          end>
+        SourceLink = <
+          item
+            SourceRect.Left = 135.000000000000000000
+            SourceRect.Top = 358.000000000000000000
+            SourceRect.Right = 146.000000000000000000
+            SourceRect.Bottom = 374.000000000000000000
+          end
+          item
+            Scale = 1.500000000000000000
+            SourceRect.Left = 202.000000000000000000
+            SourceRect.Top = 537.000000000000000000
+            SourceRect.Right = 218.000000000000000000
+            SourceRect.Bottom = 561.000000000000000000
+          end
+          item
+            Scale = 2.000000000000000000
+            SourceRect.Left = 270.000000000000000000
+            SourceRect.Top = 716.000000000000000000
+            SourceRect.Right = 292.000000000000000000
+            SourceRect.Bottom = 748.000000000000000000
+          end>
+        TouchAnimation.Link = <>
+      end
+    end
+    object TLayout
+      StyleName = 'accessorycheckmark'
+      Align = MostRight
+      Size.Width = 22.000000000000000000
+      Size.Height = 44.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      object TActiveStyleObject
+        Align = Center
+        SourceLookup = 'Windows 10 Desktopstyle.png'
+        Size.Width = 17.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        WrapMode = Center
+        ActiveTrigger = Selected
+        ActiveLink = <
+          item
+            SourceRect.Left = 151.000000000000000000
+            SourceRect.Top = 357.000000000000000000
+            SourceRect.Right = 168.000000000000000000
+            SourceRect.Bottom = 374.000000000000000000
+          end
+          item
+            Scale = 1.500000000000000000
+            SourceRect.Left = 226.000000000000000000
+            SourceRect.Top = 536.000000000000000000
+            SourceRect.Right = 252.000000000000000000
+            SourceRect.Bottom = 562.000000000000000000
+          end
+          item
+            Scale = 2.000000000000000000
+            SourceRect.Left = 302.000000000000000000
+            SourceRect.Top = 714.000000000000000000
+            SourceRect.Right = 336.000000000000000000
+            SourceRect.Bottom = 748.000000000000000000
+          end>
+        SourceLink = <
+          item
+            SourceRect.Left = 151.000000000000000000
+            SourceRect.Top = 357.000000000000000000
+            SourceRect.Right = 168.000000000000000000
+            SourceRect.Bottom = 374.000000000000000000
+          end
+          item
+            Scale = 1.500000000000000000
+            SourceRect.Left = 226.000000000000000000
+            SourceRect.Top = 536.000000000000000000
+            SourceRect.Right = 252.000000000000000000
+            SourceRect.Bottom = 562.000000000000000000
+          end
+          item
+            Scale = 2.000000000000000000
+            SourceRect.Left = 302.000000000000000000
+            SourceRect.Top = 714.000000000000000000
+            SourceRect.Right = 336.000000000000000000
+            SourceRect.Bottom = 748.000000000000000000
+          end>
+        TouchAnimation.Link = <>
+      end
+    end
+    object TLayout
+      StyleName = 'accessorydetail'
+      Align = MostRight
+      Size.Width = 22.000000000000000000
+      Size.Height = 44.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      object TActiveStyleObject
+        Align = Center
+        SourceLookup = 'Windows 10 Desktopstyle.png'
+        Size.Width = 17.000000000000000000
+        Size.Height = 15.000000000000000000
+        Size.PlatformDefault = False
+        WrapMode = Center
+        ActiveTrigger = Selected
+        ActiveLink = <
+          item
+            SourceRect.Left = 173.000000000000000000
+            SourceRect.Top = 358.000000000000000000
+            SourceRect.Right = 190.000000000000000000
+            SourceRect.Bottom = 373.000000000000000000
+          end
+          item
+            Scale = 1.500000000000000000
+            SourceRect.Left = 260.000000000000000000
+            SourceRect.Top = 537.000000000000000000
+            SourceRect.Right = 286.000000000000000000
+            SourceRect.Bottom = 559.000000000000000000
+          end
+          item
+            Scale = 2.000000000000000000
+            SourceRect.Left = 346.000000000000000000
+            SourceRect.Top = 716.000000000000000000
+            SourceRect.Right = 380.000000000000000000
+            SourceRect.Bottom = 746.000000000000000000
+          end>
+        SourceLink = <
+          item
+            SourceRect.Left = 173.000000000000000000
+            SourceRect.Top = 358.000000000000000000
+            SourceRect.Right = 190.000000000000000000
+            SourceRect.Bottom = 373.000000000000000000
+          end
+          item
+            Scale = 1.500000000000000000
+            SourceRect.Left = 260.000000000000000000
+            SourceRect.Top = 537.000000000000000000
+            SourceRect.Right = 286.000000000000000000
+            SourceRect.Bottom = 559.000000000000000000
+          end
+          item
+            Scale = 2.000000000000000000
+            SourceRect.Left = 346.000000000000000000
+            SourceRect.Top = 716.000000000000000000
+            SourceRect.Right = 380.000000000000000000
+            SourceRect.Bottom = 746.000000000000000000
+          end>
+        TouchAnimation.Link = <>
+      end
+    end
+  end
+  object TLayout
+    StyleName = 'ListBoxItem1Style1CheckBoxStyle1'
+    Align = Center
+    Size.Width = 150.000000000000000000
+    Size.Height = 32.000000000000000000
+    Size.PlatformDefault = False
+    Visible = False
+    TabOrder = 18
+    object TLayout
+      Align = Left
+      Size.Width = 18.000000000000000000
+      Size.Height = 32.000000000000000000
+      Size.PlatformDefault = False
+      object TCheckStyleObject
+        StyleName = 'background'
+        Align = Center
+        CapMode = Tile
+        Locked = True
+        SourceLookup = 'Windows 10 Desktopstyle.png'
+        Size.Width = 13.000000000000000000
+        Size.Height = 13.000000000000000000
+        Size.PlatformDefault = False
+        WrapMode = Center
+        ActiveTrigger = Checked
+        ActiveLink = <
+          item
+            SourceRect.Left = 31.000000000000000000
+            SourceRect.Top = 146.000000000000000000
+            SourceRect.Right = 44.000000000000000000
+            SourceRect.Bottom = 159.000000000000000000
+          end
+          item
+            Scale = 1.500000000000000000
+            SourceRect.Left = 46.000000000000000000
+            SourceRect.Top = 219.000000000000000000
+            SourceRect.Right = 65.000000000000000000
+            SourceRect.Bottom = 238.000000000000000000
+          end
+          item
+            Scale = 2.000000000000000000
+            SourceRect.Left = 62.000000000000000000
+            SourceRect.Top = 292.000000000000000000
+            SourceRect.Right = 88.000000000000000000
+            SourceRect.Bottom = 318.000000000000000000
+          end>
+        SourceLink = <
+          item
+            SourceRect.Left = 3.000000000000000000
+            SourceRect.Top = 146.000000000000000000
+            SourceRect.Right = 16.000000000000000000
+            SourceRect.Bottom = 159.000000000000000000
+          end
+          item
+            Scale = 1.500000000000000000
+            SourceRect.Left = 4.000000000000000000
+            SourceRect.Top = 219.000000000000000000
+            SourceRect.Right = 23.000000000000000000
+            SourceRect.Bottom = 238.000000000000000000
+          end
+          item
+            Scale = 2.000000000000000000
+            SourceRect.Left = 6.000000000000000000
+            SourceRect.Top = 292.000000000000000000
+            SourceRect.Right = 32.000000000000000000
+            SourceRect.Bottom = 318.000000000000000000
+          end>
+        HotLink = <
+          item
+            SourceRect.Left = 17.000000000000000000
+            SourceRect.Top = 146.000000000000000000
+            SourceRect.Right = 30.000000000000000000
+            SourceRect.Bottom = 159.000000000000000000
+          end
+          item
+            Scale = 1.500000000000000000
+            SourceRect.Left = 25.000000000000000000
+            SourceRect.Top = 219.000000000000000000
+            SourceRect.Right = 44.000000000000000000
+            SourceRect.Bottom = 238.000000000000000000
+          end
+          item
+            Scale = 2.000000000000000000
+            SourceRect.Left = 34.000000000000000000
+            SourceRect.Top = 292.000000000000000000
+            SourceRect.Right = 60.000000000000000000
+            SourceRect.Bottom = 318.000000000000000000
+          end>
+        ActiveHotLink = <
+          item
+            SourceRect.Left = 45.000000000000000000
+            SourceRect.Top = 146.000000000000000000
+            SourceRect.Right = 58.000000000000000000
+            SourceRect.Bottom = 159.000000000000000000
+          end
+          item
+            Scale = 1.500000000000000000
+            SourceRect.Left = 67.000000000000000000
+            SourceRect.Top = 219.000000000000000000
+            SourceRect.Right = 86.000000000000000000
+            SourceRect.Bottom = 238.000000000000000000
+          end
+          item
+            Scale = 2.000000000000000000
+            SourceRect.Left = 90.000000000000000000
+            SourceRect.Top = 292.000000000000000000
+            SourceRect.Right = 116.000000000000000000
+            SourceRect.Bottom = 318.000000000000000000
+          end>
+        FocusedLink = <
+          item
+            SourceRect.Left = 17.000000000000000000
+            SourceRect.Top = 146.000000000000000000
+            SourceRect.Right = 30.000000000000000000
+            SourceRect.Bottom = 159.000000000000000000
+          end
+          item
+            Scale = 1.500000000000000000
+            SourceRect.Left = 25.000000000000000000
+            SourceRect.Top = 219.000000000000000000
+            SourceRect.Right = 44.000000000000000000
+            SourceRect.Bottom = 238.000000000000000000
+          end
+          item
+            Scale = 2.000000000000000000
+            SourceRect.Left = 34.000000000000000000
+            SourceRect.Top = 292.000000000000000000
+            SourceRect.Right = 60.000000000000000000
+            SourceRect.Bottom = 318.000000000000000000
+          end>
+        ActiveFocusedLink = <
+          item
+            SourceRect.Left = 45.000000000000000000
+            SourceRect.Top = 146.000000000000000000
+            SourceRect.Right = 58.000000000000000000
+            SourceRect.Bottom = 159.000000000000000000
+          end
+          item
+            Scale = 1.500000000000000000
+            SourceRect.Left = 67.000000000000000000
+            SourceRect.Top = 219.000000000000000000
+            SourceRect.Right = 86.000000000000000000
+            SourceRect.Bottom = 238.000000000000000000
+          end
+          item
+            Scale = 2.000000000000000000
+            SourceRect.Left = 90.000000000000000000
+            SourceRect.Top = 292.000000000000000000
+            SourceRect.Right = 116.000000000000000000
+            SourceRect.Bottom = 318.000000000000000000
+          end>
+      end
+    end
+    object TButtonStyleTextObject
+      StyleName = 'text'
+      Align = Client
+      Locked = True
+      Margins.Left = 3.000000000000000000
+      Size.Width = 129.000000000000000000
+      Size.Height = 32.000000000000000000
+      Size.PlatformDefault = False
+      ShadowVisible = False
+      HotColor = claBlack
+      FocusedColor = claBlack
+      NormalColor = claBlack
+      PressedColor = claBlack
+    end
+  end
+end
