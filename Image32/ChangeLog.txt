@@ -1,16 +1,22 @@
 
 Image32 - 2D graphics library for Delphi Pascal
-Latest version: 4.3
-Released: 27 September 2022
+Latest version: 4.6
+Released: 18 September 2024
 
-Copyright © 2019-2022 Angus Johnson
+Copyright © 2019-2024 Angus Johnson
 Freeware released under Boost Software License
 https://www.boost.org/LICENSE_1_0.txt
 
-Documentation : http://www.angusj.com/delphi/image32/Docs/
-Download      : https://sourceforge.net/projects/image32/files/
+Documentation : https://www.angusj.com/image32/Docs/Overview.htm
+Download      : https://github.com/AngusJohnson/Image32
 
 Recent changes:
+
+Version 4.6 
+* This release contains many bug fixes (see issues #10..#101) in the 
+GitHub repository.
+* Andreas Hausladen has also made multiple contributions to
+the library that that have very significantly improved its performance.
 
 Version 4.3 
   Numerous minor bugfixes

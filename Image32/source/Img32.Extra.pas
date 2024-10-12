@@ -2,8 +2,8 @@ unit Img32.Extra;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.4                                                             *
-* Date      :  18 August 2024                                                  *
+* Version   :  4.6                                                             *
+* Date      :  12 October 2024                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Miscellaneous routines that don't belong in other modules.      *
@@ -2248,43 +2248,63 @@ end;
 
 procedure GaussianBlur(img: TImage32; rec: TRect; radius: Integer);
 var
-  i, w,h, x,y,yy,z: Integer;
+  i, w,h, highX, x,y,yy,z,startz: Integer;
   gaussTable: array [-MaxBlur .. MaxBlur] of Cardinal;
   wc: TWeightedColor;
   wca: TArrayOfWeightedColor;
+  wcaColor: TArrayOfColor32;
   row: PColor32Array;
   wcRow: PWeightedColorArray;
+  imgWidth: Integer;
+  dst, pc: PColor32;
 begin
   Types.IntersectRect(rec, rec, img.Bounds);
   if IsEmptyRect(rec) or (radius < 1) then Exit
   else if radius > MaxBlur then radius := MaxBlur;
-  for i := 0 to radius do
+
+  gaussTable[0] := {Sqr}(Radius +1);
+  for i := 1 to radius do
   begin
-    gaussTable[i] := Sqr(Radius - i +1);
+    gaussTable[i] := {Sqr}(Radius - i +1);
     gaussTable[-i] := gaussTable[i];
   end;
+
   RectWidthHeight(rec, w, h);
   setLength(wca, w * h);
+  NewColor32Array(wcaColor, w * h, True);
+  imgWidth := img.Width;
+  highX := imgWidth -1;
   for y := 0 to h -1 do
   begin
-    row := PColor32Array(@img.Pixels[(y + rec.Top) * img.Width + rec.Left]);
+    row := PColor32Array(@img.Pixels[(y + rec.Top) * imgWidth + rec.Left]);
     wcRow := PWeightedColorArray(@wca[y * w]);
     for x := 0 to w -1 do
-      for z := max(0, x - radius) to min(img.Width -1, x + radius) do
+      for z := max(0, x - radius) to min(highX, x + radius) do
         wcRow[x].Add(row[z], gaussTable[x-z]);
   end;
+
+  // calculate colors
+  for x := 0 to w * h - 1 do
+    wcaColor[x] := wca[x].Color;
+
+  dst := @img.Pixels[rec.Left + rec.Top * imgWidth];
+  imgWidth := imgWidth * SizeOf(TColor32); // convert to byte size
   for x := 0 to w -1 do
   begin
+    pc := dst;
+    inc(pc, x);
     for y := 0 to h -1 do
     begin
       wc.Reset;
-      yy := max(0, y - radius) * w;
-      for z := max(0, y - radius) to min(h -1, y + radius) do
+      startz := max(0, y - radius);
+      yy := startz * w;
+      for z := startz to min(h -1, y + radius) do
       begin
-        wc.Add(wca[x + yy].Color, gaussTable[y-z]);
+        wc.Add(wcaColor[x + yy], gaussTable[y-z]);
         inc(yy, w);
       end;
-      img.Pixels[x + rec.Left + (y + rec.Top) * img.Width] := wc.Color;
+      pc^ := wc.Color;
+      inc(PByte(pc), imgWidth); // increment by byte size
     end;
   end;
 end;
@@ -2323,7 +2343,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure BoxBlurH(var src, dst: TArrayOfColor32; w,h, stdDev: integer);
+procedure BoxBlurH(const src, dst: TArrayOfColor32; w,h, stdDev: integer);
 var
   i,j, ti, li, ri, re, ovr: integer;
   fv, val: TWeightedColor;
@@ -2336,7 +2356,6 @@ begin
     li := ti;
     ri := ti +stdDev;
     re := ti +w -1; // idx of last pixel in row
-    lastColor := src[re];  // color of last pixel in row
     fv.Reset(src[ti]);
     val.Reset(src[ti], stdDev +1);
     for j := 0 to stdDev -1 - ovr do
@@ -2344,9 +2363,9 @@ begin
     if ovr > 0 then val.Add(clNone32, ovr);
     for j := 0 to stdDev do
     begin
-      if ri > re then
-        val.Add(lastColor) else
-        val.Add(src[ri]);
+      if ri <= re then
+        val.Add(src[ri]) else
+        val.Add(src[re]); // color of last pixel in row
       inc(ri);
       val.Subtract(fv);
       if ti <= re then
@@ -2367,7 +2386,8 @@ begin
           inc(ri);
           inc(li);
         end;
-        dst[ti] := lastColor; inc(ti);
+        dst[ti] := lastColor;
+        inc(ti);
       end;
       while ti <= re do
       begin
@@ -2382,7 +2402,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure BoxBlurV(var src, dst: TArrayOfColor32; w, h, stdDev: integer);
+procedure BoxBlurV(const src, dst: TArrayOfColor32; w, h, stdDev: integer);
 var
   i,j, ti, li, ri, re, ovr: integer;
   fv, val: TWeightedColor;
@@ -2395,7 +2415,6 @@ begin
     li := ti;
     ri := ti + stdDev * w;
     re := ti +w *(h-1); // idx of last pixel in column
-    lastColor := src[re];      // color of last pixel in column
     fv.Reset(src[ti]);
     val.Reset(src[ti], stdDev +1);
     for j := 0 to stdDev -1 -ovr do
@@ -2403,9 +2422,9 @@ begin
     if ovr > 0 then val.Add(clNone32, ovr);
     for j := 0 to stdDev do
     begin
-      if ri > re then
-        val.Add(lastColor) else
-        val.Add(src[ri]);
+      if ri <= re then
+        val.Add(src[ri]) else
+        val.Add(src[re]); // color of last pixel in column
       inc(ri, w);
       val.Subtract(fv);
       if ti <= re then
@@ -2426,7 +2445,8 @@ begin
           inc(ri, w);
           inc(li, w);
         end;
-        dst[ti] := lastColor; inc(ti, w);
+        dst[ti] := lastColor;
+        inc(ti, w);
       end;
       while ti <= re do
       begin

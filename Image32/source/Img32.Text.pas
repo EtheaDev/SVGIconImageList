@@ -2,8 +2,8 @@ unit Img32.Text;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.4                                                             *
-* Date      :  18 August 2024                                                  *
+* Version   :  4.6                                                             *
+* Date      :  18 September 2024                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  TrueType fonts for TImage32 (without Windows dependencies)      *
@@ -671,11 +671,26 @@ end;
 
 function MergePathsArray(const pa: TArrayOfPathsD): TPathsD;
 var
-  i: integer;
+  i, j: integer;
+  resultCount: integer;
 begin
   Result := nil;
+
+  // Preallocate the Result-Array
+  resultCount := 0;
   for i := 0 to High(pa) do
-    AppendPath(Result, pa[i]);
+    inc(resultCount, Length(pa[i]));
+  SetLength(Result, resultCount);
+
+  resultCount := 0;
+  for i := 0 to High(pa) do
+  begin
+    for j := 0 to High(pa[i]) do
+    begin
+      Result[resultCount] := pa[i][j];
+      inc(resultCount);
+    end;
+  end;
 end;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
@@ -2493,32 +2508,48 @@ end;
 function TFontCache.GetTextOutline(x, y: double; const text: UnicodeString;
   out nextX: double; underlineIdx: integer): TPathsD;
 var
-  i: integer;
+  i, j: integer;
   w, y2: double;
-  p: TPathD;
   arrayOfGlyphs: TArrayOfPathsD;
+  resultCount: integer;
 begin
   Result := nil;
   if not GetTextOutlineInternal(x, y, text,
     arrayOfGlyphs, nextX, underlineIdx) then Exit;
 
+  // pre allocate the Result array
+  resultCount := 0;
+  if fUnderlined then inc(resultCount);
+  for i := 0 to high(arrayOfGlyphs) do
+    inc(resultCount, Length(arrayOfGlyphs[i]));
+  if fStrikeOut then inc(resultCount);
+  SetLength(Result, resultCount);
+
+  resultCount := 0;
+
   if fUnderlined then
   begin
     w := LineHeight * lineFrac;
     y2 := y + 1.5 *(1+w);
-    p := Rectangle(x, y2, nextX, y2 + w);
-    AppendPath(Result, p);
+    Result[resultCount] := Rectangle(x, y2, nextX, y2 + w);
+    inc(resultCount);
   end;
 
   for i := 0 to high(arrayOfGlyphs) do
-    AppendPath(Result, arrayOfGlyphs[i]);
+  begin
+    for j := 0 to high(arrayOfGlyphs[i]) do
+    begin
+      Result[resultCount] := arrayOfGlyphs[i][j];
+      inc(resultCount);
+    end;
+  end;
 
   if fStrikeOut then
   begin
     w := LineHeight * lineFrac;
     y := y - LineHeight/4;
-    p := Rectangle(x, y , nextX, y + w);
-    AppendPath(Result, p);
+    Result[resultCount] := Rectangle(x, y , nextX, y + w);
+    //inc(ResultCount);
   end;
 end;
 //------------------------------------------------------------------------------

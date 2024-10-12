@@ -11,7 +11,7 @@
 // function is 'BoxDownSampling'. When downsampling, this function generally produces much
 // clearer images than general purpose resamplers (which are much better at upsampling,
 // and doing other affine transformations). However, if for some reason you do wish to use
-// a general purpose resampler while downsampling, then disable this define.
+// a general purpose resampler while downsampling, then comment out (ie disable) this define.
 {$DEFINE USE_DOWNSAMPLER_AUTOMATICALLY}
 
 // The SimplifyPath and SimplifyPaths functions have changed. Specifically the last 
@@ -42,6 +42,7 @@
   {$DEFINE PBYTE}
   {$DEFINE NEWPOSFUNC}
   {$DEFINE SUPPORTS_POINTERMATH}
+  {$DEFINE CLASS_STATIC}
   {.$DEFINE UITYPES}
   {$DEFINE NESTED_TYPES}
   {$IFNDEF DEBUG}
@@ -79,6 +80,7 @@
           {$DEFINE EXIT_PARAM}                    //added Exit(value)
           {$DEFINE ALPHAFORMAT}                   //added TBitmap.AlphaFormat property
           {$DEFINE SUPPORTS_POINTERMATH}          //added {$POINTERMATH ON/OFF}
+          {$DEFINE CLASS_STATIC}                  //added class static methods
           {$IF COMPILERVERSION >= 21}           //Delphi 2010
             {$DEFINE GESTURES}                    //added screen gesture support
             {$IF COMPILERVERSION >= 23}         //DelphiXE2

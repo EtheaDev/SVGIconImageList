@@ -2,8 +2,8 @@ unit Img32;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.5                                                             *
-* Date      :  26 July 2024                                                    *
+* Version   :  4.6                                                             *
+* Date      :  12 October 2024                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  The core module of the Image32 library                          *
@@ -28,8 +28,12 @@ uses
   {$IFDEF UITYPES} UITypes,{$ENDIF} Math;
 
 type
-  {$IF not declared(NativeInt)}
-  NativeInt = Integer;
+  {$IF not declared(SizeInt)} // FPC has SizeInt
+    {$IF CompilerVersion < 120}
+  SizeInt = Integer; // Delphi 7-2007 can't use NativeInt with "FOR"
+    {$ELSE}
+  SizeInt = NativeInt;
+    {$IFEND}
   {$IFEND}
 
   TRect = Types.TRect;
@@ -171,6 +175,8 @@ type
 
   TResamplerFunction = function(img: TImage32; x, y: double): TColor32;
 
+  TGrayscaleMode = (gsmSaturation, gsmLinear, gsmColorimetric);
+
   TImage32 = class(TObject)
   private
     fWidth: integer;
@@ -304,7 +310,8 @@ type
     procedure SetRGB(rgbColor: TColor32); overload;
     procedure SetRGB(rgbColor: TColor32; rec: TRect); overload;
     //Grayscale: Only changes color channels. The alpha channel is untouched.
-    procedure Grayscale;
+    procedure Grayscale(mode: TGrayscaleMode = gsmSaturation;
+      linearAmountPercentage: double = 1.0);
     procedure InvertColors;
     procedure InvertAlphas;
     procedure AdjustHue(percent: Integer);         //ie +/- 100%
@@ -565,6 +572,8 @@ const
   angle345 = TwoPi - angle15;
   angle360 = TwoPi;
 
+  div255: Double = 1 / 255;
+
 var
   //Resampling function identifiers (initialized in Img32.Resamplers)
   rNearestResampler : integer;
@@ -644,8 +653,6 @@ const
   Trunc: function(Value: Double): Integer = __Trunc;
 {$ENDIF CPUX86}
 
-const
-  div255 : Double = 1 / 255;
 type
   TByteArray = array[0..MaxInt -1] of Byte;
   PByteArray = ^TByteArray;
@@ -732,7 +739,7 @@ end;
 function InternSetSimpleDynArrayLengthUninit(a: Pointer; count: nativeint; elemSize: integer): Pointer;
 var
   p: PDynArrayRec;
-  oldCount: integer;
+  oldCount: nativeint;
 begin
   if a = nil then
     Result := NewSimpleDynArray(count, elemSize)
@@ -761,7 +768,8 @@ begin
       // SetLength makes a copy of the dyn array to get RefCnt=1
       GetMem(Pointer(p), SizeOf(TDynArrayRec) + count * elemSize);
       if oldCount < 0 then oldCount := 0; // data corruption detected
-      Move(a^, p.Data, Min(oldCount, count) * elemSize);
+      if oldCount > count then oldCount := count;
+      Move(a^, p.Data, oldCount * elemSize);
       TArrayOfByte(a) := nil; // use a non-managed dyn.array type
     end;
 
@@ -1943,7 +1951,7 @@ begin
   c := ((255 - abs(2 * hsl.lum - 255)) * hsl.sat) shr 8;
   a := 252 - (hsl.hue mod 85) * 6;
   x := (c * (255 - abs(a))) shr 8;
-  m := hsl.lum - c div 2;
+  m := hsl.lum - c shr 1{div 2}; // Delphi's 64bit compiler can't optimize this
   rgba.A := hsl.alpha;
   case (hsl.hue * 6) shr 8 of
     0: begin rgba.R := c + m; rgba.G := x + m; rgba.B := 0 + m; end;
@@ -3760,47 +3768,115 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TImage32.Grayscale;
+procedure TImage32.Grayscale(mode: TGrayscaleMode;
+  linearAmountPercentage: double);
+var
+  i: SizeInt;
+  cLinear: double;
+  c, lastC, grayC: TColor32;
+  p: PStaticColor32Array;
+  amountCalc: Boolean;
+  oneMinusAmount: double;
 begin
-  AdjustSaturation(-100);
+  if mode = gsmSaturation then
+  begin
+    // linearAmountPercentage has no effect here
+    AdjustSaturation(-100);
+    Exit;
+  end;
+
+  // Colorimetric (perceptual luminance-preserving) conversion to grayscale
+  // See https://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale
+  if IsEmpty then Exit;
+
+  if linearAmountPercentage <= 0.0 then Exit;
+  amountCalc := linearAmountPercentage < 1.0;
+  oneMinusAmount := 1.0 - linearAmountPercentage;
+
+  p := PStaticColor32Array(PixelBase);
+  lastC := 0;
+  grayC := 0;
+  for i := 0 to high(fPixels) do
+  begin
+    c := p[i] and $00FFFFFF;
+    if c <> 0 then
+    begin
+      if c <> lastC then // only do the calculation if the color channels changed
+      begin
+        lastC := c;
+        {$IF DEFINED(ANDROID)}
+        c := SwapRedBlue(c);
+        {$IFEND}
+
+        // We don't divide by 255 here, so can skip some division and multiplications.
+        // That means cLinear is actually "cLinear * 255"
+        cLinear := (0.2126 * Byte(c shr 16)) + (0.7152 * Byte(c shr 8)) + (0.0722 * Byte(c));
+        //cLinear := (0.2126 * TARGB(c).R) + (0.7152 * TARGB(c).G) + (0.0722 * TARGB(c).B);
+
+        if mode = gsmLinear then
+          c := ClampByte(cLinear)
+        else //if mode = gsmColorimetric then
+        begin
+          if cLinear <= (0.0031308 * 255) then // adjust for cLinear being "cLiniear * 255"
+            c := ClampByte(Integer(Round(12.92 * cLinear)))
+          else // for Power we must divide by 255 and then later multipy by 255
+            //c := ClampByte(Integer(Round((1.055 * 255) * Power(cLinear / 255, 1/2.4) - (0.055 * 255))));
+        end;
+
+
+        if not amountCalc then
+          grayC := (c shl 16) or (c shl 8) or c
+        else
+        begin
+          cLinear := c * linearAmountPercentage;
+          grayC := ClampByte(Integer(Round(Byte(lastC shr 16) * oneMinusAmount + cLinear))) shl 16 or
+                   ClampByte(Integer(Round(Byte(lastC shr  8) * oneMinusAmount + cLinear))) shl  8 or
+                   ClampByte(Integer(Round(Byte(lastC       ) * oneMinusAmount + cLinear)));
+        end;
+
+        {$IF DEFINED(ANDROID)}
+        grayC := SwapRedBlue(grayC);
+        {$IFEND}
+      end;
+      p[i] := (p[i] and $FF000000) or grayC;
+    end;
+  end;
+
+  Changed;
 end;
 //------------------------------------------------------------------------------
 
 procedure TImage32.InvertColors;
 var
-  pc: PARGB;
-  i: Integer;
+  pc: PStaticColor32Array;
+  i: SizeInt;
 begin
-  pc := PARGB(PixelBase);
+  pc := PStaticColor32Array(PixelBase);
   for i := 0 to Width * Height -1 do
-  begin
-    pc.Color := pc.Color xor $00FFFFFF; // keep the alpha channel untouched
-    inc(pc);
-  end;
+    pc[i] := pc[i] xor $00FFFFFF; // keep the alpha channel untouched
   Changed;
 end;
 //------------------------------------------------------------------------------
 
 procedure TImage32.InvertAlphas;
 var
-  pc: PARGB;
-  i: Integer;
+  pc: PStaticColor32Array;
+  i: SizeInt;
 begin
-  pc := PARGB(PixelBase);
+  pc := PStaticColor32Array(PixelBase);
   for i := 0 to Width * Height -1 do
-  begin
-    pc.A := 255 - pc.A;
-    inc(pc);
-  end;
+    pc[i] := pc[i] xor $FF000000; // keep the color channels untouched
   Changed;
 end;
 //------------------------------------------------------------------------------
 
 procedure TImage32.AdjustHue(percent: Integer);
 var
-  i: Integer;
+  i: SizeInt;
   hsl: THsl;
   lut: array [byte] of byte;
+  c, lastC, newC: TColor32;
+  p: PStaticColor32Array;
 begin
   percent := percent mod 100;
   if percent < 0 then inc(percent, 100);
@@ -3808,11 +3884,24 @@ begin
   if (percent = 0) or IsEmpty then Exit;
   for i := 0 to 255 do lut[i] := (i + percent) mod 255;
 
+  lastC := 0;
+  newC := 0;
+  p := PStaticColor32Array(fPixels);
   for i := 0 to high(fPixels) do
   begin
-    hsl := RgbToHsl(fPixels[i]);
-    hsl.hue := lut[ hsl.hue ];
-    fPixels[i] := HslToRgb(hsl);
+    c := p[i];
+    c := c and $00FFFFFF;
+    if c <> 0 then
+    begin
+      if c <> lastC then // only do the calculation if the color channels changed
+      begin
+        lastC := C;
+        hsl := RgbToHsl(c);
+        hsl.hue := lut[hsl.hue];
+        newC := HslToRgb(hsl);
+      end;
+      p[i] := (p[i] and $FF000000) or newC; // keep the alpha channel
+    end;
   end;
 
   Changed;
@@ -3821,10 +3910,12 @@ end;
 
 procedure TImage32.AdjustLuminance(percent: Integer);
 var
-  i: Integer;
+  i: SizeInt;
   hsl: THsl;
   pc: double;
   lut: array [byte] of byte;
+  c, lastC, newC: TColor32;
+  p: PStaticColor32Array;
 begin
   if (percent = 0) or IsEmpty then Exit;
   percent := percent mod 101;
@@ -3834,11 +3925,24 @@ begin
   else
     for i := 0 to 255 do lut[i] := Round(i + (i * pc));
 
+  lastC := 0;
+  newC := 0;
+  p := PStaticColor32Array(fPixels);
   for i := 0 to high(fPixels) do
   begin
-    hsl := RgbToHsl(fPixels[i]);
-    hsl.lum := lut[ hsl.lum ];
-    fPixels[i] := HslToRgb(hsl);
+    c := p[i];
+    c := c and $00FFFFFF;
+    if c <> 0 then
+    begin
+      if c <> lastC then // only do the calculation if the color channels changed
+      begin
+        lastC := C;
+        hsl := RgbToHsl(c);
+        hsl.lum := lut[hsl.lum];
+        newC := HslToRgb(hsl);
+      end;
+      p[i] := (p[i] and $FF000000) or newC; // keep the alpha channel
+    end;
   end;
 
   Changed;
@@ -3847,10 +3951,12 @@ end;
 
 procedure TImage32.AdjustSaturation(percent: Integer);
 var
-  i: Integer;
+  i: SizeInt;
   hsl: THsl;
   lut: array [byte] of byte;
   pc: double;
+  c, lastC, newC: TColor32;
+  p: PStaticColor32Array;
 begin
   if (percent = 0) or IsEmpty then Exit;
   percent := percent mod 101;
@@ -3860,12 +3966,24 @@ begin
   else
     for i := 0 to 255 do lut[i] := Round(i + (i * pc));
 
-  // Do the conversion inline without creating new pixel/hsl arrays
+  lastC := 0;
+  newC := 0;
+  p := PStaticColor32Array(fPixels);
   for i := 0 to high(fPixels) do
   begin
-    hsl := RgbToHsl(fPixels[i]);
-    hsl.sat := lut[ hsl.sat ];
-    fPixels[i] := HslToRgb(hsl);
+    c := p[i];
+    c := c and $00FFFFFF;
+    if c <> 0 then
+    begin
+      if c <> lastC then // only do the calculation if the color channels changed
+      begin
+        lastC := C;
+        hsl := RgbToHsl(c);
+        hsl.sat := lut[hsl.sat];
+        newC := HslToRgb(hsl);
+      end;
+      p[i] := (p[i] and $FF000000) or newC; // keep the alpha channel
+    end;
   end;
 
   Changed;
@@ -4018,7 +4136,7 @@ begin
   pb := PARGB(PixelBase);
   for i := 0 to Width * Height - 1 do
   begin
-    pb.A := ClampByte(Round(pb.A * scale));
+    pb.A := ClampByte(Integer(Round(pb.A * scale)));
     inc(pb);
   end;
   Changed;

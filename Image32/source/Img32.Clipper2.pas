@@ -2,8 +2,8 @@ unit Img32.Clipper2;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.3                                                             *
-* Date      :  27 September 2022                                               *
+* Version   :  4.6                                                             *
+* Date      :  18 September 2024                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 * Purpose   :  Wrapper module for the Clipper library                          *

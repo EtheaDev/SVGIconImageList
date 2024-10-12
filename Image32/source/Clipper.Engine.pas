@@ -2,7 +2,7 @@ unit Clipper.Engine;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Date      :  12 August 2024                                                  *
+* Date      :  17 September 2024                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2024                                         *
 * Purpose   :  This is the main polygon clipping module                        *
@@ -2845,7 +2845,7 @@ var
   Y: Int64;
   e: PActive;
 begin
-  if clipType = ctNone then Exit;
+  if clipType = ctNoClip then Exit;
   FFillRule := fillRule;
   FClipType := clipType;
   Reset;

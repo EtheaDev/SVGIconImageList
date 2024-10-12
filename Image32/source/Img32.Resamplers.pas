@@ -2,8 +2,8 @@ unit Img32.Resamplers;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.4                                                             *
-* Date      :  3 July 2024                                                     *
+* Version   :  4.6                                                             *
+* Date      :  18 September 2024                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  For image transformations (scaling, rotating etc.)              *

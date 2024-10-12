@@ -2,8 +2,8 @@ unit Img32.Storage;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.2                                                             *
-* Date      :  30 May 2022                                                     *
+* Version   :  4.6                                                             *
+* Date      :  18 September 2024                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2022                                         *
 * Purpose   :  Object persistence                                              *

@@ -1,8 +1,8 @@
 unit Img32.Fmt.QOI;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.4                                                             *
-* Date      :  12 March 2023                                                   *
+* Version   :  4.6                                                             *
+* Date      :  18 September 2024                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2023                                         *
 * Purpose   :  QOI file format extension for TImage32                          *

@@ -2,8 +2,8 @@ unit Img32.Vector;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.5                                                             *
-* Date      :  18 August 2024                                                  *
+* Version   :  4.6                                                             *
+* Date      :  10 October 2024                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -71,7 +71,8 @@ type
 
   function NormalizeRect(var rect: TRect): Boolean;
 
-  function PrePendPoint(const pt: TPointD; const p: TPathD): TPathD;
+  function PrePendPoint(const pt: TPointD; const p: TPathD): TPathD; overload;
+  procedure PrePendPoint(const pt: TPointD; const p: TPathD; var Result: TPathD); overload;
   function PrePendPoints(const pt1, pt2: TPointD; const p: TPathD): TPathD;
 
   function Rectangle(const rec: TRect): TPathD; overload;
@@ -2528,7 +2529,7 @@ end;
 
 function GrowOpenLine(const line: TPathD; delta: double;
   joinStyle: TJoinStyle; endStyle: TEndStyle;
-  miterLim: double): TPathD;
+  miterLimOrRndScale: double): TPathD;
 var
   len               : integer;
   resCnt, resCap    : integer;
@@ -2685,7 +2686,7 @@ var
       DoMiter(j, k, acos)
     else if (joinStyle = jsMiter) then
     begin
-      if (1 + acos > miterLim) then
+      if (1 + acos > miterLimOrRndScale) then
         DoMiter(j, k, acos) else
         DoSquare(j, k);
     end
@@ -2724,13 +2725,15 @@ begin
   //with very narrow lines, don't get fancy with joins and line ends
   if (delta <= 1) then
   begin
-    joinStyle := jsButt;
-    if endStyle = esRound then endStyle := esSquare;
+    if (joinStyle = jsRound) and (delta * miterLimOrRndScale <=1) then
+      joinStyle := jsButt;
+    if (endStyle = esRound) and (delta * miterLimOrRndScale <=1) then
+      endStyle := esSquare;
   end
   else if joinStyle = jsAuto then
   begin
     if (endStyle = esRound) and
-      (delta >= AutoWidthThreshold) then
+      (delta * miterLimOrRndScale >= AutoWidthThreshold) then
       joinStyle := jsRound
     else
       joinStyle := jsSquare;
@@ -2739,7 +2742,7 @@ begin
   stepsPerRadian := 0;
   if (joinStyle = jsRound) or (endStyle = esRound) then
   begin
-    steps := CalcRoundingSteps(delta);
+    steps := CalcRoundingSteps(delta * miterLimOrRndScale);
 //		if (steps > absDelta * Pi) then // todo - recheck if needed
 //			steps := absDelta * Pi;
     stepSin := sin(TwoPi/steps);
@@ -2748,9 +2751,9 @@ begin
     stepsPerRadian := steps / TwoPi;
   end;
 
-  if miterLim <= 0 then miterLim := DefaultMiterLimit
-  else if miterLim < 2 then miterLim := 2;
-  miterLim := 2 /(sqr(miterLim));
+  if miterLimOrRndScale <= 0 then miterLimOrRndScale := DefaultMiterLimit
+  else if miterLimOrRndScale < 2 then miterLimOrRndScale := 2;
+  miterLimOrRndScale := 2 /(sqr(miterLimOrRndScale));
 
   norms := GetNormals(path);
   resCnt := 0; resCap := 0;
@@ -2863,9 +2866,12 @@ begin
     end;
   end
   else
+  begin
+    SetLength(Result, Length(lines));
     for i := 0 to high(lines) do
-      AppendPath(Result, GrowOpenLine(lines[i], lineWidth,
-        joinStyle, endStyle, miterLimOrRndScale));
+      Result[i] := GrowOpenLine(lines[i], lineWidth,
+        joinStyle, endStyle, miterLimOrRndScale);
+  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -3572,35 +3578,76 @@ end;
 function GetBoundsD(const paths: TPathsD): TRectD;
 var
   i,j: integer;
-  l,t,r,b: double;
   p: PPointD;
+  {$IFDEF CPUX64}
+  l,t,r,b,x,y: double;
+  {$ENDIF CPUX64}
 begin
-  l := MaxDouble; t := MaxDouble;
-  r := -MaxDouble; b := -MaxDouble;
+  if paths = nil then
+  begin
+    Result := NullRectD;
+    Exit;
+  end;
+
+  {$IFDEF CPUX64}
+  l := MaxDouble; t := l;
+  r := -MaxDouble; b := r;
+  {$ELSE}
+  Result.Left := MaxDouble;
+  Result.Top := MaxDouble;
+  Result.Right := -MaxDouble;
+  Result.Bottom := -MaxDouble;
+  {$ENDIF CPUX64}
   for i := 0 to high(paths) do
   begin
     p := PPointD(paths[i]);
     if not assigned(p) then Continue;
     for j := 0 to high(paths[i]) do
     begin
-      if p.x < l then l := p.x;
-      if p.x > r then r := p.x;
-      if p.y < t then t := p.y;
-      if p.y > b then b := p.y;
+      {$IFDEF CPUX64}
+      // load p.X and p.Y into xmm registers
+      x := p.X;
+      y := p.Y;
+      if x < l then l := x;
+      if x > r then r := x;
+      if y < t then t := y;
+      if y > b then b := y;
+      {$ELSE}
+      // If we must use the FPU and memory then we should write directly
+      // to the target memory.
+      if p.x < Result.Left   then Result.Left := p.x;
+      if p.x > Result.Right  then Result.Right := p.x;
+      if p.y < Result.Top    then Result.Top := p.y;
+      if p.y > Result.Bottom then Result.Bottom := p.y;
+      {$ENDIF CPUX64}
       inc(p);
     end;
   end;
+  {$IFDEF CPUX64}
   if r < l then
-    result := NullRectD else
-    result := RectD(l, t, r, b);
+    Result := NullRectD
+  else
+  begin
+    // Inline the RectD() call by hand
+    Result.Left := l;
+    Result.Top := t;
+    Result.Right := r;
+    Result.Bottom := b;
+  end;
+  {$ELSE}
+  if Result.Right < Result.Left then
+    Result := NullRectD;
+  {$ENDIF CPUX64}
 end;
 //------------------------------------------------------------------------------
 
 function GetBoundsD(const path: TPathD): TRectD;
 var
   i,highI: integer;
-  l,t,r,b: double;
   p: PPointD;
+  {$IFDEF CPUX64}
+  l,t,r,b,x,y: double;
+  {$ENDIF CPUX64}
 begin
   highI := High(path);
   if highI < 0 then
@@ -3608,18 +3655,49 @@ begin
     Result := NullRectD;
     Exit;
   end;
+
+  {$IFDEF CPUX64}
   l := path[0].X; r := l;
   t := path[0].Y; b := t;
   p := PPointD(path);
   for i := 1 to highI do
   begin
     inc(p);
-    if p.x < l then l := p.x;
-    if p.x > r then r := p.x;
-    if p.y < t then t := p.y;
-    if p.y > b then b := p.y;
+    // load p.X and p.Y into xmm registers
+    x := p.X;
+    y := p.Y;
+    if x < l then l := x;
+    if x > r then r := x;
+    if y < t then t := y;
+    if y > b then b := y;
   end;
-  result := RectD(l, t, r, b);
+  // Inline the RectD() call by hand
+  Result.Left := l;
+  Result.Top := t;
+  Result.Right := r;
+  Result.Bottom := b;
+  {$ELSE}
+  // If we must use the FPU and memory then we should write directly
+  // to the target memory.
+    {$IFDEF RECORD_METHODS}
+  Result.TopLeft := path[0]; // uses "rep movsd"
+  Result.BottomRight := Result.TopLeft;
+    {$ELSE}
+  Result.Left := path[0].X; // uses "fld" and "fstp"
+  Result.Top := path[0].Y;
+  Result.Right := Result.Left;
+  Result.Bottom := Result.Right;
+    {$ENDIF RECORD_METHODS}
+  p := PPointD(path);
+  for i := 1 to highI do
+  begin
+    inc(p);
+    if p.x < Result.Left   then Result.Left := p.x;
+    if p.x > Result.Right  then Result.Right := p.x;
+    if p.y < Result.Top    then Result.Top := p.y;
+    if p.y > Result.Bottom then Result.Bottom := p.y;
+  end;
+  {$ENDIF CPUX64}
 end;
 //------------------------------------------------------------------------------
 
@@ -3641,14 +3719,20 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function PrePendPoint(const pt: TPointD; const p: TPathD): TPathD;
+procedure PrePendPoint(const pt: TPointD; const p: TPathD; var Result: TPathD);
 var
   len: integer;
 begin
   len := Length(p);
-  NewPointDArray(Result, len +1, True);
+  SetLengthUninit(Result, len +1);
   Result[0] := pt;
   if len > 0 then Move(p[0], Result[1], len * SizeOf(TPointD));
+end;
+//------------------------------------------------------------------------------
+
+function PrePendPoint(const pt: TPointD; const p: TPathD): TPathD;
+begin
+  PrePendPoint(pt, p, Result);
 end;
 //------------------------------------------------------------------------------
 
@@ -3693,7 +3777,7 @@ begin
   highI := high(pts);
   if highI < 0 then Exit;
   if (highI < 2) or Odd(highI) then
-    raise Exception.Create(rsInvalidQBezier);
+    raise Exception.CreateRes(@rsInvalidQBezier);
   if tolerance <= 0.0 then tolerance := BezierTolerance;
   NewPointDArray(Result, 1, True);
   Result[0] := pts[0];
@@ -3779,7 +3863,7 @@ end;
 function FlattenCBezier(const firstPt: TPointD; const pts: TPathD;
   tolerance: double = 0.0): TPathD; overload;
 begin
-    Result := FlattenCBezier(PrePendPoint(firstPt, pts), tolerance);
+  Result := FlattenCBezier(PrePendPoint(firstPt, pts), tolerance);
 end;
 //------------------------------------------------------------------------------
 
