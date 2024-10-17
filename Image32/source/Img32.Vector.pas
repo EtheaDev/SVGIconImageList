@@ -3,7 +3,7 @@ unit Img32.Vector;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
-* Date      :  10 October 2024                                                 *
+* Date      :  17 October 2024                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -435,20 +435,24 @@ type
   function GetClosestPtOnRotatedEllipse(const ellipseRect: TRectD;
     ellipseRotation: double; const pt: TPointD): TPointD;
 
-  // RoughOutline: these are **rough** because outlines are untidy with
-  // numerous self-intersections and negative area regions. Nevertheless
-  // these functions are **much** faster that Img32.Clipper.InflatePaths.
-  // (These two functions are really only intended for internal use.)
+  // RoughOutline: outlines are **rough** because they will contain numerous
+  // self-intersections and negative area regions. (This untidiness will be
+  // hidden as long as the NonZero fill rule is applied when rendering, and
+  // this function will be **much** faster than Img32.Clipper.InflatePaths.)
+  // The 'scale' parameter doesn't actually scale the returned outline, it's
+  // only a warning of future scaling and used to guide the returned precision.
+  // RoughOutline is intended mostly for internal use.
   function RoughOutline(const line: TPathD; lineWidth: double;
     joinStyle: TJoinStyle; endStyle: TEndStyle;
-    miterLimOrRndScale: double = 0): TPathsD; overload;
+    miterLim: double = 0; scale: double = 1.0): TPathsD; overload;
   function RoughOutline(const lines: TPathsD; lineWidth: double;
     joinStyle: TJoinStyle; endStyle: TEndStyle;
-    miterLimOrRndScale: double = 0): TPathsD; overload;
+    miterLim: double = 0; scale: double = 1.0): TPathsD; overload;
 
-  // Grow: only intended for internal use
+  // Grow: For the same reasons stated in RoughOutline's comments above,
+  // this function is also intended mostly for internal use
   function Grow(const path, normals: TPathD; delta: double;
-    joinStyle: TJoinStyle; miterLim: double; isOpen: Boolean = false): TPathD;
+    joinStyle: TJoinStyle; miterLim: double = 0; scale: double = 1.0; isOpen: Boolean = false): TPathD;
 
   function ValueAlmostZero(val: double; epsilon: double = 0.001): Boolean;
   function ValueAlmostOne(val: double; epsilon: double = 0.001): Boolean;
@@ -2268,7 +2272,7 @@ end;
 //------------------------------------------------------------------------------
 
 function Grow(const path, normals: TPathD; delta: double;
-  joinStyle: TJoinStyle; miterLim: double; isOpen: Boolean): TPathD;
+  joinStyle: TJoinStyle; miterLim: double; scale: double; isOpen: Boolean): TPathD;
 var
   resCnt, resCap    : integer;
   norms             : TPathD;
@@ -2420,6 +2424,8 @@ begin
         dec(len);
   if len < 2 then Exit;
 
+  if scale = 0 then scale := 1.0;
+
   absDelta := Abs(delta);
   if absDelta < MinStrokeWidth/2 then
   begin
@@ -2427,7 +2433,7 @@ begin
       delta := -MinStrokeWidth/2 else
       delta := MinStrokeWidth/2;
   end;
-  if absDelta < 1 then
+  if absDelta * scale < 1 then
     joinStyle := jsButt
   else if joinStyle = jsAuto then
   begin
@@ -2445,10 +2451,7 @@ begin
   stepsPerRadian := 0;
   if joinStyle = jsRound then
   begin
-    steps := CalcRoundingSteps(delta);
-//    // avoid excessive precision // todo - recheck if needed
-//		if (steps > absDelta * Pi) then
-//			steps := absDelta * Pi;
+    steps := CalcRoundingSteps(delta * scale);
     stepSin := sin(TwoPi/steps);
     stepCos := cos(TwoPi/steps);
 		if (delta < 0) then stepSin := -stepSin;
@@ -2529,7 +2532,7 @@ end;
 
 function GrowOpenLine(const line: TPathD; delta: double;
   joinStyle: TJoinStyle; endStyle: TEndStyle;
-  miterLimOrRndScale: double): TPathD;
+  miterLim: double = 0; scale: double = 1.0): TPathD;
 var
   len               : integer;
   resCnt, resCap    : integer;
@@ -2686,7 +2689,7 @@ var
       DoMiter(j, k, acos)
     else if (joinStyle = jsMiter) then
     begin
-      if (1 + acos > miterLimOrRndScale) then
+      if (1 + acos > miterLim) then
         DoMiter(j, k, acos) else
         DoSquare(j, k);
     end
@@ -2725,35 +2728,31 @@ begin
   //with very narrow lines, don't get fancy with joins and line ends
   if (delta <= 1) then
   begin
-    if (joinStyle = jsRound) and (delta * miterLimOrRndScale <=1) then
+    if (joinStyle = jsRound) and (delta * scale <= 1) then
       joinStyle := jsButt;
-    if (endStyle = esRound) and (delta * miterLimOrRndScale <=1) then
+    if (endStyle = esRound) and (delta * scale <= 1) then
       endStyle := esSquare;
   end
   else if joinStyle = jsAuto then
   begin
-    if (endStyle = esRound) and
-      (delta * miterLimOrRndScale >= AutoWidthThreshold) then
-      joinStyle := jsRound
-    else
+    if (endStyle = esRound) and (delta * scale >= AutoWidthThreshold) then
+      joinStyle := jsRound else
       joinStyle := jsSquare;
   end;
 
   stepsPerRadian := 0;
   if (joinStyle = jsRound) or (endStyle = esRound) then
   begin
-    steps := CalcRoundingSteps(delta * miterLimOrRndScale);
-//		if (steps > absDelta * Pi) then // todo - recheck if needed
-//			steps := absDelta * Pi;
+    steps := CalcRoundingSteps(delta * scale);
     stepSin := sin(TwoPi/steps);
     stepCos := cos(TwoPi/steps);
 		if (delta < 0) then stepSin := -stepSin;
     stepsPerRadian := steps / TwoPi;
   end;
 
-  if miterLimOrRndScale <= 0 then miterLimOrRndScale := DefaultMiterLimit
-  else if miterLimOrRndScale < 2 then miterLimOrRndScale := 2;
-  miterLimOrRndScale := 2 /(sqr(miterLimOrRndScale));
+  if miterLim <= 0 then miterLim := DefaultMiterLimit
+  else if miterLim < 2 then miterLim := 2;
+  miterLim := 2 /(sqr(miterLim));
 
   norms := GetNormals(path);
   resCnt := 0; resCap := 0;
@@ -2793,7 +2792,7 @@ end;
 //------------------------------------------------------------------------------
 
 function GrowClosedLine(const line: TPathD; width: double;
-  joinStyle: TJoinStyle; miterLimOrRndScale: double): TPathsD;
+  joinStyle: TJoinStyle; miterLim: double = 0; scale: double = 1.0): TPathsD;
 var
   norms: TPathD;
   rec: TRectD;
@@ -2805,34 +2804,33 @@ begin
   begin
     SetLength(Result, 1);
     norms := GetNormals(line);
-    Result[0] := Grow(line, norms, width/2, joinStyle, miterLimOrRndScale, false);
+    Result[0] := Grow(line, norms, width/2, joinStyle, miterLim, scale, false);
   end else
   begin
     SetLength(Result, 2);
     norms := GetNormals(line);
-    Result[0] := Grow(line, norms, width/2, joinStyle, miterLimOrRndScale, false);
+    Result[0] := Grow(line, norms, width/2, joinStyle, miterLim, scale, false);
     Result[1] := ReversePath(
-      Grow(line, norms, -width/2, joinStyle, miterLimOrRndScale, false));
+      Grow(line, norms, -width/2, joinStyle, miterLim, scale, false));
   end;
 end;
 //------------------------------------------------------------------------------
 
 function RoughOutline(const line: TPathD; lineWidth: double;
   joinStyle: TJoinStyle; endStyle: TEndStyle;
-  miterLimOrRndScale: double): TPathsD;
+  miterLim: double = 0; scale: double = 1.0): TPathsD;
 var
   lines: TPathsD;
 begin
   SetLength(lines,1);
   lines[0] := line;
-  Result := RoughOutline(lines, lineWidth,
-    joinStyle, endStyle, miterLimOrRndScale);
+  Result := RoughOutline(lines, lineWidth, joinStyle, endStyle, miterLim, scale);
 end;
 //------------------------------------------------------------------------------
 
 function RoughOutline(const lines: TPathsD; lineWidth: double;
   joinStyle: TJoinStyle; endStyle: TEndStyle;
-  miterLimOrRndScale: double): TPathsD;
+  miterLim: double = 0; scale: double = 1.0): TPathsD;
 var
   i: integer;
   lwDiv2: double;
@@ -2846,6 +2844,8 @@ begin
       joinStyle := jsRound else
       joinStyle := jsSquare;
   end;
+  if scale = 0 then scale := 1;
+
   if endStyle = esPolygon then
   begin
     for i := 0 to high(lines) do
@@ -2861,7 +2861,7 @@ begin
         p := StripNearDuplicates(lines[i], 0.1, true);
         if Length(p) = 2 then AppendPoint(p, p[0]);
         AppendPath(Result,
-          GrowClosedLine(p, lineWidth, joinStyle, miterLimOrRndScale));
+          GrowClosedLine(p, lineWidth, joinStyle, miterLim, scale));
       end;
     end;
   end
@@ -2870,7 +2870,7 @@ begin
     SetLength(Result, Length(lines));
     for i := 0 to high(lines) do
       Result[i] := GrowOpenLine(lines[i], lineWidth,
-        joinStyle, endStyle, miterLimOrRndScale);
+        joinStyle, endStyle, miterLim, scale);
   end;
 end;
 //------------------------------------------------------------------------------

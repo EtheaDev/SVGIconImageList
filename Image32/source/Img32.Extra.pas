@@ -3,7 +3,7 @@ unit Img32.Extra;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
-* Date      :  12 October 2024                                                 *
+* Date      :  15 October 2024                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Miscellaneous routines that don't belong in other modules.      *
@@ -2249,7 +2249,8 @@ end;
 procedure GaussianBlur(img: TImage32; rec: TRect; radius: Integer);
 var
   i, w,h, highX, x,y,yy,z,startz: Integer;
-  gaussTable: array [-MaxBlur .. MaxBlur] of Cardinal;
+  expConst: double;
+  gaussTable: array [-MaxBlur .. MaxBlur] of integer;
   wc: TWeightedColor;
   wca: TArrayOfWeightedColor;
   wcaColor: TArrayOfColor32;
@@ -2257,15 +2258,19 @@ var
   wcRow: PWeightedColorArray;
   imgWidth: Integer;
   dst, pc: PColor32;
+const
+  tableConst = 1024;
+  sigma = 3;
 begin
   Types.IntersectRect(rec, rec, img.Bounds);
   if IsEmptyRect(rec) or (radius < 1) then Exit
   else if radius > MaxBlur then radius := MaxBlur;
 
-  gaussTable[0] := {Sqr}(Radius +1);
+  expConst := - 1 / (Sqr(radius) * 2 * Sqr(sigma));
+  gaussTable[0] := Round(tableConst * Exp(expConst));
   for i := 1 to radius do
   begin
-    gaussTable[i] := {Sqr}(Radius - i +1);
+    gaussTable[i] := Round(tableConst * Exp(expConst * Sqr(i)));
     gaussTable[-i] := gaussTable[i];
   end;
 

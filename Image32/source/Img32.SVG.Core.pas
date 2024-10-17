@@ -3,7 +3,7 @@ unit Img32.SVG.Core;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
-* Date      :  18 September 2024                                               *
+* Date      :  16 October 2024                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -2796,13 +2796,14 @@ end;
 
 function TColorConstList.GetColorValue(const ColorName: UTF8String; var Color: TColor32): Boolean;
 var
-  Hash: Integer;
+  Hash: Cardinal;
   Item: PColorConstMapItem;
 begin
   Hash := GetHash(ColorName);
   Item := FBuckets[(Cardinal(Hash) and $7FFFFFFF) mod FMod];
-  while (Item <> nil) and not IsSameAsciiUTF8String(Item.Data.ColorName, ColorName) do
-    Item := Item.Next;
+  while (Item <> nil) and
+    not IsSameAsciiUTF8String(Item.Data.ColorName, ColorName) do
+      Item := Item.Next;
   if Item <> nil then
   begin
     Color := Item.Data.ColorValue;
