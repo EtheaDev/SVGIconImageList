@@ -2,18 +2,29 @@
 
 ## Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 4.2.1 (VCL+FMX)
+### Actual official version 4.3.0 (VCL+FMX)
 
 | Component | Description |
 | - | - |
 | ![SVGIconImageCollectionComponentIcon.png](./Packages/SVGIconImageCollectionComponentIcon.png) | **TSVGIconImageCollection** is collection of SVG Images for Delphi to provide a centralized list of images for SVGIconVirtualImageLists (only for VCL) |
 | ![SVGIconVirtualImageListComponentIcon.png](./Packages/SVGIconVirtualImageListComponentIcon.png) | **TSVGIconVirtualImageList** is a special "virtual" ImageList for Delphi linked to an SVGIconImageCollection (only for VCL) to simplify use of SVG Icons (resize, opacity, grayscale and more...) |
 | ![SVGIconImageComponentIcon.png](./Packages/SVGIconImageComponentIcon.png) | **TSVGIconImage** is an extended Image component for Delphi (VCL+FMX) to show any SVG image directly or included into a an SVGIconImageList with all functionality (stretch, opacity, grayscale and more...) |
-| ![SVGIconImageListComponentIcon.png](./Packages/SVGIconImageListComponentIcon.png) | **TSVGIconImageList** is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection: **the VCL component is deprecated**, we recommend to use SVGIconImageCollection + SVGIconVirtualImageList also for older Delphi versions! |
+| ![SVGIconImageListComponentIcon.png](./Packages/SVGIconImageListComponentIcon.png) | **TSVGIconImageList** is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection. Use this component to simplify replace of ImageList for older Delphi Apps and obtain auto-scaling of Icons! |
 
-## Very important notice
+## Now you can search and download Icons directly from the WEB!
 
-WARNING: From version 4.0, **TSVGIconVirtualImageList** inherits from **TVirtualImageList** (using Delphi 10.3 to latest). For previous Delphi versions **TSVGIconVirtualImageList** inherits from **TSVGIconImageListBase**.
+From version 4.3 an integrated service is now available in the component editor to download SVG icons from the WEB, via the API provided by [iconify.design](https://iconify.design/).
+
+Now you can select "Add from WEB" in the Component Editor: a new form to search and Download from the WEB is available for both VCL and FMX Platforms.
+
+![SVG_REST_Client_Search](./Demo/Images/SVG_REST_Client_Search.jpg)
+
+Read the [wiki page](https://github.com/EtheaDev/SVGIconImageList/wiki/RESTAPISearch) to understand how to easily download SVG icons from the WEB and include them in the SVGIconImageList or SVGIconImageCollection.
+
+
+## Important notice
+
+From version 4.0, **TSVGIconVirtualImageList** inherits from **TVirtualImageList** (using Delphi 10.3 to latest). For previous Delphi versions **TSVGIconVirtualImageList** inherits from **TSVGIconImageListBase**.
 
 An important difference is that a TVirtualImageList may use and create only a subset of the images in the collection.
 
@@ -21,7 +32,7 @@ Although, the standard TVirtualImageList does not have the FixedColor, GrayScale
 
 For this reasons, now TSVGIconVirtualImageList have also FixedColor, GrayScale, ApplyToRootOnly and Opacity properties, so you can setup those properties only at VirtualImageList level, and you can share the same TSVGIconImageCollection from many VirtualImageList with different poperties, as you can see in the new SVGIconVirtualImageListDemo.
 
-So, if you are using those components from Delphi 10.3, the recommended combination should be **TSVGIconImageCollection + TSVGIconVirtualImageList**.
+For this reason, if you are using those components from Delphi 10.3, the recommended combination should be **TSVGIconImageCollection + TSVGIconVirtualImageList**.
 
 Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to "True", everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.
 
@@ -90,7 +101,14 @@ Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/
 A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/IconFontsImageList](https://github.com/EtheaDev/IconFontsImageList)
 
 ### RELEASE NOTES
-17 Oct 2024: versione 4.2.1 (VCL+FMX)
+26 Nov 2024: version 4.3.0 (VCL+FMX)
+- Updated to Image32 4.6 Released 26 Nov 2024 to fix issue drawing text inside SVG
+- NameSpace added to all uses
+- Added SVGIconImageListRestClient package
+- New Option in Component Editor to select Icons from WEB (VCL and FMX)
+- Demos updated
+
+17 Oct 2024: version 4.2.1 (VCL+FMX)
 - Updated to Image32 4.6 Released 16 Oct 2024 to fix some drawing issue
 
 12 Oct 2024: versione 4.2.0 (VCL+FMX)

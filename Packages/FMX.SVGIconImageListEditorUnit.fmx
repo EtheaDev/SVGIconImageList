@@ -227,26 +227,26 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
-        Text = 'Add...'
+        Text = 'Add from Disk...'
         OnClick = AddButtonClick
       end
       object DeleteButton: TButton
-        Position.X = 3.000000000000000000
-        Position.Y = 56.000000000000000000
-        Size.Width = 106.000000000000000000
-        Size.Height = 22.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 2
-        Text = 'Delete'
-        OnClick = DeleteButtonClick
-      end
-      object ClearAllButton: TButton
         Position.X = 3.000000000000000000
         Position.Y = 82.000000000000000000
         Size.Width = 106.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 3
+        Text = 'Delete'
+        OnClick = DeleteButtonClick
+      end
+      object ClearAllButton: TButton
+        Position.X = 3.000000000000000000
+        Position.Y = 108.000000000000000000
+        Size.Width = 106.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
         Text = 'Clear all'
         OnClick = ClearAllButtonClick
       end
@@ -260,6 +260,16 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Text = 'New'
         OnClick = NewButtonClick
       end
+      object AddWebButton: TButton
+        Position.X = 4.000000000000000000
+        Position.Y = 56.000000000000000000
+        Size.Width = 106.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'Add from Web...'
+        OnClick = AddWebButtonClick
+      end
     end
     object paClient: TPanel
       Align = Client
@@ -270,7 +280,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       object ImageListGroupBox: TGroupBox
         Align = Left
         Size.Width = 217.000000000000000000
-        Size.Height = 408.000000000000000000
+        Size.Height = 346.000000000000000000
         Size.PlatformDefault = False
         Text = 'Properties of ImageList'
         TabOrder = 1

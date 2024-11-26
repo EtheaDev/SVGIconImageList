@@ -112,7 +112,7 @@ procedure Register;
 implementation
 
 uses
-  SysUtils
+  System.SysUtils
   , BrandingAPI
   , Vcl.Themes
   , Vcl.Forms
@@ -132,7 +132,8 @@ uses
   , SVGIconImageCollection
   , SVGIconImageListEditorUnit
   , SVGTextPropertyEditorUnit
-  , PngImage;
+  , Vcl.Imaging.PngImage
+  ;
 
 const
   {$IFDEF D11+}

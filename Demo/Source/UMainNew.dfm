@@ -154,9 +154,9 @@ object MainForm: TMainForm
       object ApplyToRootOnlyCheckBox: TCheckBox
         Left = 10
         Top = 47
-        Width = 108
+        Width = 110
         Height = 17
-        Caption = 'Apply To Root Only'
+        Caption = 'ApplyToRootOnly'
         TabOrder = 1
         OnClick = ApplyToRootOnlyCheckBoxClick
       end
@@ -207,11 +207,13 @@ object MainForm: TMainForm
       Left = 0
       Top = 0
       Action = DisabledAction
+      ImageIndex = 0
     end
     object ToolButton2: TToolButton
       Left = 39
       Top = 0
       Action = DeleteIconAction
+      ImageIndex = 1
     end
     object ToolButton3: TToolButton
       Left = 78
@@ -232,13 +234,14 @@ object MainForm: TMainForm
       Left = 195
       Top = 0
       Action = ChangeIconAction
+      ImageIndex = 5
     end
     object ToolButton7: TToolButton
       Left = 234
       Top = 0
       Caption = 'Change Color'
       Enabled = False
-      ImageIndex = 7
+      ImageIndex = 6
       OnClick = ChangeColorActionExecute
     end
   end
@@ -355,8 +358,6 @@ object MainForm: TMainForm
       SmallImages = VirtualImageList
       TabOrder = 1
       OnSelectItem = ImageViewSelectItem
-      ExplicitWidth = 418
-      ExplicitHeight = 285
     end
   end
   object ActionList: TActionList
@@ -379,7 +380,6 @@ object MainForm: TMainForm
       Category = 'Edit'
       Caption = 'Disabled'
       Enabled = False
-      ImageIndex = 0
     end
     object NewFormAction: TAction
       Category = 'View'
@@ -397,12 +397,12 @@ object MainForm: TMainForm
       item
         CollectionIndex = 0
         CollectionName = 'Business\businessman'
-        Name = 'business\businessman'
+        Name = 'businessman'
       end
       item
         CollectionIndex = 1
         CollectionName = 'Business\businesswoman'
-        Name = 'business\businesswoman'
+        Name = 'businesswoman'
       end
       item
         CollectionIndex = 2
@@ -542,12 +542,12 @@ object MainForm: TMainForm
       item
         CollectionIndex = 29
         CollectionName = 'Business\business'
-        Name = 'business\business'
+        Name = 'business'
       end
       item
         CollectionIndex = 30
         CollectionName = 'Business\business_contact'
-        Name = 'business\business_contact'
+        Name = 'business_contact'
       end
       item
         CollectionIndex = 31

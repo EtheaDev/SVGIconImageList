@@ -30,11 +30,9 @@ interface
 {$INCLUDE SVGIconImageList.inc}
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics,
-  Controls, Forms, Dialogs, ImgList,
-  StdCtrls, Buttons, StdActns,
-  ActnList, ExtCtrls, ComCtrls, ToolWin,
-  Spin, SVGIconImage, Vcl.ExtDlgs;
+  System.SysUtils, Vcl.ExtDlgs, SVGIconImage,
+  Vcl.Dialogs, Vcl.StdCtrls, Vcl.Controls,
+  Vcl.Forms, Vcl.ExtCtrls, System.Classes;
 
 type
   TSVGTextPropertyEditorForm = class(TForm)
@@ -83,8 +81,8 @@ implementation
 {$R *.dfm}
 
 uses
-  Themes
-  , Math
+  Vcl.Themes
+  , System.Math
   {$IFDEF DXE3+}
   , System.UITypes
   {$ENDIF}
@@ -98,7 +96,12 @@ uses
   , BrandingAPI
   {$IF (CompilerVersion >= 32.0)}, IDETheme.Utils{$IFEND}
 {$ENDIF}
-  , ShellAPI;
+  , WinApi.ShellAPI
+  , System.Types
+  , System.UIConsts
+  , Vcl.Graphics
+  , WinApi.Windows
+  ;
 
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);

@@ -35,6 +35,8 @@ requires
   vcl
   , VclSmp
   , vclimg
+  , RESTComponents
+  , SVGIconImageListRestClient
   {$IFDEF Image32_SVGEngine}
   , SVGImage32Package
   {$ENDIF}

@@ -3,7 +3,7 @@ unit Img32.SVG.Reader;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
-* Date      :  17 October 2024                                                 *
+* Date      :  16 November 2024                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -666,7 +666,7 @@ const
     strokeWidth: (rawVal: InvalidD; unitType: utNumber);
     strokeCap: esPolygon; strokeJoin: jsMiter; strokeMitLim: 0.0; strokeEl : '';
     dashArray: nil; dashOffset: 0;
-    fontInfo: (family: ttfUnknown; size: 0; spacing: 0.0;
+    fontInfo: (family: tfUnknown; familyNames: nil; size: 0; spacing: 0.0;
     textLength: 0; italic: sfsUndefined; weight: -1; align: staUndefined;
     decoration: fdUndefined; baseShift: (rawVal: InvalidD; unitType: utNumber));
     markerStart: ''; markerMiddle: ''; markerEnd: '';
@@ -782,8 +782,11 @@ begin
     if (filterElRef <> '') then
       drawDat.filterElRef := filterElRef;
 
-    if fontInfo.family <> ttfUnknown then
+    if fontInfo.family <> tfUnknown then
       drawDat.fontInfo.family := fontInfo.family;
+    if Assigned(fontInfo.familyNames) then
+      drawDat.fontInfo.familyNames := fontInfo.familyNames;
+
     if fontInfo.size > 0 then
       drawDat.fontInfo.size := fontInfo.size;
     if fontInfo.spacing <> 0 then
@@ -4288,15 +4291,18 @@ var
 begin
   with aOwnerEl.fDrawData.FontInfo do
   begin
-    family := ttfUnknown;
+    family := tfUnknown;
+    familyNames := GetCommaSeparatedArray(value);
+    // get comma separated family names
+
     c := PUTF8Char(value);
     endC := c + Length(value);
     while ParseNextWordExHash(c, endC, hash) do
     begin
       case hash of
-        hSans_045_Serif, hArial  : family := ttfSansSerif;
-        hSerif, hTimes: family := ttfSerif;
-        hMonospace: family := ttfMonospace;
+        hSans_045_Serif, hArial  : family := tfSansSerif;
+        hSerif, hTimes: family := tfSerif;
+        hMonospace: family := tfMonospace;
         else Continue;
       end;
       break;
@@ -5373,14 +5379,20 @@ end;
 
 procedure TSvgReader.GetBestFontForFontCache(const svgFontInfo: TSVGFontInfo);
 var
+  i, len: integer;
   bestFontReader: TFontReader;
   fi: TFontInfo;
 begin
-  if svgFontInfo.family = ttfUnknown then
-    fi.fontFamily := ttfSansSerif else
-    fi.fontFamily := svgFontInfo.family;
+  if svgFontInfo.family = tfUnknown then
+    fi.family := tfSansSerif else
+    fi.family := svgFontInfo.family;
   fi.faceName := ''; //just match to a family here, not to a specific facename
   fi.macStyles := [];
+  len := Length(svgFontInfo.familyNames);
+  SetLength(fi.familyNames, len);
+  for i := 0 to len -1 do
+    fi.familyNames[i] := string(svgFontInfo.familyNames[i]);
+
   if svgFontInfo.italic = sfsItalic then
     Include(fi.macStyles, msItalic);
   if svgFontInfo.weight >= 600 then

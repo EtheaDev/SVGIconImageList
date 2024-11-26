@@ -47,7 +47,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '4.2.1';
+  SVGIconImageListVersion = '4.3.0';
   DEFAULT_SIZE = 32;
   ZOOM_DEFAULT = 100;
   SVG_INHERIT_COLOR = TAlphaColors.Null;
@@ -202,6 +202,8 @@ type
     constructor Create(AOwner: TComponent); override;
     procedure Assign(Source: TPersistent); override;
     procedure DeleteIcon(const AIndex: Integer);
+    function AddIcon(const ASVGText: string;
+      const AIconName: string = ''): TSVGIconSourceItem;
     function InsertIcon(const AIndex: Integer;
       const ASVGText: string; const AIconName: string = ''): TSVGIconSourceItem;
     function CloneIcon(const AIndex: Integer; const AInsertIndex: Integer = -1): TSVGIconSourceItem;
@@ -787,6 +789,15 @@ begin
   finally
     LSVG.Free;
   end;
+end;
+
+function TSVGIconImageList.AddIcon(const ASVGText,
+  AIconName: string): TSVGIconSourceItem;
+begin
+  if Count = 0 then
+    Result := InsertIcon(0, ASVGText, AIconName)
+  else
+    Result := InsertIcon(Source.Count, ASVGText, AIconName);
 end;
 
 procedure TSVGIconImageList.Assign(Source: TPersistent);

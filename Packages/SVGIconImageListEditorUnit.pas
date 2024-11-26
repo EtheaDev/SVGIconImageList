@@ -9,12 +9,6 @@
 {       https://github.com/EtheaDev/SVGIconsImageList                          }
 {                                                                              }
 {******************************************************************************}
-{       Original version (c) 2005, 2008 Martin Walter with license:            }
-{       Use of this file is permitted for commercial and non-commercial        }
-{       use, as long as the author is credited.                                }
-{       home page: http://www.mwcs.de                                          }
-{       email    : martin.walter@mwcs.de                                       }
-{******************************************************************************}
 {                                                                              }
 {  Licensed under the Apache License, Version 2.0 (the "License");             }
 {  you may not use this file except in compliance with the License.            }
@@ -80,10 +74,10 @@ type
     paClient: TPanel;
     SVGText: TMemo;
     SizeLabel: TLabel;
-    SizeEdit: TEdit;
+    SizeEdit: TSpinEdit;
     WidthLabel: TLabel;
-    WidthEdit: TEdit;
-    HeightEdit: TEdit;
+    WidthEdit: TSpinEdit;
+    HeightEdit: TSpinEdit;
     HeightLabel: TLabel;
     BottomPanel: TPanel;
     ApplyButton: TButton;
@@ -131,12 +125,11 @@ type
     AntialiasColorComboBox: TColorBox;
     ApplyToRootOnlyCheckBox: TCheckBox;
     ApplyToRootOnlyItemCheckBox: TCheckBox;
-    PngGroupBox: TGroupBox;
-    PngWidthEdit: TEdit;
-    PngHeightEdit: TEdit;
     ExportPngButton: TButton;
-    PngHeightLabel: TLabel;
-    PngWidthLabel: TLabel;
+    DiskBevel: TBevel;
+    AddWebButton: TButton;
+    ReplaceWebButton: TButton;
+    WebBevel: TBevel;
     procedure FormCreate(Sender: TObject);
     procedure ApplyButtonClick(Sender: TObject);
     procedure ClearAllButtonClick(Sender: TObject);
@@ -180,6 +173,8 @@ type
     procedure ExportPngButtonClick(Sender: TObject);
     procedure ApplyToRootOnlyCheckBoxClick(Sender: TObject);
     procedure ApplyToRootOnlyItemCheckBoxClick(Sender: TObject);
+    procedure AddWebButtonClick(Sender: TObject);
+    procedure ReplaceWebButtonClick(Sender: TObject);
   private
     FOldSVGText: string;
     FOpenDialog: TOpenPictureDialogSvg;
@@ -243,6 +238,10 @@ uses
 {$ENDIF}
   , Winapi.CommDlg
   , SVGIconUtils
+  {$IFDEF UseRESTClientSearch}
+  , SVGRESTClientFormUnit
+  {$ENDIF}
+  , SVGIconSetFormUnit
   , dlgExportPNG;
 
 var
@@ -254,32 +253,29 @@ var
   LEditor: TSVGIconImageListEditor;
 begin
   LEditor := TSVGIconImageListEditor.Create(nil);
-  with LEditor do
-  begin
+  try
+    Screen.Cursor := crHourglass;
     try
+      LEditor.FSourceList := AImageList;
+      LEditor.FEditingList.Assign(AImageList);
+      LEditor.UpdateGUI;
+    finally
+      Screen.Cursor := crDefault;
+    end;
+    Result := LEditor.ShowModal = mrOk;
+    if Result then
+    begin
       Screen.Cursor := crHourglass;
       try
-        FSourceList := AImageList;
-        FEditingList.Assign(AImageList);
-        UpdateGUI;
+        AImageList.Assign(LEditor.FEditingList);
       finally
         Screen.Cursor := crDefault;
       end;
-      Result := ShowModal = mrOk;
-      if Result then
-      begin
-        Screen.Cursor := crHourglass;
-        try
-          AImageList.Assign(LEditor.FEditingList);
-        finally
-          Screen.Cursor := crDefault;
-        end;
-      end;
-      SavedBounds := BoundsRect;
-      paTopHeight := paTop.Height;
-    finally
-      Free;
     end;
+    SavedBounds := LEditor.BoundsRect;
+    paTopHeight := LEditor.paTop.Height;
+  finally
+    LEditor.Free;
   end;
 end;
 
@@ -291,34 +287,31 @@ begin
   if AImageList.ImageCollection = nil then
     exit(false);
   LEditor := TSVGIconImageListEditor.Create(nil);
-  with LEditor do
-  begin
+  try
+    Screen.Cursor := crHourglass;
     try
+      LEditor.FSVGIconVirtualImageList := AImageList;
+      LEditor.FSourceList := TSVGIconImageList.Create(LEditor);
+      LEditor.FSourceList.Assign(AImageList);
+      LEditor.FEditingList.Assign(AImageList);
+      LEditor.UpdateGUI;
+    finally
+      Screen.Cursor := crDefault;
+    end;
+    Result := LEditor.ShowModal = mrOk;
+    if Result then
+    begin
       Screen.Cursor := crHourglass;
       try
-        FSVGIconVirtualImageList := AImageList;
-        FSourceList := TSVGIconImageList.Create(LEditor);
-        FSourceList.Assign(AImageList);
-        FEditingList.Assign(AImageList);
-        UpdateGUI;
+        LEditor.ApplyToSVGIconVirtualImageList;
       finally
         Screen.Cursor := crDefault;
       end;
-      Result := ShowModal = mrOk;
-      if Result then
-      begin
-        Screen.Cursor := crHourglass;
-        try
-          ApplyToSVGIconVirtualImageList;
-        finally
-          Screen.Cursor := crDefault;
-        end;
-      end;
-      SavedBounds := BoundsRect;
-      paTopHeight := paTop.Height;
-    finally
-      Free;
     end;
+    SavedBounds := LEditor.BoundsRect;
+    paTopHeight := LEditor.paTop.Height;
+  finally
+    LEditor.Free;
   end;
 end;
 {$ENDIF}
@@ -328,42 +321,39 @@ var
   LEditor: TSVGIconImageListEditor;
 begin
   LEditor := TSVGIconImageListEditor.Create(nil);
-  with LEditor do
-  begin
+  try
+    Screen.Cursor := crHourglass;
     try
+      LEditor.FImageCollection := AImageCollection;
+      LEditor.FSourceList := TSVGIconImageList.Create(LEditor);
+      LEditor.FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
+      LEditor.FSourceList.Size := 64; //Force 64 pixel size for image collection icons
+      LEditor.FSourceList.GrayScale := AImageCollection.GrayScale;
+      LEditor.FSourceList.FixedColor := AImageCollection.FixedColor;
+      LEditor.FSourceList.ApplyFixedColorToRootOnly := AImageCollection.ApplyFixedColorToRootOnly;
+      LEditor.FSourceList.AntiAliasColor := AImageCollection.AntiAliasColor;
+      LEditor.FSourceList.Opacity := AImageCollection.Opacity;
+      LEditor.ImageListGroupBox.Visible := False;
+      LEditor.FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
+      LEditor.FEditingList.Assign(LEditor.FSourceList);
+      LEditor.UpdateGUI;
+    finally
+      Screen.Cursor := crDefault;
+    end;
+    Result := LEditor.ShowModal = mrOk;
+    if Result then
+    begin
       Screen.Cursor := crHourglass;
       try
-        FImageCollection := AImageCollection;
-        FSourceList := TSVGIconImageList.Create(LEditor);
-        FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
-        FSourceList.Size := 64; //Force 64 pixel size for image collection icons
-        FSourceList.GrayScale := AImageCollection.GrayScale;
-        FSourceList.FixedColor := AImageCollection.FixedColor;
-        FSourceList.ApplyFixedColorToRootOnly := AImageCollection.ApplyFixedColorToRootOnly;
-        FSourceList.AntiAliasColor := AImageCollection.AntiAliasColor;
-        FSourceList.Opacity := AImageCollection.Opacity;
-        ImageListGroupBox.Visible := False;
-        FSourceList.SVGIconItems.Assign(AImageCollection.SVGIconItems);
-        FEditingList.Assign(FSourceList);
-        UpdateGUI;
+        LEditor.ApplyToImageCollection;
       finally
         Screen.Cursor := crDefault;
       end;
-      Result := ShowModal = mrOk;
-      if Result then
-      begin
-        Screen.Cursor := crHourglass;
-        try
-          ApplyToImageCollection;
-        finally
-          Screen.Cursor := crDefault;
-        end;
-      end;
-      SavedBounds := BoundsRect;
-      paTopHeight := paTop.Height;
-    finally
-      Free;
     end;
+    SavedBounds := LEditor.BoundsRect;
+    paTopHeight := LEditor.paTop.Height;
+  finally
+    LEditor.Free;
   end;
 end;
 
@@ -376,11 +366,9 @@ begin
   FUpdating := True;
   try
     Screen.Cursor := crHourGlass;
-    SizeEdit.Text := IntToStr(FEditingList.Size);
-    WidthEdit.Text := IntToStr(FEditingList.Width);
-    HeightEdit.Text := IntToStr(FEditingList.Height);
-    PngWidthEdit.Text := IntToStr(FEditingList.Width);
-    PngHeightEdit.Text := IntToStr(FEditingList.Height);
+    SizeEdit.Value := FEditingList.Size;
+    WidthEdit.Value := FEditingList.Width;
+    HeightEdit.Value := FEditingList.Height;
     LIconPanelSize := IconPanel.Height - (IconPanel.BorderWidth * 2);
     if FEditingList.Width > FEditingList.Height then
     begin
@@ -454,6 +442,7 @@ end;
 
 procedure TSVGIconImageListEditor.AddButtonClick(Sender: TObject);
 begin
+  FOpenDialog.Options := FOpenDialog.Options + [ofAllowMultiSelect];
   if FOpenDialog.Execute then
   begin
     Screen.Cursor := crHourGlass;
@@ -509,6 +498,7 @@ begin
     ExportPngButton.Enabled := LIsItemSelected;
     ReformatXMLButton.Enabled := LIsItemSelected;
     ReplaceButton.Enabled := LIsItemSelected;
+    ReplaceWebButton.Enabled := LIsItemSelected;
     SetCategoriesButton.Enabled := LIsItemSelected;
     ApplyButton.Enabled := FChanged;
     NameEdit.Enabled := LIsItemSelected;
@@ -558,7 +548,7 @@ end;
 procedure TSVGIconImageListEditor.WidthEditChange(Sender: TObject);
 begin
   if FUpdating then Exit;
-  FEditingList.Width := StrToInt(WidthEdit.Text);
+  FEditingList.Width := WidthEdit.Value;
   UpdateSizeGUI;
 end;
 
@@ -648,28 +638,22 @@ end;
 
 procedure TSVGIconImageListEditor.ReplaceButtonClick(Sender: TObject);
 var
-  LIndex: Integer;
-  SVG: ISVG;
   FileName: string;
   Item: TSVGIconItem;
 begin
+  FOpenDialog.Options := FOpenDialog.Options - [ofAllowMultiSelect];
   if FOpenDialog.Execute then
   begin
-    Screen.Cursor := crHourGlass;
     FEditingList.BeginUpdate;
     try
-      SVG := GlobalSVGFactory.NewSvg;
-      for LIndex := 0 to FOpenDialog.Files.Count - 1 do
+      Screen.Cursor := crHourGlass;
+      if FOpenDialog.Files.Count > 0 then
       begin
-        FileName := ChangeFileExt(ExtractFileName(FOpenDialog.Files[LIndex]), '');
-        try
-          SVG.LoadFromFile(FOpenDialog.Files[LIndex]);
-          Item := FEditingList.SVGIconItems[ImageView.ItemIndex];
-          Item.IconName := FileName;
-          Item.SVG := SVG;
-          FChanged := True;
-        finally
-        end;
+        Item := FEditingList.SVGIconItems[ImageView.ItemIndex];
+        FileName := ChangeFileExt(ExtractFileName(FOpenDialog.Files[0]), '');
+        Item.SVG.LoadFromFile(FOpenDialog.Files[0]);
+        Item.IconName := FileName;
+        FChanged := True;
       end;
       BuildList(ImageView.Items[ImageView.ItemIndex].ImageIndex);
     finally
@@ -677,6 +661,41 @@ begin
       Screen.Cursor := crDefault;
     end;
   end;
+end;
+
+procedure TSVGIconImageListEditor.ReplaceWebButtonClick(Sender: TObject);
+begin
+  {$IFDEF UseRESTClientSearch}
+  FEditingList.BeginUpdate;
+  try
+    Screen.Cursor := crHourGlass;
+    if SearchSVGIconsFromWeb(FEditingList, ImageView.ItemIndex) then
+    begin
+      FChanged := True;
+      BuildList(ImageView.Items[ImageView.ItemIndex].ImageIndex);
+    end;
+  finally
+    FEditingList.EndUpdate;
+    Screen.Cursor := crDefault;
+  end;
+  {$ENDIF}
+end;
+
+procedure TSVGIconImageListEditor.AddWebButtonClick(Sender: TObject);
+begin
+  {$IFDEF UseRESTClientSearch}
+  FEditingList.BeginUpdate;
+  try
+    if SearchSVGIconsFromWeb(FEditingList) then
+    begin
+      BuildList(MaxInt);
+      FChanged := True;
+      UpdateGUI;
+    end;
+  finally
+    FEditingList.EndUpdate;
+  end;
+  {$ENDIF}
 end;
 
 procedure TSVGIconImageListEditor.ImageViewKeyDown(Sender: TObject;
@@ -703,38 +722,38 @@ var
   LSVGIconItem: TSVGIconItem;
   LCategoryName: string;
 begin
-  LCategoryName := InputBox('Set Category', 'Name', FSelectedCategory);
-  if (LCategoryName = FSelectedCategory) then
-    Exit;
-
-  Screen.Cursor := crHourGlass;
-  try
-    FSelectedCategory := LCategoryName;
-    Selected := ImageView.ItemIndex;
-    FEditingList.BeginUpdate;
+  if SVGPropInputCategory(Self, LCategoryName) and
+    (LCategoryName <> FSelectedCategory) then
+  begin
+    Screen.Cursor := crHourGlass;
     try
-      for LIndex := ImageView.Items.Count - 1 downto 0 do
-      begin
-        if ImageView.Items[LIndex].Selected then
+      FSelectedCategory := LCategoryName;
+      Selected := ImageView.ItemIndex;
+      FEditingList.BeginUpdate;
+      try
+        for LIndex := ImageView.Items.Count - 1 downto 0 do
         begin
-          LSVGIconItem := FEditingList.SVGIconItems[ImageView.Items[LIndex].ImageIndex];
-          LSVGIconItem.Category := FSelectedCategory;
+          if ImageView.Items[LIndex].Selected then
+          begin
+            LSVGIconItem := FEditingList.SVGIconItems[ImageView.Items[LIndex].ImageIndex];
+            LSVGIconItem.Category := FSelectedCategory;
+          end;
         end;
+      finally
+        FEditingList.EndUpdate;
       end;
+      FChanged := True;
+      BuildList(Selected);
     finally
-      FEditingList.EndUpdate;
+      Screen.Cursor := crDefault;
     end;
-    FChanged := True;
-    BuildList(Selected);
-  finally
-    Screen.Cursor := crDefault;
   end;
 end;
 
 procedure TSVGIconImageListEditor.SizeEditChange(Sender: TObject);
 begin
   if FUpdating then Exit;
-  FEditingList.Size := StrToInt(SizeEdit.Text);
+  FEditingList.Size := SizeEdit.Value;
   UpdateSizeGUI;
 end;
 
@@ -921,12 +940,12 @@ begin
     if UseThemeFont then
       Self.Font.Assign(GetThemeFont);
     {$IFEND}
-    {$IF CompilerVersion > 34.0}
-    if TIDEThemeMetrics.Font.Enabled then
-      Self.Font.Assign(TIDEThemeMetrics.Font.GetFont);
-    {$IFEND}
+    //{$IF CompilerVersion > 34.0}
+    //if TIDEThemeMetrics.Font.Enabled then
+    //  Self.Font.Assign(TIDEThemeMetrics.Font.GetFont);
+    //{$IFEND}
 
-    if ThemeProperties <> nil then
+    if IDEThemeAvailable then
     begin
       LStyle := ThemeProperties.StyleServices;
       StyleElements := StyleElements - [seClient];
@@ -939,6 +958,12 @@ begin
     end;
   {$IFEND}
 {$ENDIF}
+
+  {$IFNDEF UseRESTClientSearch}
+  ReplaceWebButton.Visible := False;
+  AddWebButton.Visible := False;
+  WebBevel.Visible := False;
+  {$ENDIF}
 
   FUpdating := False;
   ResetError;
@@ -1045,6 +1070,7 @@ end;
 procedure TSVGIconImageListEditor.ExportPngButtonClick(Sender: TObject);
 var
   LOutputPath: string;
+  LPngSize, LPngWidth, LPngHeight: Integer;
 
   procedure SaveIconsToFiles(const AOutDir: string);
   var
@@ -1077,7 +1103,7 @@ var
             GrayScaleCheckBox.Checked);
 
           //Export image by the Interface
-          SVGExportToPng(StrToInt(PngWidthEdit.Text), StrToInt(PngHeightEdit.Text),
+          SVGExportToPng(LPngWidth, LPngHeight,
             LItem.SVG, LOutputPath, ExtractFileName(LFileName));
           Inc(C);
         end;
@@ -1090,6 +1116,12 @@ var
   end;
 
 begin
+  LPngSize := FEditingList.Size;
+  LPngWidth := FEditingList.Width;
+  LPngHeight := FEditingList.Height;
+  if not SVGPropInputPngSize(Self, LPngSize, LPngWidth, LPngHeight) then
+    Exit;
+
   LOutputPath := ExtractFilePath(FOpenDialog.FileName);
   if Win32MajorVersion >= 6 then
     with TFileOpenDialog.Create(nil) do
@@ -1179,7 +1211,7 @@ end;
 procedure TSVGIconImageListEditor.HeightEditChange(Sender: TObject);
 begin
   if FUpdating then Exit;
-  FEditingList.Height := StrToInt(HeightEdit.Text);
+  FEditingList.Height := HeightEdit.Value;
   UpdateSizeGUI;
 end;
 

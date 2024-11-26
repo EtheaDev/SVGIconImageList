@@ -74,7 +74,7 @@
         <DCC_K>false</DCC_K>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Namespace>System;WinApi;$(DCC_Namespace)</DCC_Namespace>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <SanitizedProjectName>SVGIconImageListFMX</SanitizedProjectName>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -83,6 +83,7 @@
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DllSuffix>$(Auto)</DllSuffix>
+        <DCC_UnitSearchPath>..\..\Source;..\..\Image32\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=</VerInfo_Keys>
@@ -140,12 +141,12 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="fmx.dcp"/>
-        <DCCReference Include="SVGImage32Package.dcp"/>
-        <DCCReference Include="..\..\Image32\Source\Img32.FMX.pas"/>
+        <DCCReference Include="RESTComponents.dcp"/>
+        <DCCReference Include="SVGIconImageListRestClient.dcp"/>
         <DCCReference Include="..\..\Source\FMX.ImageSVG.pas"/>
-        <DCCReference Include="..\..\Source\FMX.Image32SVG.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImageList.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImage.pas"/>
+        <DCCReference Include="..\..\Source\FMX.SVGIconsUtils.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

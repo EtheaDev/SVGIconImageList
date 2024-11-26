@@ -58,19 +58,21 @@ implementation
 
 uses
   Winapi.GDIPAPI, System.IOUtils, System.Types, FileCtrl,
-  Image32SVGFactory, D2DSVGFactory, SkiaSVGFactory;
+  Image32SVGFactory,
+  {$IFDEF SKIA}SkiaSVGFactory,{$ENDIF}
+  D2DSVGFactory;
 
 procedure TSVGViewerForm.ApplyToRootOnlyCheckBoxClick(Sender: TObject);
 begin
   FrameViewerD2D.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
-  FrameViewSkia.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
+  {$IFDEF SKIA}FrameViewSkia.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;{$ENDIF}
   FrameViewImage32.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
 end;
 
 procedure TSVGViewerForm.DrawImage(const AFileName: string);
 begin
   FrameViewerD2D.DrawFile(AFileName);
-  FrameViewSkia.DrawFile(AFileName);
+  {$IFDEF SKIA}FrameViewSkia.DrawFile(AFileName);{$ENDIF}
   FrameViewImage32.DrawFile(AFileName);
 end;
 
@@ -119,7 +121,7 @@ end;
 procedure TSVGViewerForm.FixedColorComboBoxChange(Sender: TObject);
 begin
   FrameViewerD2D.FixedColor := FixedColorComboBox.Selected;
-  FrameViewSkia.FixedColor := FixedColorComboBox.Selected;
+  {$IFDEF SKIA}FrameViewSkia.FixedColor := FixedColorComboBox.Selected;{$ENDIF}
   FrameViewImage32.FixedColor := FixedColorComboBox.Selected;
 end;
 
@@ -129,9 +131,12 @@ begin
   SourcePath := ExtractFilePath(Application.ExeName)+'..\svg_examples';
 
   FrameViewerD2D.InitViewer('Native Direct2D', GetD2DSVGFactory);
+  {$IFDEF SKIA}
   FrameViewSkia.InitViewer('Skia SVG', GetSkiaSVGFactory);
+  {$ELSE}
+  FrameViewSkia.Visible := False;
+  {$ENDIF}
   FrameViewImage32.InitViewer('Delphi Image32', GetImage32SVGFactory);
-
 end;
 
 procedure TSVGViewerForm.FormResize(Sender: TObject);
@@ -148,14 +153,14 @@ end;
 procedure TSVGViewerForm.GrayScaleCheckBoxClick(Sender: TObject);
 begin
   FrameViewerD2D.GrayScale := GrayScaleCheckBox.Checked;
-  FrameViewSkia.GrayScale := GrayScaleCheckBox.Checked;
+  {$IFDEF SKIA}FrameViewSkia.GrayScale := GrayScaleCheckBox.Checked;{$ENDIF}
   FrameViewImage32.GrayScale := GrayScaleCheckBox.Checked;
 end;
 
 procedure TSVGViewerForm.KeepCheckBoxClick(Sender: TObject);
 begin
   FrameViewerD2D.KeepAspectRatio := KeepCheckBox.Checked;
-  FrameViewSkia.KeepAspectRatio := KeepCheckBox.Checked;
+  {$IFDEF SKIA}FrameViewSkia.KeepAspectRatio := KeepCheckBox.Checked;{$ENDIF}
   FrameViewImage32.KeepAspectRatio := KeepCheckBox.Checked;
 end;
 

@@ -3,7 +3,7 @@ unit Img32;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
-* Date      :  12 October 2024                                                 *
+* Date      :  26 November 2024                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  The core module of the Image32 library                          *
@@ -810,8 +810,7 @@ procedure NewColor32Array(var a: TArrayOfColor32; count: nativeint; uninitialize
 begin
   if a <> nil then
   begin
-    if uninitialized and CanReuseDynArray(a, count) then
-      Exit;
+    if uninitialized and CanReuseDynArray(a, count) then Exit;
     a := nil;
   end;
   Pointer(a) := NewSimpleDynArray(count, SizeOf(TColor32), uninitialized);

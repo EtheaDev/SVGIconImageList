@@ -3,7 +3,7 @@ unit Img32.CQ;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
-* Date      :  18 September 2024                                               *
+* Date      :  26 November 2024                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Color reduction for TImage32                                    *
@@ -562,21 +562,10 @@ end;
 //------------------------------------------------------------------------------
 
 function TOctNode.GetColor: TColor32;
-var
-  argb: TARGB absolute Result;
 begin
   if palColor = UnassignedColor then
-  begin
-    argb.R := TotalR;
-    argb.G := TotalG;
-    argb.B := TotalB;
-    argb.A := 255;
-    palColor := Result;
-  end else
-  begin
-    Result := palColor;
-  end;
-
+    palColor := Color32(255, TotalR, TotalG, TotalB);
+  Result := palColor;
 end;
 
 //------------------------------------------------------------------------------

@@ -37,6 +37,7 @@ object MainForm: TMainForm
     Height = 509
     Align = alLeft
     TabOrder = 0
+    ExplicitHeight = 508
     object SelectThemeRadioGroup: TRadioGroup
       Left = 1
       Top = 1
@@ -46,6 +47,7 @@ object MainForm: TMainForm
       Caption = 'Select Theme/Color'
       TabOrder = 0
       OnClick = SelectThemeRadioGroupClick
+      ExplicitHeight = 209
     end
     object LoadGroupBox: TGroupBox
       Left = 1
@@ -55,6 +57,7 @@ object MainForm: TMainForm
       Align = alBottom
       Caption = 'Load SVG from disk'
       TabOrder = 1
+      ExplicitTop = 210
       object BuildFromFilesButton: TButton
         Left = 3
         Top = 23
@@ -73,6 +76,7 @@ object MainForm: TMainForm
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 3
+      ExplicitTop = 372
       object IconSizeLabel: TLabel
         Left = 8
         Top = 3
@@ -103,6 +107,7 @@ object MainForm: TMainForm
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 2
+      ExplicitTop = 269
       object ClearButton: TButton
         Left = 5
         Top = 5
@@ -130,6 +135,7 @@ object MainForm: TMainForm
       Align = alBottom
       Caption = 'Fixed color'
       TabOrder = 4
+      ExplicitTop = 434
       object FixedColorComboBox: TColorBox
         Left = 10
         Top = 19
@@ -143,7 +149,7 @@ object MainForm: TMainForm
         OnSelect = FixedColorComboBoxSelect
       end
       object GrayScaleCheckBox: TCheckBox
-        Left = 124
+        Left = 127
         Top = 47
         Width = 71
         Height = 17
@@ -154,7 +160,7 @@ object MainForm: TMainForm
       object ApplyToRootOnlyCheckBox: TCheckBox
         Left = 10
         Top = 47
-        Width = 108
+        Width = 117
         Height = 17
         Caption = 'Apply To Root Only'
         TabOrder = 1
@@ -208,7 +214,6 @@ object MainForm: TMainForm
       Top = 0
       Action = DisabledAction
       ImageIndex = 0
-      ImageName = 'businessman'
     end
     object ToolButton2: TToolButton
       Left = 39
@@ -220,19 +225,16 @@ object MainForm: TMainForm
       Left = 78
       Top = 0
       ImageIndex = 2
-      ImageName = 'calendar'
     end
     object ToolButton4: TToolButton
       Left = 117
       Top = 0
       ImageIndex = 3
-      ImageName = 'about'
     end
     object ToolButton5: TToolButton
       Left = 156
       Top = 0
       ImageIndex = 4
-      ImageName = 'calculator'
     end
     object ToolButton6: TToolButton
       Left = 195
@@ -246,7 +248,6 @@ object MainForm: TMainForm
       Caption = 'Change Color'
       Enabled = False
       ImageIndex = 6
-      ImageName = 'advertising'
       OnClick = ChangeColorActionExecute
     end
   end
@@ -271,7 +272,6 @@ object MainForm: TMainForm
       AutoSize = False
       ImageList = SVGIconVirtualImageList
       ImageIndex = 100
-      ImageName = 'Delphi_Product icon'
       Align = alBottom
       OnDblClick = SVGIconImageDblClick
       OnMouseDown = SVGIconImageMouseDown
@@ -334,16 +334,15 @@ object MainForm: TMainForm
       Indent = 35
       TabOrder = 0
       Items.NodeData = {
-        070300000009540054007200650065004E006F00640065002500000001000000
-        01000000FFFFFFFFFFFFFFFF0000000000000000000100000001036F006E0065
-        0000002D0000000400000004000000FFFFFFFFFFFFFFFF000000000000000000
-        0000000001076F006E0065002D006F006E006500000025000000020000000200
-        0000FFFFFFFFFFFFFFFF000000000000000000020000000103740077006F0000
-        002D0000000500000005000000FFFFFFFFFFFFFFFF0000000000000000000000
-        00000107740077006F0020006F006E00650000002D0000000600000007000000
-        00000000FFFFFFFF000000000000000000000000000107740077006F00200074
-        0077006F000000290000000300000003000000FFFFFFFFFFFFFFFF0000000000
-        0000000000000000010574006800720065006500}
+        0303000000240000000100000001000000FFFFFFFFFFFFFFFF00000000000000
+        000100000001036F006E0065002C0000000400000004000000FFFFFFFFFFFFFF
+        FF00000000000000000000000001076F006E0065002D006F006E006500240000
+        000200000002000000FFFFFFFFFFFFFFFF000000000000000002000000010374
+        0077006F002C0000000500000005000000FFFFFFFFFFFFFFFF00000000000000
+        00000000000107740077006F0020006F006E0065002C00000006000000070000
+        0000000000FFFFFFFF0000000000000000000000000107740077006F00200074
+        0077006F00280000000300000003000000FFFFFFFFFFFFFFFF00000000000000
+        0000000000010574006800720065006500}
     end
     object ImageView: TListView
       Left = 1
@@ -375,27 +374,23 @@ object MainForm: TMainForm
       Category = 'Edit'
       Caption = 'Change icon'
       ImageIndex = 255
-      ImageName = 'synchronize'
       OnExecute = ChangeIconActionExecute
     end
     object DeleteIconAction: TAction
       Category = 'Edit'
       Caption = 'Delete Icon'
       ImageIndex = 39
-      ImageName = 'cancel'
       OnExecute = DeleteIconActionExecute
     end
     object DisabledAction: TAction
       Category = 'Edit'
       Caption = 'Disabled'
       Enabled = False
-      ImageName = 'business\businessman'
     end
     object NewFormAction: TAction
       Category = 'View'
       Caption = 'New Form'
       ImageIndex = 107
-      ImageName = 'frame'
       OnExecute = NewFormActionExecute
     end
   end

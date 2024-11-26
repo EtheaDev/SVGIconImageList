@@ -14,12 +14,10 @@ object SVGTextPropertyEditorForm: TSVGTextPropertyEditorForm
   Font.Height = -11
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OldCreateOrder = True
   ShowHint = True
   OnCreate = FormCreate
   OnResize = FormResize
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object RightSplitter: TSplitter
     Left = 550

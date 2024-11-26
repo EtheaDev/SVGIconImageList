@@ -175,7 +175,7 @@ begin
   LSource := TBitMapData.Create(FImage32.Width, FImage32.Height, TPixelFormat.RGBA);
 {$ELSE}
   LSource := TBitMapData.Create(FImage32.Width, FImage32.Height, TPixelFormat.BGRA);
-{$IFEND}
+{$ENDIF}
   LSource.Data := FImage32.PixelBase;
   LSource.Pitch := FImage32.Width * 4;
   ABitmap.SetSize(FImage32.Width, FImage32.Height);

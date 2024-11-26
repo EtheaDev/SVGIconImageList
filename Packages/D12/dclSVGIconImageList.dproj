@@ -19,6 +19,11 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
@@ -45,7 +50,6 @@
         <DCC_K>false</DCC_K>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <SanitizedProjectName>dclSVGIconImageList</SanitizedProjectName>
         <DCC_Description>Ethea SVGIconImageList VCL components</DCC_Description>
@@ -56,8 +60,10 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
+        <DCC_UsePackage>SVGIconImageList;$(DCC_UsePackage)</DCC_UsePackage>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_UsePackage>SVGIconImageList;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -91,7 +97,12 @@
         <DCCReference Include="..\SVGIconImageRegister.pas"/>
         <DCCReference Include="..\SVGTextPropertyEditorUnit.pas">
             <Form>SVGTextPropertyEditorForm</Form>
-            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\SVGRESTClientFormUnit.pas">
+            <Form>SVGRESTClientSearchForm</Form>
+        </DCCReference>
+        <DCCReference Include="..\SVGIconSetFormUnit.pas">
+            <Form>SVGIconSetForm</Form>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

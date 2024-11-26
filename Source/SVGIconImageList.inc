@@ -195,4 +195,8 @@
   {$Define HiDPISupport}
 {$ENDIF}
 
+{$IFDEF DXE8+}
+  {$DEFINE UseRESTClientSearch}
+{$ENDIF}
+
 

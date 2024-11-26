@@ -1,0 +1,246 @@
+object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
+  Left = 0
+  Top = 0
+  Caption = 'SVG REST Client Search %s - Copyright Ethea S.r.l.'
+  ClientHeight = 530
+  ClientWidth = 720
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  DesignerMasterStyle = 0
+  object ItemGroupBox: TGroupBox
+    Align = Client
+    Padding.Left = 10.000000000000000000
+    Padding.Top = 20.000000000000000000
+    Padding.Right = 10.000000000000000000
+    Padding.Bottom = 10.000000000000000000
+    Size.Width = 720.000000000000000000
+    Size.Height = 498.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Search for Icons from the Web'
+    TabOrder = 0
+    object IconControlsPanel: TPanel
+      Align = Top
+      Position.X = 10.000000000000000000
+      Position.Y = 20.000000000000000000
+      Size.Width = 700.000000000000000000
+      Size.Height = 41.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 29
+      object SearchEdit: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Client
+        TabOrder = 3
+        Hint = 'Insert Icon Name to search'
+        Margins.Left = 8.000000000000000000
+        Margins.Top = 10.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 8.000000000000000000
+        Size.Width = 444.000000000000000000
+        Size.Height = 23.000000000000000000
+        Size.PlatformDefault = False
+        TextPrompt = 'Icon Name'
+      end
+      object OpacityLabel: TLabel
+        Align = Right
+        Position.X = 460.000000000000000000
+        Size.Width = 56.000000000000000000
+        Size.Height = 41.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.Trimming = None
+        Text = 'Max Icons:'
+        TabOrder = 1
+      end
+      object MaxIconsEdit: TSpinBox
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Right
+        TabOrder = 2
+        Cursor = crIBeam
+        Value = 50.000000000000000000
+        Position.X = 524.000000000000000000
+        Position.Y = 8.000000000000000000
+        Margins.Left = 8.000000000000000000
+        Margins.Top = 8.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 8.000000000000000000
+        Size.Width = 77.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+      end
+      object SearchButton: TButton
+        Align = Right
+        Default = True
+        Margins.Left = 8.000000000000000000
+        Margins.Top = 8.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 8.000000000000000000
+        Position.X = 617.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 75.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = 'Search'
+        TextSettings.Trimming = None
+        OnClick = SearchButtonClick
+      end
+    end
+    object IconsGroupBox: TGroupBox
+      Align = Client
+      Size.Width = 482.000000000000000000
+      Size.Height = 427.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Available Icons: double click to select Icon'
+      TabOrder = 3
+      object SearchView: TListBox
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Margins.Top = 16.000000000000000000
+        Margins.Right = 4.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Size.Width = 474.000000000000000000
+        Size.Height = 407.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        OnDblClick = SearchViewDblClick
+        AllowDrag = True
+        Columns = 2
+        DisableFocusEffect = True
+        ItemHeight = 36.000000000000000000
+        ItemWidth = 200.000000000000000000
+        DefaultItemStyles.ItemStyle = ''
+        DefaultItemStyles.GroupHeaderStyle = ''
+        DefaultItemStyles.GroupFooterStyle = ''
+        Viewport.Width = 470.000000000000000000
+        Viewport.Height = 403.000000000000000000
+      end
+    end
+    object Splitter1: TSplitter
+      Align = Right
+      Cursor = crHSplit
+      MinSize = 20.000000000000000000
+      Position.X = 492.000000000000000000
+      Position.Y = 61.000000000000000000
+      Size.Width = 4.000000000000000000
+      Size.Height = 427.000000000000000000
+      Size.PlatformDefault = False
+    end
+    object GroupBox1: TGroupBox
+      Align = Right
+      Position.X = 496.000000000000000000
+      Position.Y = 61.000000000000000000
+      Size.Width = 214.000000000000000000
+      Size.Height = 427.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Selected Icons'
+      TabOrder = 2
+      object SelectedView: TListBox
+        Align = Client
+        Margins.Left = 4.000000000000000000
+        Margins.Top = 16.000000000000000000
+        Margins.Right = 4.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Size.Width = 206.000000000000000000
+        Size.Height = 407.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        OnDblClick = SelectedViewDblClick
+        AllowDrag = True
+        DisableFocusEffect = True
+        ItemHeight = 36.000000000000000000
+        ItemWidth = 200.000000000000000000
+        DefaultItemStyles.ItemStyle = ''
+        DefaultItemStyles.GroupHeaderStyle = ''
+        DefaultItemStyles.GroupFooterStyle = ''
+        Viewport.Width = 202.000000000000000000
+        Viewport.Height = 403.000000000000000000
+      end
+    end
+  end
+  object BottomPanel: TPanel
+    Align = MostBottom
+    Position.Y = 498.000000000000000000
+    Size.Width = 720.000000000000000000
+    Size.Height = 32.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object OKButton: TButton
+      Align = Right
+      Default = True
+      ModalResult = 1
+      Margins.Left = 4.000000000000000000
+      Margins.Top = 4.000000000000000000
+      Margins.Right = 4.000000000000000000
+      Margins.Bottom = 4.000000000000000000
+      Position.X = 475.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 75.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'OK'
+      TextSettings.Trimming = None
+    end
+    object CancelButton: TButton
+      Align = Right
+      Cancel = True
+      ModalResult = 2
+      Margins.Left = 4.000000000000000000
+      Margins.Top = 4.000000000000000000
+      Margins.Right = 4.000000000000000000
+      Margins.Bottom = 4.000000000000000000
+      Position.X = 558.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 75.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = 'Cancel'
+      TextSettings.Trimming = None
+    end
+    object HelpButton: TButton
+      Align = Right
+      Margins.Left = 4.000000000000000000
+      Margins.Top = 4.000000000000000000
+      Margins.Right = 4.000000000000000000
+      Margins.Bottom = 4.000000000000000000
+      Position.X = 641.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 75.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      Text = 'Help'
+      TextSettings.Trimming = None
+      OnClick = HelpButtonClick
+    end
+    object RemovePrefixCheckBox: TCheckBox
+      Align = Left
+      Hint = 'Remove Prefix from Name during selection'
+      IsChecked = True
+      Margins.Left = 4.000000000000000000
+      Position.X = 4.000000000000000000
+      Size.Width = 171.000000000000000000
+      Size.Height = 32.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 4
+      Text = 'Remove Prefix from Name'
+    end
+    object TrackBar: TTrackBar
+      Align = Client
+      CanParentFocus = True
+      Hint = 'Icon Preview Size'
+      Max = 96.000000000000000000
+      Min = 12.000000000000000000
+      Orientation = Horizontal
+      Size.Width = 296.000000000000000000
+      Size.Height = 19.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 5
+      Value = 48.000000000000000000
+      OnTracking = TrackBarTracking
+    end
+  end
+end

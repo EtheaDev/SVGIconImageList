@@ -125,7 +125,7 @@ uses
   VCL.Controls,
   VCL.Themes,
 {$IFDEF D10_3+}
-  BaseImageCollection,
+  Vcl.BaseImageCollection,
 {$ENDIF}
   SVGIconImageList,
   SVGIconImageCollection;

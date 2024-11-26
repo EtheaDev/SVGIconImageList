@@ -31,7 +31,7 @@ td{
 </style>
 <h1>SVGIconImageList <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg" alt="License"/></a></h1>
 <h2>Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale&hellip;)</h2>
-<h3>Actual official version 4.2.1 (VCL+FMX)</h3>
+<h3>Actual official version 4.3.0 (VCL+FMX)</h3>
 <table>
   <tr>
     <th>Component</th>
@@ -51,15 +51,20 @@ td{
   </tr>
   <tr>
     <td><img src="./Packages/SVGIconImageListComponentIcon.png" alt="SVGIconImageListComponentIcon.png"/></td>
-    <td><strong>TSVGIconImageList</strong> is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection: <strong>the VCL component is deprecated</strong>, we recommend to use SVGIconImageCollection + SVGIconVirtualImageList also for older Delphi versions!</td>
+    <td><strong>TSVGIconImageList</strong> is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection. Use this component to simplify replace of ImageList for older Delphi Apps and obtain auto-scaling of Icons!</td>
   </tr>
 </table>
-<h2>Very important notice</h2>
-<p>WARNING: From version 4.0, <strong>TSVGIconVirtualImageList</strong> inherits from <strong>TVirtualImageList</strong> (using Delphi 10.3 to latest). For previous Delphi versions <strong>TSVGIconVirtualImageList</strong> inherits from <strong>TSVGIconImageListBase</strong>.</p>
+<h2>Now you can search and download Icons directly from the WEB!</h2>
+<p>From version 4.3 an integrated service is now available in the component editor to download SVG icons from the WEB, via the API provided by <a href="https://iconify.design/">iconify.design</a>.</p>
+<p>Now you can select &ldquo;Add from WEB&rdquo; in the Component Editor: a new form to search and Download from the WEB is available for both VCL and FMX Platforms.</p>
+<p><img src="./Demo/Images/SVG_REST_Client_Search.jpg" alt="SVG_REST_Client_Search"/></p>
+<p>Read the <a href="https://github.com/EtheaDev/SVGIconImageList/wiki/RESTAPISearch">wiki page</a> to understand how to easily download SVG icons from the WEB and include them in the SVGIconImageList or SVGIconImageCollection.</p>
+<h2>Important notice</h2>
+<p>From version 4.0, <strong>TSVGIconVirtualImageList</strong> inherits from <strong>TVirtualImageList</strong> (using Delphi 10.3 to latest). For previous Delphi versions <strong>TSVGIconVirtualImageList</strong> inherits from <strong>TSVGIconImageListBase</strong>.</p>
 <p>An important difference is that a TVirtualImageList may use and create only a subset of the images in the collection.</p>
 <p>Although, the standard TVirtualImageList does not have the FixedColor, GrayScale, ApplyToRootOnly and Opacity properties, these properties exist at the TSVGIconImageCollection and they would be reflected on the linked TVirtualImageList, but if you change those properties at collection level, all the VirtualImageList linked changes!</p>
 <p>For this reasons, now TSVGIconVirtualImageList have also FixedColor, GrayScale, ApplyToRootOnly and Opacity properties, so you can setup those properties only at VirtualImageList level, and you can share the same TSVGIconImageCollection from many VirtualImageList with different poperties, as you can see in the new SVGIconVirtualImageListDemo.</p>
-<p>So, if you are using those components from Delphi 10.3, the recommended combination should be <strong>TSVGIconImageCollection + TSVGIconVirtualImageList</strong>.</p>
+<p>For this reason, if you are using those components from Delphi 10.3, the recommended combination should be <strong>TSVGIconImageCollection + TSVGIconVirtualImageList</strong>.</p>
 <p>Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to &ldquo;True&rdquo;, everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.</p>
 <p>Another feature available from Delphi 10.4 version, is that <strong>TSVGIconImageCollection</strong> inherits from TCustomImageCollection, so you can also use it with the TVirtualImage component and place SVG icons into the TControlList component, as explained <a href="https://github.com/EtheaDev/SVGIconImageList/wiki/TControlList-with-SVGIconImageCollection">here&hellip;</a></p>
 <h2>Choose your preferred SVG engine!</h2>
@@ -126,7 +131,15 @@ td{
 <h3>Other similar library</h3>
 <p>A similar project made by Ethea for Icon Fonts: <a href="https://github.com/EtheaDev/IconFontsImageList">https://github.com/EtheaDev/IconFontsImageList</a></p>
 <h3>RELEASE NOTES</h3>
-<p>17 Oct 2024: versione 4.2.1 (VCL+FMX)</p>
+<p>26 Nov 2024: version 4.3.0 (VCL+FMX)</p>
+<ul>
+<li>Updated to Image32 4.6 Released 26 Nov 2024 to fix issue drawing text inside SVG</li>
+<li>NameSpace added to all uses</li>
+<li>Added SVGIconImageListRestClient package</li>
+<li>New Option in Component Editor to select Icons from WEB (VCL and FMX)</li>
+<li>Demos updated</li>
+</ul>
+<p>17 Oct 2024: version 4.2.1 (VCL+FMX)</p>
 <ul>
 <li>Updated to Image32 4.6 Released 16 Oct 2024 to fix some drawing issue</li>
 </ul>

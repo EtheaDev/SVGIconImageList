@@ -1,8 +1,11 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{8F8CA4FC-1C05-400D-AA12-DFB6CC64EF1F}</ProjectGuid>
+        <ProjectGuid>{1b228097-d884-47d2-99c1-45d6839a807e}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
+        <Projects Include="SVGIconImageListRestClient.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="SVGImage32Package.dproj">
             <Dependencies/>
         </Projects>
@@ -26,6 +29,15 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
+    <Target Name="SVGIconImageListRestClient">
+        <MSBuild Projects="SVGIconImageListRestClient.dproj"/>
+    </Target>
+    <Target Name="SVGIconImageListRestClient:Clean">
+        <MSBuild Projects="SVGIconImageListRestClient.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SVGIconImageListRestClient:Make">
+        <MSBuild Projects="SVGIconImageListRestClient.dproj" Targets="Make"/>
+    </Target>
     <Target Name="SVGImage32Package">
         <MSBuild Projects="SVGImage32Package.dproj"/>
     </Target>
@@ -72,13 +84,13 @@
         <MSBuild Projects="dclSVGIconImageListFMX.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="SVGImage32Package;SVGIconImageList;dclSVGIconImageList;SVGIconImageListFMX;dclSVGIconImageListFMX"/>
+        <CallTarget Targets="SVGIconImageListRestClient;SVGImage32Package;SVGIconImageList;dclSVGIconImageList;SVGIconImageListFMX;dclSVGIconImageListFMX"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="SVGImage32Package:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean;SVGIconImageListFMX:Clean;dclSVGIconImageListFMX:Clean"/>
+        <CallTarget Targets="SVGIconImageListRestClient:Clean;SVGImage32Package:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean;SVGIconImageListFMX:Clean;dclSVGIconImageListFMX:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="SVGImage32Package:Make;SVGIconImageList:Make;dclSVGIconImageList:Make;SVGIconImageListFMX:Make;dclSVGIconImageListFMX:Make"/>
+        <CallTarget Targets="SVGIconImageListRestClient:Make;SVGImage32Package:Make;SVGIconImageList:Make;dclSVGIconImageList:Make;SVGIconImageListFMX:Make;dclSVGIconImageListFMX:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

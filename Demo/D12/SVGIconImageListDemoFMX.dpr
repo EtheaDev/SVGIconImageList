@@ -33,7 +33,9 @@ uses
   {$IFDEF MSWINDOWS}
   FMX.SVGIconImageListEditorUnit in '..\..\Packages\FMX.SVGIconImageListEditorUnit.pas' {SVGIconImageListEditorFMX},
   {$ENDIF }
-  UMainFMX in '..\Source\UMainFMX.pas' {SVGIconImageListForm};
+  UMainFMX in '..\Source\UMainFMX.pas' {SVGIconImageListForm},
+  Browser.IconifyApi in '..\Source\Browser.IconifyApi.pas',
+  FMX.SVGRESTClientFormUnit in '..\..\Packages\FMX.SVGRESTClientFormUnit.pas' {SVGRESTClientSearchForm};
 
 {$R *.res}
 

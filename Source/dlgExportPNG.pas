@@ -35,8 +35,8 @@ unit dlgExportPNG;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, SVGIconImage, SVGIconUtils;
+  System.SysUtils, WinApi.Windows, SVGIconImage, SVGIconUtils,
+  Vcl.Dialogs, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, System.Classes;
 
 resourcestring
   SVG_IMAGE_EXPORTED = 'PNG Images created into Folder';
@@ -102,7 +102,9 @@ implementation
 
 uses
   System.UITypes
-  , System.Math;
+  , System.Math
+  , Vcl.Graphics
+  ;
 
 function ExportToPNG(const AParentRect: TRect;
   const AFileName: TFileName;

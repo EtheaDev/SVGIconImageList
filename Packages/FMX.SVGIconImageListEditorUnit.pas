@@ -89,6 +89,7 @@ type
     IconButtonsPanel: TPanel;
     IconControlsPanel: TPanel;
     ApplyToRootOnlyItemCheckBox: TCheckBox;
+    AddWebButton: TButton;
     procedure ClearAllButtonClick(Sender: TObject);
     procedure DeleteButtonClick(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
@@ -122,6 +123,7 @@ type
     procedure ApplyToRootOnlyItemCheckBoxChange(Sender: TObject);
     procedure FixedColorItemComboColorBoxChange(Sender: TObject);
     procedure FixedColorItemEditChange(Sender: TObject);
+    procedure AddWebButtonClick(Sender: TObject);
   private
     FIconIndexLabel: string;
     FTotIconsLabel: string;
@@ -153,40 +155,14 @@ uses
   {$IFDEF Image32_SVGEngine}
   , Img32.SVG.Core
   {$ENDIF}
+  , FMX.SVGIconsUtils
   , System.Math
+  , FMX.SVGRESTClientFormUnit
   ;
 
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
   ItemPanelHeight: Single;
-
-function UpdateSVGIconListView(const AListBox: TListBox): Integer;
-var
-  I: Integer;
-  LItem: TSVGIconSourceItem;
-  LListItem: TListBoxItem;
-  LSVGIconImageList: TSVGIconImageList;
-begin
-  LSVGIconImageList := AListBox.Images as TSVGIconImageList;
-
-  AListBox.Items.BeginUpdate;
-  try
-    AListBox.Clear;
-    Result := LSVGIconImageList.Source.Count;
-    for I := 0 to Result -1 do
-    begin
-      LItem := LSVGIconImageList.Source.Items[I] as TSVGIconSourceItem;
-      LListItem := TListBoxItem.Create(AListBox);
-      LListItem.StyleLookup := 'CustomListBoxItemStyle';
-      LListItem.Text := Format('%d.%s', [LItem.Index,Litem.IconName]);
-      LListItem.ImageIndex := I;
-
-      AListBox.AddObject(LListItem);
-    end;
-  finally
-    AListBox.Items.EndUpdate;
-  end;
-end;
 
 function UpdateSVGIconListViewCaptions(const AListBox: TListBox;
   const AShowCaption: Boolean = True): Integer;
@@ -593,6 +569,10 @@ end;
 procedure TSVGIconImageListEditorFMX.FormCreate(Sender: TObject);
 begin
   Caption := Format(Caption, [SVGIconImageListVersion]);
+  {$IFDEF D11+}
+  Constraints.MinHeight := 500;
+  Constraints.MinWidth := 700;
+  {$ENDIF}
   FUpdating := True;
   FEditingList := TSVGIconImageList.Create(nil);
   FIconIndexLabel := ItemGroupBox.Text;
@@ -633,12 +613,26 @@ begin
     //Screen.Cursor := crHourGlass;
     try
       FEditingList.LoadFromFiles(OpenDialog.Files);
-    finally
       UpdateSVGIconListView(ImageView);
+    finally
       //Screen.Cursor := crDefault;
     end;
   end;
 end;
+
+procedure TSVGIconImageListEditorFMX.AddWebButtonClick(Sender: TObject);
+begin
+  if SearchSVGIconsFromWeb(FEditingList) then
+  begin
+    //Screen.Cursor := crHourGlass;
+    try
+      UpdateSVGIconListView(ImageView);
+    finally
+      //Screen.Cursor := crDefault;
+    end;
+  end;
+end;
+
 
 procedure TSVGIconImageListEditorFMX.FormShow(Sender: TObject);
 begin

@@ -12,13 +12,11 @@ object MainForm: TMainForm
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   ShowHint = True
   OnCreate = FormCreate
   DesignSize = (
     739
     340)
-  PixelsPerInch = 96
   TextHeight = 13
   object SVGIconImage: TSVGIconImage
     Left = 224

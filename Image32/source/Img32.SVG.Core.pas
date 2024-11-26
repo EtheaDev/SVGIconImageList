@@ -3,7 +3,7 @@ unit Img32.SVG.Core;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
-* Date      :  16 October 2024                                                 *
+* Date      :  16 November 2024                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -95,8 +95,11 @@ type
   TFontDecoration = (fdUndefined, fdNone, fdUnderline, fdStrikeThrough);
   TSvgTextAlign = (staUndefined, staLeft, staCenter, staRight, staJustify);
 
+  UTF8Strings = array of UTF8String;
+
   TSVGFontInfo = record
-    family      : TTtfFontFamily;
+    family      : TFontFamily;
+    familyNames : UTF8Strings;
     size        : double;
     spacing     : double;
     textLength  : double;
@@ -259,6 +262,9 @@ type
   function SkipBlanksEx(c: PUTF8Char; endC: PUTF8Char): PUTF8Char; {$IFDEF INLINE} inline; {$ENDIF}
   function SkipBlanksAndComma(c, endC: PUTF8Char): PUTF8Char; {$IFDEF INLINE} inline; {$ENDIF}
 
+  function GetCommaSeparatedArray(const str: UTF8String): UTF8Strings;
+  function TrimQuotes(const str: UTF8String): UTF8String;
+
   procedure ConvertUnicodeToUtf8(memStream: TMemoryStream);
 
   function GetScale(src, dst: double): double;
@@ -268,7 +274,6 @@ type
 
 type
   TSetOfUTF8Char = set of UTF8Char;
-  UTF8Strings = array of UTF8String;
 
 function CharInSet(chr: UTF8Char; const chrs: TSetOfUTF8Char): Boolean;
 
@@ -279,6 +284,7 @@ const
   quote       = '''';
   dquote      = '"';
   space       = #32;
+  comma       = ',';
   SvgDecimalSeparator = '.'; //do not localize
 
   {$I Img32.SVG.HashConsts.inc}
@@ -590,20 +596,66 @@ begin
   spcCnt := 0;
   i := 1;
   len := Length(str);
-  while (len > 0) and (str[len] <= #32) do dec(len);
-  while (i <= len) and (str[i] <= #32) do inc(i);
+  while (len > 0) and (str[len] <= space) do dec(len);
+  while (i <= len) and (str[i] <= space) do inc(i);
   for j := i + 1 to len do
-    if (str[j] <= #32) and (str[j -1] > #32) then inc(spcCnt);
+    if (str[j] <= space) and (str[j -1] > space) then inc(spcCnt);
   SetLength(Result, spcCnt +1);
   for k := 0 to spcCnt do
   begin
     j := i;
-    while (j <= len) and (str[j] > #32) do inc(j);
+    while (j <= len) and (str[j] > space) do inc(j);
     SetLength(Result[k], j -i);
     Move(str[i], Result[k][1], j -i);
-    while (j <= len) and (str[j] <= #32) do inc(j);
+    while (j <= len) and (str[j] <= space) do inc(j);
     i := j;
   end;
+end;
+//------------------------------------------------------------------------------
+
+function TrimQuotes(const str: UTF8String): UTF8String;
+var
+  i, len: integer;
+  savedQuote: UTF8Char;
+begin
+  len := Length(str);
+  i := 1;
+  while (i < len) and (str[i] <= space) do inc(i);
+  if (i < len) and (str[i] in [quote, dquote]) then
+  begin
+    savedQuote := str[i];
+    inc(i);
+    while (len > i) and (str[len] <= space) do dec(len);
+    if (len = i) or (str[len] <> savedQuote) then
+      Result := str else  // oops!
+      Result := Copy(str, i, len - i);
+  end
+  else
+    Result := str
+end;
+//------------------------------------------------------------------------------
+
+function GetCommaSeparatedArray(const str: UTF8String): UTF8Strings;
+var
+  i,j,k, cnt, len: integer;
+begin
+  // precondition: commas CANNOT be embedded
+  len := Length(str);
+  cnt := 1;
+  for i := 1 to len do
+    if (str[i] = comma) then inc(cnt);
+  SetLength(Result, cnt);
+  j := 0;
+  k := 1;
+  for i := 1 to len do
+  begin
+    if (str[i] <> comma) then Continue;
+    Result[j] := TrimQuotes(Copy(str, k, i-k));
+    inc(j);
+    k := i + 1;
+  end;
+  if len >= k then
+    Result[j] := TrimQuotes(Copy(str, k, len-k +1));
 end;
 //------------------------------------------------------------------------------
 
@@ -1241,9 +1293,9 @@ var
   len: integer;
 begin
   // trim left
-  while (c < endC) and (c^ <= #32) do Inc(c);
+  while (c < endC) and (c^ <= space) do Inc(c);
   // trim right
-  while (endC > c) and (endC[-1] <= #32) do Dec(endC);
+  while (endC > c) and (endC[-1] <= space) do Dec(endC);
 
   len := endC - c;
   SetLength(S, len);
@@ -1438,12 +1490,12 @@ begin
     begin
       hash := ParseNextWordHashed(c, endC);
       case hash of
-        hSans_045_Serif   : fontInfo.family := ttfSansSerif;
-        hSerif            : fontInfo.family := ttfSerif;
-        hMonospace        : fontInfo.family := ttfMonospace;
+        hSans_045_Serif   : fontInfo.family := tfSansSerif;
+        hSerif            : fontInfo.family := tfSerif;
+        hMonospace        : fontInfo.family := tfMonospace;
         hBold             : fontInfo.weight := 600;
         hItalic           : fontInfo.italic := sfsItalic;
-        hNormal           : 
+        hNormal           :
           begin
             fontInfo.weight := 400;
             fontInfo.italic := sfsNone;

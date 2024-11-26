@@ -37,15 +37,16 @@ interface
 {$INCLUDE SVGIconImageList.inc}
 
 uses
-  Classes
-  , ImgList
+  System.Classes
+  , Vcl.ImgList
   , SVGInterfaces
   , SVGIconImageListBase
   , SVGIconImageList
-  , Windows
-  , Graphics
+  , WinApi.Windows
+  , Vcl.Graphics
   , Vcl.Imaging.pngimage
-  , ComCtrls;
+  , Vcl.ComCtrls
+  ;
 
 Type
   TPngExportSize = (es16, es32, es48, es64, es96, es128, es192, es256, esCustom);
@@ -77,7 +78,7 @@ uses
   , SVGIconImageCollection
   , Vcl.Clipbrd
   {$IFDEF D10_3}
-  , VirtualImageList
+  , Vcl.VirtualImageList
   {$ENDIF}
   ;
 

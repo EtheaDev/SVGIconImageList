@@ -37,18 +37,19 @@ interface
 {$INCLUDE SVGIconImageList.inc}
 
 uses
-  Classes
-  , SysUtils
-  , ImgList
-  , Windows
-  , Graphics
+  System.Classes
+  , System.SysUtils
+  , Vcl.ImgList
+  , WinApi.Windows
+  , Vcl.Graphics
 {$IFDEF HiDPISupport}
-  , Messaging
+  , System.Messaging
 {$ENDIF}
-  , Forms
+  , Vcl.Forms
   , SVGInterfaces
   , SVGIconItems
-  , SVGIconImageListBase;
+  , SVGIconImageListBase
+  ;
 
 type
   TSVGIconItem = SVGIconItems.TSVGIconItem;
@@ -72,7 +73,11 @@ type
     function Add(const ASVG: ISVG; const AIconName: string;
        const AGrayScale: Boolean = False;
        const AFixedColor: TColor = SVG_INHERIT_COLOR;
-       const AAntiAliasColor: TColor = clBtnFace): Integer;
+       const AAntiAliasColor: TColor = clBtnFace): Integer; overload;
+    function Add(const ASVG: ISVG; const AIconName, AIconCategory: string;
+       const AGrayScale: Boolean = False;
+       const AFixedColor: TColor = SVG_INHERIT_COLOR;
+       const AAntiAliasColor: TColor = clBtnFace): Integer; overload;
     procedure Delete(const Index: Integer);
     procedure Remove(const Name: string);
     procedure ClearIcons; override;
@@ -106,9 +111,9 @@ implementation
 
 uses
   System.Types
-  , CommCtrl
-  , Math
-  , ComCtrls
+  , WinApi.CommCtrl
+  , System.Math
+  , Vcl.ComCtrls
   , SVGIconVirtualImageList;
 
 
@@ -116,6 +121,14 @@ uses
 
 function TSVGIconImageList.Add(const ASVG: ISVG;
   const AIconName: string; const AGrayScale: Boolean = False;
+  const AFixedColor: TColor = SVG_INHERIT_COLOR;
+  const AAntiAliasColor: TColor = clBtnFace): Integer;
+begin
+  Result := Add(ASVG, AIconName, '', AGrayScale, AFixedColor, AAntiAliasColor);
+end;
+
+function TSVGIconImageList.Add(const ASVG: ISVG;
+  const AIconName, AIconCategory: string; const AGrayScale: Boolean = False;
   const AFixedColor: TColor = SVG_INHERIT_COLOR;
   const AAntiAliasColor: TColor = clBtnFace): Integer;
 var
@@ -126,6 +139,7 @@ begin
     Item := FSVGItems.Add;
     Item.SVG := ASVG;
     Item.IconName := AIconName;
+    Item.Category := AIconCategory;
     Item.FixedColor := AFixedColor;
     Item.AntiAliasColor := AAntiAliasColor;
     Item.GrayScale := AGrayScale;

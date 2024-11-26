@@ -74,8 +74,8 @@ implementation
 {$INCLUDE SVGIconImageList.inc}
 
 Uses
-  {$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine)}
-    {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine) into SVGIconImageList.inc)'}
+  {$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine) and NOT DEFINED(PreferNativeSvgSupport)}
+    {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or PreferNativeSvgSupport) into SVGIconImageList.inc)'}
   {$ENDIF}
 
   {$IF DEFINED(Image32_SVGEngine) and DEFINED(Skia_SVGEngine)}
@@ -97,7 +97,7 @@ Uses
     {$IFNDEF SvgDisableEngineHint}
     {$MESSAGE HINT 'but Prefer Windows Direct-2D SVG-Engine if available'}
     {$ENDIF}
-    , D2DSVGFactory
+    D2DSVGFactory
   {$ENDIF}
   ;
 
