@@ -27,7 +27,7 @@ unit SVGTextPropertyEditorUnit;
 
 interface
 
-{$INCLUDE SVGIconImageList.inc}
+{$INCLUDE ..\Source\SVGIconImageList.inc}
 
 uses
   System.SysUtils, Vcl.ExtDlgs, SVGIconImage,
@@ -93,7 +93,7 @@ uses
   //WARNING: you must define this directive to use this unit outside the IDE
 {$IFNDEF UseSVGEditorsAtRunTime}
   , ToolsAPI
-  , BrandingAPI
+  {$IF (CompilerVersion >= 27.0)}, BrandingAPI{$IFEND}
   {$IF (CompilerVersion >= 32.0)}, IDETheme.Utils{$IFEND}
 {$ENDIF}
   , WinApi.ShellAPI
@@ -191,7 +191,7 @@ end;
 procedure TSVGTextPropertyEditorForm.HelpButtonClick(Sender: TObject);
 begin
   ShellExecute(handle, 'open',
-    PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/SVGText-Editor'), nil, nil,
+    PChar('https://ethea.it/docs/svgiconimagelist/SVGText-Editor.html'), nil, nil,
     SW_SHOWNORMAL)
 end;
 

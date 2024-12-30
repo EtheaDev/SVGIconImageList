@@ -28,7 +28,7 @@
 {$IF DEFINED(FPC)}
   {$DEFINE USING_LCL}
   {$DEFINE USING_VCL_LCL}
-{$ELSEIF declared(FireMonkeyVersion) OR DEFINED(FRAMEWORK_FMX)}
+{$ELSEIF defined(ANDROID) OR defined(IOS) OR defined(OSX)}
   {$DEFINE USING_FMX}
 {$ELSE}
   {$DEFINE USING_VCL}
@@ -47,6 +47,7 @@
   {$DEFINE NESTED_TYPES}
   {$IFNDEF DEBUG}
     {$DEFINE INLINE}
+    {$DEFINE INLINE_COMPATIBLE}
   {$ENDIF}
   {$DEFINE DELPHI_PNG}
   {$IFDEF WINDOWS}
@@ -82,6 +83,9 @@
           {$DEFINE SUPPORTS_POINTERMATH}          //added {$POINTERMATH ON/OFF}
           {$DEFINE CLASS_STATIC}                  //added class static methods
           {$IF COMPILERVERSION >= 21}           //Delphi 2010
+            {$IFNDEF DEBUG}
+              {$DEFINE INLINE_COMPATIBLE}         //avoid compiler bug with INLINE in Delphi 2005-2009 ("incompatible type")
+            {$ENDIF}
             {$DEFINE GESTURES}                    //added screen gesture support
             {$IF COMPILERVERSION >= 23}         //DelphiXE2
               {$DEFINE USES_NAMESPACES}

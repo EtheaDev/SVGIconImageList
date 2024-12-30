@@ -95,7 +95,7 @@ begin
   end
   else
     ShellExecute(0, 'open',
-      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Overview-(FMX)'), nil, nil,
+      PChar('https://ethea.it/docs/svgiconimagelist/Overview-(FMX).html'), nil, nil,
       SW_SHOWNORMAL)
 end;
 
@@ -138,7 +138,7 @@ begin
   end
   else
     ShellExecute(0, 'open',
-      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Overview-(FMX)'), nil, nil,
+      PChar('https://ethea.it/docs/svgiconimagelist/Overview-(FMX).html'), nil, nil,
       SW_SHOWNORMAL)
 end;
 

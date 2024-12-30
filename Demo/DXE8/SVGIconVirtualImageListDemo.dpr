@@ -34,9 +34,10 @@ uses
   UMain in '..\Source\UMain.pas' {MainForm},
   SVGIconImageListEditorUnit in '..\..\Packages\SVGIconImageListEditorUnit.pas' {SVGIconImageListEditor},
   SVGTextPropertyEditorUnit in '..\..\Packages\SVGTextPropertyEditorUnit.pas' {SVGTextPropertyEditorForm},
-  SVGIconSetFormUnit in '..\..\Packages\SVGIconSetFormUnit.pas' {SVGIconSetForm},
   SVGIconImageList in '..\..\source\SVGIconImageList.pas',
-  UDataModule in '..\Source\UDataModule.pas' {ImageDataModule: TDataModule};
+  UDataModule in '..\Source\UDataModule.pas' {ImageDataModule: TDataModule},
+  SVGRESTClientFormUnit in '..\..\Packages\SVGRESTClientFormUnit.pas' {SVGRESTClientSearchForm},
+  SVGIconSetFormUnit in '..\..\Packages\SVGIconSetFormUnit.pas' {SVGIconSetForm};
 
 {$R *.res}
 

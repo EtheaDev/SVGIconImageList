@@ -31,7 +31,7 @@ td{
 </style>
 <h1>SVGIconImageList <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg" alt="License"/></a></h1>
 <h2>Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale&hellip;)</h2>
-<h3>Actual official version 4.3.0 (VCL+FMX)</h3>
+<h3>Actual official version 4.4.0 (VCL+FMX)</h3>
 <table>
   <tr>
     <th>Component</th>
@@ -54,7 +54,11 @@ td{
     <td><strong>TSVGIconImageList</strong> is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection. Use this component to simplify replace of ImageList for older Delphi Apps and obtain auto-scaling of Icons!</td>
   </tr>
 </table>
-<h2>Now you can search and download Icons directly from the WEB!</h2>
+<h2>New Setup for automatic installation of components</h2>
+<p>From 4.4.0 version a new &ldquo;Installer&rdquo; read-to-use is located in the Release area: <a href="https://github.com/EtheaDev/SVGIconImageList/releases/latest/download/SVGIconImageList_Setup.exe">Download the Installer</a>.</p>
+<p>The Installer automatically detect your Delphi versions, install sources, build and install packages and add source paths.</p>
+<p><img src="./Demo/Images/Setup.png" alt="Setup"/></p>
+<h2>You can search and download Icons directly from the WEB!</h2>
 <p>From version 4.3 an integrated service is now available in the component editor to download SVG icons from the WEB, via the API provided by <a href="https://iconify.design/">iconify.design</a>.</p>
 <p>Now you can select &ldquo;Add from WEB&rdquo; in the Component Editor: a new form to search and Download from the WEB is available for both VCL and FMX Platforms.</p>
 <p><img src="./Demo/Images/SVG_REST_Client_Search.jpg" alt="SVG_REST_Client_Search"/></p>
@@ -77,7 +81,6 @@ td{
 <li><p>A wrapper to the native Windows <strong>Direct2D</strong> implementation</p>
 </li>
 </ul>
-<p>You can read more details <a href="https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories">here.</a></p>
 <h2>Performance comparison</h2>
 <p>This table shows the performance of the three rendering engines tested with SVGExplorer, using a significant amount of icons from different sets, rendered at 128x128 pixels.</p>
 <table>
@@ -112,9 +115,6 @@ td{
 </table>
 <p>As you can see, the three engines perform differently depending on the icons and their complexity.</p>
 <p><sup>(1)</sup>Notice that Image32 and Skia4Delphi are the only engines capable of rendering blur effect (that is always slow to calculate): this is the reason of &ldquo;slow&rdquo; performance to render Papirus icons that contains blur effect.</p>
-<h3>Available from Delphi XE3 to Delphi 12 (VCL and FMX Platforms)</h3>
-<p><img src="./Demo/Images/SupportingDelphi.jpg" alt="Delphi 12 Support"/></p>
-<p>Related links: <a href="https://www.embarcadero.com">embarcadero.com</a> - <a href="https://learndelphi.org">learndelphi.org</a></p>
 <p><strong>Sample image of VCL version</strong></p>
 <p><img src="./Demo/Images/Sample.jpg" alt="Sample.jpg"/></p>
 <p><strong>Sample image of FMX (Windows) version</strong></p>
@@ -127,10 +127,20 @@ td{
 <p>The <a href="https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIconExplorer">SVG Icon Explorer</a> utility is useful to explore and preview your svg image collections.</p>
 <p>You can use <a href="https://github.com/EtheaDev/SVGShellExtensions">SVG Shell Extensions</a> if you want to see your icons directly into Windows Explorer or you want to edit them using a powerful <strong>SVG Text Editor</strong>.</p>
 <h3>DOCUMENTATION</h3>
-<p>Follow the <a href="https://github.com/EtheaDev/SVGIconImageList/wiki">guide in Wiki section</a> to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.</p>
+<p>Follow the <a href="https://ethea.it/docs/svgiconimagelist/">Project Site</a> to known how to use those components to modernize your Delphi VCL or FMX applications with scalable, colored and beautiful icons.</p>
 <h3>Other similar library</h3>
 <p>A similar project made by Ethea for Icon Fonts: <a href="https://github.com/EtheaDev/IconFontsImageList">https://github.com/EtheaDev/IconFontsImageList</a></p>
+<h3>Available from Delphi XE3 to Delphi 12 (VCL and FMX Platforms)</h3>
+<p><img src="./Demo/Images/SupportingDelphi.jpg" alt="Delphi 12 Support"/></p>
+<p>Related links: <a href="https://www.embarcadero.com">embarcadero.com</a> - <a href="https://learndelphi.org">learndelphi.org</a></p>
 <h3>RELEASE NOTES</h3>
+<p>30 Dec 2024: version 4.4.0 (VCL+FMX)</p>
+<ul>
+<li>New <a href="https://www.ethea.it/docs/SVGIconImageList/">Project Site</a></li>
+<li>New Setup for automatic Installation of Components</li>
+<li>Aligned to Image32 4.6 Released 26 Dec 2024 (more text/font support)</li>
+<li>Changed LibSuffix for Packages (eg. from D10_3 to 260)</li>
+</ul>
 <p>26 Nov 2024: version 4.3.0 (VCL+FMX)</p>
 <ul>
 <li>Updated to Image32 4.6 Released 26 Nov 2024 to fix issue drawing text inside SVG</li>
@@ -500,11 +510,10 @@ Take care of TSVGIconVirtualImageList.Collection renamed to SVGIconVirtualImageL
 <p>These components uses the followin libraries:</p>
 <ul>
 <li><p>Image32 library by <a href="https://angusj.com/image32/Docs/_Body.htm">Angus Johnson</a></p>
-<p>These files are included in the Image32/Source and Image32/source/Image32_SVG folders</p>
+<p>These files are included in the Image32/Source folders</p>
 <p>Copyright <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License Version 1</a></p>
 </li>
 <li><p>Skia4Delphi Library by <a href="https://skia4delphi.org/">the autohors</a></p>
-<p>These files are included in the Skia4Delphi/Source folder</p>
 <p>Copyright <a href="https://github.com/skia4delphi/skia4delphi?tab=MIT-1-ov-file">MIT-License</a></p>
 </li>
 </ul>

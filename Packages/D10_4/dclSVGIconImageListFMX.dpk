@@ -29,11 +29,12 @@ package dclSVGIconImageListFMX;
 {$DESCRIPTION 'Ethea SVGIconImageList  FMX components'}
 {$LIBSUFFIX AUTO}
 {$DESIGNONLY}
-{$IMPLICITBUILD ON}
+{$IMPLICITBUILD OFF}
 
 requires
   DesignIDE,
   dclfmxstd,
+  SVGIconImageListRestClient,
   SVGIconImageListFMX;
 
 contains

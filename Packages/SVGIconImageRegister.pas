@@ -113,7 +113,7 @@ implementation
 
 uses
   System.SysUtils
-  , BrandingAPI
+  {$IF (CompilerVersion >= 27.0)}, BrandingAPI{$IFEND}
   , Vcl.Themes
   , Vcl.Forms
   , Vcl.Controls
@@ -136,6 +136,7 @@ uses
   ;
 
 const
+  Component_Docs_URL = 'https://ethea.it/docs/svgiconimagelist/Overview-(VCL).html';
   {$IFDEF D11+}
   ABOUT_RES_NAME = 'SVGICONSPLASH48PNG';
   SPLASH_RES_NAME = 'SVGICONSPLASH48PNG';
@@ -144,7 +145,7 @@ const
   SPLASH_RES_NAME = 'SVGICONSPLASH24BMP';
   {$ENDIF}
   RsAboutTitle = 'Ethea SvgIconImageList';
-  RsAboutDescription = 'Ethea - SvgIconImageList Components - https://github.com/EtheaDev/SVGIconImageList/' + sLineBreak +
+  RsAboutDescription = 'Ethea - SvgIconImageList Components - https://ethea.it/docs/svgiconimagelist/' + sLineBreak +
     'Three engines to render SVG Icons and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)';
   RsAboutLicense = 'Apache 2.0 (Free/Opensource)';
 var
@@ -254,9 +255,7 @@ begin
   end
   else if Index = 1 then
   begin
-    ShellExecute(0, 'open',
-      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Overview-(VCL)'), nil, nil,
-      SW_SHOWNORMAL)
+    ShellExecute(0, 'open',PChar(Component_Docs_URL), nil, nil, SW_SHOWNORMAL)
   end;
 end;
 
@@ -387,9 +386,7 @@ begin
   end
   else if Index = 1 then
   begin
-    ShellExecute(0, 'open',
-      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Overview-(VCL)'), nil, nil,
-      SW_SHOWNORMAL)
+    ShellExecute(0, 'open',PChar(Component_Docs_URL), nil, nil, SW_SHOWNORMAL)
   end;
 
 end;
@@ -421,9 +418,7 @@ begin
   end
   else if Index = 1 then
   begin
-    ShellExecute(0, 'open',
-      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Overview-(VCL)'), nil, nil,
-      SW_SHOWNORMAL)
+    ShellExecute(0, 'open',PChar(Component_Docs_URL), nil, nil, SW_SHOWNORMAL)
   end;
 end;
 
@@ -461,9 +456,7 @@ begin
   end
   else if Index = 1 then
   begin
-    ShellExecute(0, 'open',
-      PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/Overview-(VCL)'), nil, nil,
-      SW_SHOWNORMAL)
+    ShellExecute(0, 'open',PChar(Component_Docs_URL), nil, nil, SW_SHOWNORMAL)
   end;
 end;
 

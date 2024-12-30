@@ -3,7 +3,7 @@ unit Img32.Fmt.JPG;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
-* Date      :  18 September 2024                                               *
+* Date      :  7 December 2024                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2023                                         *
 * Purpose   :  JPG/JPEG file format extension for TImage32                     *
@@ -26,7 +26,7 @@ type
       img32: TImage32; imgIndex: integer = 0): Boolean; override;
     //SaveToStream: compressionQuality (range: 0-100%)
     procedure SaveToStream(stream: TStream;
-      img32: TImage32; compressionQlty: integer = -1); override;
+      img32: TImage32; compressionQlty: integer = defaultCompression); override;
     class function CopyToClipboard(img32: TImage32): Boolean; override;
     class function CanPasteFromClipboard: Boolean; override;
     class function PasteFromClipboard(img32: TImage32): Boolean; override;
@@ -98,8 +98,9 @@ begin
   Jpeg := TJpegImage.Create;
   with TJpegImageHack(jpeg) do
   try
-    if (compressionQlty >= 0) then
-      jpeg.CompressionQuality := Min(100, compressionQlty);
+    if compressionQuality = defaultCompression then
+      jpeg.CompressionQuality := 75 else
+      jpeg.CompressionQuality := Max(0, Min(100, compressionQuality));
     NewImage;
     NewBitmap;
     Bitmap.Width := img32.Width;

@@ -3,7 +3,7 @@ unit Img32;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
-* Date      :  26 November 2024                                                *
+* Date      :  16 December 2024                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  The core module of the Image32 library                          *
@@ -29,10 +29,12 @@ uses
 
 type
   {$IF not declared(SizeInt)} // FPC has SizeInt
-    {$IF CompilerVersion < 120}
+    {$IF CompilerVersion < 20.0}
   SizeInt = Integer; // Delphi 7-2007 can't use NativeInt with "FOR"
+  SizeUInt = Cardinal; // Delphi 7-2007 can't use NativeUInt with "FOR"
     {$ELSE}
   SizeInt = NativeInt;
+  SizeUInt = NativeUInt;
     {$IFEND}
   {$IFEND}
 
@@ -85,6 +87,8 @@ const
   clDarkBtn32  = TColor32($FFE8E8E8);
   clBtnFace32  = TColor32($FFF0F0F0);
   clLiteBtn32  = TColor32($FFF8F8F8);
+
+  defaultCompression = -1;
 
 {$IFDEF ZEROBASEDSTR}
   {$ZEROBASEDSTRINGS OFF}
@@ -212,7 +216,7 @@ type
       const srcRec, dstRec: TRect; blendFunc: TBlendFunction);
     procedure CopyInternalLine(src: TImage32;
       const srcRec, dstRec: TRect; blendLineFunc: TBlendLineFunction);
-    function CopyBlendInternal(src: TImage32; srcRec, dstRec: TRect;
+    function CopyBlendInternal(src: TImage32; const srcRec: TRect; dstRec: TRect;
       blendFunc: TBlendFunction = nil; blendLineFunc: TBlendLineFunction = nil): Boolean; overload;
     procedure  Changed; virtual;
     procedure  Resized; virtual;
@@ -337,8 +341,10 @@ type
     class function GetImageFormatClass(const ext: string): TImageFormatClass; overload;
     class function GetImageFormatClass(stream: TStream): TImageFormatClass; overload;
     class function IsRegisteredFormat(const ext: string): Boolean;
-    function SaveToFile(filename: string; quality: integer = 0): Boolean;
-    function SaveToStream(stream: TStream; const FmtExt: string): Boolean;
+    function SaveToFile(filename: string;
+      compressionQuality: integer = defaultCompression): Boolean;
+    function SaveToStream(stream: TStream; const FmtExt: string;
+      compressionQuality: integer = defaultCompression): Boolean;
     function LoadFromFile(const filename: string): Boolean;
     function LoadFromStream(stream: TStream; imgIdx: integer = 0): Boolean;
     function LoadFromResource(const resName: string; resType: PChar): Boolean;
@@ -480,15 +486,15 @@ type
 
   {$IFDEF MSWINDOWS}
   //Color32: Converts a Graphics.TColor value into a TColor32 value.
-  function Color32(rgbColor: Integer): TColor32; overload;
+  function Color32(rgbColor: Integer): TColor32; overload; {$IFDEF INLINE} inline; {$ENDIF}
 
   procedure FixPalette(p: PARGB; count: integer);
   {$ENDIF}
-  function Color32(a, r, g, b: Byte): TColor32; overload;
+  function Color32(a, r, g, b: Byte): TColor32; overload; {$IFDEF INLINE} inline; {$ENDIF}
 
   //RGBColor: Converts a TColor32 value into a COLORREF value
-  function RGBColor(color: TColor32): Cardinal;
-  function InvertColor(color: TColor32): TColor32;
+  function RGBColor(color: TColor32): Cardinal; {$IFDEF INLINE} inline; {$ENDIF}
+  function InvertColor(color: TColor32): TColor32; {$IFDEF INLINE} inline; {$ENDIF}
 
   //RgbToHsl: See https://en.wikipedia.org/wiki/HSL_and_HSV
   function RgbToHsl(color: TColor32): THsl;
@@ -500,8 +506,8 @@ type
 
   function GetAlpha(color: TColor32): Byte;  {$IFDEF INLINE} inline; {$ENDIF}
 
-  function PointD(const X, Y: Double): TPointD; overload;
-  function PointD(const pt: TPoint): TPointD; overload;
+  function PointD(const X, Y: Double): TPointD; overload; {$IFDEF INLINE} inline; {$ENDIF}
+  function PointD(const pt: TPoint): TPointD; overload; {$IFDEF INLINE} inline; {$ENDIF}
 
   function RectD(left, top, right, bottom: double): TRectD; overload;
   function RectD(const rec: TRect): TRectD; overload;
@@ -512,10 +518,10 @@ type
     {$IFDEF INLINE} inline; {$ENDIF}
   function ClampRange(val, min, max: double): double; overload;
     {$IFDEF INLINE} inline; {$ENDIF}
-  function IncPColor32(pc: Pointer; cnt: Integer): PColor32;
+  function IncPColor32(pc: Pointer; cnt: Integer): PColor32; {$IFDEF INLINE} inline; {$ENDIF}
 
   procedure NormalizeAngle(var angle: double; tolerance: double = Pi/360);
-  function GrayScale(color: TColor32): TColor32;
+  function GrayScale(color: TColor32): TColor32; {$IFDEF INLINE} inline; {$ENDIF}
 
   //DPIAware: Useful for DPIAware sizing of images and their container controls.
   //It scales values relative to the display's resolution (PixelsPerInch).
@@ -596,7 +602,9 @@ var
 
   //AND BECAUSE OLDER DELPHI COMPILERS (OLDER THAN D2006)
   //DON'T SUPPORT RECORD METHODS
-  procedure RectWidthHeight(const rec: TRect; out width, height: Integer);
+  procedure RectWidthHeight(const rec: TRect; out width, height: Integer); overload;
+  {$IFDEF INLINE} inline; {$ENDIF}
+  procedure RectWidthHeight(const rec: TRectD; out width, height: double); overload;
   {$IFDEF INLINE} inline; {$ENDIF}
   function RectWidth(const rec: TRect): Integer;
   {$IFDEF INLINE} inline; {$ENDIF}
@@ -1458,19 +1466,7 @@ end;
 function BlendBlueChannel(bgColor, blueMask: TColor32): TColor32;
 begin
   Result := (bgColor and $00FFFFFF) or
-            (TColor32(MulTable[bgColor shr 24, blueMask shr 24]) shl 24);
-end;
-//------------------------------------------------------------------------------
-
-procedure BlendBlueChannelLine(bgColor, blueMask: PColor32; width: nativeint);
-begin
-  while width > 0 do
-  begin
-    PARGB(bgColor).A := MulTable[PARGB(bgColor).A, PARGB(blueMask).A];
-    inc(bgColor);
-    inc(blueMask);
-    dec(width);
-  end;
+            (TColor32(MulTable[bgColor shr 24, Byte(blueMask)]) shl 24);
 end;
 //------------------------------------------------------------------------------
 
@@ -1485,6 +1481,21 @@ end;
 //------------------------------------------------------------------------------
 
 {$RANGECHECKS OFF} // negative array index is used
+
+procedure BlendBlueChannelLine(bgColor, blueMask: PColor32; width: nativeint);
+begin
+  inc(bgColor, width);
+  inc(blueMask, width);
+  width := -width;
+  while width < 0 do
+  begin
+    PStaticARGBArray(bgColor)[width].A :=
+      MulTable[PStaticARGBArray(bgColor)[width].A,
+               PStaticARGBArray(blueMask)[width].B];
+    inc(width);
+  end;
+end;
+//------------------------------------------------------------------------------
 
 procedure BlendInvertedMaskLine(bgColor, alphaMask: PColor32; width: nativeint);
 var
@@ -1603,6 +1614,13 @@ end;
 //------------------------------------------------------------------------------
 
 procedure RectWidthHeight(const rec: TRect; out width, height: Integer);
+begin
+  width := rec.Right - rec.Left;
+  height := rec.Bottom - rec.Top;
+end;
+//------------------------------------------------------------------------------
+
+procedure RectWidthHeight(const rec: TRectD; out width, height: double);
 begin
   width := rec.Right - rec.Left;
   height := rec.Bottom - rec.Top;
@@ -2002,9 +2020,9 @@ end;
 
 function NameToId(Name: PChar): Longint;
 begin
-  if Cardinal(PWord(Name)) < 30 then
+  if Name < Pointer(30) then
   begin
-    Result := Cardinal(PWord(Name))
+    Result := Longint(Name)
   end else
   begin
     if Name^ = '#' then inc(Name);
@@ -2952,7 +2970,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TImage32.SaveToFile(filename: string; quality: integer = 0): Boolean;
+function TImage32.SaveToFile(filename: string; compressionQuality: integer): Boolean;
 var
   fileFormatClass: TImageFormatClass;
 begin
@@ -2965,14 +2983,15 @@ begin
   if assigned(fileFormatClass) then
     with fileFormatClass.Create do
     try
-      result := SaveToFile(filename, self, quality);
+      result := SaveToFile(filename, self, compressionQuality);
     finally
       free;
     end;
 end;
 //------------------------------------------------------------------------------
 
-function TImage32.SaveToStream(stream: TStream; const FmtExt: string): Boolean;
+function TImage32.SaveToStream(stream: TStream;
+  const FmtExt: string; compressionQuality: integer): Boolean;
 var
   fileFormatClass: TImageFormatClass;
 begin
@@ -2981,7 +3000,7 @@ begin
   if assigned(fileFormatClass) then
     with fileFormatClass.Create do
     try
-      SaveToStream(stream, self);
+      SaveToStream(stream, self, compressionQuality);
       result := true;
     finally
       free;
@@ -3191,7 +3210,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TImage32.CopyBlendInternal(src: TImage32; srcRec, dstRec: TRect;
+function TImage32.CopyBlendInternal(src: TImage32; const srcRec: TRect; dstRec: TRect;
   blendFunc: TBlendFunction; blendLineFunc: TBlendLineFunction): Boolean;
 var
   tmp: TImage32;

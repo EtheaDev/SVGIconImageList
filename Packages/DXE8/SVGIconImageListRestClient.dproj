@@ -1,13 +1,13 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{6D06E633-2544-45A7-A93F-1E8AAF4A14C9}</ProjectGuid>
-        <MainSource>SVGImage32Package.dpk</MainSource>
+        <ProjectGuid>{B023A732-5B29-44FE-8D8F-E501AB76533F}</ProjectGuid>
+        <MainSource>SVGIconImageListRestClient.dpk</MainSource>
         <ProjectVersion>19.2</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <TargetedPlatforms>1</TargetedPlatforms>
+        <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Package</AppType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -34,6 +34,12 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Cfg_2_Win32>true</Cfg_2_Win32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_DcuOutput>..\..\Lib\DXE8\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
@@ -46,11 +52,11 @@
         <GenPackage>true</GenPackage>
         <DCC_Namespace>System;WinApi;Vcl;Vcl.Imaging;$(DCC_Namespace)</DCC_Namespace>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
-        <SanitizedProjectName>SVGImage32Package</SanitizedProjectName>
+        <SanitizedProjectName>SVGIconImageListRestClient</SanitizedProjectName>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
-        <DCC_UnitSearchPath>..\..\Image32\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
-        <DCC_Description>Image32 2D Graphic Library - Copyright Angus Johnson</DCC_Description>
+        <DCC_Description>Ethea SVGIconImageList REST Client services</DCC_Description>
         <DllSuffix>220</DllSuffix>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
@@ -78,41 +84,17 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="vclimg.dcp"/>
-        <DCCReference Include="..\..\Image32\source\Img32.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.Fmt.BMP.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.Panels.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.Fmt.PNG.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.CQ.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.Draw.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.Extra.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.Layers.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.Resamplers.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.Transform.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.Text.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.Vector.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.Fmt.SVG.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.Storage.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.SVG.Core.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.SVG.Path.pas"/>
-        <DCCReference Include="..\..\Image32\source\Img32.SVG.Reader.pas"/>
-        <DCCReference Include="..\..\Image32\Source\Img32.Clipper2.pas"/>
-        <DCCReference Include="..\..\Image32\source\Clipper.pas"/>
-        <DCCReference Include="..\..\Image32\source\Clipper.Core.pas"/>
-        <DCCReference Include="..\..\Image32\source\Clipper.Engine.pas"/>
-        <DCCReference Include="..\..\Image32\source\Clipper.Minkowski.pas"/>
-        <DCCReference Include="..\..\Image32\source\Clipper.Offset.pas"/>
-        <DCCReference Include="..\..\Image32\source\Clipper.RectClip.pas"/>
+        <DCCReference Include="RESTComponents.dcp"/>
+        <DCCReference Include="..\..\Source\Browser.IconifyApi.pas"/>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
-            <CfgParent>Base</CfgParent>
-        </BuildConfiguration>
-        <BuildConfiguration Include="Release">
-            <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
@@ -122,7 +104,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">SVGImage32Package.dpk</Source>
+                    <Source Name="MainSource">SVGIconImageListRestClient.dpk</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>

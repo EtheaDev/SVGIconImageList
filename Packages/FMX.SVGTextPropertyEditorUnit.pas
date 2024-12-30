@@ -154,7 +154,7 @@ end;
 procedure TSVGTextPropertyEditorFormFMX.HelpButtonClick(Sender: TObject);
 begin
   ShellExecute(0, 'open',
-    PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/SVG-TextEditor-FMX'), nil, nil,
+    PChar('https://ethea.it/docs/svgiconimagelist/SVGText-Editor-FMX.html'), nil, nil,
     SW_SHOWNORMAL)
 end;
 

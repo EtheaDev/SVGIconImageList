@@ -71,7 +71,6 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
         Top = 0
         Width = 48
         Height = 24
-        Align = alClient
         MaxValue = 255
         MinValue = 0
         TabOrder = 0

@@ -564,7 +564,7 @@ initialization
   StartClassGroup(VCL.Controls.TControl);
   ActivateClassGroup(VCL.Controls.TControl);
   GroupDescendentsWith(TSVGIconImageCollection, VCL.Controls.TControl);
-{$ENDIF}
+{$IFEND}
 
 
 end.

@@ -27,7 +27,7 @@ package SVGIconImageList;
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Ethea SVGIconImageList VCL components'}
-{$LIBSUFFIX '_D10_1'}
+{$LIBSUFFIX '240'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
@@ -36,6 +36,7 @@ requires
   , VclSmp
   , vclimg
   , RESTComponents
+  , SVGIconImageListRestClient
   {$IFDEF Image32_SVGEngine}
   , SVGImage32Package
   {$ENDIF}
@@ -64,7 +65,6 @@ contains
   SkiaSVGFactory in '..\..\Source\SkiaSVGFactory.pas',
   {$ENDIF}
   SVGInterfaces in '..\..\Source\SVGInterfaces.pas',
-  Browser.IconifyApi in '..\..\Source\Browser.IconifyApi.pas',
   dlgExportPNG in '..\..\Source\dlgExportPNG.pas' {ExportToPNGDialog};
 
 end.

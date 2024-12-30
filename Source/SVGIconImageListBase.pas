@@ -48,7 +48,7 @@ uses
   SvgInterfaces;
 
 const
-  SVGIconImageListVersion = '4.3.0';
+  SVGIconImageListVersion = '4.4.0';
   DEFAULT_SIZE = 16;
 
 type
@@ -109,7 +109,7 @@ type
     procedure DefineProperties(Filer: TFiler); override;
     procedure DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer; Style: Cardinal; Enabled: Boolean = True); override;
     procedure Loaded; override;
-    function GetCount: Integer; {$IF CompilerVersion > 28}override;{$ELSE}virtual;{$ENDIF}
+    function GetCount: Integer; {$IF CompilerVersion > 28}override;{$ELSE}virtual;{$IFEND}
 
     procedure RecreateBitmaps; virtual; abstract;
     {$IF CompilerVersion < 29}

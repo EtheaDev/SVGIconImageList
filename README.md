@@ -2,7 +2,7 @@
 
 ## Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 4.3.0 (VCL+FMX)
+### Actual official version 4.4.0 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -11,7 +11,15 @@
 | ![SVGIconImageComponentIcon.png](./Packages/SVGIconImageComponentIcon.png) | **TSVGIconImage** is an extended Image component for Delphi (VCL+FMX) to show any SVG image directly or included into a an SVGIconImageList with all functionality (stretch, opacity, grayscale and more...) |
 | ![SVGIconImageListComponentIcon.png](./Packages/SVGIconImageListComponentIcon.png) | **TSVGIconImageList** is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection. Use this component to simplify replace of ImageList for older Delphi Apps and obtain auto-scaling of Icons! |
 
-## Now you can search and download Icons directly from the WEB!
+## New Setup for automatic installation of components
+
+From 4.4.0 version a new "Installer" read-to-use is located in the Release area: [Download the Installer](https://github.com/EtheaDev/SVGIconImageList/releases/latest/download/SVGIconImageList_Setup.exe).
+
+The Installer automatically detect your Delphi versions, install sources, build and install packages and add source paths.
+
+![Setup](./Demo/Images/Setup.png)
+
+## You can search and download Icons directly from the WEB!
 
 From version 4.3 an integrated service is now available in the component editor to download SVG icons from the WEB, via the API provided by [iconify.design](https://iconify.design/).
 
@@ -48,7 +56,6 @@ There are three implementation:
 
 - A wrapper to the native Windows **Direct2D** implementation
 
-You can read more details [here.](https://github.com/EtheaDev/SVGIconImageList/wiki/Choice-of-Factories)
 
 ## Performance comparison
 
@@ -63,12 +70,6 @@ Count | Icon set        | Image32 |    D2D |Skia4Delphi|
 As you can see, the three engines perform differently depending on the icons and their complexity.
 
 <sup>(1)</sup>Notice that Image32 and Skia4Delphi are the only engines capable of rendering blur effect (that is always slow to calculate): this is the reason of "slow" performance to render Papirus icons that contains blur effect.
-
-### Available from Delphi XE3 to Delphi 12 (VCL and FMX Platforms)
-
-![Delphi 12 Support](./Demo/Images/SupportingDelphi.jpg)
-
-Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
 **Sample image of VCL version**
 
@@ -94,13 +95,25 @@ You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtension
 
 ### DOCUMENTATION
 
-Follow the [guide in Wiki section](https://github.com/EtheaDev/SVGIconImageList/wiki) to known how to use those components to modernize your Delphi VCL or FMX Windows applications scalable, colored and beautiful with few lines of code.
+Follow the [Project Site](https://ethea.it/docs/svgiconimagelist/) to known how to use those components to modernize your Delphi VCL or FMX applications with scalable, colored and beautiful icons.
 
 ### Other similar library
 
 A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/IconFontsImageList](https://github.com/EtheaDev/IconFontsImageList)
 
+### Available from Delphi XE3 to Delphi 12 (VCL and FMX Platforms)
+
+![Delphi 12 Support](./Demo/Images/SupportingDelphi.jpg)
+
+Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
+
 ### RELEASE NOTES
+30 Dec 2024: version 4.4.0 (VCL+FMX)
+- New [Project Site](https://www.ethea.it/docs/SVGIconImageList/)
+- New Setup for automatic Installation of Components
+- Aligned to Image32 4.6 Released 26 Dec 2024 (more text/font support)
+- Changed LibSuffix for Packages (eg. from D10_3 to 260)
+
 26 Nov 2024: version 4.3.0 (VCL+FMX)
 - Updated to Image32 4.6 Released 26 Nov 2024 to fix issue drawing text inside SVG
 - NameSpace added to all uses
@@ -426,13 +439,11 @@ These components uses the followin libraries:
 
 - Image32 library by [Angus Johnson](https://angusj.com/image32/Docs/_Body.htm)
 
-  These files are included in the Image32/Source and Image32/source/Image32_SVG folders
+  These files are included in the Image32/Source folders
 
   Copyright [Boost Software License Version 1](https://www.boost.org/LICENSE_1_0.txt)
 
 - Skia4Delphi Library by [the autohors](https://skia4delphi.org/)
-
-  These files are included in the Skia4Delphi/Source folder
 
   Copyright [MIT-License](https://github.com/skia4delphi/skia4delphi?tab=MIT-1-ov-file)
 

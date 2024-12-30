@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{2CD11B99-3805-4F90-B598-3652213872B2}</ProjectGuid>
+        <ProjectGuid>{29aeac09-74e0-4d02-b41d-31fa4b33dbf3}</ProjectGuid>
         <MainSource>SVGIconImageListFMX.dpk</MainSource>
         <ProjectVersion>18.8</ProjectVersion>
         <FrameworkType>FMX</FrameworkType>
@@ -52,7 +52,7 @@
         <DCC_Description>Ethea SVGIconImageList FMX components</DCC_Description>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
-        <DllSuffix>_D10_3</DllSuffix>
+        <DllSuffix>260</DllSuffix>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>

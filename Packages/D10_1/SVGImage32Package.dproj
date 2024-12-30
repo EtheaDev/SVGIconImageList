@@ -51,7 +51,7 @@
         <DCC_UnitSearchPath>..\..\Image32\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DCC_Description>Image32 2D Graphic Library - Copyright Angus Johnson</DCC_Description>
-        <DllSuffix>_D10_1</DllSuffix>
+        <DllSuffix>240</DllSuffix>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>

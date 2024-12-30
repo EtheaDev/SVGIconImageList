@@ -3,7 +3,7 @@ unit Img32.SVG.Core;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
-* Date      :  16 November 2024                                                *
+* Date      :  5 December 2024                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -116,20 +116,21 @@ type
 
   PClassStyleListItem = ^TClassStyleListItem;
   TClassStyleListItem = record //used internally by TClassStylesList
-    Hash: Cardinal;
-    Next: Integer;
-    Name: UTF8String;
-    Style: UTF8String;
+    Hash  : Cardinal;
+    Next  : Integer;
+    Name  : UTF8String;
+    Style : UTF8String;
   end;
 
   TClassStylesList = class
   private
+    FNameHash: Cardinal;
     FItems: array of TClassStyleListItem;
     FBuckets: TArrayOfInteger;
     FCount: Integer;
     FMod: Cardinal;
     procedure Grow(NewCapacity: Integer = -1);
-    function FindItemIndex(Hash: Cardinal; const Name: UTF8String): Integer;
+    function FindItemIndex(const Name: UTF8String): Integer;
   public
     procedure Preallocate(AdditionalItemCount: Integer);
     procedure AddAppendStyle(const Name, Style: UTF8String);
@@ -192,7 +193,7 @@ type
     function    ParseAttributes(var c: PUTF8Char; endC: PUTF8Char): Boolean; override;
   end;
 
-  TSvgTreeEl = class(TXmlEl)
+  TSvgXmlEl = class(TXmlEl)
   public
     constructor Create(owner: TSvgParser); override;
     procedure   Clear; override;
@@ -207,7 +208,7 @@ type
     classStyles : TClassStylesList;
     xmlHeader   : TXmlEl;
     docType     : TDocTypeEl;
-    svgTree     : TSvgTreeEl;
+    svgTree     : TSvgXmlEl;
     constructor Create;
     destructor  Destroy; override;
     procedure Clear;
@@ -1923,7 +1924,6 @@ begin
   //load the class's style (ie undotted style) if found.
   style := owner.classStyles.GetStyle(name);
   if style <> '' then ParseStyleAttribute(style);
-
   Result := ParseAttributes(c, endC);
 end;
 //------------------------------------------------------------------------------
@@ -2025,7 +2025,7 @@ begin
       Exit;
     end;
 
-    attribs.Add(attrib);    
+    attribs.Add(attrib);
     case attrib.hash of
       hId     : idAttrib := attrib;
       hClass  : classAttrib := attrib;
@@ -2123,7 +2123,7 @@ end;
 
 function TXmlEl.ParseContent(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 var
-  child: TSvgTreeEl;
+  child: TSvgXmlEl;
   entity: PSvgAttrib;
   c2, cc, tmpC, tmpEndC: PUTF8Char;
 begin
@@ -2182,7 +2182,7 @@ begin
         else
         begin
           //starting a new element
-          child := TSvgTreeEl.Create(owner);
+          child := TSvgXmlEl.Create(owner);
           childs.Add(child);
           if not child.ParseHeader(c, endC) then break;
           if not child.selfClosed then
@@ -2215,7 +2215,7 @@ begin
         ToUTF8String(tmpC, cc, text);
       end else
       begin
-        child := TSvgTreeEl.Create(owner);
+        child := TSvgXmlEl.Create(owner);
         childs.Add(child);
         ToUTF8String(tmpC, cc, child.text);
       end;
@@ -2304,25 +2304,25 @@ end;
 // TSvgTreeEl
 //------------------------------------------------------------------------------
 
-constructor TSvgTreeEl.Create(owner: TSvgParser);
+constructor TSvgXmlEl.Create(owner: TSvgParser);
 begin
   inherited Create(owner);
   selfClosed := false;
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgTreeEl.Clear;
+procedure TSvgXmlEl.Clear;
 var
   i: integer;
 begin
   for i := 0 to childs.Count -1 do
-    TSvgTreeEl(childs[i]).free;
+    TSvgXmlEl(childs[i]).free;
   childs.Clear;
   inherited;
 end;
 //------------------------------------------------------------------------------
 
-function TSvgTreeEl.ParseHeader(var c: PUTF8Char; endC: PUTF8Char): Boolean;
+function TSvgXmlEl.ParseHeader(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 begin
   Result := inherited ParseHeader(c, endC);
   if Result then hash := GetHash(name);
@@ -2479,7 +2479,7 @@ begin
     if (c^ = '<') and Match(c, '<svg') then
     begin
       inc(c);
-      svgTree := TSvgTreeEl.Create(self);
+      svgTree := TSvgXmlEl.Create(self);
       if svgTree.ParseHeader(c, endC) and
         not svgTree.selfClosed then
           svgTree.ParseContent(c, endC);
@@ -2741,29 +2741,29 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TClassStylesList.FindItemIndex(Hash: Cardinal; const Name: UTF8String): Integer;
+function TClassStylesList.FindItemIndex(const Name: UTF8String): Integer;
 begin
   Result := -1;
+  FNameHash := GetHash(Name);
   if FMod <> 0 then
   begin
-    Hash := GetHash(Name);
-    Result := FBuckets[(Hash and $7FFFFFFF) mod FMod];
+    Result := FBuckets[(FNameHash and $7FFFFFFF) mod FMod];
     while (Result <> -1) and
-          ((FItems[Result].Hash <> Hash) or not IsSameUTF8String(FItems[Result].Name, Name)) do
-      Result := FItems[Result].Next;
+      ((FItems[Result].Hash <> FNameHash) or
+      not IsSameUTF8String(FItems[Result].Name, Name)) do
+        Result := FItems[Result].Next;
   end;
 end;
+
 //------------------------------------------------------------------------------
 
 procedure TClassStylesList.AddAppendStyle(const Name, Style: UTF8String);
 var
   Index: Integer;
-  Hash: Cardinal;
   Item: PClassStyleListItem;
   Bucket: PInteger;
 begin
-  Hash := GetHash(Name);
-  Index := FindItemIndex(Hash, Name);
+  Index := FindItemIndex(Name);
   if Index <> -1 then
   begin
     Item := @FItems[Index];
@@ -2779,10 +2779,10 @@ begin
     Index := FCount;
     Inc(FCount);
 
-    Bucket := @FBuckets[(Hash and $7FFFFFFF) mod FMod];
+    Bucket := @FBuckets[(FNameHash and $7FFFFFFF) mod FMod];
     Item := @FItems[Index];
     Item.Next := Bucket^;
-    Item.Hash := Hash;
+    Item.Hash := FNameHash;
     Item.Name := Name;
     Item.Style := style;
     Bucket^ := Index;
@@ -2798,7 +2798,7 @@ begin
     Result := ''
   else
   begin
-    Index := FindItemIndex(GetHash(Name), Name);
+    Index := FindItemIndex(Name);
     if Index <> -1 then
       Result := FItems[Index].Style
     else

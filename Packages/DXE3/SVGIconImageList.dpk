@@ -1,5 +1,6 @@
 package SVGIconImageList;
 
+{$INCLUDE ..\..\Source\SVGIconImageList.inc}
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
@@ -26,15 +27,22 @@ package SVGIconImageList;
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Ethea SVGIconImageList VCL components'}
-{$LIBSUFFIX '_DXE3'}
+{$LIBSUFFIX '170'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
 requires
-  vcl,
-  VclSmp,
-  SVGImage32Package,
-  vclimg;
+  vcl
+  , VclSmp
+  , vclimg
+  {$IFDEF Image32_SVGEngine}
+  , SVGImage32Package
+  {$ENDIF}
+  {$IFDEF Skia_SVGEngine}
+  , Skia.Package.VCL
+  , Skia.Package.RTL
+  {$ENDIF}
+  ;
 
 contains
   SVGMessaging in '..\..\Source\SVGMessaging.pas',
@@ -45,9 +53,16 @@ contains
   SVGIconItems in '..\..\Source\SVGIconItems.pas',
   SVGIconVirtualImageList in '..\..\Source\SVGIconVirtualImageList.pas',
   SVGIconImageListBase in '..\..\Source\SVGIconImageListBase.pas',
+  {$IFDEF PreferNativeSvgSupport}
   D2DSVGFactory in '..\..\Source\D2DSVGFactory.pas',
   Winapi.D2DMissing in '..\..\Source\Winapi.D2DMissing.pas',
+  {$ENDIF}
+  {$IFDEF Image32_SVGEngine}
   Image32SVGFactory in '..\..\Source\Image32SVGFactory.pas',
+  {$ENDIF}
+  {$IFDEF Skia_SVGEngine}
+  SkiaSVGFactory in '..\..\Source\SkiaSVGFactory.pas',
+  {$ENDIF}
   SVGInterfaces in '..\..\Source\SVGInterfaces.pas',
   dlgExportPNG in '..\..\Source\dlgExportPNG.pas' {ExportToPNGDialog};
 

@@ -27,7 +27,7 @@ package SVGIconImageList;
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Ethea SVGIconImageList VCL components'}
-{$LIBSUFFIX '_DXE8'}
+{$LIBSUFFIX '220'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 
@@ -35,6 +35,8 @@ requires
   vcl
   , VclSmp
   , vclimg
+  , RESTComponents
+  , SVGIconImageListRestClient
   {$IFDEF Image32_SVGEngine}
   , SVGImage32Package
   {$ENDIF}

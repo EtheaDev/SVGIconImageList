@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{AC5E58B2-BDF0-4A77-9084-92441FBD9BC2}</ProjectGuid>
+        <ProjectGuid>{fe4c7d52-3f68-400e-ba2d-b49884fa30d6}</ProjectGuid>
         <MainSource>dclSVGIconImageListFMX.dpk</MainSource>
         <ProjectVersion>18.8</ProjectVersion>
         <FrameworkType>FMX</FrameworkType>
@@ -53,7 +53,7 @@
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <SanitizedProjectName>dclSVGIconImageListFMX</SanitizedProjectName>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <DllSuffix>_D10_3</DllSuffix>
+        <DllSuffix>260</DllSuffix>
         <DCC_Description>Ethea SVGIconImageList  FMX components</DCC_Description>
         <DesignOnlyPackage>true</DesignOnlyPackage>
         <VerInfo_Locale>1033</VerInfo_Locale>

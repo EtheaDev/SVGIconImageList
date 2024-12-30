@@ -53,7 +53,7 @@
         <SanitizedProjectName>dclSVGIconImageList</SanitizedProjectName>
         <DCC_Description>Ethea SVGIconImageList VCL components</DCC_Description>
         <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
-        <DllSuffix>_D10_1</DllSuffix>
+        <DllSuffix>240</DllSuffix>
         <DCC_UnitSearchPath>..\..\Source;..\..\Image32\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DesignOnlyPackage>true</DesignOnlyPackage>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -96,10 +96,9 @@
         <DCCReference Include="..\SVGIconImageRegister.pas"/>
         <DCCReference Include="..\SVGTextPropertyEditorUnit.pas">
             <Form>SVGTextPropertyEditorForm</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\SVGIconifySearchFormUnit.pas">
-            <Form>SVGIconifySearchForm</Form>
+        <DCCReference Include="..\SVGRESTClientFormUnit.pas">
+            <Form>SVGRESTClientSearchForm</Form>
         </DCCReference>
         <DCCReference Include="..\SVGIconSetFormUnit.pas">
             <Form>SVGIconSetForm</Form>

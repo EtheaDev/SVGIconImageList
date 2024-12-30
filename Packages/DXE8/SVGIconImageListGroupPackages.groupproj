@@ -3,6 +3,9 @@
         <ProjectGuid>{43558AC6-3EF5-4323-9448-1656FF056E82}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
+        <Projects Include="SVGIconImageListRestClient.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="SVGImage32Package.dproj">
             <Dependencies/>
         </Projects>
@@ -20,6 +23,15 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
+    <Target Name="SVGIconImageListRestClient">
+        <MSBuild Projects="SVGIconImageListRestClient.dproj"/>
+    </Target>
+    <Target Name="SVGIconImageListRestClient:Clean">
+        <MSBuild Projects="SVGIconImageListRestClient.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SVGIconImageListRestClient:Make">
+        <MSBuild Projects="SVGIconImageListRestClient.dproj" Targets="Make"/>
+    </Target>
     <Target Name="SVGImage32Package">
         <MSBuild Projects="SVGImage32Package.dproj"/>
     </Target>
@@ -48,13 +60,13 @@
         <MSBuild Projects="dclSVGIconImageList.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="SVGImage32Package;SVGIconImageList;dclSVGIconImageList"/>
+        <CallTarget Targets="SVGIconImageListRestClient;SVGImage32Package;SVGIconImageList;dclSVGIconImageList"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="SVGImage32Package:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean"/>
+        <CallTarget Targets="SVGIconImageListRestClient:Clean;SVGImage32Package:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="SVGImage32Package:Make;SVGIconImageList:Make;dclSVGIconImageList:Make"/>
+        <CallTarget Targets="SVGIconImageListRestClient:Make;SVGImage32Package:Make;SVGIconImageList:Make;dclSVGIconImageList:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

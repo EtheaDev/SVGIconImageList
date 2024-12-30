@@ -77,7 +77,7 @@ uses
   //WARNING: you must define this directive to use this unit outside the IDE
 {$IFNDEF UseSVGEditorsAtRunTime}
   , ToolsAPI
-  , BrandingAPI
+  {$IF (CompilerVersion >= 27.0)}, BrandingAPI{$IFEND}
   {$IF (CompilerVersion >= 32.0)}, IDETheme.Utils{$IFEND}
 {$ENDIF}
   ;

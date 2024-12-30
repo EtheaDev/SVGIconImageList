@@ -28,7 +28,7 @@ package dclSVGIconImageList;
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Ethea SVGIconImageList VCL components'}
-{$LIBSUFFIX '_D10_1'}
+{$LIBSUFFIX '240'}
 {$DESIGNONLY}
 {$IMPLICITBUILD OFF}
 
@@ -40,7 +40,7 @@ contains
   SVGIconImageListEditorUnit in '..\SVGIconImageListEditorUnit.pas' {SVGIconImageListEditor},
   SVGIconImageRegister in '..\SVGIconImageRegister.pas',
   SVGTextPropertyEditorUnit in '..\SVGTextPropertyEditorUnit.pas' {SVGTextPropertyEditorForm},
-  SVGIconifySearchFormUnit in '..\SVGIconifySearchFormUnit.pas' {SVGIconifySearchForm},
+  SVGRESTClientFormUnit in '..\..\Packages\SVGRESTClientFormUnit.pas' {SVGRESTClientSearchForm},
   SVGIconSetFormUnit in '..\SVGIconSetFormUnit.pas' {SVGIconSetForm};
 
 end.

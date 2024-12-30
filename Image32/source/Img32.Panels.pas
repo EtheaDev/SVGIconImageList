@@ -896,7 +896,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-type TControl = class(Controls.TControl); //access protected Color property
+type TWinControl = class(Controls.TWinControl); //access protected Color property
 
 procedure TBaseImgPanel.DrawToPanelCanvas(const srcRect, dstRect: TRect);
 begin
@@ -1001,7 +1001,7 @@ begin
   if (csDesigning in ComponentState) or not backgroundPainted then
   begin
     if ParentColor then
-      Canvas.Brush.Color := TControl(parent).Color else
+      Canvas.Brush.Color := TWinControl(parent).Color else
       Canvas.Brush.Color := self.Color;
     Canvas.FillRect(innerRec);
   end;

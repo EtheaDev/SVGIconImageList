@@ -189,8 +189,8 @@ end;
 
 initialization
 {$IFDEF MSWINDOWS}
-  FontManager.Load('Arial');
-  FontManager.Load('Times New Roman');
+  FontManager.LoadFontReaderFamily('Arial');
+  FontManager.LoadFontReaderFamily('Times New Roman');
 {$ENDIF}
 
 end.

@@ -26,7 +26,7 @@ package SVGImage32Package;
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Image32 2D Graphic Library - Copyright Angus Johnson'}
-{$LIBSUFFIX '_DXE3'}
+{$LIBSUFFIX '170'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
 

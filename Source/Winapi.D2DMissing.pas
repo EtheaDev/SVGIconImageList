@@ -88,7 +88,7 @@ type
 const
   {$IF CompilerVersion < 33}
   D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT = $00000004; // Render color versions of glyphs if defined by the font.
-  {$ENDIF}
+  {$IFEND}
   // Indicates no data is available for this glyph.
   DWRITE_GLYPH_IMAGE_FORMATS_NONE                   = DWRITE_GLYPH_IMAGE_FORMATS($00000000);
   {$EXTERNALSYM DWRITE_GLYPH_IMAGE_FORMATS_NONE}

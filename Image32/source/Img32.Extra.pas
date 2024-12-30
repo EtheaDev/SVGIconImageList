@@ -3,7 +3,7 @@ unit Img32.Extra;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
-* Date      :  15 October 2024                                                 *
+* Date      :  26 December 2024                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 * Purpose   :  Miscellaneous routines that don't belong in other modules.      *
@@ -150,8 +150,8 @@ function SimplifyPaths(const paths: TPathsD;
   shapeTolerance: double = 0.1; isClosedPath: Boolean = true): TPathsD;
 {$ENDIF}
 
-// SimplifyPathEx: this is mainly useful following Vectorize()
-// Also removes very short segments that zig-zag (rather than curve)
+// SimplifyPathEx: this is particularly useful following Vectorize()
+// because it also removes very short zig-zag segments
 function SimplifyPathEx(const path: TPathD; shapeTolerance: double): TPathD;
 function SimplifyPathsEx(const paths: TPathsD; shapeTolerance: double): TPathsD;
 
@@ -216,6 +216,23 @@ type
 
 //------------------------------------------------------------------------------
 // Miscellaneous functions
+//------------------------------------------------------------------------------
+
+function Clamp(val, endVal: integer): integer;
+  {$IFDEF INLINE} inline; {$ENDIF}
+begin
+  if val < 0 then Result := 0
+  else if val >= endVal then Result := endVal -1
+  else Result := val;
+end;
+//------------------------------------------------------------------------------
+
+function ModEx(val, endVal: integer): integer;
+  {$IFDEF INLINE} inline; {$ENDIF}
+begin
+  Result := val mod endVal;
+  if Result < 0 then Result := endVal + Result;
+end;
 //------------------------------------------------------------------------------
 
 function GetSymmetricCropTransparentRect(img: TImage32): TRect;
@@ -636,7 +653,7 @@ end;
 
 procedure HatchBackground(img: TImage32; const rec: TRect;
   color1: TColor32 = clWhite32; color2: TColor32= $FFE8E8E8;
-  hatchSize: Integer = 10); overload;
+  hatchSize: Integer = 10);
 var
   i,j: Integer;
   pc: PColor32;
@@ -654,7 +671,7 @@ begin
       for j := rec.Left to rec.Right -1 do
       begin
         if (j + 1) mod hatchSize = 0 then hatch := not hatch;
-        pc^ := BlendToOpaque(colors[hatch], pc^);
+        pc^ := BlendToOpaque(pc^, colors[hatch]);
        inc(pc);
       end;
     end;
@@ -1726,97 +1743,64 @@ type
     pdSqrd  : double;
     prev    : PSimplifyRec;
     next    : PSimplifyRec;
-    isEnd   : Boolean;
+    isEndPt   : Boolean;
   end;
 
 function SimplifyPath(const path: TPathD;
   shapeTolerance: double; isClosedPath: Boolean): TPathD;
 var
-  i, highI, minLen: integer;
+  i, iPrev, iNext, len, minLen: integer;
   tolSqrd: double;
   srArray: array of TSimplifyRec;
-  first, last: PSimplifyRec;
+  current, last: PSimplifyRec;
 begin
   Result := nil;
-  highI := High(path);
+  len := Length(path);
   if not isClosedPath then minLen := 2 else minLen := 3;
+  if len < minLen then Exit;
 
-  if highI +1 < minLen then Exit;
-
-  SetLength(srArray, highI +1);
-  with srArray[0] do
-  begin
-    pt      := path[0];
-    prev    := @srArray[highI];
-    next    := @srArray[1];
-    if isClosedPath then
-    begin
-      pdSqrd  := PerpendicularDistSqrd(path[0], path[highI], path[1]);
-      isEnd   := false;
-    end else
-    begin
-      pdSqrd  := MaxDouble;
-      isEnd   := true;
-    end;
-  end;
-
-  with srArray[highI] do
-  begin
-    pt      := path[highI];
-    prev    := @srArray[highI-1];
-    next    := @srArray[0];
-    if isClosedPath then
-    begin
-      pdSqrd  := PerpendicularDistSqrd(path[highI], path[highI-1], path[0]);
-      isEnd   := false;
-    end else
-    begin
-      pdSqrd  := MaxDouble;
-      isEnd   := true;
-    end;
-  end;
-
-  for i := 1 to highI -1 do
+  SetLength(srArray, len);
+  for i := 0 to len -1 do
     with srArray[i] do
     begin
+      iPrev := ModEx(i-1, len);
+      iNext := ModEx(i+1, len);
       pt      := path[i];
-      prev    := @srArray[i-1];
-      next    := @srArray[i+1];
-      pdSqrd  := PerpendicularDistSqrd(path[i], path[i-1], path[i+1]);
-      isEnd   := false;
+      prev    := @srArray[iPrev];
+      next    := @srArray[iNext];
+      pdSqrd  := PerpendicularDistSqrd(path[i], path[iPrev], path[iNext]);
+      isEndPt   := not isClosedPath and ((i = 0) or (i = len -1));
     end;
 
-  first := @srArray[0];
-  last := first.prev;
+  current := @srArray[0];
+  last := current.prev;
 
   tolSqrd := Sqr(shapeTolerance);
-  while first <> last do
+  while current <> last do
   begin
-    if first.isEnd or (first.pdSqrd > tolSqrd) or
-      (first.next.pdSqrd < first.pdSqrd) then
+    if not current.isEndPt and
+      ((current.pdSqrd < tolSqrd) and (current.next.pdSqrd > current.pdSqrd)) then
     begin
-      first := first.next;
-    end else
-    begin
-      first.prev.next := first.next;
-      first.next.prev := first.prev;
-      last := first.prev;
-      dec(highI);
+      current.prev.next := current.next;
+      current.next.prev := current.prev;
+      last := current.prev;
+      dec(len);
       if last.next = last.prev then break;
-      last.pdSqrd :=
-        PerpendicularDistSqrd(last.pt, last.prev.pt, last.next.pt);
-      first := last.next;
-      first.pdSqrd :=
-        PerpendicularDistSqrd(first.pt, first.prev.pt, first.next.pt);
-    end;
+      last.pdSqrd := PerpendicularDistSqrd(last.pt, last.prev.pt, last.next.pt);
+      current := last.next;
+      current.pdSqrd := PerpendicularDistSqrd(current.pt, current.prev.pt, current.next.pt);
+    end
+    else
+      current := current.next;
   end;
-  if highI +1 < minLen then Exit;
-  if not isClosedPath then first := @srArray[0];
-  NewPointDArray(Result, highI +1, True);
-  for i := 0 to HighI do
+
+  if len < minLen then Exit;
+  if not isClosedPath then current := @srArray[0];
+  NewPointDArray(Result, len, True);
+  for i := 0 to len -1 do
   begin
-    Result[i] := first.pt;
-    first := first.next;
+    Result[i] := current.pt;
+    current := current.next;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -1843,11 +1827,11 @@ end;
 type
   PSimplifyExRec = ^TSimplifyExRec;
   TSimplifyExRec = record
-    pt      : TPointD;
-    pdSqrd  : double;
-    segLenSq: double;
-    prev    : PSimplifyExRec;
-    next    : PSimplifyExRec;
+    pt        : TPointD;
+    pdSqrd    : double;
+    segLenSq  : double;
+    prev      : PSimplifyExRec;
+    next      : PSimplifyExRec;
   end;
 
 function DeleteCurrent(var current: PSimplifyExRec): Boolean;
@@ -1861,37 +1845,36 @@ begin
   Result := next <> current.prev;
   if not Result then Exit;
   next.pdSqrd := PerpendicularDistSqrd(next.pt, next.prev.pt, next.next.pt);
-  next.segLenSq := DistanceSqrd(next.prev.pt, next.pt);
+  current.segLenSq := DistanceSqrd(current.pt, current.next.pt);
   current.pdSqrd := PerpendicularDistSqrd(current.pt, current.prev.pt, current.next.pt);
 end;
 //---------------------------------------------------------------------------
 
 function SimplifyPathEx(const path: TPathD; shapeTolerance: double): TPathD;
 var
-  i, prevI, nextI, highI: integer;
-  cp, cp2, shapeTolSqr, shapeTolSqrEx: double;
+  i, prevI, nextI, len: integer;
+  shapeTolSqr: double;
   srArray: array of TSimplifyExRec;
   current, start: PSimplifyExRec;
 begin
   Result := nil;
-  highI := High(path);
-  if highI < 2 then Exit;
+  len := Length(path);
+  if len < 3 then Exit;
 
   shapeTolSqr := Sqr(shapeTolerance);
-  shapeTolSqrEx := shapeTolerance * 4 +1; // may need adjusting
-  SetLength(srArray, highI +1);
+  SetLength(srArray, len);
 
-  for i := 0 to highI do
+  for i := 0 to len -1 do
   begin
     prevI := i -1;
     nextI := i +1;
-    if i = 0 then prevI := highI
-    else if i = highI then nextI := 0;
+    if i = 0 then prevI := len -1
+    else if i = len -1 then nextI := 0;
 
     with srArray[i] do
     begin
       pt      := path[i];
-      segLenSq:= DistanceSqrd(path[prevI], path[i]);
+      segLenSq:= DistanceSqrd(path[i], path[nextI]);
       pdSqrd  := PerpendicularDistSqrd(path[i], path[prevI], path[nextI]);
       prev    := @srArray[prevI];
       next    := @srArray[nextI];
@@ -1903,40 +1886,33 @@ begin
 
   while current <> start do
   begin
+    // Irrespective of segment length, remove vertices that deviate very little
+    // from imaginary lines that pass through their adjacent vertices.
+    // However, if the following vertex has an even sorter distance from its
+    // respective imaginary line, its important to remove that vertex first.
     if ((current.pdSqrd < shapeTolSqr) and
       (current.pdSqrd < current.next.pdSqrd)) then
     begin
-      // nb: always remove the shorter segment first
-      // irrespective of segment length remove vertices that
-      // deviate insignificantly from their adjacent vertices.
-      dec(highI);
+      dec(len);
       if not DeleteCurrent(current) then Break;
       start := current.prev;
-    end else if
-      (current.segLenSq * shapeTolSqrEx < current.prev.segLenSq) and
-      (current.segLenSq * shapeTolSqrEx < current.next.segLenSq) then
+    end
+    // also remove insignificant path zig-zags
+    else if (current.prev.segLenSq < shapeTolSqr) and
+      (current.segLenSq < shapeTolSqr) and
+      ((CrossProduct(current.prev.pt, current.pt, current.next.pt) > 0) <>
+      (CrossProduct(current.pt, current.next.pt, current.next.next.pt) > 0)) then
     begin
-      cp := CrossProduct(current.prev.prev.pt, current.prev.pt, current.pt);
-      cp2 := CrossProduct(current.prev.pt, current.pt, current.next.pt);
-      if ((cp > 0) = (cp2 > 0)) then
-      begin
-        // not a zig-zag (ie avoids truncating tightly rounded corners)
-        current := current.next;
-      end else
-      begin
-        // remove insignificant zigzags
-        current.prev.pt := MidPoint(current.pt, current.prev.pt);
-        if not DeleteCurrent(current) then Break;
-        start := current.prev;
-        dec(highI);
-      end;
+      dec(len);
+      if not DeleteCurrent(current) then Break;
+      start := current.prev;
     end else
       current := current.next;
   end;
 
-  if highI < 2 then Exit;
-  NewPointDArray(Result, highI +1, True);
-  for i := 0 to HighI do
+  if len < 3 then Exit;
+  NewPointDArray(Result, len, True);
+  for i := 0 to len -1 do
   begin
     Result[i] := current.pt;
     current := current.next;
@@ -2110,23 +2086,6 @@ begin
   SetLength(Result, len);
   for i := 0 to len -1 do
     Result[i] := SmoothToCubicBezier2(paths[i], pathIsClosed, maxOffset);
-end;
-//------------------------------------------------------------------------------
-
-function Clamp(val, endVal: integer): integer;
-  {$IFDEF INLINE} inline; {$ENDIF}
-begin
-  if val < 0 then Result := 0
-  else if val >= endVal then Result := endVal -1
-  else Result := val;
-end;
-//------------------------------------------------------------------------------
-
-function ModEx(val, endVal: integer): integer;
-  {$IFDEF INLINE} inline; {$ENDIF}
-begin
-  Result := val mod endVal;
-  if Result < 0 then Result := endVal + Result;
 end;
 //------------------------------------------------------------------------------
 

@@ -126,7 +126,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
-        <DCC_UsePackage>rtl;IconFontsImageListFMX;SVGIconImageListFMX;SVGIconPackage;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
@@ -160,6 +160,7 @@
         <DCCReference Include="..\SVGIconImageListNew.dcr"/>
         <DCCReference Include="DesignIDE.dcp"/>
         <DCCReference Include="dclfmxstd.dcp"/>
+        <DCCReference Include="SVGIconImageListRestClient.dcp"/>
         <DCCReference Include="SVGIconImageListFMX.dcp"/>
         <DCCReference Include="..\FMX.SVGIconImageRegister.pas"/>
         <DCCReference Include="..\FMX.SVGIconImageListEditorUnit.pas">

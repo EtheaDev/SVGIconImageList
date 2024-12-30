@@ -94,6 +94,8 @@ type
     procedure MoveIconToSelectView(const AIndex: Integer);
     procedure Apply;
     procedure SetReplaceIndex(const AValue: Integer);
+  protected
+    procedure Loaded; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -120,7 +122,7 @@ uses
   //WARNING: you must define this directive to use this unit outside the IDE
 {$IFNDEF UseSVGEditorsAtRunTime}
   , ToolsAPI
-  , BrandingAPI
+  {$IF (CompilerVersion >= 27.0)}, BrandingAPI{$IFEND}
   {$IF (CompilerVersion >= 32.0)}, IDETheme.Utils{$IFEND}
 {$ENDIF}
   ;
@@ -305,8 +307,16 @@ end;
 procedure TSVGRESTClientSearchForm.HelpButtonClick(Sender: TObject);
 begin
   ShellExecute(handle, 'open',
-    PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/RESTAPISearch'), nil, nil,
+    PChar('https://ethea.it/docs/svgiconimagelist/RESTAPISearch.html'), nil, nil,
     SW_SHOWNORMAL)
+end;
+
+procedure TSVGRESTClientSearchForm.Loaded;
+begin
+  inherited;
+  {$IFDEF D10_1+}
+  MaxIconsEdit.Align := alClient;
+  {$ENDIF}
 end;
 
 procedure TSVGRESTClientSearchForm.Apply;

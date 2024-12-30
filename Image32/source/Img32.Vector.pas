@@ -3,7 +3,7 @@ unit Img32.Vector;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
-* Date      :  17 October 2024                                                 *
+* Date      :  16 December 2024                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2019-2024                                         *
 *                                                                              *
@@ -262,6 +262,7 @@ type
 
   function GetBoundsD(const path: TPathD): TRectD; overload;
   function GetBoundsD(const paths: TPathsD): TRectD; overload;
+  function GetBoundsD(const paths: TArrayOfPathsD): TRectD; overload;
 
   function GetRotatedRectBounds(const rec: TRect; angle: double): TRect; overload;
   function GetRotatedRectBounds(const rec: TRectD; angle: double): TRectD; overload;
@@ -3572,6 +3573,36 @@ begin
 //    AppendPath(Result, GrowOpenLine(tmp[i],
 //      lineWidth, joinStyle, endStyle, 2));
     AppendPath(Result, GrowClosedLine(tmp[i], lineWidth, joinStyle, 2));
+end;
+//------------------------------------------------------------------------------
+
+function GetBoundsD(const paths: TArrayOfPathsD): TRectD;
+var
+  i, len: integer;
+  rec: TRectD;
+begin
+  len := Length(paths);
+  i := 0;
+  while (i < len) do
+  begin
+    rec := GetBoundsD(paths[i]);
+    if not IsEmptyRect(rec) then Break;
+    inc(i);
+  end;
+
+  if i = len then
+  begin
+    Result := NullRectD;
+    Exit;
+  end;
+  Result := rec;
+
+  for i := i + 1 to len -1 do
+  begin
+    rec := GetBoundsD(paths[i]);
+    if IsEmptyRect(rec) then Continue;
+    Result := UnionRect(Result, rec);
+  end;
 end;
 //------------------------------------------------------------------------------
 

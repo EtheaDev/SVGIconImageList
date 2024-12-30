@@ -82,6 +82,7 @@
         <DCC_Description>Ethea SVGIconImageList  FMX components</DCC_Description>
         <DesignOnlyPackage>true</DesignOnlyPackage>
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=</VerInfo_Keys>
@@ -140,6 +141,7 @@
         <DCCReference Include="..\SVGIconImageListNew.dcr"/>
         <DCCReference Include="DesignIDE.dcp"/>
         <DCCReference Include="dclfmxstd.dcp"/>
+        <DCCReference Include="SVGIconImageListRestClient.dcp"/>
         <DCCReference Include="SVGIconImageListFMX.dcp"/>
         <DCCReference Include="..\FMX.SVGIconImageRegister.pas"/>
         <DCCReference Include="..\FMX.SVGIconImageListEditorUnit.pas">
@@ -152,15 +154,15 @@
             <Form>SVGRESTClientSearchForm</Form>
             <FormType>fmx</FormType>
         </DCCReference>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
-            <CfgParent>Base</CfgParent>
-        </BuildConfiguration>
-        <BuildConfiguration Include="Release">
-            <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>

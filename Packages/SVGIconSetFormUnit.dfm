@@ -110,7 +110,6 @@ object SVGIconSetForm: TSVGIconSetForm
       Width = 60
       Height = 21
       Margins.Top = 6
-      Align = alLeft
       Alignment = taRightJustify
       AutoSize = False
       Caption = 'Height:'
@@ -123,7 +122,6 @@ object SVGIconSetForm: TSVGIconSetForm
       Width = 60
       Height = 21
       Margins.Top = 6
-      Align = alLeft
       Alignment = taRightJustify
       AutoSize = False
       Caption = 'Width:'
@@ -136,7 +134,6 @@ object SVGIconSetForm: TSVGIconSetForm
       Width = 60
       Height = 21
       Margins.Top = 6
-      Align = alLeft
       Alignment = taRightJustify
       AutoSize = False
       Caption = 'Size:'
@@ -148,7 +145,6 @@ object SVGIconSetForm: TSVGIconSetForm
       Top = 20
       Width = 44
       Height = 24
-      Align = alLeft
       MaxValue = 255
       MinValue = 0
       TabOrder = 0
@@ -160,7 +156,6 @@ object SVGIconSetForm: TSVGIconSetForm
       Top = 20
       Width = 44
       Height = 24
-      Align = alLeft
       MaxValue = 255
       MinValue = 0
       TabOrder = 1
@@ -172,7 +167,6 @@ object SVGIconSetForm: TSVGIconSetForm
       Top = 20
       Width = 44
       Height = 24
-      Align = alLeft
       MaxValue = 255
       MinValue = 0
       TabOrder = 2

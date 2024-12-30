@@ -172,7 +172,7 @@ procedure TSVGRESTClientSearchForm.HelpButtonClick(Sender: TObject);
 begin
   {$IFDEF MSWINDOWS}
   ShellExecute(0, 'open',
-    PChar('https://github.com/EtheaDev/SVGIconImageList/wiki/RESTAPISearch'), nil, nil,
+    PChar('https://ethea.it/docs/svgiconimagelist/RESTAPISearch.html'), nil, nil,
     SW_SHOWNORMAL)
   {$ENDIF}
 end;

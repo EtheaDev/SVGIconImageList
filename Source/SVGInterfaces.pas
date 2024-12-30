@@ -76,11 +76,11 @@ implementation
 Uses
   {$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine) and NOT DEFINED(PreferNativeSvgSupport)}
     {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or PreferNativeSvgSupport) into SVGIconImageList.inc)'}
-  {$ENDIF}
+  {$IFEND}
 
   {$IF DEFINED(Image32_SVGEngine) and DEFINED(Skia_SVGEngine)}
     {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine) into SVGIconImageList.inc)'}
-  {$ENDIF}
+  {$IFEND}
 
   {$IF DEFINED(Image32_SVGEngine)}
     {$IFNDEF SvgDisableEngineHint}
@@ -92,7 +92,7 @@ Uses
     {$MESSAGE HINT 'Use Skia4Delphi "wrapper" SVG-Engine for SVGIconImageList'}
     {$ENDIF}
     SkiaSVGFactory
-  {$ENDIF}
+  {$IFEND}
   {$IFDEF PreferNativeSvgSupport}
     {$IFNDEF SvgDisableEngineHint}
     {$MESSAGE HINT 'but Prefer Windows Direct-2D SVG-Engine if available'}
@@ -117,7 +117,7 @@ begin
       FGlobalSVGFactory := GetImage32SVGFactory;
     {$ELSEIF DEFINED(Skia_SVGEngine)}
       FGlobalSVGFactory := GetSkiaSVGFactory;
-    {$ENDIF}
+    {$IFEND}
   end;
   Result := FGlobalSVGFactory;
 end;
@@ -138,7 +138,7 @@ begin
     Result := 'Delphi Image32 Engine'
   {$ELSEIF DEFINED(Skia_SVGEngine)}
     Result := 'Skia4delphi Engine'
-  {$ENDIF}
+  {$IFEND}
 end;
 
 end.
