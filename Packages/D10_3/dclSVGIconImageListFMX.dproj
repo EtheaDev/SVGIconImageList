@@ -52,7 +52,6 @@
         <DCC_Namespace>System;WinApi;$(DCC_Namespace)</DCC_Namespace>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <SanitizedProjectName>dclSVGIconImageListFMX</SanitizedProjectName>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DllSuffix>260</DllSuffix>
         <DCC_Description>Ethea SVGIconImageList  FMX components</DCC_Description>
         <DesignOnlyPackage>true</DesignOnlyPackage>
@@ -89,6 +88,7 @@
         <DCCReference Include="..\SVGIconImageListNew.dcr"/>
         <DCCReference Include="DesignIDE.dcp"/>
         <DCCReference Include="dclfmxstd.dcp"/>
+        <DCCReference Include="SVGIconImageListRestClient.dcp"/>
         <DCCReference Include="SVGIconImageListFMX.dcp"/>
         <DCCReference Include="..\FMX.SVGIconImageRegister.pas"/>
         <DCCReference Include="..\FMX.SVGIconImageListEditorUnit.pas">
@@ -101,15 +101,15 @@
             <Form>SVGRESTClientSearchForm</Form>
             <FormType>fmx</FormType>
         </DCCReference>
-        <BuildConfiguration Include="Release">
-            <Key>Cfg_2</Key>
-            <CfgParent>Base</CfgParent>
-        </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>

@@ -2,10 +2,10 @@ unit Img32.CQ;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6                                                             *
-* Date      :  27 November 2024                                                *
+* Version   :  4.7                                                             *
+* Date      :  6 January 2025                                                  *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2024                                         *
+* Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Color reduction for TImage32                                    *
 *           :  Uses Octree Color Quantization & Floyd / Steinberg Dithering    *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
@@ -71,7 +71,7 @@ type
 
   TOctree = class
     private
-      fLeaves       : cardinal;
+      fLeafCount    : cardinal;
       fTop          : TOctNode;
       ColorPxlCnt   : integer;
       fReducible8   : TOctNodes8;
@@ -92,7 +92,7 @@ type
       procedure   BuildTree(image: TImage32);
       procedure   ApplyPalette(image: TImage32);
       function    GetColorFreqArray: TArrayOfColFreq;
-      property    ColorCount: cardinal read fLeaves;
+      property    ColorCount: cardinal read fLeafCount;
       // PixelCount: = Sum( leaves[ 0 .. n-1 ].Count )
       // and semi-transparent pixels aren't counted
       property    PixelCount: integer read ColorPxlCnt;
@@ -587,7 +587,7 @@ end;
 constructor TOctree.Create;
 begin
   fReduceType := rtMedianCut;
-  fLeaves := 0;
+  fLeafCount := 0;
   fTop := TOctNode.Create(0);
   fReducible8 := NullOctNodes8;
 end;
@@ -614,7 +614,7 @@ end;
 procedure TOctree.Reset;
 begin
   if Assigned(fTop) then Delete(fTop);
-  fLeaves := 0;
+  fLeafCount := 0;
   fTop := TOctNode.Create(0);
   fReducible8 := NullOctNodes8;
 end;
@@ -684,7 +684,7 @@ begin
     end;
   node.Add(wc.Color);
   inc(node.Count, wc.Weight -1);
-  Dec(fLeaves, childCnt -1);
+  Dec(fLeafCount, childCnt -1);
 end;
 //------------------------------------------------------------------------------
 
@@ -740,7 +740,7 @@ begin
     if child.IsLeaf then
     begin
       child.Add(color);
-      Inc(fLeaves);
+      Inc(fLeafCount);
     end else
     begin
       child.Next  := fReducible8[level];
@@ -793,7 +793,7 @@ var
   end;
 
 begin
-  SetLength(colors, fLeaves);
+  SetLength(colors, fLeafCount);
   count := 0;
   FillPalette(fTop);
 end;
@@ -822,7 +822,7 @@ var
   end;
 
 begin
-  SetLength(Result, fLeaves);
+  SetLength(Result, fLeafCount);
   count := 0;
   FillPalette(fTop);
 end;
@@ -867,7 +867,7 @@ end;
 
 function TOctree.BasicReduce(palSize: cardinal): TArrayOfColor32;
 begin
-  while (fLeaves > palSize) and ReduceOne do;
+  while (fLeafCount > palSize) and ReduceOne do;
   GetTreePalette(Result);
 end;
 

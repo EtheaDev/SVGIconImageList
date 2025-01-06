@@ -33,8 +33,7 @@ package SVGImage32Package;
 requires
   rtl,
   vcl,
-  vclimg
-  ;
+  vclimg;
 
 contains
   Img32 in '..\..\Image32\source\Img32.pas',

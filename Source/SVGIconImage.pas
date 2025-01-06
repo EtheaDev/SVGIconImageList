@@ -2,7 +2,7 @@
 {                                                                              }
 {       SVG Image in TPicture: useful to show a Scalable Vector Graphic        }
 {                                                                              }
-{       Copyright (c) 2019-2024 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2025 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors:                                                          }
 {                                                                              }

@@ -89,6 +89,7 @@
         <DCCReference Include="VclSmp.dcp"/>
         <DCCReference Include="vclwinx.dcp"/>
         <DCCReference Include="RESTComponents.dcp"/>
+        <DCCReference Include="SVGIconImageListRestClient.dcp"/>
         <DCCReference Include="..\..\Source\SVGIconImage.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageList.pas"/>
         <DCCReference Include="..\..\Source\SVGIconUtils.pas"/>
@@ -97,7 +98,6 @@
         <DCCReference Include="..\..\Source\SVGIconVirtualImageList.pas"/>
         <DCCReference Include="..\..\Source\SVGIconImageListBase.pas"/>
         <DCCReference Include="..\..\Source\SVGInterfaces.pas"/>
-        <DCCReference Include="..\..\Source\Browser.IconifyApi.pas"/>
         <DCCReference Include="..\..\Source\dlgExportPNG.pas">
             <Form>ExportToPNGDialog</Form>
         </DCCReference>

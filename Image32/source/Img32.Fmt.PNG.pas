@@ -2,10 +2,10 @@ unit Img32.Fmt.PNG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6                                                             *
-* Date      :  7 December 2024                                                 *
+* Version   :  4.7                                                             *
+* Date      :  6 January 2025                                                  *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2023                                         *
+* Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  PNG file format extension for TImage32                          *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -219,7 +219,8 @@ begin
       if (Cardinal(palentries[255]) = 0) and (Cardinal(palentries[254]) = 0) then
       begin
         palSize := 253;
-        while Cardinal(palentries[palSize -1]) = 0 do dec(palSize);
+        while (palSize > 0) and (Cardinal(palentries[palSize -1]) = 0) do
+          dec(palSize);
       end;
       palIs4Bits := palSize <= 16; // each pal index uses only 4 bits
       FixPalette(@palentries[0], palSize);

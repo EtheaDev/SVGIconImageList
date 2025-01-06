@@ -32,9 +32,8 @@ package SVGIconImageListFMX;
 {$IMPLICITBUILD OFF}
 
 requires
-  fmx
-  , RESTComponents
-  , SVGIconImageListRestClient
+  rtl
+  , fmx
   {$IFDEF Image32_SVGEngine}
   , SVGImage32Package
   {$ENDIF}

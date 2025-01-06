@@ -7,7 +7,7 @@ uses
 {$R *.res}
 
 begin
-  Application.Title := 'SVG Icons Explorer - Copyright (c) 2020-2024 Ethea S.r.l.';
+  Application.Title := 'SVG Icons Explorer - Copyright (c) 2020-2025 Ethea S.r.l.';
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TfmExplorerSVG, fmExplorerSVG);

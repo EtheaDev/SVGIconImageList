@@ -2,10 +2,10 @@ unit Img32.Vector;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6                                                             *
-* Date      :  16 December 2024                                                *
+* Version   :  4.7                                                             *
+* Date      :  6 January 2025                                                  *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2024                                         *
+* Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
 * Purpose   :  Vector drawing for TImage32                                     *
 *                                                                              *
@@ -333,8 +333,8 @@ type
   function RectsIntersect(const rec1, rec2: TRectD): Boolean; overload;
   function IntersectRect(const rec1, rec2: TRectD): TRectD; overload;
 
-  //UnionRect: this behaves differently to types.UnionRect
-  //in that if either parameter is empty the other parameter is returned
+  // UnionRect: this behaves differently to types.UnionRect
+  // in that if either parameter is empty the other parameter is returned
   function UnionRect(const rec1, rec2: TRect): TRect; overload;
   function UnionRect(const rec1, rec2: TRectD): TRectD; overload;
 

@@ -2,10 +2,10 @@ unit Img32.Fmt.JPG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6                                                             *
-* Date      :  7 December 2024                                                 *
+* Version   :  4.7                                                             *
+* Date      :  6 January 2025                                                  *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2023                                         *
+* Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  JPG/JPEG file format extension for TImage32                     *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)

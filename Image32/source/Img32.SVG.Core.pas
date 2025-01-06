@@ -2,10 +2,10 @@ unit Img32.SVG.Core;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6                                                             *
-* Date      :  5 December 2024                                                 *
+* Version   :  4.7                                                             *
+* Date      :  6 January 2025                                                  *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2024                                         *
+* Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
 * Purpose   :  Essential structures and functions to read SVG files            *
 *                                                                              *
@@ -19,7 +19,7 @@ interface
 {$I Img32.inc}
 
 uses
-  SysUtils, Classes, Types, Math,
+  SysUtils, Classes, Types, Math, StrUtils,
   {$IFDEF XPLAT_GENERICS} Generics.Collections, Generics.Defaults,{$ENDIF}
   Img32, Img32.Vector, Img32.Text, Img32.Transform;
 
@@ -76,6 +76,7 @@ type
     procedure Init;
     function  GetRectD(const relSize: TRectD; assumeRelValBelow: Double): TRectD; overload;
     function  GetRectD(relSize: double; assumeRelValBelow: Double): TRectD; overload;
+    function  GetRectD(relSizeX, relSizeY: double; assumeRelValBelow: Double): TRectD; overload;
     function  GetRectWH(const relSize: TRectD; assumeRelValBelow: Double): TRectWH;
     function  IsValid: Boolean;
     function  IsEmpty: Boolean;
@@ -94,20 +95,22 @@ type
   TSvgItalicSyle  = (sfsUndefined, sfsNone, sfsItalic);
   TFontDecoration = (fdUndefined, fdNone, fdUnderline, fdStrikeThrough);
   TSvgTextAlign = (staUndefined, staLeft, staCenter, staRight, staJustify);
+  TSpacesInText = (sitUndefined, sitIgnore, sitPreserve);
 
   UTF8Strings = array of UTF8String;
 
   TSVGFontInfo = record
-    family      : TFontFamily;
-    familyNames : UTF8Strings;
-    size        : double;
-    spacing     : double;
-    textLength  : double;
-    italic      : TSvgItalicSyle;
-    weight      : Integer;
-    align       : TSvgTextAlign;
-    decoration  : TFontDecoration;
-    baseShift   : TValue;
+    family        : TFontFamily;
+    familyNames   : UTF8Strings;
+    size          : double;
+    spacing       : double;
+    spacesInText  : TSpacesInText;
+    textLength    : double;
+    italic        : TSvgItalicSyle;
+    weight        : Integer;
+    align         : TSvgTextAlign;
+    decoration    : TFontDecoration;
+    baseShift     : TValue;
   end;
 
   //////////////////////////////////////////////////////////////////////
@@ -244,7 +247,12 @@ type
   function ScaleDashArray(const dblArray: TArrayOfDouble; scale: double): TArrayOfDouble;
   function Match(c: PUTF8Char; const compare: UTF8String): Boolean; overload;
   function Match(const compare1, compare2: UTF8String): Boolean; overload;
-  procedure ToUTF8String(c, endC: PUTF8Char; var S: UTF8String);
+  procedure ToUTF8String(c, endC: PUTF8Char; var S: UTF8String;
+    spacesInText: TSpacesInText = sitUndefined);
+  function TrimMultiSpacesUtf8(const text: Utf8String): Utf8String;
+  function TrimMultiSpacesUnicode(const text: UnicodeString): UnicodeString;
+  function StripNewlines(const s: UTF8String): UTF8String; overload;
+  function StripNewlines(const s: UnicodeString): UnicodeString; overload;
   procedure ToAsciiLowerUTF8String(c, endC: PUTF8Char; var S: UTF8String);
   procedure ToTrimmedUTF8String(c, endC: PUTF8Char; var S: UTF8String);
   function IsSameUTF8String(const S1, S2: UTF8String): Boolean;
@@ -277,6 +285,7 @@ type
   TSetOfUTF8Char = set of UTF8Char;
 
 function CharInSet(chr: UTF8Char; const chrs: TSetOfUTF8Char): Boolean;
+function DecodeUtf8ToWideString(const utf8: UTF8String): WideString;
 
 const
   clInvalid   = $00010001;
@@ -607,7 +616,8 @@ begin
     j := i;
     while (j <= len) and (str[j] > space) do inc(j);
     SetLength(Result[k], j -i);
-    Move(str[i], Result[k][1], j -i);
+    if j > i then
+      Move(str[i], Result[k][1], j -i);
     while (j <= len) and (str[j] <= space) do inc(j);
     i := j;
   end;
@@ -1305,7 +1315,98 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure ToUTF8String(c, endC: PUTF8Char; var S: UTF8String);
+function ReversePosEx(utf8: utf8Char;
+  const text: Utf8String; startIdx: integer): integer; overload;
+{$IFDEF INLINE} inline; {$ENDIF}
+begin
+  Result := Max(0, Min(Length(text), startidx));
+  while (Result > 0) and (text[Result] <> utf8) do Dec(Result);
+end;
+//------------------------------------------------------------------------------
+
+function TrimMultiSpacesUtf8(const text: Utf8String): Utf8String;
+var
+  i, len: integer;
+begin
+  Result := text;
+  len := Length(Result);
+  for i := 1 to len do
+    if Result[i] < #32 then Result[i] := #32;
+  i := ReversePosEx(space, Result, len);
+  while i > 1 do
+  begin
+    Dec(i);
+    while (i > 0) and (Result[i] = space) do
+    begin
+      Delete(Result, i, 1);
+      Dec(i);
+    end;
+    i := ReversePosEx(space, Result, i);
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function ReversePosEx(c: WideChar;
+  const text: UnicodeString; startIdx: integer): integer; overload;
+{$IFDEF INLINE} inline; {$ENDIF}
+begin
+  Result := Max(0, Min(Length(text), startidx));
+  while (Result > 0) and (text[Result] <> c) do Dec(Result);
+end;
+//------------------------------------------------------------------------------
+
+function TrimMultiSpacesUnicode(const text: UnicodeString): UnicodeString;
+var
+  i, len: integer;
+begin
+  Result := text;
+  len := Length(Result);
+  for i := 1 to len do
+    if Result[i] < #32 then Result[i] := #32;
+  i := ReversePosEx(space, Result, len);
+  while i > 1 do
+  begin
+    Dec(i);
+    while (i > 0) and (Result[i] = space) do
+    begin
+      Delete(Result, i, 1);
+      Dec(i);
+    end;
+    i := ReversePosEx(space, Result, i);
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function StripNewlines(const s: UTF8String): UTF8String;
+var
+  i: integer;
+begin
+  Result := s;
+  i := Length(Result);
+  while i > 0 do
+  begin
+    if Result[i] < space then Delete(Result, i, 1);
+    Dec(i);
+  end;
+end;
+//------------------------------------------------------------------------------
+
+function StripNewlines(const s: UnicodeString): UnicodeString;
+var
+  i: integer;
+begin
+  Result := s;
+  i := Length(Result);
+  while i > 0 do
+  begin
+    if Result[i] < space then Delete(Result, i, 1);
+    Dec(i);
+  end;
+end;
+//------------------------------------------------------------------------------
+
+procedure ToUTF8String(c, endC: PUTF8Char;
+  var S: UTF8String; spacesInText: TSpacesInText);
 var
   len: integer;
 begin
@@ -1313,6 +1414,9 @@ begin
   SetLength(S, len);
   if len = 0 then Exit;
   Move(c^, PUTF8Char(S)^, len * SizeOf(UTF8Char));
+  if spacesInText <> sitPreserve then
+    S := TrimMultiSpacesUtf8(S);
+  S := StripNewlines(S);
 end;
 //------------------------------------------------------------------------------
 
@@ -1969,7 +2073,7 @@ begin
   c2 := Result;
   while (c2 > c) and ((c2 -1)^ <= space) do dec(c2);
 
-  ToUTF8String(c, c2, attrib.value);
+  ToUTF8String(c, c2, attrib.value, sitPreserve);
   inc(Result); //skip end quote
 end;
 //------------------------------------------------------------------------------
@@ -2121,6 +2225,16 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function IsTextAreaTbreak(var c: PUTF8Char; endC: PUTF8Char): Boolean;
+const
+  // https://www.w3.org/TR/SVGTiny12/text.html#tbreakElement
+  tbreak: PUTF8Char = '<tbreak/>';
+begin
+  Result := (c + 9 < endC) and CompareMem(c, tbreak, 9);
+  if Result then inc(c, 8);
+end;
+//------------------------------------------------------------------------------
+
 function TXmlEl.ParseContent(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 var
   child: TSvgXmlEl;
@@ -2128,7 +2242,9 @@ var
   c2, cc, tmpC, tmpEndC: PUTF8Char;
 begin
   Result := false;
-  while SkipBlanks(c, endC) do
+  // note: don't trim spaces at the start of text content.
+  // Space trimming will be done later IF and when required.
+  while (hash = hTSpan) or (hash = hTextArea) or SkipBlanks(c, endC) do
   begin
     if (c^ = '<') then
     begin
@@ -2202,32 +2318,34 @@ begin
     end
     else if (hash = hTSpan) or (hash = hText) or (hash = hTextPath) then
     begin
-      //text content: and because text can be mixed with one or more
-      //<tspan> elements we need to create sub-elements for each text block.
-      //And <tspan> elements can even have <tspan> sub-elements.
+      // assume this is text content, and because text can also be mixed
+      // with any number of nested <tspan> elements, always put text
+      // content inside a pseudo 'self closed' <tspan> element
       cc := c;
-      tmpC := cc;
-      //preserve a leading space
-      if (tmpC -1)^ = space then dec(tmpC);
       while (cc < endC) and (cc^ <> '<') do inc(cc);
-      if (hash = hTextPath) then
-      begin
-        ToUTF8String(tmpC, cc, text);
-      end else
-      begin
-        child := TSvgXmlEl.Create(owner);
-        childs.Add(child);
-        ToUTF8String(tmpC, cc, child.text);
-      end;
+      child := TSvgXmlEl.Create(owner);
+      child.name := 'tspan';
+      child.hash := GetHash('tspan');
+      child.selfClosed := true;
+      childs.Add(child);
+      ToUTF8String(c, cc, child.text, sitPreserve);
+      c := cc;
+    end
+    else if (hash = hTextArea) then
+    begin
+      // also assume this is text content, but don't create
+      // pseudo <tspan> elements inside <textarea> elements
+      cc := c;
+      while (cc < endC) and
+        ((cc^ <> '<') or IsTextAreaTbreak(cc, endC)) do inc(cc);
+      ToUTF8String(c, cc, text, sitPreserve);
       c := cc;
     end else
     begin
       cc := c;
-      tmpC := cc;
       while (cc < endC) and (cc^ <> '<') do inc(cc);
-      ToUTF8String(tmpC, cc, text);
+      ToUTF8String(c, cc, text);
       c := cc;
-
       //if <style> element then load styles into owner.classStyles
       if (hash = hStyle) then
         ParseStyleElementContent(text, owner.classStyles);
@@ -2490,6 +2608,76 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+// Miscellaneous functions
+//------------------------------------------------------------------------------
+
+function DecodeUtf8ToWideString(const utf8: UTF8String): WideString;
+var
+  i,j, len: Integer;
+  c, cp: Cardinal;
+  codePoints: TArrayOfCardinal;
+begin
+  Result := '';
+  if utf8 = '' then Exit;
+  len := Length(utf8);
+
+  // first decode utf8String to codepoints
+  SetLength(codePoints, len);
+  i := 1;
+  j := 0;
+  while i <= len do
+  begin
+    c := Ord(utf8[i]);
+    if c and $80 = 0 then // c < 128
+    begin
+      codePoints[j] := c;
+      inc(i); inc(j);
+    end
+    else if c and $E0 = $C0 then
+    begin
+      if i = len then break;
+      codePoints[j] := (c and $1F) shl 6 + (Ord(utf8[i+1]) and $3F);
+      inc(i, 2); inc(j);
+    end
+    else if c and $F0 = $E0 then
+    begin
+      if i > len - 2 then break;
+      codePoints[j] := (c and $F) shl 12 +
+        ((Ord(utf8[i+1]) and $3F) shl 6) + ((Ord(utf8[i+2]) and $3F));
+      inc(i, 3); inc(j);
+    end else
+    begin
+      if (i > len - 3) or (c shr 3 <> $1E) then break;
+      codePoints[j] := (c and $7) shl 18 + ((Ord(utf8[i+1]) and $3F) shl 12) +
+        ((Ord(utf8[i+2]) and $3F) shl 6) + (Ord(utf8[i+3]) and $3F);
+      inc(i, 4); inc(j);
+    end;
+  end;
+  len := j; // there are now 'j' valid codepoints
+  j := 0;
+
+  // make room in the result for surrogate paired chars, and
+  // convert codepoints into the result (a Utf16 Widestring)
+  SetLength(Result, len *2);
+  for i := 0 to len -1 do
+  begin
+    inc(j);
+    cp := codePoints[i];
+    if (cp < $D7FF) or (cp = $E000) or (cp = $FFFF) then
+    begin
+      Result[j] := WideChar(cp);
+    end else if (cp > $FFFF) and (cp < $110000) then
+    begin
+      Dec(cp, $10000);
+      Result[j] := WideChar($D800 + (cp shr 10));
+      inc(j);
+      Result[j] := WideChar($DC00 + (cp and $3FF));
+    end;
+  end;
+  SetLength(Result, j);
+end;
+
+//------------------------------------------------------------------------------
 // TValue
 //------------------------------------------------------------------------------
 
@@ -2666,6 +2854,21 @@ begin
 
   Result.Right := Result.Left + width.GetValue(relSize, assumeRelValBelow);
   Result.Bottom := Result.Top + height.GetValue(relSize, assumeRelValBelow);
+end;
+//------------------------------------------------------------------------------
+
+function TValueRecWH.GetRectD(relSizeX, relSizeY: double; assumeRelValBelow: Double): TRectD;
+begin
+  if not left.IsValid then
+    Result.Left := 0 else
+    Result.Left := left.GetValue(relSizeX, assumeRelValBelow);
+
+  if not top.IsValid then
+    Result.Top := 0 else
+    Result.Top := top.GetValue(relSizeY, assumeRelValBelow);
+
+  Result.Right := Result.Left + width.GetValue(relSizeX, assumeRelValBelow);
+  Result.Bottom := Result.Top + height.GetValue(relSizeY, assumeRelValBelow);
 end;
 //------------------------------------------------------------------------------
 

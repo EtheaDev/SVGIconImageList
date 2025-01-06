@@ -3,7 +3,7 @@
 {       SVG Explorer: Utility to explore SVG Icons on disk                     }
 {       to simplify use of Icons (resize, colors and more...)                  }
 {                                                                              }
-{       Copyright (c) 2019-2024 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2025 (Ethea S.r.l.)                                 }
 {       Author: Nicola Tambascia                                               }
 {       Contributors:                                                          }
 {         Carlo Barazzetta                                                     }

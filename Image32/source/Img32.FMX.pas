@@ -2,10 +2,10 @@ unit Img32.FMX;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6                                                             *
-* Date      :  18 September 2024                                               *
+* Version   :  4.7                                                             *
+* Date      :  6 January 2025                                                  *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2023                                         *
+* Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Image file format support for TImage32 and FMX                  *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -82,6 +82,9 @@ function TImageFormat_FMX.LoadFromStream(stream: TStream;
 var
   cm: TBitmapCodecManager;
   surf: TBitmapSurface;
+//{$IF DEFINED(ANDROID)}
+//  i: integer;
+//{$IFEND}
 begin
   result := false;
   surf := TBitmapSurface.Create;
@@ -95,6 +98,11 @@ begin
     else Exit;
     img32.SetSize(surf.Width, surf.Height);
     Move(surf.Scanline[0]^, img32.PixelBase^, surf.Width * surf.Height * 4);
+//    {$IF DEFINED(ANDROID)}
+//    if img32.HasTransparency then
+//      for i := 0 to img32.Width * img32.Height -1 do
+//        img32.Pixels[i] := SwapRedBlue(img32.Pixels[i]);
+//    {$IFEND}
     result := true;
   finally
     cm.Free;

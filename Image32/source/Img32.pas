@@ -2,10 +2,10 @@ unit Img32;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6                                                             *
-* Date      :  16 December 2024                                                *
+* Version   :  4.7                                                             *
+* Date      :  6 January 2025                                                  *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2024                                         *
+* Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  The core module of the Image32 library                          *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -816,17 +816,24 @@ end;
 
 procedure NewColor32Array(var a: TArrayOfColor32; count: nativeint; uninitialized: boolean);
 begin
+{$IF COMPILERVERSION < 16}
+  SetLength(a, count);
+{$ELSE}
   if a <> nil then
   begin
     if uninitialized and CanReuseDynArray(a, count) then Exit;
     a := nil;
   end;
   Pointer(a) := NewSimpleDynArray(count, SizeOf(TColor32), uninitialized);
+{$IFEND}
 end;
 //------------------------------------------------------------------------------
 
 procedure NewIntegerArray(var a: TArrayOfInteger; count: nativeint; uninitialized: boolean);
 begin
+{$IF COMPILERVERSION < 16}
+  SetLength(a, count);
+{$ELSE}
   if a <> nil then
   begin
     if uninitialized and CanReuseDynArray(a, count) then
@@ -834,11 +841,15 @@ begin
     a := nil;
   end;
   Pointer(a) := NewSimpleDynArray(count, SizeOf(Integer), uninitialized);
+{$IFEND}
 end;
 //------------------------------------------------------------------------------
 
 procedure NewByteArray(var a: TArrayOfByte; count: nativeint; uninitialized: boolean);
 begin
+{$IF COMPILERVERSION < 16}
+  SetLength(a, count);
+{$ELSE}
   if a <> nil then
   begin
     if uninitialized and CanReuseDynArray(a, count) then
@@ -846,11 +857,15 @@ begin
     a := nil;
   end;
   Pointer(a) := NewSimpleDynArray(count, SizeOf(Byte), uninitialized);
+{$IFEND}
 end;
 //------------------------------------------------------------------------------
 
 procedure NewPointDArray(var a: TPathD; count: nativeint; uninitialized: boolean);
 begin
+{$IF COMPILERVERSION < 16}
+  SetLength(a, count);
+{$ELSE}
   if a <> nil then
   begin
     if uninitialized and CanReuseDynArray(a, count) then
@@ -858,30 +873,44 @@ begin
     a := nil;
   end;
   Pointer(a) := NewSimpleDynArray(count, SizeOf(TPointD), uninitialized);
+{$IFEND}
 end;
 //------------------------------------------------------------------------------
 
 procedure SetLengthUninit(var a: TArrayOfColor32; count: nativeint);
 begin
-  Pointer(a) := InternSetSimpleDynArrayLengthUninit(Pointer(a), count, SizeOf(TColor32));
+  SetLength(a, count);
+//  Pointer(a) := InternSetSimpleDynArrayLengthUninit(Pointer(a), count, SizeOf(TColor32));
 end;
 //------------------------------------------------------------------------------
 
 procedure SetLengthUninit(var a: TArrayOfInteger; count: nativeint);
 begin
+{$IF COMPILERVERSION < 16}
+  SetLength(a, count);
+{$ELSE}
   Pointer(a) := InternSetSimpleDynArrayLengthUninit(Pointer(a), count, SizeOf(Integer));
+{$IFEND}
 end;
 //------------------------------------------------------------------------------
 
 procedure SetLengthUninit(var a: TArrayOfByte; count: nativeint);
 begin
+{$IF COMPILERVERSION < 16}
+  SetLength(a, count);
+{$ELSE}
   Pointer(a) := InternSetSimpleDynArrayLengthUninit(Pointer(a), count, SizeOf(Byte));
+{$IFEND}
 end;
 //------------------------------------------------------------------------------
 
 procedure SetLengthUninit(var a: TPathD; count: nativeint);
 begin
+{$IF COMPILERVERSION < 16}
+  SetLength(a, count);
+{$ELSE}
   Pointer(a) := InternSetSimpleDynArrayLengthUninit(Pointer(a), count, SizeOf(TPointD));
+{$IFEND}
 end;
 //------------------------------------------------------------------------------
 

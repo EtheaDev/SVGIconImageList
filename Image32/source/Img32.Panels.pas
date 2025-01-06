@@ -2,10 +2,10 @@ unit Img32.Panels;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6                                                             *
-* Date      :  18 September 2024                                               *
+* Version   :  4.7                                                             *
+* Date      :  6 January 2025                                                  *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2024                                         *
+* Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Component that displays images on a TPanel descendant           *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -96,7 +96,6 @@ type
     procedure Gesture(Sender: TObject;
       const EventInfo: TGestureEventInfo; var Handled: Boolean);
 {$ENDIF}
-    procedure WMSize(var Message: TWMSize); message WM_SIZE;
     procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
     procedure WMEraseBkgnd(var message: TMessage); message WM_ERASEBKGND;
     procedure WMGetDlgCode(var Message: TWMGetDlgCode); message WM_GETDLGCODE;
@@ -113,6 +112,7 @@ type
       X, Y: Integer); override;
     procedure DrawToPanelCanvas(const srcRect, dstRect: TRect); virtual;
     procedure Paint; override;
+    procedure Resize; override;
     procedure WMKeyDown(var Message: TWMKey); message WM_KEYDOWN;
     procedure WMKeyUp(var Message: TWMKey); message WM_KEYUP;
     procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
@@ -402,13 +402,6 @@ end;
 destructor TBaseImgPanel.Destroy;
 begin
   inherited;
-end;
-//------------------------------------------------------------------------------
-
-procedure TBaseImgPanel.WMSize(var Message: TWMSize);
-begin
-  inherited;
-  UpdateOffsetDelta(true);
 end;
 //------------------------------------------------------------------------------
 
@@ -1066,6 +1059,13 @@ begin
         DrawScrollButton(tmpRec);
       end;
   end;
+end;
+//------------------------------------------------------------------------------
+
+procedure TBaseImgPanel.Resize;
+begin
+  UpdateOffsetDelta(true);
+  inherited;
 end;
 //------------------------------------------------------------------------------
 

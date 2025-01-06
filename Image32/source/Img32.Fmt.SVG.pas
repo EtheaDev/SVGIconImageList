@@ -2,10 +2,10 @@ unit Img32.Fmt.SVG;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6                                                             *
-* Date      :  18 September 2024                                               *
+* Version   :  4.7                                                             *
+* Date      :  6 January 2025                                                  *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2024                                         *
+* Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  SVG file format extension for TImage32                          *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -377,7 +377,7 @@ begin
     Result := LoadFromStream(stream);
     if not Result then Exit;
 
-    r := RootElement.GetViewbox;
+    r := RootElement.viewboxWH;
     img32.BeginUpdate;
     try
       if img32.IsEmpty then

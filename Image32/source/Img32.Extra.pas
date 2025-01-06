@@ -2,10 +2,10 @@ unit Img32.Extra;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6                                                             *
-* Date      :  26 December 2024                                                *
+* Version   :  4.7                                                             *
+* Date      :  6 January 2025                                                  *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2019-2024                                         *
+* Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Miscellaneous routines that don't belong in other modules.      *
 * License   :  http://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
@@ -651,30 +651,53 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure HatchBackground(img: TImage32; const rec: TRect;
-  color1: TColor32 = clWhite32; color2: TColor32= $FFE8E8E8;
-  hatchSize: Integer = 10);
+procedure InternHatchBackground(img: TImage32; const rec: TRect;
+  color1, color2: TColor32; hatchSize: Integer = 10);
 var
-  i,j: Integer;
+  i, j, imgWidth: Integer;
   pc: PColor32;
   colors: array[boolean] of TColor32;
   hatch: Boolean;
+  c: TColor32;
+  x: integer;
 begin
   colors[false] := color1;
   colors[true] := color2;
-  img.BeginUpdate;
-  try
-    for i := rec.Top to rec.Bottom -1 do
+  imgWidth := img.Width;
+
+  for i := rec.Top to rec.Bottom -1 do
+  begin
+    pc := @img.Pixels[i * imgWidth + rec.Left];
+    hatch := Odd(i div hatchSize);
+
+    x := (rec.Left + 1) mod hatchSize;
+    if x = 0 then hatch := not hatch;
+    for j := rec.Left to rec.Right -1 do
     begin
-      pc := @img.Pixels[i * img.Width + rec.Left];
-      hatch := Odd(i div hatchSize);
-      for j := rec.Left to rec.Right -1 do
+      c := pc^;
+      if c = 0 then
+        pc^ := colors[hatch] else
+        pc^ := BlendToOpaque(c, colors[hatch]);
+      inc(pc);
+      inc(x);
+      if x >= hatchSize then
       begin
-        if (j + 1) mod hatchSize = 0 then hatch := not hatch;
-        pc^ := BlendToOpaque(pc^, colors[hatch]);
-       inc(pc);
+        x := 0;
+        hatch := not hatch;
       end;
     end;
+  end;
+end;
+//------------------------------------------------------------------------------
+
+procedure HatchBackground(img: TImage32; const rec: TRect;
+  color1: TColor32 = clWhite32; color2: TColor32= $FFE8E8E8;
+  hatchSize: Integer = 10); overload;
+begin
+  if (rec.Right <= rec.Left) or (rec.Bottom - rec.Top <= 0) then Exit;
+  img.BeginUpdate;
+  try
+    InternHatchBackground(img, rec, color1, color2, hatchSize);
   finally
     img.EndUpdate;
   end;
@@ -2307,11 +2330,74 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+type
+  {$IFDEF SUPPORTS_POINTERMATH}
+    {$POINTERMATH ON}
+  PStaticColor32Array = ^TColor32;
+    {$POINTERMATH OFF}
+  {$ELSE} // Delphi 7-2007
+  PStaticColor32Array = ^TStaticColor32Array;
+  TStaticColor32Array = array[0..MaxInt div SizeOf(TColor32) - 1] of TColor32;
+  {$ENDIF}
+
+procedure BoxBlurHLine(src, dst: PColor32; srcRiOffset: nativeint;
+  count, w: integer; dstLast: PColor32; var v: TWeightedColor);
+var
+  lastColor: TColor32;
+  val: PWeightedColor;
+  s, d: PColor32;
+begin
+  lastColor := v.Color;
+  if count > w then
+    count := w;
+  w := w - count;
+
+  // The Delphi compiler sometimes is really stupid with
+  // the CPU register allocation. With this, even if no actual
+  // code is produced, the compiler happens to make better
+  // decisions.
+  val := @v;
+  s := src;
+  d := dst;
+
+  if count > 0 then
+  begin
+    while count > 0 do
+    begin
+      if val.AddSubtract(PStaticColor32Array(s)[srcRiOffset], s^) then
+        lastColor := val.Color;
+      inc(s);
+      d^ := lastColor;
+      inc(d);
+      dec(count);
+    end;
+
+    count := w;
+    while count > 0 do
+    begin
+      d^ := lastColor;
+      inc(d);
+      dec(count);
+    end;
+  end;
+
+  while PByte(d) <= PByte(dstLast) do
+  begin
+    if val.AddNoneSubtract(s^) then
+      lastColor := val.Color;
+    inc(s);
+    d^ := lastColor;
+    inc(d);
+  end;
+end;
+//------------------------------------------------------------------------------
+
 procedure BoxBlurH(const src, dst: TArrayOfColor32; w,h, stdDev: integer);
 var
   i,j, ti, li, ri, re, ovr: integer;
   fv, val: TWeightedColor;
   lastColor: TColor32;
+  stdDevW: integer;
 begin
   ovr := Max(0, stdDev - w);
   for i := 0 to h -1 do
@@ -2338,30 +2424,88 @@ begin
     end;
 
     // Skip "val.Color" calculation if both for-loops are skipped anyway
-    if (ti <= re) or (w > stdDev*2 + 1) then
+    stdDevW := w - stdDev*2 - 1;
+    if (ti <= re) or (stdDevW > 0) then
     begin
-      lastColor := val.Color;
-      for j := stdDev +1 to w - stdDev -1 do
+      if w > 4 then // prevent the call-overhead if it would be slower than the inline version
+        BoxBlurHLine(@src[li], @dst[ti], ri - li, re - ri + 1, stdDevW, @dst[re], val)
+      else
       begin
-        if ri <= re then
+        lastColor := val.Color;
+        for j := stdDevW downto 1 do
         begin
-          if val.AddSubtract(src[ri], src[li]) then
-            lastColor := val.Color;
-          inc(ri);
-          inc(li);
+          if ri <= re then
+          begin
+            if val.AddSubtract(src[ri], src[li]) then
+              lastColor := val.Color;
+            inc(ri);
+            inc(li);
+          end;
+          dst[ti] := lastColor;
+          inc(ti);
         end;
-        dst[ti] := lastColor;
-        inc(ti);
-      end;
-      while ti <= re do
-      begin
-        if val.AddNoneSubtract(src[li]) then
-          lastColor := val.Color;
-        inc(li);
-        dst[ti] := lastColor;
-        inc(ti);
+        while ti <= re do
+        begin
+          if val.AddNoneSubtract(src[li]) then
+            lastColor := val.Color;
+          inc(li);
+          dst[ti] := lastColor;
+          inc(ti);
+        end;
       end;
     end;
+  end;
+end;
+//------------------------------------------------------------------------------
+
+procedure BoxBlurVLine(src, dst: PColor32; srcRiOffset: nativeint;
+  widthBytes, count, h: integer; dstLast: PColor32; var v: TWeightedColor);
+var
+  lastColor: TColor32;
+  val: PWeightedColor;
+  s, d: PColor32;
+begin
+  lastColor := v.Color;
+  if count > h then
+    count := h;
+  h := h - count;
+
+  // The Delphi compiler sometimes is really stupid with
+  // the CPU register allocation. With this, even if no actual
+  // code is produced, the compiler happens to make better
+  // decisions.
+  val := @v;
+  s := src;
+  d := dst;
+
+  if count > 0 then
+  begin
+    while count > 0 do
+    begin
+      if val.AddSubtract(PStaticColor32Array(s)[srcRiOffset], s^) then
+        lastColor := val.Color;
+      inc(PByte(s), widthBytes);
+      d^ := lastColor;
+      inc(PByte(d), widthBytes);
+      dec(count);
+    end;
+
+    count := h;
+    while count > 0 do
+    begin
+      d^ := lastColor;
+      inc(PByte(d), widthBytes);
+      dec(count);
+    end;
+  end;
+
+  while PByte(d) <= PByte(dstLast) do
+  begin
+    if val.AddNoneSubtract(s^) then
+      lastColor := val.Color;
+    inc(PByte(s), widthBytes);
+    d^ := lastColor;
+    inc(PByte(d), widthBytes);
   end;
 end;
 //------------------------------------------------------------------------------
@@ -2371,6 +2515,7 @@ var
   i,j, ti, li, ri, re, ovr: integer;
   fv, val: TWeightedColor;
   lastColor: TColor32;
+  stdDevH: integer;
 begin
   ovr := Max(0, stdDev - h);
   for i := 0 to w -1 do
@@ -2397,28 +2542,35 @@ begin
     end;
 
     // Skip "val.Color" calculation if both for-loops are skipped anyway
-    if (ti <= re) or (h > stdDev*2 + 1) then
+    stdDevH := h - stdDev*2 - 1;
+    if (ti <= re) or (stdDevH > 0) then
     begin
-      lastColor := val.Color;
-      for j := stdDev +1 to h - stdDev -1 do
+      if stdDevH > 4 then // prevent the call-overhead if it would be slower than the inline version
+        BoxBlurVLine(@src[li], @dst[ti], ri - li, w * SizeOf(TColor32), re - ri + 1, stdDevH, @dst[re], val)
+      else
       begin
-        if ri <= re then
+        lastColor := val.Color;
+        for j := stdDevH downto 1 do
         begin
-          if val.AddSubtract(src[ri], src[li]) then
-            lastColor := val.Color;
-          inc(ri, w);
-          inc(li, w);
+          if ri <= re then
+          begin
+            if val.AddSubtract(src[ri], src[li]) then
+              lastColor := val.Color;
+            inc(ri, w);
+            inc(li, w);
+          end;
+
+          dst[ti] := lastColor;
+          inc(ti, w);
         end;
-        dst[ti] := lastColor;
-        inc(ti, w);
-      end;
-      while ti <= re do
-      begin
-        if val.AddNoneSubtract(src[li]) then
-          lastColor := val.Color;
-        inc(li, w);
-        dst[ti] := lastColor;
-        inc(ti, w);
+        while ti <= re do
+        begin
+          if val.AddNoneSubtract(src[li]) then
+            lastColor := val.Color;
+          inc(li, w);
+          dst[ti] := lastColor;
+          inc(ti, w);
+        end;
       end;
     end;
   end;
@@ -2444,14 +2596,16 @@ begin
   if (Min(w, h) < 2) or ((stdDevX < 1) and (stdDevY < 1)) then Exit;
   len := w * h;
   NewColor32Array(src, len, True); // content is overwritten in BoxBlurH
-  NewColor32Array(dst, len, True);
   if blurFullImage then
   begin
-    // copy the entire image into 'dst'
-    Move(img.PixelBase^, dst[0], len * SizeOf(TColor32));
-  end else
+    // Use the img.Pixels directly instead of copying the entire image into 'dst'.
+    // The first thing the code does is BoxBlurH({source:=}dst, {dest:=}src, ...).
+    dst := img.Pixels;
+  end
+  else
   begin
     // copy a rectangular region into 'dst'
+    NewColor32Array(dst, len, True);
     pSrc := img.PixelRow[rec2.Top];
     inc(pSrc, rec2.Left);
     pDst := @dst[0];
@@ -2462,25 +2616,25 @@ begin
       inc(pDst, w);
     end;
   end;
+
   // do the blur
   inc(repeats); // now represents total iterations
   boxesH := BoxesForGauss(stdDevX, repeats);
   if stdDevY = stdDevX then
     boxesV := boxesH else
     boxesV := BoxesForGauss(stdDevY, repeats);
-  for j := 0 to repeats -1 do
+
+  img.BeginUpdate;
+  try
+    for j := 0 to repeats -1 do
     begin
       BoxBlurH(dst, src, w, h, boxesH[j]);
       BoxBlurV(src, dst, w, h, boxesV[j]);
     end;
-  // copy dst array back to image rect
-  img.BeginUpdate;
-  try
-    if blurFullImage then
+
+    if not blurFullImage then
     begin
-      Move(dst[0], img.PixelBase^, len * SizeOf(TColor32));
-    end else
-    begin
+      // copy dst array back to image rect
       pDst := img.PixelRow[rec2.Top];
       inc(pDst, rec2.Left);
       pSrc := @dst[0];

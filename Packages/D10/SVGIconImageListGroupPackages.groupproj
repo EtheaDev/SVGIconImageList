@@ -76,14 +76,14 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="SVGIconImageList.dproj">
-            <ProjectGuid>{85171451-55E6-43E5-8241-572342FA535C}</ProjectGuid>
+        <BuildGroupProject Include="SVGImage32Package.dproj">
+            <ProjectGuid>{C44DE7AB-511E-439C-9D35-B25C44EF200D}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="SVGImage32Package.dproj">
-            <ProjectGuid>{C44DE7AB-511E-439C-9D35-B25C44EF200D}</ProjectGuid>
+        <BuildGroupProject Include="SVGIconImageList.dproj">
+            <ProjectGuid>{85171451-55E6-43E5-8241-572342FA535C}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>

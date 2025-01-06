@@ -2,7 +2,7 @@
 
 ## Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 4.4.0 (VCL+FMX)
+### Actual official version 4.4.1 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -108,6 +108,12 @@ A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/Ico
 Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
 ### RELEASE NOTES
+06 Jan 2025: version 4.4.1 (VCL+FMX)
+- Aligned to Image32 4.6 Released on 6 Jan 2025
+- Added Setup for Delphi XE7, XE8, 10.1, 10.2
+- Fixed Setup for Delphi 10
+- Updated copyrights 2025
+
 30 Dec 2024: version 4.4.0 (VCL+FMX)
 - New [Project Site](https://www.ethea.it/docs/SVGIconImageList/)
 - New Setup for automatic Installation of Components
@@ -115,17 +121,17 @@ Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org
 - Changed LibSuffix for Packages (eg. from D10_3 to 260)
 
 26 Nov 2024: version 4.3.0 (VCL+FMX)
-- Updated to Image32 4.6 Released 26 Nov 2024 to fix issue drawing text inside SVG
+- Updated to Image32 4.6 Released on 26 Nov 2024 to fix issue drawing text inside SVG
 - NameSpace added to all uses
 - Added SVGIconImageListRestClient package
 - New Option in Component Editor to select Icons from WEB (VCL and FMX)
 - Demos updated
 
 17 Oct 2024: version 4.2.1 (VCL+FMX)
-- Updated to Image32 4.6 Released 16 Oct 2024 to fix some drawing issue
+- Updated to Image32 4.6 Released on 16 Oct 2024 to fix some drawing issue
 
 12 Oct 2024: versione 4.2.0 (VCL+FMX)
-- Updated to Image32 4.6 Released 12 Oct 2024 to fix some drawing issue
+- Updated to Image32 4.6 Released on 12 Oct 2024 to fix some drawing issue
 - Added components info into About and Splash Screen
 
 14 Sep 2024: version 4.1.9 (VCL+FMX)
