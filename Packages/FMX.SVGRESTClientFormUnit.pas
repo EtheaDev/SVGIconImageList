@@ -186,7 +186,7 @@ begin
   LSearch := TIconifySearch.Create;
   try
     FSearchList.ClearIcons;
-    FIconify.Search(SearchEdit.Text, Round(MaxIconsEdit.Value), LSearch);
+    FIconify.Search(SearchEdit.Text, '', Round(MaxIconsEdit.Value), LSearch);
     for LName in LSearch.Icons do
     begin
       LSvgString := FIconify.Download(LName);

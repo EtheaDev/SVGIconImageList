@@ -27,6 +27,7 @@ uses
   , System.SysUtils
   , System.Json
   , System.Net.HttpClient
+  , System.Generics.Collections
   , REST.Json
   ;
 
@@ -46,11 +47,42 @@ type
     property Start: Integer read FStart write FStart;
   end;
 
+  TIconifyCollection = class
+  private
+    FName: string;
+    FTotal: Integer;
+    FCategory: string;
+    FPrefix: string;
+  public
+    property Name: string read FName write FName;
+    property Prefix: string read FPrefix write FPrefix;
+    property Total: Integer read FTotal write FTotal;
+    property Category: string read FCategory write FCategory;
+  end;
+
+  TIconifyCollections = class(TObjectList<TIconifyCollection>)
+  end;
+
+  TIconifyCollectionIcons = class
+  private
+    FTotal: Integer;
+    FTitle: string;
+    FIcons: TArray<string>;
+    FPrefix: string;
+  public
+    property Title: string read FTitle write FTitle;
+    property Prefix: string read FPrefix write FPrefix;
+    property Total: Integer read FTotal write FTotal;
+    property Icons: TArray<string> read FIcons write FIcons;
+  end;
+
   TIconifyApi = class
   public
-    procedure Search(const APattern: string; const AMaxIcons: Integer;
+    procedure Search(const APattern, APrefix: string; const AMaxIcons: Integer;
       AResult: TIconifySearch);
     function Download(const AName: string): string;
+    procedure Collections(AResult: TIconifyCollections);
+    procedure Collection(const APrefix: string; AResult: TIconifyCollectionIcons);
   end;
 
 implementation
@@ -59,6 +91,103 @@ implementation
 
 const
   BaseUrl = 'https://api.iconify.design/';
+
+procedure TIconifyApi.Collection(const APrefix: string;
+  AResult: TIconifyCollectionIcons);
+var
+  LHttpClient: THTTPClient;
+  LHttpResponse: IHTTPResponse;
+  LJsonObject: TJSONObject;
+  LJsonString: string;
+  LURL: string;
+  LIconName: TJSONValue;
+  LJsonPair: TJSONPair;
+begin
+  LHttpClient := THTTPClient.Create;
+  try
+    LURL := Format('%scollection?prefix=%s', [BaseUrl, APrefix]);
+    LHttpResponse := LHttpClient.Get(LURL);
+    if LHttpResponse.StatusCode >= 400 then
+      raise TIconifyError.Create(LHttpResponse.StatusText);
+    LJsonString := LHttpResponse.ContentAsString(TEncoding.UTF8);
+    {$if compilerversion > 32}
+    LJsonObject := TJSONObject.ParseJSONValue(LJsonString, False, True) as TJSONObject;
+    {$else}
+    LJsonObject := TJSONObject.ParseJSONValue(LJsonString) as TJSONObject;
+    {$endif}
+    try
+      //TJson.JsonToObject(AResult, LJsonObject);
+      AResult.Prefix := LJsonObject.GetValue<string>('prefix');
+      AResult.Total := LJsonObject.GetValue<Integer>('total');
+      AResult.Title := LJsonObject.GetValue<string>('title');
+      AResult.Icons := [];
+      if LJsonObject.GetValue('categories') <> nil then
+      begin
+        for LJsonPair in LJsonObject.GetValue('categories') as TJSONObject do
+        begin
+          for LIconName in LJsonPair.JsonValue as TJSONArray do
+          begin
+            AResult.Icons := AResult.Icons + [AResult.Prefix + ':' + LIconName.Value];
+          end;
+        end;
+      end
+      else if LJsonObject.GetValue('uncategorized') <> nil then
+      begin
+        for LIconName in LJsonObject.GetValue('uncategorized') as TJSONArray do
+        begin
+          AResult.Icons := AResult.Icons + [AResult.Prefix + ':' + LIconName.Value];
+        end;
+      end;
+    finally
+      LJsonObject.Free;
+    end;
+  finally
+    LHttpClient.Free;
+  end;end;
+
+procedure TIconifyApi.Collections(AResult: TIconifyCollections);
+var
+  LHttpClient: THTTPClient;
+  LHttpResponse: IHTTPResponse;
+  LJsonObject: TJSONObject;
+  LJsonString: string;
+  LURL: string;
+  LItem: TIconifyCollection;
+  LJsonPair: TJSONPair;
+  LJsonItem: TJSONObject;
+  LHidden: Boolean;
+begin
+  LHttpClient := THTTPClient.Create;
+  try
+    LURL := Format('%scollections', [BaseUrl]);
+    LHttpResponse := LHttpClient.Get(LURL);
+    if LHttpResponse.StatusCode >= 400 then
+      raise TIconifyError.Create(LHttpResponse.StatusText + ' - ' + LURL);
+    LJsonString := LHttpResponse.ContentAsString(TEncoding.UTF8);
+    {$if compilerversion > 32}
+    LJsonObject := TJSONObject.ParseJSONValue(LJsonString, False, True) as TJSONObject;
+    {$else}
+    LJsonObject := TJSONObject.ParseJSONValue(LJsonString) as TJSONObject;
+    {$endif}
+    try
+      AResult.Clear;
+      for LJsonPair in LJsonObject do
+      begin
+        LJsonItem := LJsonPair.JsonValue as TJSONObject;
+        if LJsonItem.TryGetValue<Boolean>('hidden', LHidden) and LHidden then
+          Continue;
+        LItem := TIconifyCollection.Create;
+        LItem.Prefix := LJsonPair.JsonString.Value;
+        TJson.JsonToObject(LItem, LJsonItem);
+        AResult.Add(LItem);
+      end;
+    finally
+      LJsonObject.Free;
+    end;
+  finally
+    LHttpClient.Free;
+  end;
+end;
 
 function TIconifyApi.Download(const AName: string): string;
 var
@@ -76,7 +205,7 @@ begin
   end;
 end;
 
-procedure TIconifyApi.Search(const APattern: string;
+procedure TIconifyApi.Search(const APattern, APrefix: string;
   const AMaxIcons: Integer; AResult: TIconifySearch);
 var
   LHttpClient: THTTPClient;
@@ -87,7 +216,7 @@ var
 begin
   LHttpClient := THTTPClient.Create;
   try
-    LURL := Format('%ssearch?query=%s&limit=%d', [BaseUrl, APattern, AMaxIcons]);
+    LURL := Format('%ssearch?query=%s&limit=%d&prefix=%s', [BaseUrl, APattern, AMaxIcons, APrefix]);
     LHttpResponse := LHttpClient.Get(LURL);
     if LHttpResponse.StatusCode >= 400 then
       raise TIconifyError.Create(LHttpResponse.StatusText);
