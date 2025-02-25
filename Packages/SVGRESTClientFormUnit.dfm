@@ -42,7 +42,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
       AlignWithMargins = True
       Left = 5
       Top = 25
-      Width = 469
+      Width = 301
       Height = 24
       Hint = 'Insert Icon Name to search'
       Margins.Top = 8
@@ -54,6 +54,8 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
       OnEnter = SearchEditEnter
       OnExit = SearchEditExit
       OnKeyDown = SearchEditKeyDown
+      ExplicitWidth = 469
+      ExplicitHeight = 23
     end
     object MaxIconsPanel: TPanel
       AlignWithMargins = True
@@ -88,6 +90,20 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
       Enabled = False
       TabOrder = 2
       OnClick = SearchButtonClick
+    end
+    object CollectionsCombo: TComboBox
+      AlignWithMargins = True
+      Left = 312
+      Top = 25
+      Width = 162
+      Height = 23
+      Margins.Top = 8
+      Margins.Bottom = 4
+      Align = alRight
+      Style = csDropDownList
+      TabOrder = 3
+      OnChange = CollectionsComboChange
+      OnKeyDown = CollectionsComboKeyDown
     end
   end
   object BottomPanel: TPanel
