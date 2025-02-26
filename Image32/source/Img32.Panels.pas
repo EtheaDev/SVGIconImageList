@@ -2,12 +2,12 @@ unit Img32.Panels;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7                                                             *
-* Date      :  6 January 2025                                                  *
-* Website   :  http://www.angusj.com                                           *
+* Version   :  4.8                                                             *
+* Date      :  2 Febuary 2025                                                  *
+* Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Component that displays images on a TPanel descendant           *
-* License   :  http://www.boost.org/LICENSE_1_0.txt                            *
+* License   :  https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
 interface
@@ -26,19 +26,19 @@ type
   TShowScrollBtns = (ssbFocused, ssAlways, ssNever);
   TPanelBkgType = (pbtSolidColor, pbtChessBoard);
 
-  //TDrawImageEvent: template for TBaseImgPanel's OnDrawImage event property.
-  //nb: with scaling, srcRect & dstRect may have different widths +/- heights.
+  // TDrawImageEvent: template for TBaseImgPanel's OnDrawImage event property.
+  // nb: with scaling, srcRect & dstRect may have different widths +/- heights.
   TDrawImageEvent = procedure (Sender: TObject;
     dstCanvas: TCanvas; const srcRect, dstRect: TRect) of Object;
 
   TFileDropEvent = procedure (Sender: TObject; const filename: string) of Object;
 
-  //TPanelScrollbar: used internally by TBaseImgPanel and TImage32Panel
+  // TPanelScrollbar: used internally by TBaseImgPanel and TImage32Panel
   TPanelScrollbar = record
-    btnSize        : integer; //in dst coords
-    btnDelta       : double;  //how much src moves for each px of the ScrollBar
-    srcOffset      : integer; //offset in unscaled src coords
-    maxSrcOffset   : double;  //max offset in unscaled src coords
+    btnSize        : integer; // in dst coords
+    btnDelta       : double;  // how much src moves for each px of the ScrollBar
+    srcOffset      : integer; // offset in unscaled src coords
+    maxSrcOffset   : double;  // max offset in unscaled src coords
     MouseOver      : Boolean;
     MouseDown      : Boolean;
     MouseDownPos   : integer;
@@ -65,6 +65,7 @@ type
     fOnScrolling    : TNotifyEvent;
     fOnZooming      : TNotifyEvent;
     fOnMouseWheel   : TMouseWheelEvent;
+    fCursor         : TCursor;
 {$IFDEF GESTURES}
     fLastDistance: integer;
     fLastLocation: TPoint;
@@ -73,6 +74,7 @@ type
     fBkgChBrdColor1 : TColor32;
     fBkgChBrdColor2 : TColor32;
     fBkgChBrdSize : Integer;
+    procedure SetCursor(cursor: TCursor);
     procedure UpdateOffsetDelta(resetOrigin: Boolean);
     function  GetMinScrollBtnSize: integer;
     function  GetDstOffset: TPoint;
@@ -92,6 +94,8 @@ type
     procedure SetBkgChBrdColor1(value : TColor32);
     procedure SetBkgChBrdColor2(value : TColor32);
     procedure SetBkgChBrdSize(value : Integer);
+    function  GetTabStop: Boolean;
+    procedure SetTabStop(tabstop: Boolean);
 {$IFDEF GESTURES}
     procedure Gesture(Sender: TObject;
       const EventInfo: TGestureEventInfo; var Handled: Boolean);
@@ -126,7 +130,7 @@ type
     function ClientToImage(const clientPt: TPoint): TPoint;
     function ImageToClient(const surfacePt: TPoint): TPoint;
     function RecenterImageAt(const imagePt: TPoint): Boolean;
-    //ScaleAtPoint: zooms in or out keeping 'pt' stationary relative to display
+    // ScaleAtPoint: zooms in or out keeping 'pt' stationary relative to display
     procedure ScaleAtPoint(scaleDelta: double; const pt: TPoint);
     property InnerClientRect: TRect read GetInnerClientRect;
     property InnerMargin: integer read GetInnerMargin;
@@ -136,33 +140,35 @@ type
     property ScrollbarVert: TPanelScrollbar
       read fScrollbarVert write fScrollbarVert;
   published
-    //AutoCenter: centers the image when its size is less than the display size
+    // AutoCenter: centers the image when its size is less than the display size
     property AutoCenter: Boolean read fAutoCenter write SetAutoCenter;
     property Color: TColor read GetColor write SetColor;
-    //FocusedColor: colour of the border when the panel is focused
+    // FocusedColor: colour of the border when the panel is focused
     property FocusedColor: TColor read fFocusedColor write fFocusedColor;
     property UnFocusedColor: TColor read fUnfocusedColor write fUnfocusedColor;
-    //Scale: image scale (between ScaleMin and ScaleMax) if AllowZoom is enabled
+    // Scale: image scale (between ScaleMin and ScaleMax) if AllowZoom is enabled
     property Scale: double read fScale write SetScale;
     property ScaleMin: double read fScaleMin write SetScaleMin;
     property ScaleMax: double read fScaleMax write SetScaleMax;
-    //ShowScrollButtons: defaults to ssbFocused (ie only when Panel has focus)
+    // ShowScrollButtons: defaults to ssbFocused (ie only when Panel has focus)
     property ShowScrollButtons : TShowScrollBtns
       read fShowScrollBtns write SetShowScrollButtons;
     property AllowKeyScroll: Boolean read fAllowKeyScroll write fAllowKeyScroll;
     property AllowScrnScroll: Boolean read fAllowScrnScroll write fAllowScrnScroll;
     property AllowZoom: Boolean read fAllowZoom write SetAllowZoom;
-    //Hatched background option
+    // Hatched background option
     property BkgType        : TPanelBkgType read fBkgType        write SetBkgType;
     property BkgChBrdColor1 : TColor32      read fBkgChBrdColor1 write SetBkgChBrdColor1;
     property BkgChBrdColor2 : TColor32      read fBkgChBrdColor2 write SetBkgChBrdColor2;
     property BkgChBrdSize   : Integer       read fBkgChBrdSize   write SetBkgChBrdSize;
-    //OnKeyDown: optional event for custom keyboard actions
+    // OnKeyDown: optional event for custom keyboard actions
     property OnKeyDown: TKeyEvent read fOnKeyDown write fOnKeyDown;
     property OnKeyUp: TKeyEvent read fOnKeyUp write fOnKeyUp;
     property OnMouseWheel: TMouseWheelEvent read FOnMouseWheel write FOnMouseWheel;
     property OnScrolling: TNotifyEvent read fOnScrolling write fOnScrolling;
     property OnZooming: TNotifyEvent read fOnZooming write fOnZooming;
+    property Cursor: TCursor read fCursor write SetCursor;
+    property TabStop: Boolean read GetTabStop write SetTabStop stored True;
   end;
 
   TImage32Panel = class(TBaseImgPanel)
@@ -186,7 +192,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure  ClearImage;
-    //CopyToImage: avoids a full redraw
+    // CopyToImage: avoids a full redraw
     procedure  CopyToImage(srcImg: TImage32; const rec: TRect);
     function   CopyToClipboard: Boolean;
     function   PasteFromClipboard: Boolean;
@@ -227,9 +233,9 @@ type
 //------------------------------------------------------------------------------
 
 var
-  //The minimum width for scrolling buttons. If borders are too narrow
-  //to properly display scroll buttons then scroll buttons will be disabled.
-  MinBorderWidth: integer = 0; //see initialization
+  // The minimum width for scrolling buttons. If borders are too narrow
+  // to properly display scroll buttons then scroll buttons will be disabled.
+  MinBorderWidth: integer = 0; // see initialization
 
 const
   MinImageScale = 0.001;
@@ -368,15 +374,15 @@ begin
   Height := 200;
   Width  := 200;
   {$IFnDEF FPC}
-  {$IF COMPILERVERSION >= 17} //this is a guess
+  {$IF COMPILERVERSION >= 17} // this is a guess
   ShowCaption := false;
   {$IFEND}
   {$ENDIF}
   BevelWidth := 1;
   BorderWidth := 12;
   BevelInner := bvLowered;
-  DoubleBuffered := true;
-  TabStop := true;
+  //DoubleBuffered := true;
+  inherited TabStop := true;
   {$IFDEF GESTURES}
   OnGesture := Gesture;
   Touch.InteractiveGestures := [igPressAndTap, igZoom, igPan];
@@ -388,6 +394,7 @@ begin
   fAutoCenter := true;
   fFocusedColor := RgbColor(clActiveCaption);
   fUnfocusedColor := clBtnFace;
+  fCursor := inherited Cursor;
   fScale := 1.0;
   fScaleMin := 0.05;
   fScaleMax := 20;
@@ -420,11 +427,11 @@ end;
 
 function TBaseImgPanel.GetInnerMargin: integer;
 begin
-  //nb: BorderWidth is the space between outer and inner bevels
+  // nb: BorderWidth is the space between outer and inner bevels
   Result := DpiAware(BorderWidth);
   if BevelInner <> bvNone then inc(result, BevelWidth);
   if BevelOuter <> bvNone then inc(result, BevelWidth);
-  //BorderStyle changes the OUTSIDE of the panel so won't affect InnerMargin.
+  // BorderStyle changes the OUTSIDE of the panel so won't affect InnerMargin.
 end;
 //------------------------------------------------------------------------------
 
@@ -477,7 +484,7 @@ var
   h,w: integer;
 begin
   if IsEmpty then Exit;
-  //fScale := 1;
+  // fScale := 1;
   fScrollbarHorz.srcOffset := 0;
   fScrollbarVert.srcOffset := 0;
   rec := GetInnerClientRect;
@@ -555,6 +562,18 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function TBaseImgPanel.GetTabStop: Boolean;
+begin
+  Result := inherited TabStop;
+end;
+//------------------------------------------------------------------------------
+
+procedure TBaseImgPanel.SetTabStop(tabstop: Boolean);
+begin
+  inherited TabStop := tabstop;
+end;
+//------------------------------------------------------------------------------
+
 procedure TBaseImgPanel.SetAutoCenter(value: Boolean);
 begin
   if value = fAutoCenter then Exit;
@@ -585,7 +604,7 @@ var
   innerClientW, innerClientH, btnMin: integer;
   scaledW, scaledH: double;
 begin
-  //we need to determine 2 things:
+  // we need to determine 2 things:
   //  1. scroll button size
   //  2. how much a 1px button move moves the scaled image
   if (fImageSize.cx = 0) or (fImageSize.cy = 0) then Exit;
@@ -598,7 +617,7 @@ begin
   with fScrollbarVert do
   begin
     if resetOrigin then srcOffset := 0;
-    if (scaledH < innerClientH + tolerance) then //no scroll button needed
+    if (scaledH < innerClientH + tolerance) then // no scroll button needed
     begin
       btnSize := 0; btnDelta := 0; maxSrcOffset := 0;
     end else
@@ -611,7 +630,7 @@ begin
   with fScrollbarHorz do
   begin
     if resetOrigin then srcOffset := 0;
-    if (scaledW < innerClientW + tolerance) then  //no scroll button needed
+    if (scaledW < innerClientW + tolerance) then  // no scroll button needed
     begin
       btnSize := 0; btnDelta := 0; maxSrcOffset := 0;
     end else
@@ -698,32 +717,26 @@ end;
 
 function TBaseImgPanel.RecenterImageAt(const imagePt: TPoint): Boolean;
 var
-  scaledW, scaledH: Double;
   marg, innerW, innerH: Integer;
-  pt1, pt2: TPoint;
-  q, maxOffset: double;
+  pt2: TPoint;
+  q: double;
 begin
   Result := (fScrollbarHorz.maxSrcOffset > 0) or
     (fScrollbarVert.maxSrcOffset = 0);
   if not Result then Exit;
-  scaledW := fImageSize.cx * fScale;
-  scaledH := fImageSize.cy * fScale;
   marg := GetInnerMargin;
   innerW := ClientWidth - marg*2;
   innerH := ClientHeight - marg*2;
-  pt1 := imagePt;
   pt2 := ClientToImage(Types.Point(marg + innerW div 2, marg + innerH div 2));
   with fScrollbarHorz do
   begin
-    q := (pt1.X - pt2.X);
-    maxOffset := (scaledW - innerW) / fScale;
-    srcOffset := Round(Max(0,Min(maxOffset, q)));
+    q := (imagePt.X - pt2.X);
+    srcOffset := EnsureRange(Round(srcOffset + q), 0, Round(maxSrcOffset));
   end;
   with fScrollbarVert do
   begin
-    q := (pt1.Y - pt2.Y);
-    maxOffset := (scaledH - innerH) / fScale;
-    srcOffset := Round(Max(0,Min(maxOffset, q)));
+    q := (imagePt.Y - pt2.Y);
+    srcOffset := EnsureRange(Round(srcOffset + q), 0, Round(maxSrcOffset));
   end;
   Invalidate;
 end;
@@ -777,10 +790,11 @@ begin
       fScrollbarHorz.MouseOver := false;
       fScrollbarVert.MouseOver := false;
     end;
-    cursor := crDefault;
+    inherited cursor := fCursor;
     inherited;
     Exit;
   end;
+
   if not fMouseDown or
     not (fAllowScrnScroll or fAllowKeyScroll) then
   begin
@@ -792,19 +806,19 @@ begin
       begin
         if (Y < rec.Bottom) then
         begin
-          cursor := crSizeNS;
+          inherited cursor := crSizeNS;
           if not fScrollbarVert.MouseOver then Invalidate;
           fScrollbarVert.MouseOver := true;
         end else
-          cursor := crDefault;
+          inherited cursor := fCursor;
       end
       else if (Y >= rec.Bottom) and (fScrollbarHorz.btnSize > 0) then
       begin
-        Cursor := crSizeWE;
+        inherited cursor := crSizeWE;
         if not fScrollbarHorz.MouseOver then Invalidate;
         fScrollbarHorz.MouseOver := true;
       end else
-        cursor := crDefault;
+        inherited cursor := fCursor;
     end;
     Exit;
   end;
@@ -813,7 +827,7 @@ begin
   if not (fAllowScrnScroll or fAllowKeyScroll) then Exit;
   if fScrollbarVert.MouseDown then
   begin
-    //dragging vertical scrollbar
+    // dragging vertical scrollbar
     with fScrollbarVert do
     begin
       inc(srcOffset, Round((Y - MouseDownPos) / btnDelta));
@@ -822,7 +836,7 @@ begin
   end
   else if fScrollbarHorz.MouseDown then
   begin
-    //dragging horizontal scrollbar
+    // dragging horizontal scrollbar
     with fScrollbarHorz do
     begin
       inc(srcOffset, Round((X - MouseDownPos) / btnDelta));
@@ -830,7 +844,7 @@ begin
     end;
   end else if fAllowScrnScroll then
   begin
-    //click and drag the drawing image
+    // click and drag the drawing image
     with fScrollbarVert do if btnDelta > 0 then
     begin
       dec(srcOffset, Round((Y - MouseDownPos) / fScale));
@@ -842,11 +856,10 @@ begin
       MouseDownPos := X;
     end;
   end else
-  begin
-    Exit; //ie exit here if NOT scrolling
-  end;
+    Exit; // ie exit here if NOT scrolling
   if assigned(fOnScrolling) then fOnScrolling(self);
   Invalidate;
+  inherited;
 end;
 //------------------------------------------------------------------------------
 
@@ -885,11 +898,11 @@ end;
 
 procedure TBaseImgPanel.WMEraseBkgnd(var message: TMessage);
 begin
-  message.Result := 0; //ie don't bother erasing background
+  message.Result := 0; // ie don't bother erasing background
 end;
 //------------------------------------------------------------------------------
 
-type TWinControl = class(Controls.TWinControl); //access protected Color property
+type TWinControl = class(Controls.TWinControl); // access protected Color property
 
 procedure TBaseImgPanel.DrawToPanelCanvas(const srcRect, dstRect: TRect);
 begin
@@ -949,7 +962,7 @@ var
   backgroundPainted: Boolean;
   pt: TPoint;
 begin
-  //calculate un-scaled source rectangle that corresponds with dstRec
+  // calculate un-scaled source rectangle that corresponds with dstRec
   marg := GetInnerMargin;
   innerRec := GetInnerClientRect;
   dpiAwareBW := DpiAware(BorderWidth);
@@ -957,7 +970,7 @@ begin
   srcRec := dstRec;
   TranslateRect(srcRec, -marg, -marg);
   ScaleRect(srcRec, 1/fScale);
-  //if the scaled drawing is smaller than InnerClientRect then center it
+  // if the scaled drawing is smaller than InnerClientRect then center it
   pt := GetDstOffset;
   if pt.X > 0 then
   begin
@@ -973,7 +986,7 @@ begin
     srcRec.Top := 0;
     srcRec.Bottom := fImageSize.cy;
   end;
-  //calc offsets
+  // calc offsets
   with fScrollbarHorz do
     if (srcOffset < 0) or (btnSize = 0) then srcOffset := 0;
   with fScrollbarVert do
@@ -983,7 +996,7 @@ begin
   if fScrollbarHorz.srcOffset > fScrollbarHorz.maxSrcOffset then
     fScrollbarHorz.srcOffset := Round(fScrollbarHorz.maxSrcOffset);
   TranslateRect(srcRec, fScrollbarHorz.srcOffset, fScrollbarVert.srcOffset);
-  //paint innerRec background
+  // paint innerRec background
   backgroundPainted := ParentBackground and
   {$IFDEF STYLESERVICES}
     StyleServices.Enabled and (seClient in StyleElements) and
@@ -1003,25 +1016,25 @@ begin
   begin
     DrawChessBoard(innerRec);
   end;
-  //draw the image
+  // draw the image
   DrawToPanelCanvas(srcRec, dstRec);
-  //prevent recursive paints (in case Invalidate etc called in fOnDrawImage)
+  // prevent recursive paints (in case Invalidate etc called in fOnDrawImage)
   RedrawWindow(Handle, nil, 0, RDW_NOERASE or RDW_NOINTERNALPAINT or RDW_VALIDATE);
-  //Exit;//////////////////
-  //paint the outer bevel
+  // Exit;//////////////////
+  // paint the outer bevel
   tmpRec := ClientRect;
   case BevelOuter of
     bvLowered: DrawFrame(tmpRec, clBtnShadow, clBtnHighlight, BevelWidth);
     bvRaised:  DrawFrame(tmpRec, clBtnHighlight, clBtnShadow, BevelWidth);
   end;
-  //paint the border
+  // paint the border
   InflateRect(tmpRec, integer(-BevelWidth), integer(-BevelWidth));
   if Focused then
     DrawFrame(tmpRec, fFocusedColor, fFocusedColor, dpiAwareBW)
   else
     DrawFrame(tmpRec, fUnfocusedColor, fUnfocusedColor, dpiAwareBW);
   InflateRect(tmpRec, integer(-dpiAwareBW), integer(-dpiAwareBW));
-  //paint the inner bevel
+  // paint the inner bevel
   case BevelInner of
     bvLowered: DrawFrame(tmpRec, clBtnShadow, clBtnHighlight, BevelWidth);
     bvRaised:  DrawFrame(tmpRec, clBtnHighlight, clBtnShadow, BevelWidth);
@@ -1032,7 +1045,7 @@ begin
       (Focused and (fShowScrollBtns = ssbFocused))) then
   begin
     btnMin := GetMinScrollBtnSize;
-    //draw vertical scrollbar
+    // draw vertical scrollbar
     with fScrollbarVert do
       if (btnSize > 0) then
       begin
@@ -1045,7 +1058,7 @@ begin
         else Canvas.Brush.Color := MakeDarker(Color, 20);
         DrawScrollButton(tmpRec);
       end;
-    //draw horizontal scrollbar
+    // draw horizontal scrollbar
     with fScrollbarHorz do
       if (btnSize > 0) then
       begin
@@ -1151,6 +1164,14 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure TBaseImgPanel.SetCursor(cursor: TCursor);
+begin
+  if cursor = inherited Cursor then Exit;
+  inherited Cursor := cursor;
+  fCursor := cursor;
+end;
+//------------------------------------------------------------------------------
+
 function TBaseImgPanel.DoMouseHWheel(Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint): Boolean;
 begin
@@ -1194,7 +1215,7 @@ begin
         if ssCtrl in shiftState then
         begin
           if not fAllowZoom then Exit;
-          //zoom in and out with CTRL+UP and CTRL+DOWN respectively
+          // zoom in and out with CTRL+UP and CTRL+DOWN respectively
           midPoint := Types.Point(ClientWidth div 2, ClientHeight div 2);
           case Message.CharCode of
             VK_UP: ScaleAtPoint(1.1, midPoint);
@@ -1204,9 +1225,9 @@ begin
         end else
         begin
           if not fAllowKeyScroll then Exit;
-          //otherwise scroll the image with the arrow keys
+          // otherwise scroll the image with the arrow keys
           if ssShift in shiftState then
-            mul := 5 else //ie scrolls 5 times faster with Shift key down
+            mul := 5 else // ie scrolls 5 times faster with Shift key down
             mul := 1;
           case Message.CharCode of
             VK_LEFT:
@@ -1271,6 +1292,7 @@ begin
   fImage.SetSize(200,200);
   fAllowCopy := true;
   fAllowPaste := true;
+  DoubleBuffered := true;
 end;
 //------------------------------------------------------------------------------
 

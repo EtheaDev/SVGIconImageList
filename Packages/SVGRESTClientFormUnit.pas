@@ -83,8 +83,8 @@ type
     procedure CollectionsComboKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure CollectionsComboChange(Sender: TObject);
+    procedure SelectedViewDblClick(Sender: TObject);
   private
-    FUpdating: Boolean;
     FIconify: TIconifyApi;
     FIconsSize: Integer;
     FSourceList, FSearchList, FSelectedList: TSVGIconImageList;
@@ -168,13 +168,8 @@ end;
 
 procedure TSVGRESTClientSearchForm.UpdateGUI;
 begin
-  FUpdating := True;
-  try
-    OKButton.Enabled := FSelectedList.Count > 0;
-    SearchButton.Enabled := (SearchEdit.Text <> '') or (CollectionsCombo.ItemHeight >= 0);
-  finally
-    FUpdating := False;
-  end;
+  OKButton.Enabled := FSelectedList.Count > 0;
+  SearchButton.Enabled := (SearchEdit.Text <> '') or (CollectionsCombo.ItemHeight >= 0);
 end;
 
 procedure TSVGRESTClientSearchForm.AddImage(AStream: TStream;
@@ -216,8 +211,6 @@ begin
       LCollectionIcons.Free;
     end;
   end
-
-
 end;
 
 procedure TSVGRESTClientSearchForm.SearchButtonClick(Sender: TObject);
@@ -256,7 +249,7 @@ end;
 procedure TSVGRESTClientSearchForm.CollectionsComboChange(Sender: TObject);
 begin
   UpdateGUI;
-  SearchButton.Click;
+//  SearchButton.Click;
 end;
 
 procedure TSVGRESTClientSearchForm.CollectionsComboKeyDown(Sender: TObject;
@@ -343,7 +336,7 @@ begin
   FSearchList := TSVGIconImageList.Create(Self);
   FSelectedList := TSVGIconImageList.Create(Self);
   IconsSize := 32;
-  MaxIconsEdit.Value := 50;
+  MaxIconsEdit.Value := 100;
   SearchView.LargeImages := FSearchList;
   SelectedView.LargeImages := FSelectedList;
   Caption := Format(Caption, [SVGIconImageListVersion]);
@@ -351,8 +344,8 @@ end;
 
 procedure TSVGRESTClientSearchForm.FormDestroy(Sender: TObject);
 begin
-  FSearchList.Free;
-  FSelectedList.Free;
+  FreeAndNil(FSearchList);
+  FreeAndNil(FSelectedList);
 end;
 
 procedure TSVGRESTClientSearchForm.FormShow(Sender: TObject);
@@ -378,7 +371,7 @@ procedure TSVGRESTClientSearchForm.LoadCollections;
 var
   LCollection: TIconifyCollection;
 begin
-  if FCollections.IsEmpty then
+  if FCollections.Count = 0 then
   begin
     FCollections.Clear;
     CollectionsCombo.Clear;
@@ -475,6 +468,14 @@ begin
       UpdateGUI;
     end;
   end;
+end;
+
+procedure TSVGRESTClientSearchForm.SelectedViewDblClick(Sender: TObject);
+begin
+  //Delete selected Icon
+  FSelectedList.Delete(SelectedView.ItemIndex);
+  UpdateSVGIconListView(SelectedView);
+  UpdateGUI;
 end;
 
 procedure TSVGRESTClientSearchForm.SelectedViewDragDrop(Sender, Source: TObject; X,

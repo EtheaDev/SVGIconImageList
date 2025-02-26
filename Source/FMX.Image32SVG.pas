@@ -191,6 +191,8 @@ initialization
 {$IFDEF MSWINDOWS}
   FontManager.LoadFontReaderFamily('Arial');
   FontManager.LoadFontReaderFamily('Times New Roman');
+  FontManager.LoadFontReaderFamily('Segoe UI');
+  FontManager.LoadFontReaderFamily('Segoe UI Emoji');
 {$ENDIF}
 
 end.

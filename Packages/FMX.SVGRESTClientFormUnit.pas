@@ -54,6 +54,7 @@ type
     SelectedView: TListBox;
     RemovePrefixCheckBox: TCheckBox;
     TrackBar: TTrackBar;
+    CollectionsCombo: TComboBox;
     procedure SearchButtonClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -61,14 +62,22 @@ type
     procedure SelectedViewDblClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
     procedure TrackBarTracking(Sender: TObject);
+    procedure CollectionsComboKeyDown(Sender: TObject; var Key: Word;
+      var KeyChar: Char; Shift: TShiftState);
+    procedure CollectionsComboChange(Sender: TObject);
   private
     FIconify: TIconifyApi;
     FSearchList, FSelectedList: TSVGIconImageList;
     FIconsSize: Integer;
+    FCollections: TIconifyCollections;
     procedure AddImagesToSource(const ASourceList: TSVGIconImageList);
     procedure UpdateGUI;
     procedure SetIconsSize(const AValue: Integer);
+    procedure LoadCollections;
+    function GetIconList: TArray<string>;
   public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     property IconsSize: Integer read FIconsSize write SetIconsSize;
   end;
 
@@ -128,10 +137,13 @@ begin
   end;
 end;
 
+{ TSVGRESTClientSearchForm }
+
 procedure TSVGRESTClientSearchForm.UpdateGUI;
 begin
   OKButton.Enabled := FSelectedList.Count > 0;
   SearchView.ItemHeight := FIconsSize;
+  SearchButton.Enabled := (SearchEdit.Text <> '') or (CollectionsCombo.ItemHeight >= 0);
 end;
 
 procedure TSVGRESTClientSearchForm.AddImagesToSource(
@@ -147,15 +159,106 @@ begin
   end;
 end;
 
+function TSVGRESTClientSearchForm.GetIconList: TArray<string>;
+var
+  LSearch: TIconifySearch;
+  LCollectionIcons: TIconifyCollectionIcons;
+  LPrefix: string;
+begin
+  Result := [];
+  LPrefix := '';
+  if CollectionsCombo.ItemIndex >= 0 then
+    LPrefix := FCollections[CollectionsCombo.ItemIndex].Prefix;
+
+  if SearchEdit.Text <> '' then
+  begin
+    LSearch := TIconifySearch.Create;
+    try
+      FIconify.Search(SearchEdit.Text, LPrefix, Round(MaxIconsEdit.Value), LSearch);
+      Result := LSearch.Icons;
+    finally
+      LSearch.Free;
+    end;
+  end
+  else if CollectionsCombo.ItemIndex >= 0 then
+  begin
+    LCollectionIcons := TIconifyCollectionIcons.Create;
+    try
+      FIconify.Collection(LPrefix, LCollectionIcons);
+      Result := LCollectionIcons.Icons;
+    finally
+      LCollectionIcons.Free;
+    end;
+  end
+end;
+
+procedure TSVGRESTClientSearchForm.SearchButtonClick(Sender: TObject);
+var
+  LName: string;
+  LSvgString: string;
+  LIndex: Integer;
+  LIcons: TArray<string>;
+begin
+  LIndex := 0;
+  SearchButton.Cursor := crHourGlass;
+  try
+    FSearchList.ClearIcons;
+    LIcons := GetIconList();
+
+    for LName in LIcons do
+    begin
+      if LIndex > MaxIconsEdit.Value then
+        Break;
+      LSvgString := FIconify.Download(LName);
+      FSearchList.AddIcon(LSvgString, LName);
+      Inc(LIndex);
+    end;
+    UpdateSVGIconListView(SearchView);
+  finally
+    SearchButton.Cursor := crDefault;
+  end;
+end;
+
+procedure TSVGRESTClientSearchForm.CollectionsComboChange(Sender: TObject);
+begin
+  UpdateGUI;
+//  SearchButtonClick(SearchButton);
+end;
+
+procedure TSVGRESTClientSearchForm.CollectionsComboKeyDown(Sender: TObject;
+  var Key: Word; var KeyChar: Char; Shift: TShiftState);
+begin
+  if (key = VK_BACK) or (key = VK_DELETE) then
+    CollectionsCombo.ItemIndex := -1;
+end;
+
+constructor TSVGRESTClientSearchForm.Create(AOwner: TComponent);
+begin
+  inherited;
+  FIconify := TIconifyApi.Create;
+  FIconsSize := 48;
+  FCollections := TIconifyCollections.Create;
+
+  LoadCollections;
+end;
+
+destructor TSVGRESTClientSearchForm.Destroy;
+begin
+  FIconify.Free;
+  FCollections.Free;
+  inherited;
+end;
+
 procedure TSVGRESTClientSearchForm.FormCreate(Sender: TObject);
 begin
-  FIconsSize := 48;
   {$IFDEF D11+}
   Constraints.MinHeight := 500;
   Constraints.MinWidth := 700;
   {$ENDIF}
   FSearchList := TSVGIconImageList.Create(nil);
   FSelectedList := TSVGIconImageList.Create(nil);
+  FIconsSize := 48;
+  MaxIconsEdit.Value := 100;
   SearchView.Images := FSearchList;
   SelectedView.Images := FSelectedList;
   Caption := Format(Caption, [SVGIconImageListVersion]);
@@ -177,26 +280,20 @@ begin
   {$ENDIF}
 end;
 
-procedure TSVGRESTClientSearchForm.SearchButtonClick(Sender: TObject);
+procedure TSVGRESTClientSearchForm.LoadCollections;
 var
-  LSearch: TIconifySearch;
-  LName: string;
-  LSvgString: string;
+  LCollection: TIconifyCollection;
 begin
-  LSearch := TIconifySearch.Create;
-  try
-    FSearchList.ClearIcons;
-    FIconify.Search(SearchEdit.Text, '', Round(MaxIconsEdit.Value), LSearch);
-    for LName in LSearch.Icons do
-    begin
-      LSvgString := FIconify.Download(LName);
-      FSearchList.AddIcon(LSvgString, LName);
-    end;
-    UpdateSVGIconListView(SearchView);
-  finally
-    LSearch.Free;
+  if FCollections.Count = 0 then
+  begin
+    FCollections.Clear;
+    CollectionsCombo.Clear;
+    FIconify.Collections(FCollections);
+    for LCollection in FCollections do
+      CollectionsCombo.Items.Add(LCollection.Name);
   end;
 end;
+
 
 procedure TSVGRESTClientSearchForm.SearchViewDblClick(Sender: TObject);
 var

@@ -2,12 +2,12 @@ unit Img32.Resamplers;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7                                                             *
-* Date      :  6 January 2025                                                  *
-* Website   :  http://www.angusj.com                                           *
+* Version   :  4.8                                                             *
+* Date      :  10 January 2025                                                 *
+* Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  For image transformations (scaling, rotating etc.)              *
-* License   :  http://www.boost.org/LICENSE_1_0.txt                            *
+* License   :  https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
 interface
@@ -386,7 +386,7 @@ begin
   // let m2 = slope at pixel_c (using slope of pixel_d - pixel_b)
   // then t(0) = aa(0^3) + bb(0^2) + cc(0) + dd = dd
   // then t(1) = aa(1^3) + bb(1^2) + cc(1) + dd = aa + bb + cc + dd
-  // differentiating parametic equation at t'(0) and t'(1) ...
+  // differentiating parametric equation at t'(0) and t'(1) ...
   // t'(0) = m0 = 3*aa(0^2) + 2*bb(0) + cc = cc
   // t'(1) = m1 = 3*aa(1^2) + 2*bb(1) + cc = 3*aa + 2*bb + cc
   // t(0)  = dd                 ::EQ1
@@ -526,20 +526,11 @@ end;
 
 {$RANGECHECKS OFF} // negative index usage for Delphi 7-2007
 procedure PremultiplyAlpha(pSrc, pDst: PARGB; count: nativeint);
-type
-  {$IFDEF SUPPORTS_POINTERMATH}
-    {$POINTERMATH ON}
-  PStaticColor32Array = ^TColor32;
-    {$POINTERMATH OFF}
-  {$ELSE}
-  PStaticColor32Array = ^TStaticColor32Array;
-  TStaticColor32Array = array[0..MaxInt div SizeOf(TColor32) - 1] of TColor32;
-  {$ENDIF}
 var
   a: byte;
   tab: PByteArray;
   c: TColor32;
-  s, d: PStaticColor32Array;
+  s, d: PColor32Array;
 begin
   if count = 0 then exit;
 
@@ -548,11 +539,11 @@ begin
   inc(pDst, count);
   count := -count;
 
-  // This function is optmized with the assumption that if a pixel has a certain
-  // alpha channel, then the propability that the following pixels have the same
+  // This function is optimized with the assumption that if a pixel has a certain
+  // alpha channel, then the probability that the following pixels have the same
   // alpha channel, is very high.
 
-  c := PStaticColor32Array(pSrc)[count];
+  c := PColor32Array(pSrc)[count];
   a := c shr 24;
   while True do
   begin
@@ -560,8 +551,8 @@ begin
       0: // Special handling for 0 => color becomes black
         begin
           // Win32: Load stack variable into CPU register
-          s := PStaticColor32Array(pSrc);
-          d := PStaticColor32Array(pDst);
+          s := PColor32Array(pSrc);
+          d := PColor32Array(pDst);
           while True do
           begin
             d[count] := 0;
@@ -576,8 +567,8 @@ begin
       255: // Special handling for 255 => no color change
         begin
           // Win32: Load stack variable into CPU register
-          s := PStaticColor32Array(pSrc);
-          d := PStaticColor32Array(pDst);
+          s := PColor32Array(pSrc);
+          d := PColor32Array(pDst);
           if s = d then // if source=dest, we can skip writing to d
           begin
             while True do
@@ -608,9 +599,9 @@ begin
       // Premultiply the alpha channel
 
       // Win32: Load stack variable into CPU register
-      s := PStaticColor32Array(pSrc);
+      s := PColor32Array(pSrc);
       // Win32: This line "breaks" Delphi's register allocator
-      //d := PStaticColor32Array(pDst);
+      //d := PColor32Array(pDst);
       while True do
       begin
         tab := @MulTable[a];
@@ -619,7 +610,7 @@ begin
              (tab[Byte(c shr  8)] shl  8) or
              (tab[Byte(c       )]       );
         //d[count] := c;
-        PStaticColor32Array(pDst)[count] := c;
+        PColor32Array(pDst)[count] := c;
         inc(count);
         if count = 0 then exit;
         c := s[count];

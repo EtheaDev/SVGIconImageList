@@ -2,12 +2,12 @@ unit Img32.Extra;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7                                                             *
-* Date      :  6 January 2025                                                  *
-* Website   :  http://www.angusj.com                                           *
+* Version   :  4.8                                                             *
+* Date      :  2 February 2025                                                 *
+* Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Miscellaneous routines that don't belong in other modules.      *
-* License   :  http://www.boost.org/LICENSE_1_0.txt                            *
+* License   :  https://www.boost.org/LICENSE_1_0.txt                            *
 *******************************************************************************)
 
 interface
@@ -30,7 +30,7 @@ procedure DrawEdge(img: TImage32; const path: TPathD;
   topLeftColor, bottomRightColor: TColor32;
   penWidth: double = 1.0; closePath: Boolean = true); overload;
 
-//DrawShadowRect: is **much** faster than DrawShadow
+// DrawShadowRect: is **much** faster than DrawShadow
 procedure DrawShadowRect(img: TImage32; const rec: TRect; depth: double;
   angle: double = angle45; color: TColor32 = $80000000);
 procedure DrawShadow(img: TImage32; const polygon: TPathD;
@@ -45,8 +45,8 @@ procedure DrawGlow(img: TImage32; const polygon: TPathD;
 procedure DrawGlow(img: TImage32; const polygons: TPathsD;
   fillRule: TFillRule; color: TColor32; blurRadius: integer); overload;
 
-//FloodFill: If no CompareFunc is provided, FloodFill will fill whereever
-//adjoining pixels exactly match the starting pixel - Point(x,y).
+// FloodFill: If no CompareFunc is provided, FloodFill will fill wherever
+// adjoining pixels exactly match the starting pixel - Point(x,y).
 procedure FloodFill(img: TImage32; x, y: Integer; newColor: TColor32;
   tolerance: Byte = 0; compareFunc: TCompareFunctionEx = nil);
 
@@ -57,16 +57,24 @@ procedure FastGaussianBlur(img: TImage32;
 
 procedure GaussianBlur(img: TImage32; rec: TRect; radius: Integer);
 
-//Emboss: A smaller radius is sharper. Increasing depth increases contrast.
-//Luminance changes grayscale balance (unless preserveColor = true)
+// Emboss: A smaller radius is sharper. Increasing depth increases contrast.
+// Luminance changes grayscale balance (unless preserveColor = true)
 procedure Emboss(img: TImage32; radius: Integer = 1; depth: Integer = 10;
   luminance: Integer = 75; preserveColor: Boolean = false);
 
-//Sharpen: Radius range is 1 - 10; amount range is 1 - 50.<br>
-//see https://en.wikipedia.org/wiki/Unsharp_masking
+// Sharpen: Radius range is 1 - 10; amount range is 1 - 50.<br>
+// see https://en.wikipedia.org/wiki/Unsharp_masking
 procedure Sharpen(img: TImage32; radius: Integer = 2; amount: Integer = 10);
 
-//HatchBackground: Assumes the current image is semi-transparent.
+// Hatch: This will overwrite the image and ignore any transparency
+procedure Hatch(img: TImage32; color1: TColor32 = clWhite32;
+  color2: TColor32= $FFE8E8E8; hatchSize: Integer = 10); overload;
+procedure Hatch(img: TImage32; const rec: TRect;
+  color1: TColor32 = clWhite32; color2: TColor32= $FFE8E8E8;
+  hatchSize: Integer = 10); overload;
+
+// HatchBackground: hatches behind the existing image, so
+// it assumes the current image is semi-transparent.
 procedure HatchBackground(img: TImage32; color1: TColor32 = clWhite32;
   color2: TColor32= $FFE8E8E8; hatchSize: Integer = 10); overload;
 procedure HatchBackground(img: TImage32; const rec: TRect;
@@ -77,22 +85,27 @@ procedure GridBackground(img: TImage32; majorInterval, minorInterval: integer;
   fillColor: TColor32 = clWhite32;
   majColor: TColor32 = $30000000; minColor: TColor32 = $20000000);
 
+procedure ReplaceColor(img: TImage32; oldColor, newColor: TColor32;
+  channelTolerance: Byte; preserveAlpha: Boolean = false);
 procedure ReplaceExactColor(img: TImage32; oldColor, newColor: TColor32);
 
-//RemoveColor: Removes the specified color from the image, even from
-//pixels that are a blend of colors including the specified color.<br>
-//see https://stackoverflow.com/questions/9280902/
+// RemoveColor: Removes the specified color from the image, even from
+// pixels that are a blend of colors including the specified color.<br>
+// see https://stackoverflow.com/questions/9280902/
 procedure RemoveColor(img: TImage32; color: TColor32);
+procedure RemoveExactColor(img: TImage32; color: TColor32);
+// RemoveAllExceptColor: Opposite of RemoveColor
+procedure RemoveAllExceptColor(img: TImage32; color: TColor32);
 
-//FilterOnColor: Removes everything not nearly matching 'color'
-//This uses an algorithm that's very similar to the one in RemoveColor.
-procedure FilterOnColor(img: TImage32; color: TColor32);
+// FilterOnColor - renamed RemoveAllExceptColor
+procedure FilterOnColor(img: TImage32; color: TColor32); deprecated;
+// FilterOnExactColor - renamed RemoveExactColor
+procedure FilterOnExactColor(img: TImage32; color: TColor32); deprecated;
 
-procedure FilterOnExactColor(img: TImage32; color: TColor32);
+// FilterOnAlpha - simpler just to set alpha to zero below a specified alpha
+// procedure FilterOnAlpha(img: TImage32; alpha: byte; tolerance: byte);
 
-procedure FilterOnAlpha(img: TImage32; alpha: byte; tolerance: byte);
-
-//RedEyeRemove: Removes 'red eye' from flash photo images.
+// RedEyeRemove: Removes 'red eye' from flash photo images.
 procedure RedEyeRemove(img: TImage32; const rect: TRect);
 
 procedure PencilEffect(img: TImage32; intensity: integer = 0);
@@ -173,12 +186,9 @@ function SmoothPath(const path: TPathD; isClosedPath: Boolean;
 function SmoothPaths(const paths: TPathsD; isClosedPath: Boolean;
   tension: double = 0; shapeTolerance: double = 0.1): TPathsD;
 
-function GetFloodFillMask(imgIn, imgMaskOut: TImage32; x, y: Integer;
-  tolerance: Byte; compareFunc: TCompareFunctionEx): Boolean;
+function SymmetricCropTransparent(img: TImage32): TPoint;
 
-procedure SymmetricCropTransparent(img: TImage32);
-
-//3 additional blend functions (see TImage32.CopyBlend)
+// Three additional blend functions (see TImage32.CopyBlend)
 function BlendAverage(bgColor, fgColor: TColor32): TColor32;
 function BlendLinearBurn(bgColor, fgColor: TColor32): TColor32;
 function BlendColorDodge(bgColor, fgColor: TColor32): TColor32;
@@ -293,14 +303,15 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-//SymmetricCropTransparent: after cropping, the image's midpoint
-//will be the same pixel as before cropping. (Important for rotating.)
-procedure SymmetricCropTransparent(img: TImage32);
+// SymmetricCropTransparent: after cropping, the image's midpoint
+// will be the same pixel as before cropping. (Important for rotating.)
+function SymmetricCropTransparent(img: TImage32): TPoint;
 var
   rec: TRect;
 begin
   rec := GetSymmetricCropTransparentRect(img);
-  if (rec.Top > 0) or (rec.Left > 0) then img.Crop(rec);
+  Result := rec.TopLeft;
+  if (Result.X > 0) or (Result.Y > 0) then img.Crop(rec);
 end;
 //------------------------------------------------------------------------------
 
@@ -651,14 +662,67 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure InternHatchBackground(img: TImage32; const rec: TRect;
+procedure InternalHatch(img: TImage32; const rec: TRect;
   color1, color2: TColor32; hatchSize: Integer = 10);
 var
   i, j, imgWidth: Integer;
   pc: PColor32;
   colors: array[boolean] of TColor32;
   hatch: Boolean;
-  c: TColor32;
+  x: integer;
+begin
+  colors[false] := color1;
+  colors[true] := color2;
+  imgWidth := img.Width;
+
+  for i := rec.Top to rec.Bottom -1 do
+  begin
+    pc := @img.Pixels[i * imgWidth + rec.Left];
+    hatch := Odd(i div hatchSize);
+    x := (rec.Left + 1) mod hatchSize;
+    if x = 0 then hatch := not hatch;
+    for j := rec.Left to rec.Right -1 do
+    begin
+      pc^ := colors[hatch];
+      inc(pc); inc(x);
+      if x >= hatchSize then
+      begin
+        x := 0;
+        hatch := not hatch;
+      end;
+    end;
+  end;
+end;
+//------------------------------------------------------------------------------
+
+procedure Hatch(img: TImage32; color1: TColor32 = clWhite32;
+  color2: TColor32= $FFE8E8E8; hatchSize: Integer = 10);
+begin
+  Hatch(img, img.Bounds, color1, color2, hatchSize);
+end;
+//------------------------------------------------------------------------------
+
+procedure Hatch(img: TImage32; const rec: TRect;
+  color1: TColor32 = clWhite32; color2: TColor32= $FFE8E8E8;
+  hatchSize: Integer = 10);
+begin
+  if (rec.Right <= rec.Left) or (rec.Bottom - rec.Top <= 0) then Exit;
+  img.BeginUpdate;
+  try
+    InternalHatch(img, rec, color1, color2, hatchSize);
+  finally
+    img.EndUpdate;
+  end;
+end;
+//------------------------------------------------------------------------------
+
+procedure InternalHatchBackground(img: TImage32; const rec: TRect;
+  color1, color2: TColor32; hatchSize: Integer = 10);
+var
+  i, j, imgWidth: Integer;
+  pc: PColor32;
+  colors: array[boolean] of TColor32;
+  hatch: Boolean;
   x: integer;
 begin
   colors[false] := color1;
@@ -674,10 +738,10 @@ begin
     if x = 0 then hatch := not hatch;
     for j := rec.Left to rec.Right -1 do
     begin
-      c := pc^;
-      if c = 0 then
-        pc^ := colors[hatch] else
-        pc^ := BlendToOpaque(c, colors[hatch]);
+      if pc^ = 0 then
+        pc^ := colors[hatch]
+      else if GetAlpha(pc^) < 255 then
+        pc^ := BlendToOpaque(colors[hatch], pc^);
       inc(pc);
       inc(x);
       if x >= hatchSize then
@@ -697,7 +761,7 @@ begin
   if (rec.Right <= rec.Left) or (rec.Bottom - rec.Top <= 0) then Exit;
   img.BeginUpdate;
   try
-    InternHatchBackground(img, rec, color1, color2, hatchSize);
+    InternalHatchBackground(img, rec, color1, color2, hatchSize);
   finally
     img.EndUpdate;
   end;
@@ -728,8 +792,6 @@ begin
   try
     if minorInterval > 0 then
     begin
-      //cr.SetColor(minColor);
-
       x := minorInterval;
       path[0] := PointD(x, 0); path[1] := PointD(x, h);;
       for i := 1 to (w div minorInterval) do
@@ -799,6 +861,40 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure ReplaceColor(img: TImage32; oldColor, newColor: TColor32;
+  channelTolerance: Byte; preserveAlpha: Boolean);
+var
+  c: PARGB;
+  a,r,g,b: Byte;
+  i: Integer;
+begin
+  c := PARGB(img.PixelBase);
+  a := TARGB(oldColor).A;
+  r := TARGB(oldColor).R;
+  g := TARGB(oldColor).G;
+  b := TARGB(oldColor).B;
+
+  if preserveAlpha then
+  begin
+    newColor := newColor and $FFFFFF;
+    for i := 0 to img.Width * img.Height -1 do
+    begin
+      if Abs(c.R - r) + Abs(c.G - g) + Abs(c.B - b) <= channelTolerance then
+        c.Color := a or newColor;
+      inc(c);
+    end
+  end else
+    for i := 0 to img.Width * img.Height -1 do
+    begin
+      if (Abs(c.A - a) <= channelTolerance) and
+        (Abs(c.R - r) <= channelTolerance) and
+        (Abs(c.G - g) <= channelTolerance) and
+        (Abs(c.B - b) <= channelTolerance) then c.Color := newColor;
+      inc(c);
+    end
+end;
+//------------------------------------------------------------------------------
+
 procedure RemoveColor(img: TImage32; color: TColor32);
 var
   fg: TARGB absolute color;
@@ -828,12 +924,14 @@ begin
 
       if (Q = 0) then
         bg.Color := clNone32
-      else if (Q < 255) then
+      else if (Q = 255) then
+        // do nothing
+      else
       begin
         bg.A := MulTable[bg.A, Q];
-        bg.R := DivTable[bg.R - MulTable[not Q, fg.R], Q];
-        bg.G := DivTable[bg.G - MulTable[not Q, fg.G], Q];
-        bg.B := DivTable[bg.B - MulTable[not Q, fg.B], Q];
+        bg.R := DivTable[ClampByte(bg.R - MulTable[not Q, fg.R]), Q];
+        bg.G := DivTable[ClampByte(bg.G - MulTable[not Q, fg.G]), Q];
+        bg.B := DivTable[ClampByte(bg.B - MulTable[not Q, fg.B]), Q];
       end;
     end;
     inc(bg);
@@ -841,7 +939,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure FilterOnColor(img: TImage32; color: TColor32);
+procedure RemoveAllExceptColor(img: TImage32; color: TColor32);
 var
   fg: TARGB absolute color;
   bg: PARGB;
@@ -855,24 +953,16 @@ begin
     if bg.A > 0 then
     begin
       // red
-      if (bg.R > fg.R) then
-        Q := bg.R - fg.R
-      else if (bg.R < fg.R) then
-        Q := DivTable[fg.R - bg.R, fg.R]
-      else
-        Q := 0;
-
+      if (bg.R > fg.R) then Q := bg.R - fg.R
+      else if (bg.R < fg.R) then Q := DivTable[fg.R - bg.R, fg.R]
+      else Q := 0;
       // green
-      if (bg.G > fg.G) then
-        Q := Max(Q, bg.G - fg.G)
-      else if (bg.G < fg.G) then
-        Q := Max(Q, DivTable[fg.G - bg.G, fg.G]);
+      if (bg.G > fg.G) then Q := Max(Q, bg.G - fg.G)
+      else if (bg.G < fg.G) then Q := Max(Q, DivTable[fg.G - bg.G, fg.G]);
 
       // blue
-      if (bg.B > fg.B) then
-        Q := Max(Q, bg.B - fg.B)
-      else if (bg.B < fg.B) then
-        Q := Max(Q, DivTable[fg.B - bg.B, fg.B]);
+      if (bg.B > fg.B) then Q := Max(Q, bg.B - fg.B)
+      else if (bg.B < fg.B) then Q := Max(Q, DivTable[fg.B - bg.B, fg.B]);
 
       // weight Q toward either fully opaque or fully translucent
       Q := Sigmoid[Q];
@@ -886,7 +976,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure FilterOnExactColor(img: TImage32; color: TColor32);
+procedure FilterOnColor(img: TImage32; color: TColor32);
+begin
+  RemoveAllExceptColor(img, color);
+end;
+//------------------------------------------------------------------------------
+
+procedure RemoveExactColor(img: TImage32; color: TColor32);
 var
   pc: PColor32;
   i: Integer;
@@ -905,18 +1001,24 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure FilterOnAlpha(img: TImage32; alpha: byte; tolerance: byte);
-var
-  bg: PARGB;
-  i: Integer;
+procedure FilterOnExactColor(img: TImage32; color: TColor32);
 begin
-  bg := PARGB(img.PixelBase);
-  for i := 0 to img.Width * img.Height -1 do
-  begin
-    if abs(bg.A - alpha) > tolerance then bg.A := 0;
-    inc(bg);
-  end;
+  RemoveExactColor(img, color);
 end;
+//------------------------------------------------------------------------------
+
+// procedure FilterOnAlpha(img: TImage32; alpha: byte; tolerance: byte);
+// var
+//  bg: PARGB;
+//  i: Integer;
+// begin
+//  bg := PARGB(img.PixelBase);
+//  for i := 0 to img.Width * img.Height -1 do
+//  begin
+//    if abs(bg.A - alpha) > tolerance then bg.A := 0;
+//    inc(bg);
+//  end;
+// end;
 //------------------------------------------------------------------------------
 
 procedure RedEyeRemove(img: TImage32; const rect: TRect);
@@ -1217,7 +1319,7 @@ begin
     if ba3D in buttonAttributes then
       Draw3D(img, Result, frNonZero, lightSize*2,
         Ceil(lightSize), $CCFFFFFF, $AA000000, lightAngle);
-    DrawLine(img, Result, dpiAware1, clBlack32, esPolygon);
+    DrawLine(img, Result, dpiAware1, clBlack32, esPolygon, jsButt);
   finally
     img.EndUpdate;
   end;
@@ -2300,8 +2402,8 @@ end;
 // FastGaussian blur - and support functions
 //------------------------------------------------------------------------------
 
-//http://blog.ivank.net/fastest-gaussian-blur.html
-//https://www.peterkovesi.com/papers/FastGaussianSmoothing.pdf
+// http://blog.ivank.net/fastest-gaussian-blur.html
+// https://www.peterkovesi.com/papers/FastGaussianSmoothing.pdf
 
 function BoxesForGauss(stdDev, boxCnt: integer): TArrayOfInteger;
 var
@@ -2330,16 +2432,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-type
-  {$IFDEF SUPPORTS_POINTERMATH}
-    {$POINTERMATH ON}
-  PStaticColor32Array = ^TColor32;
-    {$POINTERMATH OFF}
-  {$ELSE} // Delphi 7-2007
-  PStaticColor32Array = ^TStaticColor32Array;
-  TStaticColor32Array = array[0..MaxInt div SizeOf(TColor32) - 1] of TColor32;
-  {$ENDIF}
-
 procedure BoxBlurHLine(src, dst: PColor32; srcRiOffset: nativeint;
   count, w: integer; dstLast: PColor32; var v: TWeightedColor);
 var
@@ -2364,7 +2456,7 @@ begin
   begin
     while count > 0 do
     begin
-      if val.AddSubtract(PStaticColor32Array(s)[srcRiOffset], s^) then
+      if val.AddSubtract(PColor32Array(s)[srcRiOffset], s^) then
         lastColor := val.Color;
       inc(s);
       d^ := lastColor;
@@ -2482,7 +2574,7 @@ begin
   begin
     while count > 0 do
     begin
-      if val.AddSubtract(PStaticColor32Array(s)[srcRiOffset], s^) then
+      if val.AddSubtract(PColor32Array(s)[srcRiOffset], s^) then
         lastColor := val.Color;
       inc(PByte(s), widthBytes);
       d^ := lastColor;

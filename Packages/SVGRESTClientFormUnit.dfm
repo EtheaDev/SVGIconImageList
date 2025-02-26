@@ -2,8 +2,8 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
   Left = 0
   Top = 0
   Caption = 'SVG REST Client Search %s - Copyright Ethea S.r.l.'
-  ClientHeight = 530
-  ClientWidth = 720
+  ClientHeight = 529
+  ClientWidth = 716
   Color = clBtnFace
   Constraints.MinHeight = 500
   Constraints.MinWidth = 700
@@ -20,7 +20,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
   object SearchGroupBox: TGroupBox
     Left = 0
     Top = 0
-    Width = 720
+    Width = 716
     Height = 55
     Align = alTop
     Caption = 'Search for Icons from the Web'
@@ -42,7 +42,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
       AlignWithMargins = True
       Left = 5
       Top = 25
-      Width = 301
+      Width = 297
       Height = 24
       Hint = 'Insert Icon Name to search'
       Margins.Top = 8
@@ -54,12 +54,10 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
       OnEnter = SearchEditEnter
       OnExit = SearchEditExit
       OnKeyDown = SearchEditKeyDown
-      ExplicitWidth = 469
-      ExplicitHeight = 23
     end
     object MaxIconsPanel: TPanel
       AlignWithMargins = True
-      Left = 546
+      Left = 542
       Top = 25
       Width = 48
       Height = 24
@@ -67,7 +65,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
       Margins.Bottom = 4
       Align = alRight
       BevelOuter = bvNone
-      TabOrder = 1
+      TabOrder = 2
       object MaxIconsEdit: TSpinEdit
         Left = 0
         Top = 0
@@ -81,42 +79,44 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
     end
     object SearchButton: TButton
       AlignWithMargins = True
-      Left = 600
+      Left = 596
       Top = 20
       Width = 115
       Height = 30
       Align = alRight
       Caption = 'Search...'
       Enabled = False
-      TabOrder = 2
+      TabOrder = 3
       OnClick = SearchButtonClick
     end
     object CollectionsCombo: TComboBox
       AlignWithMargins = True
-      Left = 312
+      Left = 308
       Top = 25
-      Width = 162
+      Width = 200
       Height = 23
+      Hint = 'Select Icons Collection'
       Margins.Top = 8
       Margins.Bottom = 4
       Align = alRight
       Style = csDropDownList
-      TabOrder = 3
+      DropDownCount = 20
+      TabOrder = 1
       OnChange = CollectionsComboChange
       OnKeyDown = CollectionsComboKeyDown
     end
   end
   object BottomPanel: TPanel
     Left = 0
-    Top = 492
-    Width = 720
+    Top = 491
+    Width = 716
     Height = 38
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
     object OKButton: TButton
       AlignWithMargins = True
-      Left = 451
+      Left = 447
       Top = 6
       Width = 85
       Height = 26
@@ -133,7 +133,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
     end
     object CancelButton: TButton
       AlignWithMargins = True
-      Left = 540
+      Left = 536
       Top = 6
       Width = 85
       Height = 26
@@ -149,7 +149,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
     end
     object HelpButton: TButton
       AlignWithMargins = True
-      Left = 629
+      Left = 625
       Top = 6
       Width = 85
       Height = 26
@@ -166,7 +166,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
       AlignWithMargins = True
       Left = 183
       Top = 3
-      Width = 263
+      Width = 259
       Height = 32
       Hint = 'Icon Preview Size'
       Align = alClient
@@ -196,8 +196,8 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
   object ClientPanel: TPanel
     Left = 0
     Top = 55
-    Width = 720
-    Height = 437
+    Width = 716
+    Height = 436
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
@@ -211,8 +211,8 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
     object AvailGroupBox: TGroupBox
       Left = 0
       Top = 0
-      Width = 524
-      Height = 437
+      Width = 520
+      Height = 436
       Align = alClient
       Caption = 'Available Icons: double click to select or drag and drop'
       TabOrder = 0
@@ -220,8 +220,8 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
         AlignWithMargins = True
         Left = 5
         Top = 21
-        Width = 514
-        Height = 411
+        Width = 510
+        Height = 410
         Margins.Top = 4
         Align = alClient
         Columns = <>
@@ -237,10 +237,10 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
       end
     end
     object SelectedGroupBox: TGroupBox
-      Left = 528
+      Left = 524
       Top = 0
       Width = 192
-      Height = 437
+      Height = 436
       Align = alRight
       Caption = 'Selected Icons'
       TabOrder = 1
@@ -249,7 +249,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
         Left = 5
         Top = 23
         Width = 182
-        Height = 409
+        Height = 408
         Margins.Top = 6
         Align = alClient
         Columns = <>
@@ -260,6 +260,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
         MultiSelect = True
         ReadOnly = True
         TabOrder = 0
+        OnDblClick = SelectedViewDblClick
         OnDragDrop = SelectedViewDragDrop
         OnDragOver = SelectedViewDragOver
       end

@@ -2,12 +2,12 @@ unit Img32.Layers;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7                                                             *
-* Date      :  6 January 2025                                                  *
-* Website   :  http://www.angusj.com                                           *
+* Version   :  4.8                                                             *
+* Date      :  11 Febuary 2025                                                 *
+* Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Layered images support                                          *
-* License   :  http://www.boost.org/LICENSE_1_0.txt                            *
+* License   :  https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
 interface
@@ -74,7 +74,6 @@ type
 {$IFNDEF NO_STORAGE}
     fStreamingRec   : TRectWH;
 {$ENDIF}
-    fDesignerLayer  : Boolean;
     function  GetMidPoint: TPointD;
     procedure SetVisible(value: Boolean);
     procedure SetHeight(value: double);
@@ -88,11 +87,12 @@ type
     function  GetPrevLayerInGroup: TLayer32;
     function  GetLayer32Parent: TLayer32;
     procedure SetLayer32Parent(parent: TLayer32);
-    procedure SetOuterMargin(value: double);
     procedure CreateInternal(parent: TStorage = nil; const name: string = '');
   protected
-    UpdateInfo : TUpdateInfo;
+    fIsDesignLayer  : Boolean;
+    fUpdateInfo     : TUpdateInfo;
     procedure SetDesignerLayer(value: Boolean);
+    procedure SetOuterMargin(value: double); virtual;
     function  GetUpdateNeeded: Boolean;
     procedure DoBeforeMerge; virtual;
     procedure PreMerge(hideDesigners: Boolean); virtual;
@@ -111,6 +111,7 @@ type
     procedure SetOpacity(value: Byte); virtual;
     procedure ImageChanged(Sender: TImage32); virtual;
     procedure UpdateLayeredImage(newLayeredImage: TLayeredImage32);
+    property  UpdateInfo: TUpdateInfo read fUpdateInfo;
     property  UpdateNeeded : Boolean read GetUpdateNeeded;
   public
     constructor Create(parent: TStorage = nil; const name: string = ''); overload; override;
@@ -152,7 +153,7 @@ type
     //Portions of child layers residing outside this region  will be clipped.
     property   ClipPath: TPathsD read fClipPath write SetClipPath;
     procedure  Offset(dx, dy: double); overload; virtual;
-    property   IsDesignerLayer: Boolean read fDesignerLayer;
+    property   IsDesignerLayer: Boolean read fIsDesignLayer write SetDesignerLayer;
     property   InnerBounds: TRectD read GetInnerBounds;
     property   InnerRect: TRectD read GetInnerRectD;
     property   OuterBounds: TRectD read GetOuterBounds;
@@ -202,16 +203,19 @@ type
     property HitTestEnabled: Boolean read GetEnabled write SetEnabled;
   end;
 
-  //TRotLayer32: rotation methods added
+  //TRotLayer32: rotating and scaling methods added
   //(abstract base layer for TVectorLayer32 and TRasterLayer32)
   TRotLayer32 = class(THitTestLayer32)
   private
     fAngle      : double;
+    fScaleX     : double;
+    fScaleY     : double;
     fPivotPt    : TPointD;
     fAutoPivot  : Boolean;
     function  GetPivotPt: TPointD;
     procedure SetAutoPivot(val: Boolean);
     procedure SetAngle(newAngle: double);
+    procedure Scale(sx, sy: double); virtual;
   protected
     procedure SetPivotPt(const pivot: TPointD); virtual;
 {$IFNDEF NO_STORAGE}
@@ -221,7 +225,7 @@ type
   public
     constructor Create(parent: TLayer32 = nil; const name: string = ''); override;
     function    Rotate(angleDelta: double): Boolean; virtual;
-    procedure ResetAngle;
+    procedure Reset;
     procedure Offset(dx, dy: double); override;
     property  Angle: double read fAngle write SetAngle;
     property  PivotPt: TPointD read GetPivotPt write SetPivotPt;
@@ -232,10 +236,15 @@ type
   //or transforms Paths when bounds change
   TVectorLayer32 = class(TRotLayer32)
   private
-    fPaths    : TPathsD;
-    fOnDraw   : TNotifyEvent;
+    fPaths      : TPathsD;
+    fIsDrawing  : Boolean;
+    fOnDraw     : TNotifyEvent;
     procedure RepositionAndDraw;
+    function  GetRelativePaths: TPathsD;
   protected
+    // we need to accommodate drawing bezier splines on TVectorLayer32 where
+    // the drawn path goes well outside the stored control points (Paths).
+    //procedure SetOuterMargin(value: double); override;
     procedure SetPaths(const newPaths: TPathsD); virtual;
     procedure Draw; virtual;
   public
@@ -243,20 +252,22 @@ type
     procedure SetInnerBounds(const newBounds: TRectD); override;
     procedure Offset(dx,dy: double); override;
     function  Rotate(angleDelta: double): Boolean; override;
+    procedure Scale(sx, sy: double); override;
     procedure UpdateHitTestMask(const vectorRegions: TPathsD); virtual;
     procedure UpdateHitTestMaskFromImage;
+    procedure AppendPoint(const pt: TPointD);
+    procedure AppendPath(const path: TPathD);
     property  Paths: TPathsD read fPaths write SetPaths;
+    property  PathsRelativeToLayer: TPathsD read GetRelativePaths;
     property  OnDraw: TNotifyEvent read fOnDraw write fOnDraw;
   end;
 
   TRasterLayer32 = class(TRotLayer32) //display layer for raster images
   private
     fMasterImg    : TImage32;
-    //fMatrix: allows combining any number of scaling & rotating ops.
-    fMatrix       : TMatrixD;
-    fRotating     : Boolean;
-    fPreScaleSize : TSize;
     fAutoHitTest  : Boolean;
+    fAutoCrop     : Boolean;
+    fCropMargins  : TPoint;
     procedure DoAutoHitTest;
   protected
     procedure ImageChanged(Sender: TImage32); override;
@@ -269,9 +280,11 @@ type
     procedure UpdateHitTestMaskTransparent(alphaValue: Byte = 127); overload; virtual;
     procedure SetInnerBounds(const newBounds: TRectD); override;
     function  Rotate(angleDelta: double): Boolean; override;
+    procedure Scale(sx, sy: double); override;
 
     property  AutoSetHitTestMask: Boolean read fAutoHitTest write fAutoHitTest;
-    property  MasterImage: TImage32 read fMasterImg;
+    property  AutoCrop          : Boolean read fAutoCrop write fAutoCrop;
+    property  MasterImage       : TImage32 read fMasterImg;
   end;
 
   TButtonDesignerLayer32 = class;
@@ -469,6 +482,7 @@ resourcestring
   rsUpdateRotateGroupError = 'UpdateRotateGroup - invalid group';
   rsLayeredImage32Error    = 'TLayeredImage32: ''root'' must be a TGroupLayer32';
   rsLayer32Error           = 'TLayer32 - children must also be TLayer32';
+  rsVectorLayer32Error     = 'TVectorLayer32 - updating Paths during draw events will cause recursion.';
 
 //------------------------------------------------------------------------------
 // TLayerNotifyImage32
@@ -579,11 +593,11 @@ end;
 
 constructor TLayer32.Create(parent: TStorage; const name: string);
 begin
-  fDesignerLayer := true; //must do this first
+  fIsDesignLayer := true; //must do this first
   if not Assigned(parent) then
     CreateInternal(nil, name)
   else if parent.InheritsFrom(TLayer32) then
-    //this constructor is commonly overrided in descendant layer classes
+    //this constructor is commonly overridden in descendant layer classes
     Create(TLayer32(parent), name)
   else
   begin
@@ -612,9 +626,9 @@ begin
   begin
     Invalidate;
     rec := OuterBounds;
-    if not UpdateInfo.priorPosition.IsEmpty then
+    if not fUpdateInfo.priorPosition.IsEmpty then
     begin
-      rec := Parent.MakeAbsolute(UpdateInfo.priorPosition);
+      rec := Parent.MakeAbsolute(fUpdateInfo.priorPosition);
       with fLayeredImage do
         fInvalidRect := UnionRect(fInvalidRect, rec);
     end;
@@ -628,7 +642,7 @@ end;
 
 procedure TLayer32.SetDesignerLayer(value: Boolean);
 begin
-  fDesignerLayer := value;
+  fIsDesignLayer := value;
 end;
 //------------------------------------------------------------------------------
 
@@ -653,7 +667,7 @@ end;
 
 function TLayer32.GetUpdateNeeded: Boolean;
 begin
-     Result := (UpdateInfo.updateMethod <> umNone);
+     Result := (fUpdateInfo.updateMethod <> umNone);
 end;
 //------------------------------------------------------------------------------
 
@@ -661,14 +675,14 @@ procedure TLayer32.Invalidate;
 var
   layer : TLayer32;
 begin
-  if (UpdateInfo.updateMethod = umSelf) then Exit;
-  UpdateInfo.updateMethod := umSelf;
+  if (fUpdateInfo.updateMethod = umSelf) then Exit;
+  fUpdateInfo.updateMethod := umSelf;
 
   layer := Parent;
   while Assigned(layer) do
   begin
-    if layer.UpdateInfo.updateMethod <> umNone then Break;
-    layer.UpdateInfo.updateMethod := umChild;
+    if layer.fUpdateInfo.updateMethod <> umNone then Break;
+    layer.fUpdateInfo.updateMethod := umChild;
     layer := layer.Parent;
   end;
 end;
@@ -1118,16 +1132,16 @@ begin
     begin
       if not Visible or
          (hideDesigners and IsDesignerLayer) or
-         (UpdateInfo.updateMethod = umNone) then
+         (fUpdateInfo.updateMethod = umNone) then
            Continue;
 
-      if UpdateInfo.updateMethod = umSelf then
+      if fUpdateInfo.updateMethod = umSelf then
       begin
-        rec := Parent.MakeAbsolute(UpdateInfo.priorPosition);
+        rec := Parent.MakeAbsolute(fUpdateInfo.priorPosition);
         with fLayeredImage do
           fInvalidRect := UnionRect(fInvalidRect, rec);
-        UpdateInfo.priorPosition := OuterBounds;
-        rec := Parent.MakeAbsolute(UpdateInfo.priorPosition);
+        fUpdateInfo.priorPosition := OuterBounds;
+        rec := Parent.MakeAbsolute(fUpdateInfo.priorPosition);
         with fLayeredImage do
           fInvalidRect := UnionRect(fInvalidRect, rec);
       end;
@@ -1180,7 +1194,7 @@ begin
          Continue;
 
       //recursive merge
-      if (UpdateInfo.updateMethod <> umNone) then
+      if (fUpdateInfo.updateMethod <> umNone) then
         Merge(hideDesigners, updateRect);
 
       if Assigned(fMergeImage) then
@@ -1250,7 +1264,7 @@ begin
     end;
   end;
 
-  with UpdateInfo do
+  with fUpdateInfo do
   begin
     priorPosition := OuterBounds;
     updateMethod := umNone;
@@ -1381,7 +1395,7 @@ end;
 procedure  TGroupLayer32.PreMerge(hideDesigners: Boolean);
 begin
   inherited;
-  if (self <> Root) and (UpdateInfo.updateMethod <> umNone) then
+  if (self <> Root) and (fUpdateInfo.updateMethod <> umNone) then
     UpdateGroupBounds;
 end;
 //------------------------------------------------------------------------------
@@ -1471,7 +1485,7 @@ constructor TRotLayer32.Create(parent: TLayer32; const name: string);
 begin
   inherited;
   fAutoPivot := true;
-  fPivotPt := InvalidPointD;
+  Reset;
 end;
 //------------------------------------------------------------------------------
 
@@ -1479,9 +1493,15 @@ procedure TRotLayer32.SetAngle(newAngle: double);
 begin
   NormalizeAngle(newAngle);
   if newAngle = fAngle then Exit;
-  if PointsEqual(fPivotPt, InvalidPointD) then
-    fPivotPt := MidPoint;
+  if not IsValid(fPivotPt) then fPivotPt := MidPoint;
   Rotate(newAngle - fAngle);
+end;
+//------------------------------------------------------------------------------
+
+procedure TRotLayer32.Scale(sx, sy: double);
+begin
+  if (sx > 0) then fScaleX := fScaleX * sx;
+  if (sy > 0) then fScaleY := fScaleY * sy;
 end;
 //------------------------------------------------------------------------------
 
@@ -1496,10 +1516,12 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TRotLayer32.ResetAngle;
+procedure TRotLayer32.Reset;
 begin
-  fAngle := 0;
   fPivotPt := InvalidPointD;
+  fAngle := 0;
+  fScaleX := 1.0;
+  fScaleY := 1.0;
 end;
 //------------------------------------------------------------------------------
 
@@ -1581,12 +1603,26 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure TVectorLayer32.Scale(sx, sy: double);
+begin
+  inherited;
+  SetInnerBounds(RectD(fLeft, fTop, fWidth * sx, fHeight * sy));
+end;
+//------------------------------------------------------------------------------
+
 procedure TVectorLayer32.SetPaths(const newPaths: TPathsD);
 begin
   fPaths := CopyPaths(newPaths);
   fPivotPt := InvalidPointD;
-  if Assigned(fPaths) then RepositionAndDraw
-  else inherited SetInnerBounds(NullRectD);
+  if not Assigned(fPaths) then inherited SetInnerBounds(NullRectD)
+  else if fIsDrawing then Raise Exception.Create(rsVectorLayer32Error)
+  else RepositionAndDraw;
+end;
+//------------------------------------------------------------------------------
+
+function  TVectorLayer32.GetRelativePaths: TPathsD;
+begin
+  Result := TranslatePath(fPaths, -Left + fOuterMargin, -Top  + fOuterMargin);
 end;
 //------------------------------------------------------------------------------
 
@@ -1628,6 +1664,33 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure TVectorLayer32.AppendPoint(const pt: TPointD);
+var
+  highPaths, lenPts: integer;
+begin
+  highPaths := High(fPaths);
+  if highPaths < 0 then
+  begin
+    SetLength(fPaths, 1);
+    SetLength(fPaths[0], 1);
+    fPaths[0][0] := pt;
+  end else
+  begin
+    lenPts := Length(fPaths[highPaths]);
+    SetLength(fPaths[highPaths], lenPts +1);
+    fPaths[highPaths][lenPts] := pt;
+  end;
+  RepositionAndDraw;
+end;
+//------------------------------------------------------------------------------
+
+procedure TVectorLayer32.AppendPath(const path: TPathD);
+begin
+  Img32.Vector.AppendPath(fPaths, path);
+  RepositionAndDraw;
+end;
+//------------------------------------------------------------------------------
+
 procedure TVectorLayer32.RepositionAndDraw;
 var
   rec: TRectD;
@@ -1650,7 +1713,10 @@ procedure TVectorLayer32.Draw;
 begin
   //to draw the layer, either override this event
   //in a descendant class or assign the OnDraw property
-  if Assigned(fOnDraw) then fOnDraw(self);
+  if not Assigned(fOnDraw) then Exit;
+  fIsDrawing := true;
+  fOnDraw(self);
+  fIsDrawing := false;
 end;
 //------------------------------------------------------------------------------
 
@@ -1679,6 +1745,7 @@ begin
   fCursorId := crHandPoint;
   fAutoHitTest := true;
   fOuterMargin := 0;
+  fAutoCrop := true;
 end;
 //------------------------------------------------------------------------------
 
@@ -1733,28 +1800,28 @@ procedure TRasterLayer32.ImageChanged(Sender: TImage32);
 begin
   if (Sender = MasterImage) then
   begin
+    Reset;
     if MasterImage.IsEmpty then Exit;
-    MasterImage.BlockNotify;
-    MasterImage.CropTransparentPixels;
-    MasterImage.UnblockNotify;
-    Invalidate;
-
+    if fAutoCrop then
+    begin
+      MasterImage.BlockNotify;
+      MasterImage.CropTransparentPixels;
+      MasterImage.UnblockNotify;
+    end;
     //reset whenever MasterImage changes
-    fAngle := 0;
-    fMatrix := IdentityMatrix;
-    fRotating := false;
-    fPreScaleSize := Size(MasterImage.Width, MasterImage.Height);
-
-    if Image.IsEmpty and
-      (TLayerNotifyImage32(Image).UpdateCount = 0) then
-        Image.Assign(MasterImage);
+    if Image.IsEmpty and (TLayerNotifyImage32(Image).UpdateCount = 0) then
+      Image.Assign(MasterImage);
+    fCropMargins := NullPoint;
+    Invalidate;
   end else
   begin
     if MasterImage.IsEmpty and not Image.IsEmpty then
     begin
       Image.BlockNotify;
       try
-        Image.CropTransparentPixels;
+        if fAutoCrop then
+          fCropMargins := SymmetricCropTransparent(Image);
+        PositionAt(Left + fCropMargins.X, Top + fCropMargins.Y);
         MasterImage.Assign(Image);
       finally
         Image.UnblockNotify;
@@ -1768,42 +1835,79 @@ end;
 
 procedure TRasterLayer32.SetInnerBounds(const newBounds: TRectD);
 var
-  newWidth, newHeight: double;
-  w,h: integer;
+  x,y, rx,ry: double;
+  mat: TMatrixD;
+  sinA, cosA, tanA: double;
 begin
-
-  if fRotating and Assigned(Image) then
-  begin
-    //rotation has just ended
-    fRotating := false;
-    //update fMatrix with the new rotation angle
-    if (fAngle <> 0) then
-      MatrixRotate(fMatrix, Image.MidPoint, fAngle);
-
-    //and since we're about to start scaling, we need
-    //to store the starting size, and reset the angle
-    fPreScaleSize := Size(Image.Width, Image.Height);
-    fAngle := 0;
-  end;
-
-  newWidth := newBounds.Width;
-  newHeight := newBounds.Height;
-
-  //make sure the image is large enough to scale safely
-  if not MasterImage.IsEmpty and (newWidth > 1) and (newHeight > 1) then
+  if not MasterImage.IsEmpty and
+    //the image must be large enough to scale safely
+    (newBounds.Width > 1) and (newBounds.Height > 1) then
   begin
     Image.BeginUpdate;
     try
+      // determine the amount of scaling in the **un-rotated**
+      // image that will fit 'newBounds' once the image is rotated
+
+      // given:
+      //   the pivot point is unimportant (final position already defined)
+      //   rotated x = sin(angle)*y + cos(angle)*x
+      //   rotated y = cos(angle)*y + sin(angle)*x
+      // let:
+      //   X, Y     : unrotated image width & height
+      //   rX, rY   : rotated image width & height
+
+      // rX = sinA * Y + cosA * X
+      // X = rX / cosA - sinA/cosA * Y
+      // X = rX / cosA - tanA * Y
+      // rY = cosA*Y + sinA*X
+      // Y =  rY/cosA - tanA * X
+      // X = rX / cosA - tanA * (rY / cosA - tanA * X)
+      // X = rX / cosA - tanA * rY/cosA + tanA*tanA * X
+      // X - tanA*tanA * X = rX / cosA - tanA * rY/cosA
+      // X * (1 - tanA*tanA) = rX / cosA - tanA * rY/cosA
+      // X = (rX / cosA - tanA * rY/cosA) / (1 - tanA*tanA)
+      // Y := (rY - sinA * x) /cosA;
+
+      sinA := Abs(Sin(fAngle));
+      cosA := Abs(Cos(fAngle));
+      if sinA = 0.0 then            // no rotation (or 180 deg. rotation)
+      begin
+        fScaleX := newBounds.Width / MasterImage.Width;
+        fScaleY := newBounds.Height / MasterImage.Height;
+      end
+      else if cosA = 0.0 then       // rotated 90 or 270 degrees
+      begin
+        fScaleX := newBounds.Height / MasterImage.Width;
+        fScaleY := newBounds.Width / MasterImage.Height;
+      end else
+      begin
+        tanA := sinA/cosA;
+        // adjust for rotational cropping
+        rx := newBounds.Width + fCropMargins.X * 2;
+        ry := newBounds.Height + fCropMargins.Y * 2;
+        x := (rx /cosA - tanA * ry / cosA) / (1 - tanA*tanA);
+        y := (ry - sinA * x) /cosA;
+
+        if (x <= 0) or (y <= 0) then
+        begin
+          Image.SetSize(Round(newBounds.Width), Round(newBounds.Height));
+          PositionAt(newBounds.Left, newBounds.Top);
+          Exit;
+        end;
+
+        fScaleX := x / MasterImage.Width;
+        fScaleY := y / MasterImage.Height;
+      end;
+
       Image.AssignSettings(MasterImage);
-      //apply any prior transformations
       Image.Resampler := rWeightedBilinear;
-      AffineTransformImage(MasterImage, Image, fMatrix, true); // assumes no skew
-      //cropping is very important with rotation
-      SymmetricCropTransparent(Image);
-      w := Ceil(newBounds.Right) - Floor(newBounds.Left);
-      h := Ceil(newBounds.Bottom) - Floor(newBounds.Top);
-      Image.Resize(w, h); //nb: stretch resizes
-      PositionAt(newBounds.TopLeft);
+      mat := IdentityMatrix;
+      MatrixScale(mat, fScaleX, fScaleY);
+      MatrixRotate(mat, fAngle);
+      AffineTransformImage(MasterImage, Image, mat, true);
+      if fAutoCrop then
+        fCropMargins := SymmetricCropTransparent(Image);
+      PositionAt(newBounds.Left, newBounds.Top);
     finally
       Image.EndUpdate;
     end;
@@ -1815,8 +1919,8 @@ end;
 
 function TRasterLayer32.Rotate(angleDelta: double): Boolean;
 var
-  mat: TMatrixD;
-  pt, mp: TPointD;
+  mat : TMatrixD;
+  mp  : TPointD;
 begin
   Result := (angleDelta <> 0) and
     not MasterImage.IsEmpty and
@@ -1825,37 +1929,36 @@ begin
   if not Result then Exit;
 
   mp := MidPoint;
-
-  //if not already rotating, then update fMatrix with prior scaling
-  if not fRotating then
-  begin
-    Assert((fPreScaleSize.cx > 0) and (fPreScaleSize.cy > 0), 'oops!');
-    MatrixScale(fMatrix,
-      Image.Width/fPreScaleSize.cx,
-      Image.Height/fPreScaleSize.cy);
-
-    fRotating := true;
-    if fAutoPivot then fPivotPt := mp;
-  end;
-
+  mat := IdentityMatrix;
+  MatrixScale(mat, fScaleX, fScaleY);
+  MatrixRotate(mat, fAngle);
   RotatePoint(mp, PivotPt, angleDelta);
 
   Image.BlockNotify;
   try
     Image.AssignSettings(MasterImage);
-    mat := fMatrix;
-    pt := PointD(PivotPt.X - fLeft, PivotPt.Y - fTop);
-    MatrixRotate(mat, pt, Angle);
     Image.Resampler := rWeightedBilinear;
-    AffineTransformImage(MasterImage, Image, mat, true); // assumes no skew
+    AffineTransformImage(MasterImage, Image, mat, true);
   finally
     Image.UnblockNotify;
   end;
+
+  // cropping the image significantly improves performance
+  if fAutoCrop then
+    fCropMargins := SymmetricCropTransparent(Image);
 
   fWidth := Image.Width;
   fHeight := Image.Height;
   PositionCenteredAt(mp);
   DoAutoHitTest;
+end;
+//------------------------------------------------------------------------------
+
+procedure TRasterLayer32.Scale(sx, sy: double);
+begin
+  inherited;
+  SetInnerBounds(RectD(fLeft, fTop,
+    MasterImage.Width * fSCaleX, MasterImage.Height * fSCaleY));
 end;
 
 //------------------------------------------------------------------------------
@@ -2054,7 +2157,7 @@ end;
 constructor TLayeredImage32.Create(parent: TStorage; const name: string);
 begin
   inherited;
-  fBackColor := clBtnFace32;
+  fBackColor := clNone32;
   fResampler := DefaultResampler;
   fLastUpdateType := utUndefined;
 
@@ -2170,7 +2273,7 @@ end;
 
 function TLayeredImage32.GetRepaintNeeded: Boolean;
 begin
-  Result := Root.UpdateInfo.updateMethod <> umNone;
+  Result := Root.fUpdateInfo.updateMethod <> umNone;
 end;
 //------------------------------------------------------------------------------
 

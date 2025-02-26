@@ -4,10 +4,10 @@ unit Img32.Storage;
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.7                                                             *
 * Date      :  6 January 2025                                                  *
-* Website   :  http://www.angusj.com                                           *
+* Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Object persistence                                              *
-* License   :  http://www.boost.org/LICENSE_1_0.txt                            *
+* License   :  https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
 interface
@@ -117,6 +117,7 @@ type
   public
     constructor Create(parent:  TStorage = nil; const name: string = ''); override;
     procedure LoadFromFile(const filename: string);
+    procedure LoadFromStream(stream: TStream);
     procedure LoadFromResource(const resName: string; resType: PChar);
     procedure AddWriteString(const str: Utf8String);
     procedure SaveToFile(const filename: string;
@@ -1429,39 +1430,41 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TStorageManager.LoadFromFile(const filename: string);
+procedure TStorageManager.LoadFromStream(stream: TStream);
 var
-  fs: TFileStream;
   utf8: Utf8String;
 begin
-  fs := TFileStream.Create(filename, fmOpenRead or fmShareDenyWrite);
-  try
-    SetLength(utf8, fs.Size);
-    fs.ReadBuffer(utf8[1], fs.Size);
-  finally
-    fs.Free;
-  end;
+  SetLength(utf8, stream.Size - stream.Position);
+  stream.ReadBuffer(utf8[1], stream.Size - stream.Position);
   DoBeforeLoad;
   LoadStoredObjects(utf8, self);
   DoAfterLoad;
 end;
 //------------------------------------------------------------------------------
 
+procedure TStorageManager.LoadFromFile(const filename: string);
+var
+  fs: TFileStream;
+begin
+  fs := TFileStream.Create(filename, fmOpenRead or fmShareDenyWrite);
+  try
+    LoadFromStream(fs);
+  finally
+    fs.Free;
+  end;
+end;
+//------------------------------------------------------------------------------
+
 procedure TStorageManager.LoadFromResource(const resName: string; resType: PChar);
 var
   rs: TResourceStream;
-  utf8: Utf8String;
 begin
   rs := TResourceStream.Create(hInstance, resName, resType);
   try
-    SetLength(utf8, rs.Size);
-    rs.ReadBuffer(utf8[1], rs.Size);
+    LoadFromStream(rs);
   finally
     rs.Free;
   end;
-  DoBeforeLoad;
-  LoadStoredObjects(utf8, self);
-  DoAfterLoad;
 end;
 //------------------------------------------------------------------------------
 

@@ -1,9 +1,8 @@
 
-Image32 - 2D graphics library for Delphi Pascal
-Latest version: 4.6
-Released: 18 September 2024
-
-Copyright © 2019-2024 Angus Johnson
+Image32 - a 2D graphics library for Delphi Pascal
+Latest version: 4.8
+Released: 18 January 2024
+Copyright © 2019-2025 Angus Johnson
 Freeware released under Boost Software License
 https://www.boost.org/LICENSE_1_0.txt
 
@@ -12,6 +11,17 @@ Download      : https://github.com/AngusJohnson/Image32
 
 Recent changes:
 
+Version 4.8 
+* This version contains further improvements in text rendering.
+  CAUTION: Some function and method renaming too in Img32.Text.pas.
+* Minor bug fixes too (issues #128..#130 in the GitHub repository).
+
+Version 4.7 
+* There have been significant improvements in SVG file reading
+* There have also been significant improvements in managing text rendering.
+  These include a new TChunkedText class and changes in the TFontManager class.
+* Andreas Hausladen has continued to contribute changes that improve performance.
+* Additional bug fixes (see issues #102..#125 in the GitHub repository).
 Version 4.6 
 * This release contains many bug fixes (see issues #10..#101) in the 
 GitHub repository.

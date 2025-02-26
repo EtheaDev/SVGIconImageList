@@ -2,16 +2,16 @@ unit Img32.Vector;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7                                                             *
-* Date      :  6 January 2025                                                  *
-* Website   :  http://www.angusj.com                                           *
+* Version   :  4.8                                                             *
+* Date      :  21 February 2025                                                *
+* Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
 * Purpose   :  Vector drawing for TImage32                                     *
 *                                                                              *
 * License   :  Use, modification & distribution is subject to                  *
 *              Boost Software License Ver 1                                    *
-*              http://www.boost.org/LICENSE_1_0.txt                            *
+*              https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
 interface
@@ -159,13 +159,11 @@ type
     pathEnd: TPathEnd; amount: double): TPathD;
 
   //GetDashPath: Returns a polyline (not polygons)
-  function GetDashedPath(const path: TPathD;
-    closed: Boolean; const pattern: TArrayOfDouble;
-    patternOffset: PDouble): TPathsD;
+  function GetDashedPath(const path: TPathD; closed: Boolean;
+    const pattern: TArrayOfDouble; patternOffset: PDouble): TPathsD;
 
-  function GetDashedOutLine(const path: TPathD;
-    closed: Boolean; const pattern: TArrayOfDouble;
-    patternOffset: PDouble; lineWidth: double;
+  function GetDashedOutLine(const path: TPathD; closed: Boolean;
+    const pattern: TArrayOfDouble; patternOffset: PDouble; lineWidth: double;
     joinStyle: TJoinStyle; endStyle: TEndStyle): TPathsD;
 
   function TranslatePoint(const pt: TPoint; dx, dy: integer): TPoint; overload;
@@ -418,7 +416,7 @@ type
   //GetLineEllipseIntersects: Gets the intersection of a line and
   //an ellipse. The function succeeds when the line either touches
   //tangentially or passes through the ellipse. If the line touches
-  //tangentially, the coordintates returned in pt1 and pt2 will match.
+  //tangentially, the coordinates returned in pt1 and pt2 will match.
   function GetLineEllipseIntersects(const ellipseRec: TRect;
     var linePt1, linePt2: TPointD): Boolean;
 
@@ -473,7 +471,7 @@ var
   //AutoWidthThreshold: When JoinStyle = jsAuto, this is the threshold at
   //which line joins will be rounded instead of squared. With wider strokes,
   //rounded joins generally look better, but as rounding is more complex it
-  //also requries more processing and hence is slower to execute.
+  //also requires more processing and hence is slower to execute.
   AutoWidthThreshold: double = 5.0;
   //When lines are too narrow, they become too faint to sensibly draw
   MinStrokeWidth: double = 0.5;
@@ -1469,29 +1467,30 @@ end;
 
 function GetNormals(const path: TPathD): TPathD;
 var
-  i, highI: integer;
-  last: TPointD;
+  i,j, highI: integer;
 begin
   highI := High(path);
   NewPointDArray(result, highI+1, True);
   if highI < 0 then Exit;
+  j := highI -1;
+  while (j >= 0) and PointsEqual(path[j], path[j+1]) do dec(j);
 
-  last := NullPointD;
-  for i := 0 to highI -1 do
+  if j < 0 then // all points on path are identical
   begin
-    if GetUnitNormal(path[i], path[i+1], result[i]) then
-      last := result[i] else
-      result[i] := last;
-  end;
-  if GetUnitNormal(path[highI], path[0], result[highI]) then
-    last := result[highI];
-
-  for i := 0 to highI do
+    for i := 0 to highI do
+      result[i] := NullPointD;
+  end else
   begin
-    if (result[i].X <> 0) or (result[i].Y <> 0) then Break;
-    result[i] := last;
+    GetUnitNormal(path[j], path[j+1], result[j]);
+    for i := j +1 to highI do
+      if GetUnitNormal(path[i], path[0], result[i]) then
+        j := i else
+        result[i] := result[j];
+    for i := 0 to j - 1 do
+      if GetUnitNormal(path[i], path[i+1], result[i]) then
+        j := i else
+        result[i] := result[j];
   end;
-
 end;
 //------------------------------------------------------------------------------
 
@@ -2265,6 +2264,7 @@ end;
 
 function CalcRoundingSteps(radius: double): double;
 begin
+  if radius < 0 then radius := Abs(radius);
   //the results of this function have been derived empirically
   //and may need further adjustment
   if radius < 0.55 then result := 4
@@ -2428,12 +2428,6 @@ begin
   if scale = 0 then scale := 1.0;
 
   absDelta := Abs(delta);
-  if absDelta < MinStrokeWidth/2 then
-  begin
-    if delta < 0 then
-      delta := -MinStrokeWidth/2 else
-      delta := MinStrokeWidth/2;
-  end;
   if absDelta * scale < 1 then
     joinStyle := jsButt
   else if joinStyle = jsAuto then
@@ -2442,6 +2436,14 @@ begin
       joinStyle := jsSquare else
       joinStyle := jsRound;
   end;
+
+  if absDelta < MinStrokeWidth/2 then
+  begin
+    if delta < 0 then
+      delta := -MinStrokeWidth/2 else
+      delta := MinStrokeWidth/2;
+  end;
+
 
   if assigned(normals) then
     norms := normals else
@@ -2452,7 +2454,7 @@ begin
   stepsPerRadian := 0;
   if joinStyle = jsRound then
   begin
-    steps := CalcRoundingSteps(delta * scale);
+    steps := 2 * CalcRoundingSteps(delta * scale);
     stepSin := sin(TwoPi/steps);
     stepCos := cos(TwoPi/steps);
 		if (delta < 0) then stepSin := -stepSin;
@@ -2744,7 +2746,7 @@ begin
   stepsPerRadian := 0;
   if (joinStyle = jsRound) or (endStyle = esRound) then
   begin
-    steps := CalcRoundingSteps(delta * scale);
+    steps := 2 * CalcRoundingSteps(delta * scale);
     stepSin := sin(TwoPi/steps);
     stepCos := cos(TwoPi/steps);
 		if (delta < 0) then stepSin := -stepSin;
@@ -3135,7 +3137,7 @@ begin
     centre := rec.MidPoint;
     radius := PointD(Width * 0.5, Height  * 0.5);
   end;
-  if steps < 4 then
+  if steps < 3 then
     steps := Round(CalcRoundingSteps(rec.width + rec.height));
   GetSinCos(2 * Pi / Steps, sinA, cosA);
   delta.x := cosA; delta.y := sinA;
@@ -3439,9 +3441,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function GetDashedPath(const path: TPathD;
-  closed: Boolean; const pattern: TArrayOfDouble;
-  patternOffset: PDouble): TPathsD;
+function GetDashedPath(const path: TPathD; closed: Boolean;
+  const pattern: TArrayOfDouble; patternOffset: PDouble): TPathsD;
 var
   i, highI, paIdx: integer;
   vecs, path2, dash: TPathD;

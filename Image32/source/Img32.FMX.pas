@@ -4,10 +4,10 @@ unit Img32.FMX;
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.7                                                             *
 * Date      :  6 January 2025                                                  *
-* Website   :  http://www.angusj.com                                           *
+* Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Image file format support for TImage32 and FMX                  *
-* License   :  http://www.boost.org/LICENSE_1_0.txt                            *
+* License   :  https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
 interface

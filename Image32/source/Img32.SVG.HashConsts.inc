@@ -135,6 +135,7 @@ const
   hRefY                       = $480CECDB;    // RefY
   hRepeat                     = $FF80069D;    // Repeat
   hResult                     = $47CD519F;    // Result
+  hRotate                     = $E8A48E19;    // Rotate
   hRound                      = $323B0E24;    // Round
   hRx                         = $3ABF70F3;    // Rx
   hRy                         = $0C7D9470;    // Ry

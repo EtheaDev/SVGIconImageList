@@ -4,11 +4,11 @@ unit Img32.CQ;
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.7                                                             *
 * Date      :  6 January 2025                                                  *
-* Website   :  http://www.angusj.com                                           *
+* Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Color reduction for TImage32                                    *
 *           :  Uses Octree Color Quantization & Floyd / Steinberg Dithering    *
-* License   :  http://www.boost.org/LICENSE_1_0.txt                            *
+* License   :  https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
 interface

@@ -2,12 +2,12 @@ unit Img32.Transform;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7                                                             *
-* Date      :  6 January 2025                                                  *
-* Website   :  http://www.angusj.com                                           *
+* Version   :  4.8                                                             *
+* Date      :  16 January 2025                                                 *
+* Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Affine and projective transformation routines for TImage32      *
-* License   :  http://www.boost.org/LICENSE_1_0.txt                            *
+* License   :  https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
 interface
@@ -467,7 +467,9 @@ begin
   // https://stackoverflow.com/a/32125700/359538
   X := Sqrt(Sqr(mat[0,0]) + Sqr(mat[0,1]));
   //Y := Sqrt(Sqr(mat[1,0]) + Sqr(mat[1,1]));
-  Y := Abs((mat[0,0] * mat[1,1] - mat[1,0] * mat[0,1]) / X);
+  if IsZero(X) then
+    Y := 0 else
+    Y := Abs(mat[0,0] * mat[1,1] - mat[1,0] * mat[0,1]) / X;
 end;
 //------------------------------------------------------------------------------
 

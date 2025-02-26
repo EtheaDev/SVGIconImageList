@@ -4,10 +4,10 @@ unit Img32.Vectorizer;
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.6                                                             *
 * Date      :  18 September 2024                                               *
-* Website   :  http://www.angusj.com                                           *
+* Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2023                                         *
 * Purpose   :  Converts raster images to vector paths                          *
-* License   :  http://www.boost.org/LICENSE_1_0.txt                            *
+* License   :  https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
 interface

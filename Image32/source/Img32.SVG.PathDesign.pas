@@ -4,14 +4,14 @@ unit Img32.SVG.PathDesign;
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.0                                                             *
 * Date      :  10 January 2022                                                 *
-* Website   :  http://www.angusj.com                                           *
+* Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2022                                         *
 *                                                                              *
 * Purpose   :  Supports designing SVG paths                                    *
 *                                                                              *
 * License   :  Use, modification & distribution is subject to                  *
 *              Boost Software License Ver 1                                    *
-*              http://www.boost.org/LICENSE_1_0.txt                            *
+*              https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
 interface

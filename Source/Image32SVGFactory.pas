@@ -69,7 +69,7 @@ type
     procedure PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean = True);
     procedure LoadFromSource;
     procedure SourceFromStream(Stream: TStream);
-    procedure UpdateSizeInfo(defaultWidth, defaultHeight: integer);
+    procedure UpdateSizeInfo;
     {$IFDEF CheckForUnsupportedSvg}
     procedure CheckForUnsupportedSvg;
     {$ENDIF}
@@ -159,16 +159,15 @@ begin
   Result := fSvgReader.IsEmpty;
 end;
 
-procedure TImage32SVG.UpdateSizeInfo(defaultWidth, defaultHeight: integer);
-var
-  vbox: TRectWH;
+procedure TImage32SVG.UpdateSizeInfo;
 begin
   //nb: default widths should be the target image's dimensions
   //since these values will be used for SVG images that simply
   //specify their widths and heights as percentages
-  vbox := fSvgReader.RootElement.viewboxWH;
-  FWidth := vbox.Width;
-  FHeight := vbox.Height;
+  if fSvgReader.RootElement.viewboxWH.IsEmpty then
+    fSvgReader.CalcViewBoxOfRootElement;
+  FWidth := fSvgReader.RootElement.viewboxWH.Width;
+  FHeight := fSvgReader.RootElement.viewboxWH.Height;
 end;
 
 procedure TImage32SVG.LoadFromSource;
@@ -177,7 +176,7 @@ begin
   begin
     if not fSvgReader.LoadFromString(FSource) then
       raise ESVGException.Create(IMAGE32_ERROR_PARSING_SVG_TEXT);
-    UpdateSizeInfo(100, 100);
+    UpdateSizeInfo;
   end;
 end;
 
@@ -192,7 +191,7 @@ begin
   Stream.Position := OldPos;
   // Now create the SVG
   fSvgReader.LoadFromStream(Stream);
-  UpdateSizeInfo(100, 100);
+  UpdateSizeInfo;
 end;
 
 procedure TImage32SVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
@@ -345,5 +344,7 @@ end;
 initialization
   FontManager.LoadFontReaderFamily('Arial');
   FontManager.LoadFontReaderFamily('Times New Roman');
+  FontManager.LoadFontReaderFamily('Segoe UI');
+  FontManager.LoadFontReaderFamily('Segoe UI Emoji');
 
 end.

@@ -95,8 +95,13 @@ var
   BmpRGBA: ^TRGBAArray;
   PngRGB: ^TRGB;
 begin
+  if (aBitmap.Height = 0) or (aBitmap.Width = 0) then
+  begin
+    Result := TPNGImage.CreateBlank(COLOR_RGBALPHA, 8, 1 , 1);
+    Exit;
+  end;
   //201011 Thomas Wassermann
-  Result := TPNGImage.CreateBlank(COLOR_RGBALPHA, 8, aBitmap.Width , aBitmap.Height);
+  Result := TPNGImage.CreateBlank(COLOR_RGBALPHA, 8, aBitmap.Width, aBitmap.Height);
 
   Result.CreateAlpha;
   Result.Canvas.CopyMode:= cmSrcCopy;

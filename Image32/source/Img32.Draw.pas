@@ -2,16 +2,16 @@ unit Img32.Draw;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7                                                             *
-* Date      :  6 January 2025                                                  *
-* Website   :  http://www.angusj.com                                           *
+* Version   :  4.8                                                             *
+* Date      :  2 February 2025                                                 *
+* Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
 * Purpose   :  Polygon renderer for TImage32                                   *
 *                                                                              *
 * License   :  Use, modification & distribution is subject to                  *
 *              Boost Software License Ver 1                                    *
-*              http://www.boost.org/LICENSE_1_0.txt                            *
+*              https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
 interface
@@ -50,6 +50,7 @@ type
     fCurrLinePtr : Pointer;
     fPixelSize   : integer;
     fChangeProc  : TImage32ChangeProc;
+    fOpacity     : Byte;
   protected
     procedure NotifyChange;
     function Initialize(imgBase: Pointer;
@@ -69,11 +70,13 @@ type
     // will call RenderProcSkip() for every scanline where it didn't have
     // anything to rasterize.
     function SupportsRenderProcSkip: Boolean; virtual;
-
+  public
+    constructor Create; virtual;
     property ImgWidth: integer read fImgWidth;
     property ImgHeight: integer read fImgHeight;
     property ImgBase: Pointer read fImgBase;
     property PixelSize: integer read fPixelSize;
+    property Opacity: Byte read fOpacity write fOpacity;
   end;
 
   TCustomColorRenderer = class(TCustomRenderer)
@@ -92,7 +95,7 @@ type
     procedure RenderProc(x1, x2, y: integer; alpha: PByte); override;
     function Initialize(targetImage: TImage32): Boolean; override;
   public
-    constructor Create(color: TColor32 = clNone32);
+    constructor Create(color: TColor32 = clNone32); reintroduce;
     procedure SetColor(value: TColor32); override;
   end;
 
@@ -101,7 +104,7 @@ type
     function Initialize(targetImage: TImage32): Boolean; override;
     procedure RenderProc(x1, x2, y: integer; alpha: PByte); override;
   public
-    constructor Create(color: TColor32 = clNone32);
+    constructor Create(color: TColor32 = clNone32); reintroduce;
   end;
 
   // TMaskRenderer masks all pixels inside the clipRect area
@@ -141,8 +144,15 @@ type
   end;
 
   TInverseRenderer = class(TCustomRenderer)
+  private
+    fBackImage      : TImage32;
+    fCurrBackY      : integer;
+    fCurrBkLinePtr  : Pointer;
   protected
+    function GetSrcPixel(x, y: integer): Pointer;
     procedure RenderProc(x1, x2, y: integer; alpha: PByte); override;
+  public
+    constructor Create(bkImg: TImage32 = nil); reintroduce;
   end;
 
   TImageRenderer = class(TCustomRenderer)
@@ -153,13 +163,13 @@ type
     fLastYY       : integer;
     fMirrorY      : Boolean;
     fBoundsProc   : TBoundsProc;
-    function GetFirstBrushPixel(x, y: integer): PARGB;
+    function GetFirstBrushPixel(x, y: integer): PColor32;
   protected
     procedure RenderProc(x1, x2, y: integer; alpha: PByte); override;
     function Initialize(targetImage: TImage32): Boolean; override;
   public
     constructor Create(tileFillStyle: TTileFillStyle = tfsRepeat;
-      brushImage: TImage32 = nil);
+      brushImage: TImage32 = nil); reintroduce;
     destructor Destroy; override;
     procedure SetTileFillStyle(value: TTileFillStyle);
     property Image: TImage32 read fImage;
@@ -176,7 +186,7 @@ type
     fColorsCnt       : integer;
     procedure SetGradientFillStyle(value: TGradientFillStyle); virtual;
   public
-    constructor Create;
+    constructor Create; override;
     procedure SetParameters(startColor, endColor: TColor32;
       gradFillStyle: TGradientFillStyle = gfsClamp); virtual;
     procedure InsertColorStop(offsetFrac: double; color: TColor32);
@@ -318,8 +328,18 @@ type
     joinStyle: TJoinStyle = jsAuto); overload;
   procedure DrawInvertedDashedLine(img: TImage32;
     const lines: TPathsD; dashPattern: TArrayOfDouble;
-    patternOffset: PDouble; lineWidth: double;
-    endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto); overload;
+    patternOffset: PDouble; lineWidth: double; endStyle: TEndStyle;
+    joinStyle: TJoinStyle = jsAuto); overload;
+  // bkgndImg - an alternative background image
+  // (useful when drawing on a layered image)
+  procedure DrawInvertedDashedLine(img, bkgndImg: TImage32;
+    const line: TPathD; dashPattern: TArrayOfDouble;
+    patternOffset: PDouble; lineWidth: double; endStyle: TEndStyle;
+    joinStyle: TJoinStyle = jsAuto); overload;
+  procedure DrawInvertedDashedLine(img, bkgndImg: TImage32;
+    const lines: TPathsD; dashPattern: TArrayOfDouble;
+    patternOffset: PDouble; lineWidth: double; endStyle: TEndStyle;
+    joinStyle: TJoinStyle = jsAuto); overload;
 
   procedure DrawPolygon(img: TImage32; const polygon: TPathD;
     fillRule: TFillRule; color: TColor32); overload;
@@ -351,6 +371,13 @@ type
   // MISCELLANEOUS FUNCTIONS
   // /////////////////////////////////////////////////////////////////////////
 
+  procedure EraseLine(img: TImage32; const line: TPathD; lineWidth: double;
+    endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto;
+    miterLimit: double = 2); overload;
+  procedure EraseLine(img: TImage32; const lines: TPathsD; lineWidth: double;
+    endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto;
+    miterLimit: double = 2); overload;
+
   procedure ErasePolygon(img: TImage32; const polygon: TPathD;
     fillRule: TFillRule); overload;
   procedure ErasePolygon(img: TImage32; const polygons: TPathsD;
@@ -377,31 +404,6 @@ const
 {$ENDIF CPUX86}
 
 type
-  {$IFDEF SUPPORTS_POINTERMATH}
-  // Works for Delphi 2009 and newer. For FPC it is a requirement,
-  // otherwise 32bit and 64bit code behave differently for negative
-  // indices, because FPC does not sign-extend the index variable
-  // of type Integer, if it is used for an array-index into an array
-  // with an unsigned index range.
-  //   i32:=-1; i64:=-1 => i32=i64 but @arr[i32] <> @arr[i64]
-
-  PStaticByteArray = PByte; // PByte already has PointerMath
-  {$POINTERMATH ON}
-  PStaticDoubleArray = ^Double;
-  PStaticInt64Array = ^Int64;
-  PStaticColor32Array = ^TColor32;
-  {$POINTERMATH OFF}
-
-  {$ELSE} // Delphi 7-2007
-  PStaticByteArray = ^TStaticByteArray;
-  TStaticByteArray = array[0..MaxInt div SizeOf(byte) - 1] of byte;
-  PStaticDoubleArray = ^TStaticDoubleArray;
-  TStaticDoubleArray = array[0..MaxInt div SizeOf(double) - 1] of double;
-  PStaticInt64Array = ^TStaticInt64Array;
-  TStaticInt64Array = array[0..MaxInt div SizeOf(int64) - 1] of int64;
-  PStaticColor32Array = ^TStaticColor32Array;
-  TStaticColor32Array = array[0..MaxInt div SizeOf(TColor32) - 1] of TColor32;
-  {$ENDIF}
 
   // A horizontal scanline contains any number of line fragments. A fragment
   // can be a number of pixels wide but it can't be more than one pixel high.
@@ -528,7 +530,7 @@ begin
 end;
 // ------------------------------------------------------------------------------
 
-// Here "const" is used for opimization reasons, to skip the
+// Here "const" is used for optimization reasons, to skip the
 // dyn-array reference counting. "const" for dyn-arrays doesn't
 // prevent one from changing the array's content.
 procedure ReverseColors(const colors: TArrayOfGradientColor);
@@ -1065,13 +1067,13 @@ var
   accum: double;
   lastValue: integer;
   start: nativeint;
-  buf: PStaticByteArray;
+  buf: PByteArray;
 begin
   accum := 0; //winding count accumulator
   lastValue := 0;
   // Copy byteBuffer to a local variable, so Delphi's 32bit compiler
   // can put buf into a CPU register.
-  buf := PStaticByteArray(byteBuffer);
+  buf := PByteArray(byteBuffer);
 
   // Use the negative offset trick to only increment "count"
   // until it reaches zero. And by offsetting the arrays, "count"
@@ -1082,17 +1084,17 @@ begin
   while count < 0 do
   begin
     // lastValue can be used if accum doesn't change
-    if PStaticInt64Array(windingAccum)[count] = 0 then
+    if PInt64Array(windingAccum)[count] = 0 then
     begin
       start := count;
       repeat
         inc(count);
-      until (count = 0) or (PStaticInt64Array(windingAccum)[count] <> 0);
+      until (count = 0) or (PInt64Array(windingAccum)[count] <> 0);
       FillChar(buf[start], count - start, Byte(lastValue));
       if count = 0 then break;
     end;
 
-    accum := accum + PStaticDoubleArray(windingAccum)[count];
+    accum := accum + PDoubleArray(windingAccum)[count];
 
     // EvenOdd
     lastValue := Trunc(Abs(accum) * 1275) mod 2550; // mul 5
@@ -1102,7 +1104,7 @@ begin
     if lastValue > 255 then lastValue := 255;
 
     buf[count] := Byte(lastValue);
-    PStaticDoubleArray(windingAccum)[count] := 0;
+    PDoubleArray(windingAccum)[count] := 0;
     inc(count); // walk towards zero
   end;
 end;
@@ -1113,13 +1115,13 @@ var
   accum: double;
   lastValue: integer;
   start: nativeint;
-  buf: PStaticByteArray;
+  buf: PByteArray;
 begin
   accum := 0; //winding count accumulator
   lastValue := 0;
   // Copy byteBuffer to a local variable, so Delphi's 32bit compiler
   // can put buf into a CPU register.
-  buf := PStaticByteArray(byteBuffer);
+  buf := PByteArray(byteBuffer);
 
   // Use the negative offset trick to only increment "count"
   // until it reaches zero. And by offsetting the arrays, "count"
@@ -1130,24 +1132,24 @@ begin
   while count < 0 do
   begin
     // lastValue can be used if accum doesn't change
-    if PStaticInt64Array(windingAccum)[count] = 0 then
+    if PInt64Array(windingAccum)[count] = 0 then
     begin
       start := count;
       repeat
         inc(count);
-      until (count = 0) or (PStaticInt64Array(windingAccum)[count] <> 0);
+      until (count = 0) or (PInt64Array(windingAccum)[count] <> 0);
       FillChar(buf[start], count - start, Byte(lastValue));
       if count = 0 then break;
     end;
 
-    accum := accum + PStaticDoubleArray(windingAccum)[count];
+    accum := accum + PDoubleArray(windingAccum)[count];
 
     // NonZero
     lastValue := Trunc(Abs(accum) * 318);
     if lastValue > 255 then lastValue := 255;
 
     buf[count] := Byte(lastValue);
-    PStaticDoubleArray(windingAccum)[count] := 0;
+    PDoubleArray(windingAccum)[count] := 0;
     inc(count); // walk towards zero
   end;
 end;
@@ -1158,13 +1160,13 @@ var
   accum: double;
   lastValue: integer;
   start: nativeint;
-  buf: PStaticByteArray;
+  buf: PByteArray;
 begin
   accum := 0; //winding count accumulator
   lastValue := 0;
   // Copy byteBuffer to a local variable, so Delphi's 32bit compiler
   // can put buf into a CPU register.
-  buf := PStaticByteArray(byteBuffer);
+  buf := PByteArray(byteBuffer);
 
   // Use the negative offset trick to only increment "count"
   // until it reaches zero. And by offsetting the arrays, "count"
@@ -1175,17 +1177,17 @@ begin
   while count < 0 do
   begin
     // lastValue can be used if accum doesn't change
-    if PStaticInt64Array(windingAccum)[count] = 0 then
+    if PInt64Array(windingAccum)[count] = 0 then
     begin
       start := count;
       repeat
         inc(count);
-      until (count = 0) or (PStaticInt64Array(windingAccum)[count] <> 0);
+      until (count = 0) or (PInt64Array(windingAccum)[count] <> 0);
       FillChar(buf[start], count - start, Byte(lastValue));
       if count = 0 then break;
     end;
 
-    accum := accum + PStaticDoubleArray(windingAccum)[count];
+    accum := accum + PDoubleArray(windingAccum)[count];
 
     // Positive
     lastValue := 0;
@@ -1196,7 +1198,7 @@ begin
     end;
 
     buf[count] := Byte(lastValue);
-    PStaticDoubleArray(windingAccum)[count] := 0;
+    PDoubleArray(windingAccum)[count] := 0;
     inc(count); // walk towards zero
   end;
 end;
@@ -1207,13 +1209,13 @@ var
   accum: double;
   lastValue: integer;
   start: nativeint;
-  buf: PStaticByteArray;
+  buf: PByteArray;
 begin
   accum := 0; //winding count accumulator
   lastValue := 0;
   // Copy byteBuffer to a local variable, so Delphi's 32bit compiler
   // can put buf into a CPU register.
-  buf := PStaticByteArray(byteBuffer);
+  buf := PByteArray(byteBuffer);
 
   // Use the negative offset trick to only increment "count"
   // until it reaches zero. And by offsetting the arrays, "count"
@@ -1224,17 +1226,17 @@ begin
   while count < 0 do
   begin
     // lastValue can be used if accum doesn't change
-    if PStaticInt64Array(windingAccum)[count] = 0 then
+    if PInt64Array(windingAccum)[count] = 0 then
     begin
       start := count;
       repeat
         inc(count);
-      until (count = 0) or (PStaticInt64Array(windingAccum)[count] <> 0);
+      until (count = 0) or (PInt64Array(windingAccum)[count] <> 0);
       FillChar(buf[start], count - start, Byte(lastValue));
       if count = 0 then break;
     end;
 
-    accum := accum + PStaticDoubleArray(windingAccum)[count];
+    accum := accum + PDoubleArray(windingAccum)[count];
 
     // Negative
     lastValue := 0;
@@ -1245,7 +1247,7 @@ begin
     end;
 
     buf[count] := Byte(lastValue);
-    PStaticDoubleArray(windingAccum)[count] := 0;
+    PDoubleArray(windingAccum)[count] := 0;
     inc(count); // walk towards zero
   end;
 end;
@@ -1260,7 +1262,7 @@ var
   clipRec2: TRect;
   paths2: TPathsD;
   windingAccum: TArrayOfDouble;
-  byteBuffer: PStaticByteArray;
+  byteBuffer: PByteArray;
   scanlines: TArrayOfScanline;
   fragments: PFragment;
   scanline: PScanline;
@@ -1271,7 +1273,7 @@ var
   FillByteBuffer: procedure(byteBuffer: PByte; windingAccum: PDouble; count: nativeint);
 begin
   // See also https://nothings.org/gamedev/rasterize/
-  if not assigned(renderer) then Exit;
+  if not assigned(paths) or not assigned(renderer) then Exit;
   renderer.SetClipRect(clipRec);
   skipRenderer := renderer.SupportsRenderProcSkip;
 
@@ -1401,6 +1403,13 @@ end;
 // TAbstractRenderer
 // ------------------------------------------------------------------------------
 
+constructor TCustomRenderer.Create;
+begin
+  inherited;
+  fOpacity := 255;
+end;
+// ------------------------------------------------------------------------------
+
 function TCustomRenderer.Initialize(imgBase: Pointer;
   imgWidth, imgHeight, pixelSize: integer): Boolean;
 begin
@@ -1410,7 +1419,7 @@ begin
   fPixelSize := pixelSize;
 
   fCurrLinePtr := fImgBase;
-  fCurrY       := 0;
+  fCurrY       := -1;
   result       := true;
 end;
 // ------------------------------------------------------------------------------
@@ -1476,6 +1485,7 @@ end;
 
 constructor TColorRenderer.Create(color: TColor32 = clNone32);
 begin
+  inherited Create;
   if color <> clNone32 then SetColor(color);
 end;
 // ------------------------------------------------------------------------------
@@ -1494,37 +1504,13 @@ begin
 end;
 // ------------------------------------------------------------------------------
 
-{
-procedure TColorRenderer.RenderProc(x1, x2, y: integer; alpha: PByte);
-var
-  i: integer;
-  dst: PColor32;
-  color: TColor32;
-  tab: PByteArray;
-begin
-  dst := GetDstPixel(x1,y);
-  tab := PByteArray(@MulTable[fAlpha]);
-  color := fColor; // optimize access to Self.fColor
-  for i := x1 to x2 do
-  begin
-    // BlendToAlpha is marginally slower than BlendToOpaque but it's used
-    // here because it's universally applicable.
-    // Ord() is used here because very old compilers define PByte as a PChar
-    if Ord(alpha^) > 1 then
-      dst^ := BlendToAlpha(dst^, (tab[Ord(alpha^)] shl 24) or color);
-    inc(dst); inc(alpha);
-  end;
-end;
-}
-// ------------------------------------------------------------------------------
-
 {$RANGECHECKS OFF} // negative array index usage (Delphi 7-2007 have no pointer math)
 type
   // Used to reduce the number of parameters to help the compiler's
   // optimizer.
   TRenderProcData = record
-    dst: PStaticColor32Array;
-    alpha: PStaticByteArray;
+    dst: PColor32Array;
+    alpha: PByteArray;
   end;
 
 function RenderProcBlendToAlpha255(count: nativeint; dstColor: TColor32;
@@ -1532,8 +1518,8 @@ function RenderProcBlendToAlpha255(count: nativeint; dstColor: TColor32;
 // CPU register optimized
 var
   a: byte;
-  dst: PStaticColor32Array;
-  alpha: PStaticByteArray;
+  dst: PColor32Array;
+  alpha: PByteArray;
 begin
   Result := count;
   dst := data.dst;
@@ -1550,8 +1536,8 @@ begin
   end;
 end;
 
-procedure RenderProcBlendToAlpha(dst: PStaticColor32Array; alpha: PStaticByteArray;
-  count: nativeint; color: TColor32; tab: PStaticByteArray);
+procedure RenderProcBlendToAlpha(dst: PColor32Array; alpha: PByteArray;
+  count: nativeint; color: TColor32; alphaTable: PByteArray);
 var
   a: byte;
   lastDst, dstColor: TColor32;
@@ -1571,7 +1557,7 @@ begin
     a := alpha[count];
     if a > 1 then
     begin
-      a := tab[a];
+      a := alphaTable[a];
       dstColor := (a shl 24) or color;
 
       // Special handling for alpha channel 255 (copy dstColor into dst)
@@ -1608,9 +1594,9 @@ begin
   // Help the compiler to get better CPU register allocation.
   // Without the hidden Self parameter the compiler optimizes
   // better.
-  RenderProcBlendToAlpha(PStaticColor32Array(GetDstPixel(x1, y)),
-                         PStaticByteArray(alpha), x2 - x1 + 1, fColor,
-                         PStaticByteArray(@MulTable[fAlpha]));
+  RenderProcBlendToAlpha(PColor32Array(GetDstPixel(x1, y)),
+                         PByteArray(alpha), x2 - x1 + 1, fColor,
+                         PByteArray(@MulTable[fAlpha]));
 end;
 
 // ------------------------------------------------------------------------------
@@ -1619,6 +1605,7 @@ end;
 
 constructor TAliasedColorRenderer.Create(color: TColor32 = clNone32);
 begin
+  inherited Create;
   fColor := color;
 end;
 // ------------------------------------------------------------------------------
@@ -1774,6 +1761,7 @@ end;
 constructor TImageRenderer.Create(tileFillStyle: TTileFillStyle;
   brushImage: TImage32);
 begin
+  inherited Create;
   fImage := TImage32.Create(brushImage);
   SetTileFillStyle(tileFillStyle);
 end;
@@ -1811,24 +1799,34 @@ procedure TImageRenderer.RenderProc(x1, x2, y: integer; alpha: PByte);
 var
   i: integer;
   pDst: PColor32;
-  pBrush: PARGB;
+  pImg: PColor32;
+  opacityTable: PByteArray;
 begin
   pDst := GetDstPixel(x1,y);
   dec(x1, fOffset.X);
   dec(x2, fOffset.X);
   dec(y, fOffset.Y);
-  pBrush := GetFirstBrushPixel(x1, y);
-  for i := x1 to x2 do
+  pImg := GetFirstBrushPixel(x1, y);
+  if Opacity < 255 then
   begin
-    pDst^ := BlendToAlpha(pDst^,
-      MulTable[pBrush.A, Ord(alpha^)] shl 24 or (pBrush.Color and $FFFFFF));
-    inc(pDst); inc(alpha);
-    pBrush := GetPixel(fBrushPixel, fBoundsProc(i, fImage.Width));
-  end;
+    opacityTable := PByteArray(@MulTable[Opacity]);
+    for i := x1 to x2 do
+    begin
+      pDst^ := BlendToAlpha3(pDst^, pImg^, opacityTable[Ord(alpha^)]);
+      inc(pDst); inc(alpha);
+      pImg := PColor32(GetPixel(fBrushPixel, fBoundsProc(i, fImage.Width)));
+    end;
+  end else
+    for i := x1 to x2 do
+    begin
+      pDst^ := BlendToAlpha3(pDst^, pImg^, Ord(alpha^));
+      inc(pDst); inc(alpha);
+      pImg := PColor32(GetPixel(fBrushPixel, fBoundsProc(i, fImage.Width)));
+    end;
 end;
 // ------------------------------------------------------------------------------
 
-function TImageRenderer.GetFirstBrushPixel(x, y: integer): PARGB;
+function TImageRenderer.GetFirstBrushPixel(x, y: integer): PColor32;
 begin
   if fMirrorY then
     y := MirrorQ(y, fImage.Height) else
@@ -1839,7 +1837,7 @@ begin
     fLastYY := y;
   end;
   x := fBoundsProc(x, fImage.Width);
-  result := GetPixel(fBrushPixel, x);
+  result := PColor32(GetPixel(fBrushPixel, x));
 end;
 
 // ------------------------------------------------------------------------------
@@ -1848,6 +1846,7 @@ end;
 
 constructor TCustomGradientRenderer.Create;
 begin
+  inherited Create;
   fBoundsProc := ClampQ; //default proc
 end;
 // ------------------------------------------------------------------------------
@@ -1873,7 +1872,7 @@ procedure TCustomGradientRenderer.SetParameters(startColor, endColor: TColor32;
   gradFillStyle: TGradientFillStyle = gfsClamp);
 begin
   SetGradientFillStyle(gradFillStyle);
-  // reset gradient colors if perviously set
+  // reset gradient colors if previously set
   SetLength(fGradientColors, 2);
   fGradientColors[0].offset := 0;
   fGradientColors[0].color := startColor;
@@ -1988,19 +1987,15 @@ end;
 // ------------------------------------------------------------------------------
 
 procedure TLinearGradientRenderer.RenderProc(x1, x2, y: integer; alpha: PByte);
-type
-  PArrayOfColor32 = ^TArrayOfColor32;
-  TArrayOfColor32 = array[0..MaxInt div SizeOf(TColor32) - 1] of TColor32;
-  PStaticIntegerArray = ^TStaticIntegerArray;
-  TStaticIntegerArray = array[0..MaxInt div SizeOf(Integer) - 1] of Integer;
 var
   i, colorsCnt: integer;
   pDst: PColor32;
   color: TColor32;
-  colors: PArrayOfColor32;
   boundsProc: TBoundsProc;
   offset: Integer;
-  perpendicOffsets: PStaticIntegerArray;
+  colors: PColor32Array;
+  perpendicOffsets: PIntegerArray;
+  opacityTable: PByteArray;
 begin
   pDst := GetDstPixel(x1,y);
   // optimize self fields access
@@ -2010,25 +2005,48 @@ begin
   if fIsVert then
   begin
     perpendicOffsets := @fPerpendicOffsets[0]; // optimize self field access
-    for i := x1 to x2 do
+    if Opacity < 255 then
     begin
-      // when fIsVert = true, fPerpendicOffsets is an array of Y for each X
-      color := colors[boundsProc(y - perpendicOffsets[i], colorsCnt)];
-      pDst^ := BlendToAlpha(pDst^,
-        MulTable[color shr 24, Ord(alpha^)] shl 24 or (color and $00FFFFFF));
-      inc(pDst); inc(alpha);
+      opacityTable := PByteArray(@MulTable[Opacity]);
+      for i := x1 to x2 do
+      begin
+        // when fIsVert = true, fPerpendicOffsets is an array of Y for each X
+        color := colors[boundsProc(y - perpendicOffsets[i], colorsCnt)];
+        pDst^ := BlendToAlpha3(pDst^, color, opacityTable[Ord(alpha^)]);
+        inc(pDst); inc(alpha);
+      end;
+    end else
+    begin
+      for i := x1 to x2 do
+      begin
+        // when fIsVert = true, fPerpendicOffsets is an array of Y for each X
+        color := colors[boundsProc(y - perpendicOffsets[i], colorsCnt)];
+        pDst^ := BlendToAlpha3(pDst^, color, Ord(alpha^));
+        inc(pDst); inc(alpha);
+      end;
     end;
   end
   else
   begin
     // when fIsVert = false, fPerpendicOffsets is an array of X for each Y
     offset := fPerpendicOffsets[y];
-    for i := x1 to x2 do
+    if Opacity < 255 then
     begin
-      color := colors[boundsProc(i - offset, colorsCnt)];
-      pDst^ := BlendToAlpha(pDst^,
-        MulTable[color shr 24, Ord(alpha^)] shl 24 or (color and $00FFFFFF));
-      inc(pDst); inc(alpha);
+      opacityTable := PByteArray(@MulTable[Opacity]);
+      for i := x1 to x2 do
+      begin
+        color := colors[boundsProc(i - offset, colorsCnt)];
+        pDst^ := BlendToAlpha3(pDst^, color, opacityTable[Ord(alpha^)]);
+        inc(pDst); inc(alpha);
+      end;
+    end else
+    begin
+      for i := x1 to x2 do
+      begin
+        color := colors[boundsProc(i - offset, colorsCnt)];
+        pDst^ := BlendToAlpha3(pDst^, color, Ord(alpha^));
+        inc(pDst); inc(alpha);
+      end;
     end;
   end;
 end;
@@ -2079,17 +2097,30 @@ procedure TRadialGradientRenderer.RenderProc(x1, x2, y: integer; alpha: PByte);
 var
   i: integer;
   dist: double;
-  color: TARGB;
+  color: TColor32;
   pDst: PColor32;
+  opacityTable: PByteArray;
 begin
   pDst := GetDstPixel(x1,y);
-  for i := x1 to x2 do
+  if Opacity < 255 then
   begin
-    dist := Hypot((y - fCenterPt.Y) *fScaleY, (i - fCenterPt.X) *fScaleX);
-    color.Color := fColors[fBoundsProc(Trunc(dist), fColorsCnt)];
-    pDst^ := BlendToAlpha(pDst^,
-      MulTable[color.A, Ord(alpha^)] shl 24 or (color.Color and $FFFFFF));
-    inc(pDst); inc(alpha);
+    opacityTable := PByteArray(@MulTable[Opacity]);
+    for i := x1 to x2 do
+    begin
+      dist := Hypot((y - fCenterPt.Y) *fScaleY, (i - fCenterPt.X) *fScaleX);
+      color := fColors[fBoundsProc(Trunc(dist), fColorsCnt)];
+      pDst^ := BlendToAlpha3(pDst^, color, opacityTable[Ord(alpha^)]);
+      inc(pDst); inc(alpha);
+    end;
+  end else
+  begin
+    for i := x1 to x2 do
+    begin
+      dist := Hypot((y - fCenterPt.Y) *fScaleY, (i - fCenterPt.X) *fScaleX);
+      color := fColors[fBoundsProc(Trunc(dist), fColorsCnt)];
+      pDst^ := BlendToAlpha3(pDst^, color, Ord(alpha^));
+      inc(pDst); inc(alpha);
+    end;
   end;
 end;
 
@@ -2139,10 +2170,12 @@ var
   i: integer;
   q,qq, m,c, qa,qb,qc,qs: double;
   dist, dist2: double;
-  color: TARGB;
+  color: TColor32;
   pDst: PColor32;
   pt, ellipsePt: TPointD;
+  opacityTable: PByteArray;
 begin
+  opacityTable := PByteArray(@MulTable[Opacity]);
   // get the left-most pixel to render
   pDst := GetDstPixel(x1,y);
   pt.X := x1 - fCenterPt.X; pt.Y := y - fCenterPt.Y;
@@ -2199,9 +2232,8 @@ begin
       end else
         q := 1; //shouldn't happen :)
     end;
-    color.Color := fColors[fBoundsProcD(Abs(q), fColorsCnt)];
-    pDst^ := BlendToAlpha(pDst^,
-      MulTable[color.A, Ord(alpha^)] shl 24 or (color.Color and $FFFFFF));
+    color := fColors[fBoundsProcD(Abs(q), fColorsCnt)];
+    pDst^ := BlendToAlpha3(pDst^, color, opacityTable[Ord(alpha^)]);
     inc(pDst); pt.X := pt.X + 1; inc(alpha);
   end;
 end;
@@ -2231,23 +2263,74 @@ end;
 // TInverseRenderer
 // ------------------------------------------------------------------------------
 
+constructor TInverseRenderer.Create(bkImg: TImage32);
+begin
+  inherited Create;
+  fCurrBackY := -1;
+  // bkImg, when assigned, is the background master image
+  // and fImage is very likely a transparent (layered) image
+  fBackImage := bkImg;
+end;
+// ------------------------------------------------------------------------------
+
+function TInverseRenderer.GetSrcPixel(x, y: integer): Pointer;
+begin
+  if (y <> fCurrBackY) then
+  begin
+    fCurrBackY := y;
+    fCurrBkLinePtr := fBackImage.PixelBase;
+    inc(PByte(fCurrBkLinePtr), y * fImgWidth * fPixelSize);
+  end;
+  Result := fCurrBkLinePtr;
+  inc(PByte(Result), x * fPixelSize);
+end;
+// ------------------------------------------------------------------------------
+
+function IsMidColor(const color: TARGB): Boolean;
+{$IFDEF INLINE} inline; {$ENDIF}
+begin
+  // not too dark and not too light :))
+  Result := Abs(color.R + color.G + color.B - 383) < 64;
+end;
+// ------------------------------------------------------------------------------
+
 procedure TInverseRenderer.RenderProc(x1, x2, y: integer; alpha: PByte);
 var
   i: integer;
-  dst: PARGB;
+  src, dst: PARGB;
   c: TARGB;
 begin
   dst := PARGB(GetDstPixel(x1,y));
-  for i := x1 to x2 do
+  if Assigned(fBackImage) then
   begin
-    c.Color := not dst.Color;
-    c.A := MulTable[dst.A, Ord(alpha^)];
-    dst.Color := BlendToAlpha(dst.Color, c.Color);
-    inc(dst); inc(alpha);
+    src := PARGB(GetSrcPixel(x1,y));
+    for i := x1 to x2 do
+    begin
+      if src.Color = 0 then c.Color := clBlack32
+      else if IsMidColor(src^) then c.Color := clWhite32
+      else c.Color := not src.Color;
+      c.A := Ord(alpha^);
+      dst.Color := BlendToAlpha(dst.Color, c.Color);
+      inc(dst); inc(src); inc(alpha);
+    end;
+  end else
+  begin
+    for i := x1 to x2 do
+    begin
+      if dst.Color = 0 then c.Color := clBlack32
+      else if IsMidColor(dst^) then c.Color := clWhite32
+      else c.Color := not dst.Color;
+      c.A := Ord(alpha^);
+      dst.Color := BlendToAlpha(dst.Color, c.Color);
+      inc(dst); inc(alpha);
+    end;
   end;
 end;
 
 // ------------------------------------------------------------------------------
+// TBarycentricRenderer
+// ------------------------------------------------------------------------------
+
 
 procedure TBarycentricRenderer.SetParameters(const a, b, c: TPointD;
   c1, c2, c3: TColor32);
@@ -2297,16 +2380,31 @@ var
   x: integer;
   p: PARGB;
   c: TARGB;
+  opacityTable: PByteArray;
 begin
   p := PARGB(fImgBase);
   inc(p, y * ImgWidth + x1);
-  for x := x1 to x2 do
+  if Opacity < 255 then
   begin
-    c.Color := GetColor(PointD(x, y));
-    c.A := MulTable[c.A, Ord(alpha^)];
-    p.Color := BlendToAlpha(p.Color, c.Color);
-    inc(p); inc(alpha);
-  end;
+    opacityTable := PByteArray(@MulTable[Opacity]);
+    for x := x1 to x2 do
+    begin
+      c.Color := GetColor(PointD(x, y));
+      c.A := opacityTable[MulTable[c.A, Ord(alpha^)]];
+      p.Color := BlendToAlpha(p.Color, c.Color);
+      inc(p); inc(alpha);
+    end
+  end
+  else
+    for x := x1 to x2 do
+    begin
+      c.Color := GetColor(PointD(x, y));
+      c.A := MulTable[c.A, Ord(alpha^)];
+      p.Color := BlendToAlpha(p.Color, c.Color);
+      inc(p); inc(alpha);
+    end
+
+
 end;
 
 // ------------------------------------------------------------------------------
@@ -2592,7 +2690,7 @@ begin
 end;
 // ------------------------------------------------------------------------------
 
-procedure DrawInvertedDashedLine(img: TImage32;
+procedure DrawInvertedDashedLine(img, bkgndImg: TImage32;
   const line: TPathD; dashPattern: TArrayOfDouble;
   patternOffset: PDouble; lineWidth: double; endStyle: TEndStyle;
   joinStyle: TJoinStyle = jsAuto);
@@ -2601,7 +2699,14 @@ var
   lines: TPathsD;
   renderer: TInverseRenderer;
 begin
-  if not assigned(line) then exit;
+  // when using an alterate background image,
+  // make sure it's the same size as img ...
+  if Assigned(bkgndImg) and
+    (bkgndImg.Width <> img.Width) or
+    (bkgndImg.Height <> img.Height) then bkgndImg := nil;
+
+  if not assigned(line) or img.IsEmpty then exit;
+
   if (lineWidth < MinStrokeWidth) then lineWidth := MinStrokeWidth;
 
   for i := 0 to High(dashPattern) do
@@ -2610,7 +2715,7 @@ begin
   lines := GetDashedPath(line, endStyle = esPolygon, dashPattern, patternOffset);
   if Length(lines) = 0 then Exit;
   lines := RoughOutline(lines, lineWidth, joinStyle, endStyle);
-  renderer := TInverseRenderer.Create;
+  renderer := TInverseRenderer.Create(bkgndImg);
   try
     Rasterize(img, lines, img.bounds, frNonZero, renderer);
   finally
@@ -2619,16 +2724,40 @@ begin
 end;
 // ------------------------------------------------------------------------------
 
-procedure DrawInvertedDashedLine(img: TImage32;
+procedure DrawInvertedDashedLine(img, bkgndImg: TImage32;
   const lines: TPathsD; dashPattern: TArrayOfDouble;
-  patternOffset: PDouble; lineWidth: double;
-  endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto);
+  patternOffset: PDouble; lineWidth: double; endStyle: TEndStyle;
+  joinStyle: TJoinStyle = jsAuto);
 var
   i: integer;
 begin
   if not assigned(lines) then exit;
   for i := 0 to high(lines) do
-    DrawInvertedDashedLine(img, lines[i],
+    DrawInvertedDashedLine(img, bkgndImg, lines[i],
+      dashPattern, patternOffset, lineWidth, endStyle, joinStyle);
+end;
+// ------------------------------------------------------------------------------
+
+procedure DrawInvertedDashedLine(img: TImage32;
+  const line: TPathD; dashPattern: TArrayOfDouble;
+  patternOffset: PDouble; lineWidth: double; endStyle: TEndStyle;
+  joinStyle: TJoinStyle);
+begin
+  DrawInvertedDashedLine(img, nil, line,
+    dashPattern, patternOffset, lineWidth, endStyle, joinStyle);
+end;
+// ------------------------------------------------------------------------------
+
+procedure DrawInvertedDashedLine(img: TImage32;
+  const lines: TPathsD; dashPattern: TArrayOfDouble;
+  patternOffset: PDouble; lineWidth: double; endStyle: TEndStyle;
+  joinStyle: TJoinStyle);
+var
+  i: integer;
+begin
+  if not assigned(lines) then exit;
+  for i := 0 to high(lines) do
+    DrawInvertedDashedLine(img, nil, lines[i],
       dashPattern, patternOffset, lineWidth, endStyle, joinStyle);
 end;
 // ------------------------------------------------------------------------------
@@ -2756,6 +2885,33 @@ begin
     img.CopyBlend(tmpImg, tmpImg.Bounds, rec, BlendToAlphaLine);
   finally
     tmpImg.Free;
+  end;
+end;
+// ------------------------------------------------------------------------------
+
+procedure EraseLine(img: TImage32; const line: TPathD; lineWidth: double;
+  endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto; miterLimit: double = 2);
+var
+  lines: TPathsD;
+begin
+  if not assigned(line) then exit;
+  setLength(lines, 1);
+  lines[0] := line;
+  EraseLine(img, lines, lineWidth, endStyle, joinStyle, miterLimit);
+end;
+// ------------------------------------------------------------------------------
+
+procedure EraseLine(img: TImage32; const lines: TPathsD; lineWidth: double;
+  endStyle: TEndStyle; joinStyle: TJoinStyle = jsAuto; miterLimit: double = 2);
+var
+  er: TEraseRenderer;
+begin
+  if not assigned(lines) then exit;
+  er := TEraseRenderer.Create;
+  try
+    DrawLine(img, lines, lineWidth, er, endStyle, joinStyle, miterLimit);
+  finally
+    er.Free;
   end;
 end;
 // ------------------------------------------------------------------------------

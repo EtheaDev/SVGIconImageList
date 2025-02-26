@@ -97,7 +97,7 @@ Uses
     {$IFNDEF SvgDisableEngineHint}
     {$MESSAGE HINT 'but Prefer Windows Direct-2D SVG-Engine if available'}
     {$ENDIF}
-    D2DSVGFactory
+    , D2DSVGFactory
   {$ENDIF}
   ;
 
