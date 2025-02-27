@@ -996,7 +996,7 @@ var
 begin
   Result := false;
   for i := 1 to Length(text) do
-    if (text[i] > #32) and (text[i] <> #160) then Exit;
+    if (text[i] > #32) and (text[i] <> WideChar($A0)) then Exit;
   Result := true;
 end;
 //------------------------------------------------------------------------------
