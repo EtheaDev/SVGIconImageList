@@ -69,7 +69,7 @@ implementation
 uses
   FMX.SVGIconImageList
   {$IFDEF D10_3+}
-  , FmxAnimationEditors
+//  , FmxAnimationEditors
   {$ENDIF}
   , FMX.SVGIconImage
   , Winapi.ShellApi
@@ -199,11 +199,13 @@ end;
 procedure Register;
 begin
   {$IFDEF D10_3+}
+(*
   RegisterPropertyEditor(TypeInfo(Single), TSVGIconBitmapItem, '', TFmxFloatProperty);
   RegisterPropertyEditor(TypeInfo(Single), TSVGIconSourceItem, '', TFmxFloatProperty);
   RegisterPropertyEditor(TypeInfo(Single), TSVGIconImageList, '', TFmxFloatProperty);
   RegisterPropertyEditor(TypeInfo(string), TSVGIconImage, 'SVGText', TSVGTextPropertyFMX);
   RegisterPropertyEditor(TypeInfo(string), TSVGIconSourceItem, 'SVGText', TSVGTextPropertyFMX);
+*)
   {$ENDIF}
 
   RegisterComponents('Ethea',
