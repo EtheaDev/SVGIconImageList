@@ -91,9 +91,9 @@ As you can see, the three engines perform differently depending on the icons and
 
 ### UTILITIES
 
-The [SVG Viewer Demo](https://github.com/EtheaDev/SVGIconImageList/wiki/SVG-Viewer-(VCL)) is useful to check the rendering quality of the engines available.
+The [SVG Viewer Demo](https://ethea.it/docs/svgiconimagelist/SVG-Viewer-(VCL).html) is useful to check the rendering quality of the engines available.
 
-The [SVG Icon Explorer](https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIconExplorer) utility is useful to explore and preview your svg image collections.
+The [SVG Icon Explorer utility](https://ethea.it/docs/svgiconimagelist/SVGIconExplorer.html) is useful to explore and preview your svg image collections.
 
 You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtensions) if you want to see your icons directly into Windows Explorer or you want to edit them using a powerful **SVG Text Editor**.
 
