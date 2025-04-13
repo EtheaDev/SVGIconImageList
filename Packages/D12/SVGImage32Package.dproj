@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{D0A69637-2974-4401-9226-4F66893CB5CE}</ProjectGuid>
         <MainSource>SVGImage32Package.dpk</MainSource>
-        <ProjectVersion>20.2</ProjectVersion>
+        <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
@@ -95,15 +95,15 @@
         <DCCReference Include="..\..\Image32\source\Clipper.Minkowski.pas"/>
         <DCCReference Include="..\..\Image32\source\Clipper.Offset.pas"/>
         <DCCReference Include="..\..\Image32\source\Clipper.RectClip.pas"/>
-        <BuildConfiguration Include="Debug">
-            <Key>Cfg_2</Key>
-            <CfgParent>Base</CfgParent>
-        </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
         <BuildConfiguration Include="Release">
             <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>

@@ -2,7 +2,7 @@
 
 ## Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 4.4.2 (VCL+FMX)
+### Actual official version 4.4.3 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -19,6 +19,10 @@ The Installer automatically detect your Delphi versions, install sources, build 
 
 ![Setup](./Demo/Images/Setup.png)
 
+## Documentation
+
+Follow the [Project Site](https://ethea.it/docs/svgiconimagelist/) to known how to use those components to modernize your Delphi VCL or FMX applications with scalable, colored and beautiful icons.
+
 ## You can search and download Icons directly from the WEB!
 
 From version 4.3 an integrated service is now available in the component editor to download SVG icons from the WEB, via the API provided by [iconify.design](https://iconify.design/).
@@ -27,7 +31,7 @@ Now you can select "Add from WEB" in the Component Editor: a new form to search 
 
 ![SVG_REST_Client_Search](./Demo/Images/SVG_REST_Client_Search.jpg)
 
-Read the [wiki page](https://github.com/EtheaDev/SVGIconImageList/wiki/RESTAPISearch) to understand how to easily download SVG icons from the WEB and include them in the SVGIconImageList or SVGIconImageCollection.
+Read [this page](https://ethea.it/docs/svgiconimagelist/RESTAPISearch.html) to understand how to easily download SVG icons from the WEB and include them in the SVGIconImageList or SVGIconImageCollection.
 
 
 ## Important notice
@@ -44,7 +48,7 @@ For this reason, if you are using those components from Delphi 10.3, the recomme
 
 Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to "True", everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.
 
-Another feature available from Delphi 10.4 version, is that **TSVGIconImageCollection** inherits from TCustomImageCollection, so you can also use it with the TVirtualImage component and place SVG icons into the TControlList component, as explained [here...](https://github.com/EtheaDev/SVGIconImageList/wiki/TControlList-with-SVGIconImageCollection)
+Another feature available from Delphi 10.4 version, is that **TSVGIconImageCollection** inherits from TCustomImageCollection, so you can also use it with the TVirtualImage component and place SVG icons into the TControlList component, as explained [here...](https://ethea.it/docs/svgiconimagelist/TControlList-with-SVGIconImageCollection.html)
 
 ## Choose your preferred SVG engine!
 
@@ -87,15 +91,11 @@ As you can see, the three engines perform differently depending on the icons and
 
 ### UTILITIES
 
-The [SVG Viewer Demo](https://github.com/EtheaDev/SVGIconImageList/wiki/SVG-Viewer-(VCL)) is useful to check the rendering quality of the engines available.
+The [SVG Viewer Demo](https://ethea.it/docs/svgiconimagelist/SVG-Viewer-(VCL).html) is useful to check the rendering quality of the engines available.
 
-The [SVG Icon Explorer](https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIconExplorer) utility is useful to explore and preview your svg image collections.
+The [SVG Icon Explorer utility](https://ethea.it/docs/svgiconimagelist/SVGIconExplorer.html) is useful to explore and preview your svg image collections.
 
 You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtensions) if you want to see your icons directly into Windows Explorer or you want to edit them using a powerful **SVG Text Editor**.
-
-### DOCUMENTATION
-
-Follow the [Project Site](https://ethea.it/docs/svgiconimagelist/) to known how to use those components to modernize your Delphi VCL or FMX applications with scalable, colored and beautiful icons.
 
 ### Other similar library
 
@@ -108,6 +108,9 @@ A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/Ico
 Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
 ### RELEASE NOTES
+12 Mar 2025 - Version 4.4.3
+- Added support for Delphi 12 64bit IDE
+
 26 Feb 2025: version 4.4.2 (VCL+FMX)
 - Added option to filter Icons from web by "Collection"
 - Aligned to Image32 4.6 Released on 25 Feb 2025
