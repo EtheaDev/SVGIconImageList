@@ -81,7 +81,7 @@ type
 
 function QOI_COLOR_HASH(c: TARGB): Byte;  {$IFDEF INLINE} inline; {$ENDIF}
 begin
-  Result := (c.r*3 + c.g*5 + c.b*7 + c.a*11) mod 64;
+  Result := (c.r * 3 + c.g * 5 + c.b * 7 + c.a * 11) mod 64;
 end;
 //------------------------------------------------------------------------------
 

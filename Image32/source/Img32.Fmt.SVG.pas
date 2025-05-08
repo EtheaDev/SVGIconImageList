@@ -116,7 +116,7 @@ function EnumResNameProc(hModule: HMODULE; lpszType, lpszName: PChar;
 var
   n: string;
 begin
-  n:= ResourceNameToString(lpszName);
+  n := ResourceNameToString(lpszName);
   TSvgImageList32(lParam).AddFromResource(n, n, lpszType);
   Result := true;
 end;
@@ -327,7 +327,7 @@ var
   len: integer;
 begin
   len := Length(fRecipientList);
-  SetLength(fRecipientList, len+1);
+  SetLength(fRecipientList, len + 1);
   fRecipientList[len] := Recipient;
 end;
 //------------------------------------------------------------------------------
@@ -341,7 +341,7 @@ begin
   while (i >= 0) and (fRecipientList[i] <> Recipient) do dec(i);
   if i < 0 then Exit;
   if i < highI then
-    System.Move(fRecipientList[i+1], fRecipientList[i],
+    System.Move(fRecipientList[i + 1], fRecipientList[i],
       (highI - i) * SizeOf(INotifyRecipient));
   SetLength(fRecipientList, highI);
 end;

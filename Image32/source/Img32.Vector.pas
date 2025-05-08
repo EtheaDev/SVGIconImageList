@@ -3,7 +3,7 @@ unit Img32.Vector;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.8                                                             *
-* Date      :  21 February 2025                                                *
+* Date      :  16 April 2025                                                   *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
@@ -70,10 +70,6 @@ type
   procedure InflateRect(var rec: TRectD; dx, dy: double); overload;
 
   function NormalizeRect(var rect: TRect): Boolean;
-
-  function PrePendPoint(const pt: TPointD; const p: TPathD): TPathD; overload;
-  procedure PrePendPoint(const pt: TPointD; const p: TPathD; var Result: TPathD); overload;
-  function PrePendPoints(const pt1, pt2: TPointD; const p: TPathD): TPathD;
 
   function Rectangle(const rec: TRect): TPathD; overload;
   function Rectangle(const rec: TRectD): TPathD; overload;
@@ -211,6 +207,8 @@ type
 
   function OpenPathToFlatPolygon(const path: TPathD): TPathD;
 
+  function PrePendPoint(const pt: TPointD; const p: TPathD): TPathD; overload;
+  function PrePendPoints(const pt1, pt2: TPointD; const p: TPathD): TPathD;
   procedure AppendPoint(var path: TPathD; const extra: TPointD);
 
   // AppendPath - adds TPathD & TPathsD objects to the end of
@@ -743,7 +741,7 @@ var
   mp: TPointD;
 begin
   p := Rectangle(rec);
-  mp := PointD((rec.Left + rec.Right)/2, (rec.Top + rec.Bottom)/2);
+  mp := PointD((rec.Left + rec.Right) / 2, (rec.Top + rec.Bottom) / 2);
   if angle <> 0 then
     p := RotatePath(p, mp, angle);
   Result := GetBounds(p);
@@ -756,7 +754,7 @@ var
   mp: TPointD;
 begin
   p := Rectangle(rec);
-  mp := PointD((rec.Left + rec.Right)/2, (rec.Top + rec.Bottom)/2);
+  mp := PointD((rec.Left + rec.Right) / 2, (rec.Top + rec.Bottom) / 2);
   if angle <> 0 then
     p := RotatePath(p, mp, angle);
   Result := GetBoundsD(p);
@@ -1106,8 +1104,8 @@ begin
   dir := TurnsRight(path[0], path[1], path[2]);
   //check that each other angle has the same winding direction
   for i := 1 to pathLen -1 do
-    if TurnsRight(path[i], path[(i+1) mod pathLen],
-      path[(i+2) mod pathLen]) <> dir then Exit;
+    if TurnsRight(path[i], path[(i + 1) mod pathLen],
+      path[(i + 2) mod pathLen]) <> dir then Exit;
   result := true;
 end;
 //------------------------------------------------------------------------------
@@ -1448,19 +1446,19 @@ begin
   end;
   result[i] := GetUnitVector(path[i], pt);
   //fix up any duplicates at the end of the path
-  for j := i +1 to len -1 do
-    result[j] := result[j-1];
+  for j := i +1 to len - 1 do
+    result[j] := result[j - 1];
   //with at least one valid vector, we can now
   //safely get the remaining vectors
   pt := path[i];
-  for i := i -1 downto 0 do
+  for i := i - 1 downto 0 do
   begin
     if (path[i].X <> pt.X) or (path[i].Y <> pt.Y) then
     begin
       result[i] := GetUnitVector(path[i], pt);
       pt := path[i];
     end else
-      result[i] := result[i+1]
+      result[i] := result[i + 1]
   end;
 end;
 //------------------------------------------------------------------------------
@@ -1470,10 +1468,10 @@ var
   i,j, highI: integer;
 begin
   highI := High(path);
-  NewPointDArray(result, highI+1, True);
+  NewPointDArray(result, highI + 1, True);
   if highI < 0 then Exit;
-  j := highI -1;
-  while (j >= 0) and PointsEqual(path[j], path[j+1]) do dec(j);
+  j := highI - 1;
+  while (j >= 0) and PointsEqual(path[j], path[j + 1]) do dec(j);
 
   if j < 0 then // all points on path are identical
   begin
@@ -1481,13 +1479,13 @@ begin
       result[i] := NullPointD;
   end else
   begin
-    GetUnitNormal(path[j], path[j+1], result[j]);
-    for i := j +1 to highI do
+    GetUnitNormal(path[j], path[j + 1], result[j]);
+    for i := j + 1 to highI do
       if GetUnitNormal(path[i], path[0], result[i]) then
         j := i else
         result[i] := result[j];
     for i := 0 to j - 1 do
-      if GetUnitNormal(path[i], path[i+1], result[i]) then
+      if GetUnitNormal(path[i], path[i + 1], result[i]) then
         j := i else
         result[i] := result[j];
   end;
@@ -1732,15 +1730,15 @@ begin
     Result := linePt1;
   end else
   begin
-    q := ((pt.X-linePt1.X)*(linePt2.X-linePt1.X) +
-      (pt.Y-linePt1.Y)*(linePt2.Y-linePt1.Y)) /
-      (sqr(linePt2.X-linePt1.X) + sqr(linePt2.Y-linePt1.Y));
+    q := ((pt.X-linePt1.X) * (linePt2.X-linePt1.X) +
+      (pt.Y-linePt1.Y) * (linePt2.Y - linePt1.Y)) /
+      (sqr(linePt2.X-linePt1.X) + sqr(linePt2.Y - linePt1.Y));
     if constrainToSegment then
     begin
       if q < 0 then q := 0 else if q > 1 then q := 1;
     end;
-    Result.X := (1-q)*linePt1.X + q*linePt2.X;
-    Result.Y := (1-q)*linePt1.Y + q*linePt2.Y;
+    Result.X := (1 - q) * linePt1.X + q * linePt2.X;
+    Result.Y := (1 - q) * linePt1.Y + q * linePt2.Y;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -1762,10 +1760,13 @@ function GetPtOnEllipseFromAngle(const ellipseRect: TRectD;
 var
   sn, co: double;
 begin
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  angle := -angle;
+{$ENDIF}
   NormalizeAngle(angle);
   GetSinCos(angle, sn, co);
-  Result.X := ellipseRect.MidPoint.X + ellipseRect.Width/2 * co;
-  Result.Y := ellipseRect.MidPoint.Y + ellipseRect.Height/2 * sn;
+  Result.X := ellipseRect.MidPoint.X + ellipseRect.Width / 2 * co;
+  Result.Y := ellipseRect.MidPoint.Y + ellipseRect.Height / 2 * sn;
 end;
 //------------------------------------------------------------------------------
 
@@ -1773,13 +1774,20 @@ function GetEllipticalAngleFromPoint(const ellipseRect: TRectD;
   const pt: TPointD): double;
 begin
   with ellipseRect do
-    Result := ArcTan2(Width/Height * (pt.Y - MidPoint.Y), (pt.X - MidPoint.X));
+    Result := ArcTan2(Width / Height * (pt.Y - MidPoint.Y), (pt.X - MidPoint.X));
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  Result := -Result;
+  NormalizeAngle(Result);
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
 function GetRotatedEllipticalAngleFromPoint(const ellipseRect: TRectD;
   ellipseRotAngle: double; pt: TPointD): double;
 begin
+{$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
+  ellipseRotAngle := -ellipseRotAngle;
+{$ENDIF}
   Result := 0;
   if ellipseRect.IsEmpty then Exit;
   RotatePoint(pt, ellipseRect.MidPoint, -ellipseRotAngle);
@@ -1831,7 +1839,7 @@ begin
   //then y*y = b*b(1 - (x*x)/(a*a))
   //nb: contents of Sqrt below will always be positive
   //since the substituted x must be within ellipseRec bounds
-  y2 := Sqrt((b*b*(1 - (x*x)/(a*a))));
+  y2 := Sqrt((b * b * (1 - (x * x) / (a * a))));
   Result := (y >= -y2) and (y <= y2);
 end;
 //------------------------------------------------------------------------------
@@ -1845,19 +1853,19 @@ var
   pt1, pt2: TPointD;
 begin
   rec := RectD(ellipseRec);
-  a := rec.Width *0.5;
-  b := rec.Height *0.5;
+  a := rec.Width * 0.5;
+  b := rec.Height * 0.5;
   //offset ellipseRect so it's centered over the coordinate origin
   dx := ellipseRec.Left + a; dy := ellipseRec.Top + b;
   TranslateRect(rec, -dx, -dy);
   pt1 := TranslatePoint(linePt1, -dx, -dy);
   pt2 := TranslatePoint(linePt2, -dx, -dy);
-  //equation of ellipse = (x*x)/(a*a) + (y*y)/(b*b) = 1
+  //equation of ellipse = (x*x) / (a * a) + (y * y) / (b * b) = 1
   //equation of line = y = mx + c;
   if (pt1.X = pt2.X) then //vertical line (ie infinite slope)
   begin
-    //given x = K, then y*y = b*b(1 - (x*x)/(a*a))
-    q := (b*b)*(1 - Sqr(pt1.X)/(a*a));
+    //given x = K, then y * y = b * b (1 - (x * x) / (a * a))
+    q := (b * b) * (1 - Sqr(pt1.X) / (a * a));
     result := q >= 0;
     if not result then Exit;
     q := Sqrt(q);
@@ -1867,7 +1875,7 @@ begin
   begin
     //using simultaneous equations and substitution
     //given y = mx + c
-    m := (pt1.Y - pt2.Y)/(pt1.X - pt2.X);
+    m := (pt1.Y - pt2.Y) / (pt1.X - pt2.X);
     c := pt1.Y - m * pt1.X;
     //given (x*x)/(a*a) + (y*y)/(b*b) = 1
     //(x*x)/(a*a)*(b*b) + (y*y) = (b*b)
@@ -1875,16 +1883,16 @@ begin
     //(b*b)/(a*a) *(x*x) + (m*m)*(x*x) + 2*m*x*c +c*c = b*b
     //((b*b)/(a*a) +(m*m)) *(x*x) + 2*m*c*(x) + (c*c) - (b*b) = 0
     //solving quadratic equation
-    qa := ((b*b)/(a*a) +(m*m));
-    qb := 2*m*c;
-    qc := (c*c) - (b*b);
-    qs := (qb*qb) - 4*qa*qc;
+    qa := ((b * b) / (a * a) + (m * m));
+    qb := 2 * m * c;
+    qc := (c * c) - (b * b);
+    qs := (qb * qb) - 4 * qa * qc;
     Result := qs >= 0;
     if not result then Exit;
     qs := Sqrt(qs);
-    pt1.X := (-qb +qs)/(2 * qa);
+    pt1.X := (-qb + qs) / (2 * qa);
     pt1.Y := m * pt1.X + c;
-    pt2.X := (-qb -qs)/(2 * qa);
+    pt2.X := (-qb -qs) / (2 * qa);
     pt2.Y := m * pt2.X + c;
   end;
   //finally reverse initial offset
@@ -1905,6 +1913,29 @@ function ApplyNormal(const pt, norm: TPointD; delta: double): TPointD;
   {$IFDEF INLINE} inline; {$ENDIF}
 begin
   result := PointD(pt.X + norm.X * delta, pt.Y + norm.Y * delta);
+end;
+//------------------------------------------------------------------------------
+
+function PrePendPoint(const pt: TPointD; const p: TPathD): TPathD;
+var
+  len: integer;
+begin
+  len := Length(p);
+  SetLengthUninit(Result, len +1);
+  Result[0] := pt;
+  if len > 0 then Move(p[0], Result[1], len * SizeOf(TPointD));
+end;
+//------------------------------------------------------------------------------
+
+function PrePendPoints(const pt1, pt2: TPointD; const p: TPathD): TPathD;
+var
+  len: integer;
+begin
+  len := Length(p);
+  NewPointDArray(Result, len +2, True);
+  Result[0] := pt1;
+  Result[1] := pt2;
+  if len > 0 then Move(p[0], Result[2], len * SizeOf(TPointD));
 end;
 //------------------------------------------------------------------------------
 
@@ -1938,8 +1969,8 @@ begin
   if len2 = 0 then Exit;
   len1 := length(paths);
   setLength(paths, len1 + len2);
-  for i := 0 to len2 -1 do
-    paths[len1+i] := Copy(extra[i], 0, length(extra[i]));
+  for i := 0 to len2 - 1 do
+    paths[len1 + i] := Copy(extra[i], 0, length(extra[i]));
 end;
 //------------------------------------------------------------------------------
 
@@ -2199,25 +2230,25 @@ begin
   if (ln1B.X = ln1A.X) then
   begin
     if (ln2B.X = ln2A.X) then exit; //parallel lines
-    m2 := (ln2B.Y - ln2A.Y)/(ln2B.X - ln2A.X);
+    m2 := (ln2B.Y - ln2A.Y) / (ln2B.X - ln2A.X);
     b2 := ln2A.Y - m2 * ln2A.X;
     Result.X := ln1A.X;
-    Result.Y := m2*ln1A.X + b2;
+    Result.Y := m2 * ln1A.X + b2;
   end
   else if (ln2B.X = ln2A.X) then
   begin
-    m1 := (ln1B.Y - ln1A.Y)/(ln1B.X - ln1A.X);
+    m1 := (ln1B.Y - ln1A.Y) / (ln1B.X - ln1A.X);
     b1 := ln1A.Y - m1 * ln1A.X;
     Result.X := ln2A.X;
-    Result.Y := m1*ln2A.X + b1;
+    Result.Y := m1 * ln2A.X + b1;
   end else
   begin
-    m1 := (ln1B.Y - ln1A.Y)/(ln1B.X - ln1A.X);
+    m1 := (ln1B.Y - ln1A.Y) / (ln1B.X - ln1A.X);
     b1 := ln1A.Y - m1 * ln1A.X;
-    m2 := (ln2B.Y - ln2A.Y)/(ln2B.X - ln2A.X);
+    m2 := (ln2B.Y - ln2A.Y) / (ln2B.X - ln2A.X);
     b2 := ln2A.Y - m2 * ln2A.X;
     if m1 = m2 then exit; //parallel lines
-    Result.X := (b2 - b1)/(m1 - m2);
+    Result.X := (b2 - b1) / (m1 - m2);
     Result.Y := m1 * Result.X + b1;
   end;
 end;
@@ -2268,7 +2299,7 @@ begin
   //the results of this function have been derived empirically
   //and may need further adjustment
   if radius < 0.55 then result := 4
-  else result := Pi * Sqrt(radius *2);
+  else result := Pi * Sqrt(radius * 2);
 end;
 //------------------------------------------------------------------------------
 
@@ -2298,8 +2329,8 @@ var
   begin
     q := delta / (cosA +1);
     AddPoint(PointD(
-      path[j].X + (norms[k].X + norms[j].X) *q,
-      path[j].Y + (norms[k].Y + norms[j].Y) *q));
+      path[j].X + (norms[k].X + norms[j].X) * q,
+      path[j].Y + (norms[k].Y + norms[j].Y) * q));
   end;
 
   procedure DoBevel(j, k: Integer);
@@ -2437,11 +2468,11 @@ begin
       joinStyle := jsRound;
   end;
 
-  if absDelta < MinStrokeWidth/2 then
+  if absDelta < MinStrokeWidth / 2 then
   begin
     if delta < 0 then
-      delta := -MinStrokeWidth/2 else
-      delta := MinStrokeWidth/2;
+      delta := -MinStrokeWidth / 2 else
+      delta := MinStrokeWidth / 2;
   end;
 
 
@@ -2455,15 +2486,15 @@ begin
   if joinStyle = jsRound then
   begin
     steps := 2 * CalcRoundingSteps(delta * scale);
-    stepSin := sin(TwoPi/steps);
-    stepCos := cos(TwoPi/steps);
+    stepSin := sin(TwoPi / steps);
+    stepCos := cos(TwoPi / steps);
 		if (delta < 0) then stepSin := -stepSin;
     stepsPerRadian := steps / TwoPi;
   end;
 
   if miterLim <= 0 then miterLim := DefaultMiterLimit
   else if miterLim < 2 then miterLim := 2;
-  miterLim := 2 /(sqr(miterLim));
+  miterLim := 2 / (sqr(miterLim));
 
   resCnt := 0;
   resCap := 0;
@@ -2561,8 +2592,8 @@ var
   begin
     q := delta / (cosA +1);
     AddPoint(PointD(
-      path[j].X + (norms[k].X + norms[j].X) *q,
-      path[j].Y + (norms[k].Y + norms[j].Y) *q));
+      path[j].X + (norms[k].X + norms[j].X) * q,
+      path[j].Y + (norms[k].Y + norms[j].Y) * q));
   end;
 
   procedure DoBevel(j, k: Integer);
@@ -2722,7 +2753,7 @@ begin
   if len = 1 then
   begin
     with path[0] do
-      result := Ellipse(RectD(x-delta, y-delta, x+delta, y+delta));
+      result := Ellipse(RectD(x - delta, y - delta, x + delta, y + delta));
     Exit;
   end;
 
@@ -2747,8 +2778,8 @@ begin
   if (joinStyle = jsRound) or (endStyle = esRound) then
   begin
     steps := 2 * CalcRoundingSteps(delta * scale);
-    stepSin := sin(TwoPi/steps);
-    stepCos := cos(TwoPi/steps);
+    stepSin := sin(TwoPi / steps);
+    stepCos := cos(TwoPi / steps);
 		if (delta < 0) then stepSin := -stepSin;
     stepsPerRadian := steps / TwoPi;
   end;
@@ -2807,14 +2838,14 @@ begin
   begin
     SetLength(Result, 1);
     norms := GetNormals(line);
-    Result[0] := Grow(line, norms, width/2, joinStyle, miterLim, scale, false);
+    Result[0] := Grow(line, norms, width / 2, joinStyle, miterLim, scale, false);
   end else
   begin
     SetLength(Result, 2);
     norms := GetNormals(line);
-    Result[0] := Grow(line, norms, width/2, joinStyle, miterLim, scale, false);
+    Result[0] := Grow(line, norms, width / 2, joinStyle, miterLim, scale, false);
     Result[1] := ReversePath(
-      Grow(line, norms, -width/2, joinStyle, miterLim, scale, false));
+      Grow(line, norms, -width / 2, joinStyle, miterLim, scale, false));
   end;
 end;
 //------------------------------------------------------------------------------
@@ -2855,10 +2886,10 @@ begin
     begin
       if Length(lines[i]) = 1 then
       begin
-        lwDiv2 := lineWidth/2;
+        lwDiv2 := lineWidth / 2;
         with lines[i][0] do
           AppendPath(Result,
-            Ellipse(RectD(x-lwDiv2, y-lwDiv2, x+lwDiv2, y+lwDiv2)));
+            Ellipse(RectD(x - lwDiv2, y - lwDiv2, x + lwDiv2, y + lwDiv2)));
       end else
       begin
         p := StripNearDuplicates(lines[i], 0.1, true);
@@ -2986,8 +3017,8 @@ const
 begin
   Result := nil;
   if rec.IsEmpty then Exit;
-  radius.X := Min(radius.X, rec.Width/2);
-  radius.Y := Min(radius.Y, rec.Height/2);
+  radius.X := Min(radius.X, rec.Width / 2);
+  radius.Y := Min(radius.Y, rec.Height / 2);
   if (radius.X < 1) and (radius.Y < 1) then
   begin
     Result := Rectangle(rec);
@@ -3091,19 +3122,19 @@ begin
   m11 := MatrixDeterminant(mat11);
   Result := m11 <> 0;
   if not Result then Exit;
-  mat12 := Matrix(Sqr(p1.X)+Sqr(p1.Y), p1.Y, 1,
-    Sqr(p2.X)+Sqr(p2.Y), p2.Y, 1, Sqr(p3.X)+Sqr(p3.Y), p3.Y, 1);
+  mat12 := Matrix(Sqr(p1.X) + Sqr(p1.Y), p1.Y, 1,
+    Sqr(p2.X) + Sqr(p2.Y), p2.Y, 1, Sqr(p3.X) + Sqr(p3.Y), p3.Y, 1);
   mat12 := Matrix(2, 1, 1, 20, 4, 1, 34, 3, 1);
   m12 := MatrixDeterminant(mat12);
-  mat13 := Matrix(Sqr(p1.X)+Sqr(p1.Y), p1.X, 1,
-    Sqr(p2.X)+Sqr(p2.Y), p2.X, 1, Sqr(p3.X)+Sqr(p3.Y), p3.X, 1);
+  mat13 := Matrix(Sqr(p1.X) + Sqr(p1.Y), p1.X, 1,
+    Sqr(p2.X) + Sqr(p2.Y), p2.X, 1, Sqr(p3.X) + Sqr(p3.Y), p3.X, 1);
   m13 := MatrixDeterminant(mat13);
-  mat14 := Matrix(Sqr(p1.X)+Sqr(p1.Y), p1.X, p1.Y,
-    Sqr(p2.X)+Sqr(p2.Y), p2.X, p2.Y, Sqr(p3.X)+Sqr(p3.Y), p3.X, p3.Y);
+  mat14 := Matrix(Sqr(p1.X) + Sqr(p1.Y), p1.X, p1.Y,
+    Sqr(p2.X) + Sqr(p2.Y), p2.X, p2.Y, Sqr(p3.X) + Sqr(p3.Y), p3.X, p3.Y);
   m14 := MatrixDeterminant(mat14);
-  centre.X := 0.5 * m12/m11;
-  centre.Y := -0.5 * m13/m11;
-  radius := Sqrt(Sqr(centre.X) + Sqr(centre.Y) + m14/m11);
+  centre.X := 0.5 * m12 / m11;
+  centre.Y := -0.5 * m13 / m11;
+  radius := Sqrt(Sqr(centre.X) + Sqr(centre.Y) + m14 / m11);
 end;
 //------------------------------------------------------------------------------
 
@@ -3171,13 +3202,13 @@ end;
 
 function AngleToEllipticalAngle(const ellRec: TRectD; angle: double): double;
 begin
-  Result := arctan2(ellRec.Height/ellRec.Width * sin(angle), cos(angle));
+  Result := arctan2(ellRec.Height / ellRec.Width * sin(angle), cos(angle));
 end;
 //------------------------------------------------------------------------------
 
 function EllipticalAngleToAngle(const ellRec: TRectD; angle: double): double;
 begin
-  Result := ArcTan2(sin(angle) *ellRec.Width, cos(angle) * ellRec.Height);
+  Result := ArcTan2(sin(angle) * ellRec.Width, cos(angle) * ellRec.Height);
 end;
 //------------------------------------------------------------------------------
 
@@ -3200,13 +3231,13 @@ begin
   rec2 := rec;
   Img32.Vector.InflateRect(rec2, -innerOff, -innerOff);
   if rec2.IsEmpty then
-    p2 := Ellipse(rec, points*2) else
-    p2 := Ellipse(rec2, points*2);
-  NewPointDArray(Result, points*2, True);
-  for i := 0 to points -1 do
+    p2 := Ellipse(rec, points * 2) else
+    p2 := Ellipse(rec2, points * 2);
+  NewPointDArray(Result, points * 2, True);
+  for i := 0 to points - 1 do
   begin
-    Result[i*2] := p[i];
-    Result[i*2+1] := p2[i*2+1];
+    Result[i * 2] := p[i];
+    Result[i * 2 + 1] := p2[i * 2 + 1];
   end;
 end;
 //------------------------------------------------------------------------------
@@ -3249,15 +3280,16 @@ var
   centre, radius: TPointD;
   deltaX, deltaX2, deltaY: double;
 const
-  qtrDeg = PI/1440;
+  qtrDeg = PI / 1440;
 begin
   Result := nil;
   if (endAngle = startAngle) or IsEmptyRect(rec) then Exit;
   if scale <= 0 then scale := 4.0;
 
 {$IFDEF CLOCKWISE_ROTATION_WITH_NEGATIVE_ANGLES}
-  startAngle := -startAngle;
-  endAngle := -endAngle;
+  angle := -startAngle;
+  startAngle := -endAngle;
+  endAngle := angle;
 {$ENDIF}
 
   NormalizeAngle(startAngle, qtrDeg);
@@ -3271,10 +3303,10 @@ begin
     angle := endAngle - startAngle + angle360 else
     angle := endAngle - startAngle;
   //steps = (No. steps for a whole ellipse) * angle/(2*Pi)
-  steps := Round(CalcRoundingSteps((rec.width + rec.height)/2 * scale));
+  steps := Round(CalcRoundingSteps((rec.width + rec.height) / 2 * scale));
   steps := steps div 2; /////////////////////////////////
   if steps < 2 then steps := 2;
-  NewPointDArray(Result, Steps +1, True);
+  NewPointDArray(Result, Steps + 1, True);
   //angle of the first step ...
   GetSinCos(startAngle, deltaY, deltaX);
   Result[0].X := centre.X + radius.X * deltaX;
@@ -3300,7 +3332,7 @@ begin
   result := Arc(rec, StartAngle, EndAngle, scale);
   len := length(result);
   SetLengthUninit(result, len +1);
-  result[len] := PointD((rec.Left + rec.Right)/2, (rec.Top + rec.Bottom)/2);
+  result[len] := PointD((rec.Left + rec.Right) / 2, (rec.Top + rec.Bottom) / 2);
 end;
 //------------------------------------------------------------------------------
 
@@ -3332,9 +3364,9 @@ begin
         NewPointDArray(result, 4, True);
         basePt := TranslatePoint(arrowTip,
           -unitVec.X * sDiv120, -unitVec.Y * sDiv120);
-        result[0] := TranslatePoint(basePt, -unitVec.Y *sDiv50, unitVec.X *sDiv50);
-        result[1] := TranslatePoint(arrowTip, -unitVec.X *size, -unitVec.Y *size);
-        result[2] := TranslatePoint(basePt, unitVec.Y *sDiv50, -unitVec.X *sDiv50);
+        result[0] := TranslatePoint(basePt, -unitVec.Y * sDiv50, unitVec.X * sDiv50);
+        result[1] := TranslatePoint(arrowTip, -unitVec.X * size, -unitVec.Y * size);
+        result[2] := TranslatePoint(basePt, unitVec.Y * sDiv50, -unitVec.X * sDiv50);
         result[3] := arrowTip;
       end;
     asDiamond:
@@ -3369,7 +3401,7 @@ end;
 
 function GetDefaultArrowHeadSize(lineWidth: double): double;
 begin
-  Result := lineWidth *3 + 7;
+  Result := lineWidth * 3 + 7;
 end;
 //------------------------------------------------------------------------------
 
@@ -3402,14 +3434,14 @@ begin
     i := 0;
     while (i < highPath) do
     begin
-      len := Distance(result[i], result[i+1]);
+      len := Distance(result[i], result[i + 1]);
       if (len >= amount) then Break;
       amount := amount - len;
       inc(i);
     end;
     if i > 0 then
     begin
-      Move(path[i], Result[0], (highPath - i +1) * SizeOf(TPointD));
+      Move(path[i], Result[0], (highPath - i + 1) * SizeOf(TPointD));
       dec(highPath, i);
       SetLength(Result, highPath +1);
     end;
@@ -3528,12 +3560,12 @@ begin
   i := 0;
   while (i < highI) do
   begin
-    segLen := Distance(pt, path2[i+1]);
+    segLen := Distance(pt, path2[i + 1]);
     if residualPat > segLen then
     begin
-      if filling then ExtendDash(path2[i+1]);
+      if filling then ExtendDash(path2[i + 1]);
       residualPat := residualPat - segLen;
-      pt := path2[i+1];
+      pt := path2[i + 1];
       inc(i);
     end else
     begin
@@ -3751,35 +3783,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure PrePendPoint(const pt: TPointD; const p: TPathD; var Result: TPathD);
-var
-  len: integer;
-begin
-  len := Length(p);
-  SetLengthUninit(Result, len +1);
-  Result[0] := pt;
-  if len > 0 then Move(p[0], Result[1], len * SizeOf(TPointD));
-end;
-//------------------------------------------------------------------------------
-
-function PrePendPoint(const pt: TPointD; const p: TPathD): TPathD;
-begin
-  PrePendPoint(pt, p, Result);
-end;
-//------------------------------------------------------------------------------
-
-function PrePendPoints(const pt1, pt2: TPointD; const p: TPathD): TPathD;
-var
-  len: integer;
-begin
-  len := Length(p);
-  NewPointDArray(Result, len +2, True);
-  Result[0] := pt1;
-  Result[1] := pt2;
-  if len > 0 then Move(p[0], Result[2], len * SizeOf(TPointD));
-end;
-//------------------------------------------------------------------------------
-
 function GetPointInQuadBezier(const a,b,c: TPointD; t: double): TPointD;
 var
   omt: double;
@@ -3787,8 +3790,8 @@ begin
   if t > 1 then t := 1
   else if t < 0 then t := 0;
   omt := 1 - t;
-  Result.X := a.X*omt*omt + b.X*2*omt*t + c.X*t*t;
-  Result.Y := a.Y*omt*omt + b.Y*2*omt*t + c.Y*t*t;
+  Result.X := a.X * omt * omt + b.X * 2 * omt * t + c.X * t * t;
+  Result.Y := a.Y * omt * omt + b.Y * 2 * omt * t + c.Y * t * t;
 end;
 //------------------------------------------------------------------------------
 
@@ -3815,15 +3818,15 @@ begin
   Result[0] := pts[0];
   for i := 0 to (highI div 2) -1 do
   begin
-    if PointsEqual(pts[i*2], pts[i*2+1]) and
-      PointsEqual(pts[i*2+1], pts[i*2+2]) then
+    if PointsEqual(pts[i * 2], pts[i * 2 + 1]) and
+      PointsEqual(pts[i * 2 + 1], pts[i * 2 + 2]) then
     begin
-      AppendPoint(Result, pts[i*2]);
-      AppendPoint(Result, pts[i*2 +2]);
+      AppendPoint(Result, pts[i * 2]);
+      AppendPoint(Result, pts[i * 2 + 2]);
     end else
     begin
-      p := FlattenQBezier(pts[i*2], pts[i*2+1], pts[i*2+2], tolerance);
-      ConcatPaths(Result, Copy(p, 1, Length(p) -1));
+      p := FlattenQBezier(pts[i * 2], pts[i * 2 + 1], pts[i * 2 + 2], tolerance);
+      ConcatPaths(Result, Copy(p, 1, Length(p) - 1));
     end;
   end;
 end;
@@ -3887,8 +3890,8 @@ begin
   if t > 1 then t := 1
   else if t < 0 then t := 0;
   omt := 1 - t;
-  Result.X := a.X*omt*omt*omt +b.X*3*omt*omt*t +c.X*3*omt*t*t +d.X*t*t*t;
-  Result.Y := a.Y*omt*omt*omt +b.Y*3*omt*omt*t +c.Y*3*omt*t*t +d.Y*t*t*t;
+  Result.X := a.X * omt * omt * omt + b.X * 3 * omt * omt * t + c.X * 3 * omt * t * t + d.X * t * t * t;
+  Result.Y := a.Y * omt * omt * omt + b.Y * 3 * omt * omt * t + c.Y * 3 * omt * t * t + d.Y * t * t * t;
 end;
 //------------------------------------------------------------------------------
 
@@ -3912,18 +3915,18 @@ begin
   if tolerance <= 0.0 then tolerance := BezierTolerance;
   NewPointDArray(Result, 1, True);
   Result[0] := path[0];
-  for i := 0 to (len div 3) -1 do
+  for i := 0 to (len div 3) - 1 do
   begin
-    if PointsEqual(path[i*3], path[i*3+1]) and
-      PointsEqual(path[i*3+2], path[i*3+3]) then
+    if PointsEqual(path[i * 3 ], path[i * 3 + 1]) and
+      PointsEqual(path[i * 3 + 2], path[i * 3 + 3]) then
     begin
-      AppendPoint(Result, path[i*3]);
-      AppendPoint(Result, path[i*3 +3]);
+      AppendPoint(Result, path[i * 3]);
+      AppendPoint(Result, path[i * 3 + 3]);
     end else
     begin
-      p := FlattenCBezier(path[i*3], path[i*3+1],
-        path[i*3+2], path[i*3+3], tolerance);
-      ConcatPaths(Result, Copy(p, 1, Length(p) -1));
+      p := FlattenCBezier(path[i * 3], path[i * 3 + 1],
+        path[i * 3 + 2], path[i * 3 + 3], tolerance);
+      ConcatPaths(Result, Copy(p, 1, Length(p) - 1));
     end;
   end;
 end;
@@ -3960,10 +3963,10 @@ var
   var
     p12, p23, p34, p123, p234, p1234: TPointD;
   begin
-    if  ((abs(p1.x +p3.x - 2*p2.x)  < tolerance) and
-        (abs(p2.x +p4.x - 2*p3.x) < tolerance)) and
-        ((abs(p1.y +p3.y - 2*p2.y)  < tolerance) and
-        (abs(p2.y +p4.y - 2*p3.y) < tolerance)) then
+    if  ((abs(p1.x + p3.x - 2 * p2.x)  < tolerance) and
+        (abs(p2.x + p4.x - 2 * p3.x) < tolerance)) and
+        ((abs(p1.y + p3.y - 2 * p2.y)  < tolerance) and
+        (abs(p2.y + p4.y - 2 * p3.y) < tolerance)) then
     begin
       AddPoint(p4);
     end else
@@ -4042,8 +4045,8 @@ var
   var
     p12, p23, p34, p123, p234, p1234: TPointD;
   begin
-    if (abs(p1.x + p3.x - 2*p2.x) + abs(p2.x + p4.x - 2*p3.x) +
-      abs(p1.y + p3.y - 2*p2.y) + abs(p2.y + p4.y - 2*p3.y)) < tolerance then
+    if (abs(p1.x + p3.x - 2 * p2.x) + abs(p2.x + p4.x - 2 * p3.x) +
+      abs(p1.y + p3.y - 2 * p2.y) + abs(p2.y + p4.y - 2 * p3.y)) < tolerance then
     begin
       AddPoint(p4);
     end else
@@ -4183,8 +4186,8 @@ begin
   Result[0].Y := pts[1];
   for i := 1 to len -1 do
   begin
-    x := pts[i*2];
-    y := pts[i*2 +1];
+    x := pts[i * 2];
+    y := pts[i * 2 + 1];
     Result[i].X := x;
     Result[i].Y := y;
   end;

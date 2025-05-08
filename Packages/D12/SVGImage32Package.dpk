@@ -54,6 +54,7 @@ contains
   Img32.SVG.Path in '..\..\Image32\source\Img32.SVG.Path.pas',
   Img32.SVG.Reader in '..\..\Image32\source\Img32.SVG.Reader.pas',
   Img32.Clipper2 in '..\..\Image32\Source\Img32.Clipper2.pas',
+  Img32.TextChunks in '..\..\Image32\Source\Img32.TextChunks.pas',
   Clipper in '..\..\Image32\source\Clipper.pas',
   Clipper.Core in '..\..\Image32\source\Clipper.Core.pas',
   Clipper.Engine in '..\..\Image32\source\Clipper.Engine.pas',
@@ -62,4 +63,5 @@ contains
   Clipper.RectClip in '..\..\Image32\source\Clipper.RectClip.pas';
 
 end.
+
 

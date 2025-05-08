@@ -210,8 +210,8 @@ var
 begin
   // see https://en.wikipedia.org/wiki/Color_difference
   if c2.R + c1.R < 256 then
-    result := 2*Sqr(c2.R - c1.R) + 4*Sqr(c2.G - c1.G) + 3*Sqr(c2.B - c1.B) else
-    result := 3*Sqr(c2.R - c1.R) + 4*Sqr(c2.G - c1.G) + 2*Sqr(c2.B - c1.B);
+    result := 2 * Sqr(c2.R - c1.R) + 4 * Sqr(c2.G - c1.G) + 3 * Sqr(c2.B - c1.B) else
+    result := 3 * Sqr(c2.R - c1.R) + 4 * Sqr(c2.G - c1.G) + 2 * Sqr(c2.B - c1.B);
 end;
 //------------------------------------------------------------------------------
 
@@ -459,7 +459,7 @@ destructor TOctNode.Destroy;
 var
   i: integer;
 begin
-  for i:= 0 to 7 do Childs[i].Free;
+  for i := 0 to 7 do Childs[i].Free;
   inherited Destroy;
 end;
 //------------------------------------------------------------------------------
@@ -675,7 +675,7 @@ begin
   node.Count := 0; childCnt    := 0;
   wc.Reset;
   //now merge the leaves into the parent node ...
-  for i:= 0 to 7 do
+  for i := 0 to 7 do
     if Assigned (node.Childs[i]) then
     begin
       wc.Add(node.Childs[i].GetColor, node.Childs[i].Count);
@@ -711,14 +711,14 @@ begin
     cf := @cfArr[idxArr[i]];
     wc.Reset;
     wc.Add(cf.color, cf.freq);
-    for j := idxArr[i] +1 to idxArr[i+1] -1 do
+    for j := idxArr[i] + 1 to idxArr[i + 1] -1 do
     begin
       wc.Add(cfArr[j].color, cfArr[j].freq);
       inc(cf.freq, cfArr[j].freq);
       cfArr[j].freq := 0;
     end;
     cf.color := wc.Color; // re-weighted color
-    for j := idxArr[i] to idxArr[i+1] -1 do
+    for j := idxArr[i] to idxArr[i + 1] -1 do
       cfArr[j].node.palColor := cf.color;
   end;
 
@@ -888,9 +888,9 @@ var
 function ClampByte(val: integer): Byte;
 {$IFDEF INLINE} inline; {$ENDIF}
 begin
-  if val < 0 then Result:= 0
-  else if val >= 255 then Result:= 255
-  else Result:= val;
+  if val < 0 then Result := 0
+  else if val >= 255 then Result := 255
+  else Result := val;
 end;
 //------------------------------------------------------------------------------
 

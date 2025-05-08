@@ -445,7 +445,7 @@ begin
   if Result then
   begin
     matrix := MatrixAdjugate(matrix);
-    ScaleInternal(matrix, 1/d);
+    ScaleInternal(matrix, 1 / d);
   end;
 end;
 //------------------------------------------------------------------------------
@@ -635,10 +635,10 @@ begin
 
   NewColor32Array(tmp, newWidth * newHeight, True);
   pc := @tmp[0];
-  xLimLo := -0.5/sx;
-  xLimHi := img.Width + 0.5/sx;
-  yLimLo := -0.5/sy;
-  yLimHi := img.Height + 0.5/sy;
+  xLimLo := -0.5 / sx;
+  xLimHi := img.Width + 0.5 / sx;
+  yLimLo := -0.5 / sy;
+  yLimHi := img.Height + 0.5 / sy;
 
   for i := dstRec.Top to dstRec.Bottom -1 do
   begin
@@ -671,9 +671,9 @@ var
   xx, yy: double;
 begin
   xx := x; yy := y;
-  x := matrix[0,0] *xx + matrix[0,1] *yy + matrix[0,2] *z;
-  y := matrix[1,0] *xx + matrix[1,1] *yy + matrix[1,2] *z;
-  z := matrix[2,0] *xx + matrix[2,1] *yy + matrix[2,2] *z;
+  x := matrix[0,0] * xx + matrix[0,1] * yy + matrix[0,2] * z;
+  y := matrix[1,0] * xx + matrix[1,1] * yy + matrix[1,2] * z;
+  z := matrix[2,0] * xx + matrix[2,1] * yy + matrix[2,2] * z;
 end;
 //------------------------------------------------------------------------------
 
@@ -710,15 +710,15 @@ begin
     if yy >= 0 then y := Q else y := -MaxInt;
   end else
   begin
-    xx := xx/zz;
+    xx := xx / zz;
     if xx > Q then x := MaxInt
     else if xx < -Q then x := -MaxInt
-    else x := Round(xx *256);
+    else x := Round(xx * 256);
 
-    yy := yy/zz;
+    yy := yy / zz;
     if yy > Q then y := MaxInt
     else if yy < -Q then y := -MaxInt
-    else y := Round(yy *256);
+    else y := Round(yy * 256);
   end;
 end;
 //------------------------------------------------------------------------------
@@ -742,11 +742,11 @@ begin
     if y >= 0 then y := Q else y := -MaxDouble;
   end else
   begin
-    x := x/zz;
+    x := x / zz;
     if x > Q then x := MaxDouble
     else if x < -Q then x := -MaxDouble;
 
-    y := y/zz;
+    y := y / zz;
     if y > Q then y := MaxDouble
     else if y < -Q then y := -MaxDouble
   end;
@@ -860,26 +860,26 @@ begin
     x1 := Ceil(pt1.X);
     x2 := Ceil(pt2.X);
     if x1 = x2 then Exit;
-    dydx := (pt2.Y - pt1.Y)/(pt2.X - pt1.X);
-    xo := x1 -pt1.X;
-    NewPointDArray(Result, x2-x1, True);
-    for i:= 0 to x2 - x1 -1 do
+    dydx := (pt2.Y - pt1.Y) / (pt2.X - pt1.X);
+    xo := x1 - pt1.X;
+    NewPointDArray(Result, x2 - x1, True);
+    for i := 0 to x2 - x1 - 1 do
     begin
-      Result[i].X := x1 +i;
-      Result[i].Y := pt1.Y + dydx * (xo +i);
+      Result[i].X := x1 + i;
+      Result[i].Y := pt1.Y + dydx * (xo + i);
     end;
   end else
   begin
     x1 := Floor(pt1.X);
     x2 := Floor(pt2.X);
     if x1 = x2 then Exit;
-    dydx := (pt2.Y - pt1.Y)/(pt2.X - pt1.X);
+    dydx := (pt2.Y - pt1.Y) / (pt2.X - pt1.X);
     xo := x1 -pt1.X;
-    NewPointDArray(Result, x1-x2, True);
-    for i:= 0 to x1 - x2 -1 do
+    NewPointDArray(Result, x1 - x2, True);
+    for i := 0 to x1 - x2 - 1 do
     begin
-      Result[i].X := x1 -i;
-      Result[i].Y := pt1.Y + dydx * (xo -i);
+      Result[i].X := x1 - i;
+      Result[i].Y := pt1.Y + dydx * (xo - i);
     end;
   end;
 end;
@@ -896,26 +896,26 @@ begin
     y1 := Ceil(pt1.Y);
     y2 := Ceil(pt2.Y);
     if y1 = y2 then Exit;
-    dxdy := (pt2.X - pt1.X)/(pt2.Y - pt1.Y);
+    dxdy := (pt2.X - pt1.X) / (pt2.Y - pt1.Y);
     yo := y1 -pt1.Y;
-    NewPointDArray(Result, y2-y1, True);
-    for i:= 0 to y2 - y1 -1 do
+    NewPointDArray(Result, y2 - y1, True);
+    for i := 0 to y2 - y1 - 1 do
     begin
-      Result[i].Y := y1 +i;
-      Result[i].X := pt1.X + dxdy * (yo +i);
+      Result[i].Y := y1 + i;
+      Result[i].X := pt1.X + dxdy * (yo + i);
     end;
   end else
   begin
     y1 := Floor(pt1.Y);
     y2 := Floor(pt2.Y);
     if y1 = y2 then Exit;
-    dxdy := (pt2.X - pt1.X)/(pt2.Y - pt1.Y);
-    yo := y1 -pt1.Y;
-    NewPointDArray(Result, y1-y2, True);
-    for i:= 0 to y1 - y2 -1 do
-    begin
-      Result[i].Y := y1 -i;
-      Result[i].X := pt1.X + dxdy * (yo -i);
+    dxdy := (pt2.X - pt1.X) / (pt2.Y - pt1.Y);
+    yo := y1 - pt1.Y;
+    NewPointDArray(Result, y1 - y2, True);
+    for i := 0 to y1 - y2 - 1 do
+    begin 
+      Result[i].Y := y1 - i;
+      Result[i].X := pt1.X + dxdy * (yo - i);
     end;
   end;
 end;
@@ -929,10 +929,10 @@ begin
   Result := nil;
   len := length(path);
   if len < 2 then Exit;
-  for i := 1 to len -1 do
+  for i := 1 to len - 1 do
   begin
-    tmp := InterpolateSegX(path[i-1], path[i]);
-    ConcatPaths(Result, tmp);
+    tmp := InterpolateSegX(path[i - 1], path[i]);
+    ConcatPaths(Result, tmp);       
   end;
 end;
 //------------------------------------------------------------------------------
@@ -945,9 +945,9 @@ begin
   Result := nil;
   len := length(path);
   if len < 2 then Exit;
-  for i := 1 to len -1 do
+  for i := 1 to len - 1 do
   begin
-    tmp := InterpolateSegY(path[i-1], path[i]);
+    tmp := InterpolateSegY(path[i - 1], path[i]);
     ConcatPaths(Result, tmp);
   end;
 end;
@@ -999,7 +999,7 @@ begin
   len := Length(topPath);
   inc(rec.Bottom, img.Height);
   RectWidthHeight(rec, w, h);
-  NewColor32Array(tmp, (w+1) * h, False);
+  NewColor32Array(tmp, (w + 1) * h, False);
 
   prevX := topPath[0].X;
   allowBackColoring := GetAlpha(backColor) > 2;
@@ -1011,15 +1011,15 @@ begin
   yLimLo := -0.5;
   yLimHi := img.Height + 0.5;
 
-  for i := 0 to len -1 do
+  for i := 0 to len - 1 do
   begin
-    pc := @tmp[Round(topPath[i].X)-rec.Left];
+    pc := @tmp[Round(topPath[i].X) - rec.Left];
     backColoring := allowBackColoring and (prevX >= topPath[i].X);
     prevX := topPath[i].X;
     yy := topPath[i].Y;
     for j := rec.top to rec.bottom -1 do
     begin
-      x := Distances[i]*q;
+      x := Distances[i] * q;
       y := j - yy;
       if (y < yLimLo) or (y > yLimHi) then
         // do nothing !
@@ -1084,24 +1084,24 @@ begin
   len := Length(leftPath);
   inc(rec.Right, img.Width);
   RectWidthHeight(rec, w, h);
-  NewColor32Array(tmp, w * (h+1), False);
+  NewColor32Array(tmp, w * (h + 1), False);
 
   prevY := leftPath[0].Y;
   allowBackColoring := GetAlpha(backColor) > 2;
   backColor :=   backColor and $00FFFFFF;
 
   distances := GetCumulativeDistances(leftPath);
-  q := img.Height / distances[High(distances)];;
+  q := img.Height / distances[High(distances)];
   xLimLo := -0.5;
   xLimHi := img.Width + 0.5;
 
-  for i := 0 to len -1 do
+  for i := 0 to len - 1 do
   begin
     pc := @tmp[Round(leftPath[i].Y - rec.Top) * w];
     backColoring := allowBackColoring and (prevY >= leftPath[i].Y);
     prevY := leftPath[i].Y;
     xx := leftPath[i].X;
-    y := Distances[i]*q;
+    y := Distances[i] * q;
     for j := rec.left to rec.right -1 do
     begin
       x := j - xx;
@@ -1342,7 +1342,7 @@ begin
 
   if fAlphaTot < DivOneByXTableSize then // use precalculated 1/X values
     oneDivAlphaTot := DivOneByXTable[fAlphaTot] else
-    oneDivAlphaTot := 1/(fAlphaTot);
+    oneDivAlphaTot := 1 / fAlphaTot;
 
   // 1. Skip zero calculations.
   // 2. LimitByte(Integer): Values can't be less than 0, so don't use ClampByte.
@@ -1368,7 +1368,7 @@ var
 begin
   DivOneByXTable[0] := 0; // NaN
   for i := 1 to High(DivOneByXTable) do
-    DivOneByXTable[i] := 1/i;
+    DivOneByXTable[i] := 1 / i;
 end;
 
 initialization

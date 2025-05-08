@@ -690,7 +690,7 @@ function TopX(e: PActive; const currentY: Int64): Int64; overload;
 begin
   if (currentY = e.top.Y) or (e.top.X = e.bot.X) then Result := e.top.X
   else if (currentY = e.bot.Y) then Result := e.bot.X
-  else Result := e.bot.X + Round(e.dx*(currentY - e.bot.Y));
+  else Result := e.bot.X + Round(e.dx * (currentY - e.bot.Y));
 end;
 //------------------------------------------------------------------------------
 
@@ -1157,7 +1157,7 @@ begin
     if reverse then op := op.prev else op := op.next;
   end;
 
-  setLength(path, j+1);
+  setLength(path, j + 1);
   if isOpen then
     Result := (j > 0) else
     Result := (j > 1);
@@ -1288,7 +1288,7 @@ begin
   d4 := (pt1.x - pt2.x);
   d5 := (pt2.y + pt3.y);
   d6 := (pt2.x - pt3.x);
-  result := d1 * d2 + d3 *d4 + d5 *d6;
+  result := d1 * d2 + d3 * d4 + d5 * d6;
 end;
 //------------------------------------------------------------------------------
 
@@ -3003,10 +3003,10 @@ begin
   FHorzSegList.Sort(HorzSegListSort);
 
   // find overlaps
-  for i := 0 to FHorzSegList.Count -2 do
+  for i := 0 to FHorzSegList.Count - 2 do
   begin
     hs1 := FHorzSegList.UnsafeGet(i);
-    for j := i+1 to FHorzSegList.Count -1 do
+    for j := i + 1 to FHorzSegList.Count - 1 do
     begin
       hs2 := FHorzSegList.UnsafeGet(j);
 
@@ -4039,7 +4039,7 @@ function TPolyPath64.AddChild(const path: TPath64): TPolyPathBase;
 begin
   Result := TPolyPath64.Create;
   Result.Parent := self;
-  TPolyPath64(Result).FPath := path;;
+  TPolyPath64(Result).FPath := path;
   ChildList.Add(Result);
 end;
 //------------------------------------------------------------------------------
@@ -4058,7 +4058,7 @@ begin
   inherited Create;
   CheckPrecisionRange(precision);
   FScale := Math.Power(10, precision);
-  FInvScale := 1/FScale;
+  FInvScale := 1 / FScale;
 end;
 //------------------------------------------------------------------------------
 
@@ -4225,7 +4225,7 @@ begin
   Result := TPolyPathD.Create;
   Result.Parent := self;
   TPolyPathD(Result).fScale := fScale;
-  TPolyPathD(Result).FPath := ScalePathD(path, 1/FScale);
+  TPolyPathD(Result).FPath := ScalePathD(path, 1 / FScale);
   ChildList.Add(Result);
 end;
 //------------------------------------------------------------------------------

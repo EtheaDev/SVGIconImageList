@@ -401,25 +401,25 @@ var
 begin
   result := false;
   if (len = 0) or (len mod 4 > 0) or not Assigned(memStream) then exit;
-  if str[len-2] = '=' then extra := 2
-  else if str[len-1] = '=' then extra := 1
+  if str[len - 2] = '=' then extra := 2
+  else if str[len - 1] = '=' then extra := 1
   else extra := 0;
   memStream.SetSize(LongInt((len div 4 * 3) - extra));
   dst := memStream.Memory;
   Chars4 := @str[0];
   i := 0;
   try
-    for j := 1 to (len div 4) -1 do
+    for j := 1 to (len div 4) - 1 do
     begin
       dst[i] := FrstChr(Chars4);
-      dst[i+1] := ScndChr(Chars4);
-      dst[i+2] := ThrdChr(Chars4);
-      inc(pbyte(Chars4),4);
-      inc(i,3);
+      dst[i + 1] := ScndChr(Chars4);
+      dst[i + 2] := ThrdChr(Chars4);
+      inc(pbyte(Chars4), 4);
+      inc(i, 3);
     end;
     dst[i] := FrstChr(Chars4);
-    if extra < 2  then dst[i+1] := ScndChr(Chars4);
-    if extra < 1 then dst[i+2] := ThrdChr(Chars4);
+    if extra < 2  then dst[i + 1] := ScndChr(Chars4);
+    if extra < 1 then dst[i + 2] := ThrdChr(Chars4);
   except
     Exit;
   end;
@@ -1094,8 +1094,8 @@ const
     1E10, 1E11, 1E12, 1E13, 1E14, 1E15, 1E16, 1E17, 1E18
   );
   Power10Reciprocal: array[0..18] of Double = (
-    1/1E0, 1/1E1, 1/1E2, 1/1E3, 1/1E4, 1/1E5, 1/1E6, 1/1E7, 1/1E8, 1/1E9,
-    1/1E10, 1/1E11, 1/1E12, 1/1E13, 1/1E14, 1/1E15, 1/1E16, 1/1E17, 1/1E18
+    1 / 1E0, 1 / 1E1, 1 / 1E2, 1 / 1E3, 1 / 1E4, 1 / 1E5, 1 / 1E6, 1 / 1E7, 1 / 1E8, 1 / 1E9,
+    1 / 1E10, 1 / 1E11, 1 / 1E12, 1 / 1E13, 1 / 1E14, 1 / 1E15, 1 / 1E16, 1 / 1E17, 1 / 1E18
   );
 var
   exp: integer;
@@ -1195,42 +1195,42 @@ begin
         unitType := utPercent;
       end;
     'c': //convert cm to pixels
-      if ((cc+1)^ = 'm') then
+      if ((cc + 1)^ = 'm') then
       begin
         inc(cc, 2);
         unitType := utCm;
       end;
     'd': //ignore deg
-      if ((cc+1)^ = 'e') and ((cc+2)^ = 'g') then
+      if ((cc + 1)^ = 'e') and ((cc + 2)^ = 'g') then
       begin
         inc(cc, 3);
         unitType := utDegree;
       end;
     'e': //convert cm to pixels
-      if ((cc+1)^ = 'm') then
+      if ((cc + 1)^ = 'm') then
       begin
         inc(cc, 2);
         unitType := utEm;
       end
-      else if ((cc+1)^ = 'x') then
+      else if ((cc + 1)^ = 'x') then
       begin
         inc(cc, 2);
         unitType := utEx;
       end;
     'i': //convert inchs to pixels
-      if ((cc+1)^ = 'n') then
+      if ((cc + 1)^ = 'n') then
       begin
         inc(cc, 2);
         unitType := utInch;
       end;
     'm': //convert mm to pixels
-      if ((cc+1)^ = 'm') then
+      if ((cc + 1)^ = 'm') then
       begin
         inc(cc, 2);
         unitType := utMm;
       end;
     'p':
-      case (cc+1)^ of
+      case (cc + 1)^ of
         'c':
           begin
             inc(cc, 2);
@@ -1682,7 +1682,7 @@ var
   ch: UTF8Char;
 begin
   len := Length(html);
-  SetLength(Result, len*3);
+  SetLength(Result, len * 3);
   c := PUTF8Char(html);
   endC := c + len;
   ce := c;
@@ -1753,29 +1753,29 @@ begin
       $80 .. $7FF:
         begin
           Result[len] := UTF8Char($C0 or (val shr 6));
-          Result[len+1] := UTF8Char($80 or (val and $3f));
+          Result[len + 1] := UTF8Char($80 or (val and $3f));
           inc(len, 2);
         end;
       $800 .. $7FFF:
         begin
           Result[len] := UTF8Char($E0 or (val shr 12));
-          Result[len+1] := UTF8Char($80 or ((val shr 6) and $3f));
-          Result[len+2] := UTF8Char($80 or (val and $3f));
+          Result[len + 1] := UTF8Char($80 or ((val shr 6) and $3f));
+          Result[len + 2] := UTF8Char($80 or (val and $3f));
           inc(len, 3);
         end;
       $10000 .. $10FFFF:
         begin
           Result[len] := UTF8Char($F0 or (val shr 18));
-          Result[len+1] := UTF8Char($80 or ((val shr 12) and $3f));
-          Result[len+2] := UTF8Char($80 or ((val shr 6) and $3f));
-          Result[len+3] := UTF8Char($80 or (val and $3f));
+          Result[len + 1] := UTF8Char($80 or ((val shr 12) and $3f));
+          Result[len + 2] := UTF8Char($80 or ((val shr 6) and $3f));
+          Result[len + 3] := UTF8Char($80 or (val and $3f));
           inc(len, 4);
         end;
       else
       begin
         //ie: error
-        Move(c^, Result[len], ce- c +1);
-        inc(len, ce - c +1);
+        Move(c^, Result[len], ce - c + 1);
+        inc(len, ce - c + 1);
       end;
     end;
     inc(ce);
@@ -1787,7 +1787,7 @@ begin
     Move(c^, Result[len], (ce - c));
     inc(len, ce - c);
   end;
-  setLength(Result, len -1);
+  setLength(Result, len - 1);
 end;
 //------------------------------------------------------------------------------
 
@@ -1938,7 +1938,7 @@ begin
 
   if Odd(len) then
   begin
-    SetLength(Result, len *2);
+    SetLength(Result, len * 2);
     Move(Result[0], Result[len], len * SizeOf(double));
   end;
 end;
@@ -2697,20 +2697,20 @@ begin
     else if c and $E0 = $C0 then
     begin
       if i = len then break;
-      codePoints[j] := (c and $1F) shl 6 + (Ord(utf8[i+1]) and $3F);
+      codePoints[j] := (c and $1F) shl 6 + (Ord(utf8[i + 1]) and $3F);
       inc(i, 2); inc(j);
     end
     else if c and $F0 = $E0 then
     begin
       if i > len - 2 then break;
       codePoints[j] := (c and $F) shl 12 +
-        ((Ord(utf8[i+1]) and $3F) shl 6) + ((Ord(utf8[i+2]) and $3F));
+        ((Ord(utf8[i + 1]) and $3F) shl 6) + ((Ord(utf8[i + 2]) and $3F));
       inc(i, 3); inc(j);
     end else
     begin
       if (i > len - 3) or (c shr 3 <> $1E) then break;
-      codePoints[j] := (c and $7) shl 18 + ((Ord(utf8[i+1]) and $3F) shl 12) +
-        ((Ord(utf8[i+2]) and $3F) shl 6) + (Ord(utf8[i+3]) and $3F);
+      codePoints[j] := (c and $7) shl 18 + ((Ord(utf8[i + 1]) and $3F) shl 12) +
+        ((Ord(utf8[i + 2]) and $3F) shl 6) + (Ord(utf8[i + 3]) and $3F);
       inc(i, 4); inc(j);
     end;
   end;
@@ -2719,7 +2719,7 @@ begin
 
   // make room in the result for surrogate paired chars, and
   // convert codepoints into the result (a Utf16 string)
-  SetLength(Result, len *2);
+  SetLength(Result, len * 2);
   for i := 0 to len -1 do
   begin
     inc(j);
@@ -2814,7 +2814,7 @@ end;
 function TValue.GetValueXY(const relSize: TRectD; assumeRelValBelow: Double): double;
 begin
   //https://www.w3.org/TR/SVG11/coords.html#Units
-  Result := GetValue(Hypot(relSize.Width, relSize.Height)/sqrt2, assumeRelValBelow);
+  Result := GetValue(Hypot(relSize.Width, relSize.Height) / sqrt2, assumeRelValBelow);
 end;
 //------------------------------------------------------------------------------
 
@@ -2895,7 +2895,7 @@ function TValueRecWH.GetRectD(const relSize: TRectD; assumeRelValBelow: Double):
 begin
   with GetRectWH(relSize, assumeRelValBelow) do
   begin
-    Result.Left :=Left;
+    Result.Left := Left;
     Result.Top := Top;
     Result.Right := Left + Width;
     Result.Bottom := Top + Height;
@@ -3137,9 +3137,9 @@ procedure MakeLowerCaseTable;
 var
   i: UTF8Char;
 begin
-  for i:= #0 to #$40 do LowerCaseTable[i]:= i;
-  for i:= #$41 to #$5A do LowerCaseTable[i]:= UTF8Char(Ord(i) + $20);
-  for i:= #$5B to #$FF do LowerCaseTable[i]:= i;
+  for i := #0 to #$40 do LowerCaseTable[i] := i;
+  for i := #$41 to #$5A do LowerCaseTable[i] := UTF8Char(Ord(i) + $20);
+  for i := #$5B to #$FF do LowerCaseTable[i] := i;
 end;
 //------------------------------------------------------------------------------
 

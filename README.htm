@@ -31,7 +31,7 @@ td{
 </style>
 <h1>SVGIconImageList <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg" alt="License"/></a></h1>
 <h2>Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale&hellip;)</h2>
-<h3>Actual official version 4.4.3 (VCL+FMX)</h3>
+<h3>Actual official version 4.4.4 (VCL+FMX)</h3>
 <table>
   <tr>
     <th>Component</th>
@@ -58,11 +58,13 @@ td{
 <p>From 4.4.0 version a new &ldquo;Installer&rdquo; read-to-use is located in the Release area: <a href="https://github.com/EtheaDev/SVGIconImageList/releases/latest/download/SVGIconImageList_Setup.exe">Download the Installer</a>.</p>
 <p>The Installer automatically detect your Delphi versions, install sources, build and install packages and add source paths.</p>
 <p><img src="./Demo/Images/Setup.png" alt="Setup"/></p>
+<h2>Documentation</h2>
+<p>Follow the <a href="https://ethea.it/docs/svgiconimagelist/">Project Site</a> to known how to use those components to modernize your Delphi VCL or FMX applications with scalable, colored and beautiful icons.</p>
 <h2>You can search and download Icons directly from the WEB!</h2>
 <p>From version 4.3 an integrated service is now available in the component editor to download SVG icons from the WEB, via the API provided by <a href="https://iconify.design/">iconify.design</a>.</p>
 <p>Now you can select &ldquo;Add from WEB&rdquo; in the Component Editor: a new form to search and Download from the WEB is available for both VCL and FMX Platforms.</p>
 <p><img src="./Demo/Images/SVG_REST_Client_Search.jpg" alt="SVG_REST_Client_Search"/></p>
-<p>Read the <a href="https://github.com/EtheaDev/SVGIconImageList/wiki/RESTAPISearch">wiki page</a> to understand how to easily download SVG icons from the WEB and include them in the SVGIconImageList or SVGIconImageCollection.</p>
+<p>Read <a href="https://ethea.it/docs/svgiconimagelist/RESTAPISearch.html">this page</a> to understand how to easily download SVG icons from the WEB and include them in the SVGIconImageList or SVGIconImageCollection.</p>
 <h2>Important notice</h2>
 <p>From version 4.0, <strong>TSVGIconVirtualImageList</strong> inherits from <strong>TVirtualImageList</strong> (using Delphi 10.3 to latest). For previous Delphi versions <strong>TSVGIconVirtualImageList</strong> inherits from <strong>TSVGIconImageListBase</strong>.</p>
 <p>An important difference is that a TVirtualImageList may use and create only a subset of the images in the collection.</p>
@@ -70,7 +72,7 @@ td{
 <p>For this reasons, now TSVGIconVirtualImageList have also FixedColor, GrayScale, ApplyToRootOnly and Opacity properties, so you can setup those properties only at VirtualImageList level, and you can share the same TSVGIconImageCollection from many VirtualImageList with different poperties, as you can see in the new SVGIconVirtualImageListDemo.</p>
 <p>For this reason, if you are using those components from Delphi 10.3, the recommended combination should be <strong>TSVGIconImageCollection + TSVGIconVirtualImageList</strong>.</p>
 <p>Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to &ldquo;True&rdquo;, everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.</p>
-<p>Another feature available from Delphi 10.4 version, is that <strong>TSVGIconImageCollection</strong> inherits from TCustomImageCollection, so you can also use it with the TVirtualImage component and place SVG icons into the TControlList component, as explained <a href="https://github.com/EtheaDev/SVGIconImageList/wiki/TControlList-with-SVGIconImageCollection">here&hellip;</a></p>
+<p>Another feature available from Delphi 10.4 version, is that <strong>TSVGIconImageCollection</strong> inherits from TCustomImageCollection, so you can also use it with the TVirtualImage component and place SVG icons into the TControlList component, as explained <a href="https://ethea.it/docs/svgiconimagelist/TControlList-with-SVGIconImageCollection.html">here&hellip;</a></p>
 <h2>Choose your preferred SVG engine!</h2>
 <p>There are three implementation:</p>
 <ul>
@@ -123,17 +125,19 @@ td{
 <p><img src="./Demo/Images/SVGTextPropertyEditor.jpg" alt="SVGTextPropertyEditor.jpg"/></p>
 <p><img src="./Demo/Images/SVGTextPropertyEditorFMX.jpg" alt="SVGTextPropertyEditorFMX.jpg"/></p>
 <h3>UTILITIES</h3>
-<p>The <a href="https://github.com/EtheaDev/SVGIconImageList/wiki/SVG-Viewer-(VCL)">SVG Viewer Demo</a> is useful to check the rendering quality of the engines available.</p>
-<p>The <a href="https://github.com/EtheaDev/SVGIconImageList/wiki/SVGIconExplorer">SVG Icon Explorer</a> utility is useful to explore and preview your svg image collections.</p>
+<p>The <a href="https://ethea.it/docs/svgiconimagelist/SVG-Viewer-(VCL).html">SVG Viewer Demo</a> is useful to check the rendering quality of the engines available.</p>
+<p>The <a href="https://ethea.it/docs/svgiconimagelist/SVGIconExplorer.html">SVG Icon Explorer utility</a> is useful to explore and preview your svg image collections.</p>
 <p>You can use <a href="https://github.com/EtheaDev/SVGShellExtensions">SVG Shell Extensions</a> if you want to see your icons directly into Windows Explorer or you want to edit them using a powerful <strong>SVG Text Editor</strong>.</p>
-<h3>DOCUMENTATION</h3>
-<p>Follow the <a href="https://ethea.it/docs/svgiconimagelist/">Project Site</a> to known how to use those components to modernize your Delphi VCL or FMX applications with scalable, colored and beautiful icons.</p>
 <h3>Other similar library</h3>
 <p>A similar project made by Ethea for Icon Fonts: <a href="https://github.com/EtheaDev/IconFontsImageList">https://github.com/EtheaDev/IconFontsImageList</a></p>
 <h3>Available from Delphi XE3 to Delphi 12 (VCL and FMX Platforms)</h3>
 <p><img src="./Demo/Images/SupportingDelphi.jpg" alt="Delphi 12 Support"/></p>
 <p>Related links: <a href="https://www.embarcadero.com">embarcadero.com</a> - <a href="https://learndelphi.org">learndelphi.org</a></p>
 <h3>RELEASE NOTES</h3>
+<p>12 Mar 2025 - Version 4.4.4</p>
+<ul>
+<li>Aligned to Image32 4.6 Released on 16 Apr 2025</li>
+</ul>
 <p>12 Mar 2025 - Version 4.4.3</p>
 <ul>
 <li>Added support for Delphi 12 64bit IDE</li>

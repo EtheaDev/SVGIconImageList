@@ -359,7 +359,7 @@ var
   c: TColor32;
   p: TPathD;
 const
-  RadToDeg = 180/PI;
+  RadToDeg = 180 / PI;
 begin
   if penWidth = 0 then Exit
   else if penWidth < 0 then
@@ -379,15 +379,15 @@ begin
   end;
   for i := 1 to highI do
   begin
-    deg := Round(GetAngle(p[i-1], p[i]) * RadToDeg);
+    deg := Round(GetAngle(p[i - 1], p[i]) * RadToDeg);
     case deg of
-      -180..-136: frac := (-deg-135)/45;
+      -180..-136: frac := (-deg - 135) / 45;
       -135..0   : frac := 0;
-      1..44     : frac := deg/45;
+      1..44     : frac := deg / 45;
       else        frac := 1;
     end;
     c := GradientColor(topLeftColor, bottomRightColor, frac);
-    DrawLine(img, p[i-1], p[i], penWidth, c);
+    DrawLine(img, p[i - 1], p[i], penWidth, c);
   end;
 end;
 //------------------------------------------------------------------------------
@@ -448,14 +448,14 @@ begin
   sX := Abs(Round(ss.X));
   sY := Abs(Round(ss.Y));
   if rec.Left + ss.X < 0 then ss.X := -rec.Left
-  else if rec.Right + ss.X > img.Width then ss.X := img.Width - rec.Right -1;
+  else if rec.Right + ss.X > img.Width then ss.X := img.Width - rec.Right - 1;
   if rec.Top + ss.Y < 0 then ss.Y := -rec.Top
-  else if rec.Bottom + ss.Y > img.Height then ss.Y := img.Height -rec.Bottom -1;
-  tmpImg  := TImage32.Create(sX*3 +1, sY*3 +1);
+  else if rec.Bottom + ss.Y > img.Height then ss.Y := img.Height -rec.Bottom - 1;
+  tmpImg  := TImage32.Create(sX * 3 + 1, sY * 3 + 1);
   try
     i := sX div 2; j := sY div 2;
-    DrawPolygon(tmpImg, Rectangle(i,j,i+sX*2,j+sY*2), frNonZero, color);
-    FastGaussianBlur(tmpImg, tmpImg.Bounds, Round(sX/4),Round(sY/4), 1);
+    DrawPolygon(tmpImg, Rectangle(i, j, i + sX * 2, j + sY * 2), frNonZero, color);
+    FastGaussianBlur(tmpImg, tmpImg.Bounds, Round(sX / 4),Round(sY / 4), 1);
     // t-l corner
     if (ss.X < 0) or (ss.Y < 0) then
     begin
@@ -463,77 +463,77 @@ begin
       l := rec.Left; t := rec.Top;
       if ss.X < 0 then dec(l, sX);
       if ss.Y < 0 then dec(t, sY);
-      img.Copy(tmpImg, tmpRec, Rect(l,t,l+sX,t+sY));
+      img.Copy(tmpImg, tmpRec, Rect(l, t, l + sX, t + sY));
     end;
     // t-r corner
     if (ss.X > 0) or (ss.Y < 0) then
     begin
-      tmpRec := Rect(sX*2+1, 0, sX*3+1, sY);
+      tmpRec := Rect(sX * 2 + 1, 0, sX * 3 + 1, sY);
       l := rec.Right; t := rec.Top;
       if ss.X < 0 then dec(l, sX);
       if ss.Y < 0 then dec(t, sY);
-      img.Copy(tmpImg, tmpRec, Rect(l,t,l+sX,t+sY));
+      img.Copy(tmpImg, tmpRec, Rect(l, t, l + sX, t + sY));
     end;
     // b-l corner
     if (ss.X < 0) or (ss.Y > 0) then
     begin
-      tmpRec := Rect(0, sY*2+1, sX, sY*3+1);
+      tmpRec := Rect(0, sY * 2 + 1, sX, sY * 3 + 1);
       l := rec.Left; t := rec.Bottom;
       if ss.X < 0 then dec(l, sX);
       if ss.Y < 0 then dec(t, sY);
-      img.Copy(tmpImg, tmpRec, Rect(l,t,l+sX,t+sY));
+      img.Copy(tmpImg, tmpRec, Rect(l, t, l + sX, t + sY));
     end;
     // b-r corner
     if (ss.X > 0) or (ss.Y > 0) then
     begin
-      tmpRec := Rect(sX*2+1, sY*2+1, sX*3+1, sY*3+1);
+      tmpRec := Rect(sX * 2 + 1, sY * 2 + 1, sX * 3 + 1, sY * 3 + 1);
       l := rec.Right; t := rec.Bottom;
       if ss.X < 0 then dec(l, sX);
       if ss.Y < 0 then dec(t, sY);
-      img.Copy(tmpImg, tmpRec, Rect(l,t,l+sX,t+sY));
+      img.Copy(tmpImg, tmpRec, Rect(l, t, l + sX, t + sY));
     end;
     // l-edge
     if (ss.X < 0) then
     begin
-      l := rec.Left; t := rec.Top+sY; b := rec.Bottom-1;
+      l := rec.Left; t := rec.Top + sY; b := rec.Bottom - 1;
       if ss.Y < 0 then begin dec(t, sY); dec(b,sY); end;
       for i := 1 to sX do
       begin
-        c := tmpImg.Pixel[sX-i, sY+1];
+        c := tmpImg.Pixel[sX - i, sY + 1];
         FillColorVert(img, l-i, t, b, c);
       end;
     end;
     // t-edge
     if (ss.Y < 0) then
     begin
-      l := rec.Left+sX; r := rec.Right-1; t := rec.Top;
-      if ss.X < 0 then begin dec(l, sX); dec(r,sX); end;
+      l := rec.Left + sX; r := rec.Right - 1; t := rec.Top;
+      if ss.X < 0 then begin dec(l, sX); dec(r, sX); end;
       for i := 1 to sY do
       begin
-        c := tmpImg.Pixel[sX+1, sY-i];
-        FillColorHorz(img, l, r, t-i, c);
+        c := tmpImg.Pixel[sX + 1, sY - i];
+        FillColorHorz(img, l, r, t - i, c);
       end;
     end;
     // r-edge
     if (ss.X > 0) then
     begin
-      r := rec.Right-1; t := rec.Top+sY; b := rec.Bottom-1;
-      if ss.Y < 0 then begin dec(t, sY); dec(b,sY); end;
+      r := rec.Right-1; t := rec.Top + sY; b := rec.Bottom - 1;
+      if ss.Y < 0 then begin dec(t, sY); dec(b, sY); end;
       for i := 1 to sX do
       begin
-        c := tmpImg.Pixel[sX*2+i, sY+1];
-        FillColorVert(img, r+i, t, b, c);
+        c := tmpImg.Pixel[sX * 2 + i, sY + 1];
+        FillColorVert(img, r + i, t, b, c);
       end;
     end;
     // b-edge
     if (ss.Y > 0) then
     begin
-      l := rec.Left+sX; r := rec.Right-1; b := rec.Bottom-1;
-      if ss.X < 0 then begin dec(l, sX); dec(r,sX); end;
+      l := rec.Left + sX; r := rec.Right - 1; b := rec.Bottom - 1;
+      if ss.X < 0 then begin dec(l, sX); dec(r, sX); end;
       for i := 1 to sY do
       begin
-        c := tmpImg.Pixel[sX+1, sY*2+i];
-        FillColorHorz(img, l, r, b+i, c);
+        c := tmpImg.Pixel[sX + 1, sY * 2 + i];
+        FillColorHorz(img, l, r, b + i, c);
       end;
     end;
   finally
@@ -576,7 +576,7 @@ begin
   x := depth * x;
   y := depth * y;
   blurSize := Max(1,Round(depth / 2));
-  Img32.Vector.InflateRect(rec, Ceil(depth*2), Ceil(depth*2));
+  Img32.Vector.InflateRect(rec, Ceil(depth * 2), Ceil(depth * 2));
   polys := TranslatePath(polygons, -rec.Left, -rec.Top);
   shadowPolys := TranslatePath(polys, x, y);
   RectWidthHeight(rec, w, h);
@@ -637,7 +637,7 @@ var
   pColor, pBlur: PARGB;
 begin
   if radius = 0 then Exit;
-  amt := ClampRange(amount/10, 0.1, 5);
+  amt := ClampRange(amount / 10, 0.1, 5);
   radius := ClampRange(radius, 1, 10);
   for i := -255 to 255 do
     weightAmount[i] := Round(amt * i);
@@ -793,7 +793,7 @@ begin
     if minorInterval > 0 then
     begin
       x := minorInterval;
-      path[0] := PointD(x, 0); path[1] := PointD(x, h);;
+      path[0] := PointD(x, 0); path[1] := PointD(x, h);
       for i := 1 to (w div minorInterval) do
       begin
         Img32.Draw.DrawLine(img, path, 1, cr, esSquare);
@@ -814,7 +814,7 @@ begin
       cr.SetColor(majColor);
 
       x := majorInterval;
-      path[0] := PointD(x, 0); path[1] := PointD(x, h);;
+      path[0] := PointD(x, 0); path[1] := PointD(x, h);
       for i := 1 to (w div majorInterval) do
       begin
         Img32.Draw.DrawLine(img, path, 1, cr, esSquare);
@@ -1199,7 +1199,7 @@ begin
     if GetAlpha(colorLt) > 0 then
     begin
       tmp.Clear(colorLt);
-      paths2 := TranslatePath(paths, -height*x, -height*y);
+      paths2 := TranslatePath(paths, -height * x, -height * y);
       EraseInsidePaths(tmp, paths2, fillRule);
       FastGaussianBlur(tmp, tmp.Bounds, Round(blurRadius), 0);
       EraseOutsidePaths(tmp, paths, fillRule, tmp.Bounds);
@@ -1208,7 +1208,7 @@ begin
     if GetAlpha(colorDk) > 0 then
     begin
       tmp.Clear(colorDk);
-      paths2 := TranslatePath(paths, height*x, height*y);
+      paths2 := TranslatePath(paths, height * x, height * y);
       EraseInsidePaths(tmp, paths2, fillRule);
       FastGaussianBlur(tmp, tmp.Bounds, Round(blurRadius), 0);
       EraseOutsidePaths(tmp, paths, fillRule, tmp.Bounds);
@@ -1244,10 +1244,10 @@ begin
   else
   begin
     hsl1 := RgbToHsl(color1); hsl2 := RgbToHsl(color2);
-    hsl1.hue := ClampByte(hsl1.hue*(1-frac) + hsl2.hue*frac);
-    hsl1.sat := ClampByte(hsl1.sat*(1-frac) + hsl2.sat*frac);
-    hsl1.lum := ClampByte(hsl1.lum*(1-frac) + hsl2.lum*frac);
-    hsl1.alpha := ClampByte(hsl1.alpha*(1-frac) + hsl2.alpha*frac);
+    hsl1.hue := ClampByte(hsl1.hue * (1 -frac) + hsl2.hue * frac);
+    hsl1.sat := ClampByte(hsl1.sat * (1 - frac) + hsl2.sat * frac);
+    hsl1.lum := ClampByte(hsl1.lum * (1 - frac) + hsl2.lum * frac);
+    hsl1.alpha := ClampByte(hsl1.alpha * (1 - frac) + hsl2.alpha * frac);
     Result := HslToRgb(hsl1);
   end;
 end;
@@ -1258,7 +1258,7 @@ var
   hsl: THsl;
 begin
   hsl := RgbToHsl(color);
-  hsl.lum := ClampByte(hsl.lum - (percent/100 * hsl.lum));
+  hsl.lum := ClampByte(hsl.lum - (percent / 100 * hsl.lum));
   Result := HslToRgb(hsl);
 end;
 //------------------------------------------------------------------------------
@@ -1268,7 +1268,7 @@ var
   hsl: THsl;
 begin
   hsl := RgbToHsl(color);
-  hsl.lum := ClampByte(hsl.lum + percent/100 * (255 - hsl.lum));
+  hsl.lum := ClampByte(hsl.lum + percent / 100 * (255 - hsl.lum));
   Result := HslToRgb(hsl);
 end;
 //------------------------------------------------------------------------------
@@ -1285,7 +1285,7 @@ begin
   if (size < 5) then Exit;
   radius := size * 0.5;
   lightSize := radius * 0.25;
-  rec := RectD(pt.X -radius, pt.Y -radius, pt.X +radius, pt.Y +radius);
+  rec := RectD(pt.X -radius, pt.Y -radius, pt.X + radius, pt.Y + radius);
   if baEraseBeneath in buttonAttributes then
     img.Clear(Rect(rec));
   case buttonShape of
@@ -1312,12 +1312,12 @@ begin
     // nb: only need to cutout the inside shadow if
     // the pending color fill is semi-transparent
     if baShadow in buttonAttributes then
-      DrawShadow(img, Result, frNonZero, lightSize *2,
+      DrawShadow(img, Result, frNonZero, lightSize * 2,
         (lightAngle + angle180), $AA000000, GetAlpha(color) < $FE);
     if GetAlpha(color) > 2 then
       DrawPolygon(img, Result, frNonZero, color);
     if ba3D in buttonAttributes then
-      Draw3D(img, Result, frNonZero, lightSize*2,
+      Draw3D(img, Result, frNonZero, lightSize * 2,
         Ceil(lightSize), $CCFFFFFF, $AA000000, lightAngle);
     DrawLine(img, Result, dpiAware1, clBlack32, esPolygon, jsButt);
   finally
@@ -1568,13 +1568,13 @@ begin
       // check left ...
       if IsMatch(xl) then
       begin
-        while (xl > 0) and IsMatch(xl-1) do dec(xl);
-        if xl <= xr2 -2 then
-          ffs.Push(xl, xr2-2, y, -dirY);
-        while (xr2 < maxX) and IsMatch(xr2+1) do inc(xr2);
+        while (xl > 0) and IsMatch(xl - 1) do dec(xl);
+        if xl <= xr2 - 2 then
+          ffs.Push(xl, xr2 - 2, y, -dirY);
+        while (xr2 < maxX) and IsMatch(xr2 + 1) do inc(xr2);
         ffs.Push(xl, xr2, y, dirY);
-        if xr2 >= xr +2 then
-          ffs.Push(xr+2, xr2, y, -dirY);
+        if xr2 >= xr + 2 then
+          ffs.Push(xr + 2, xr2, y, -dirY);
         xl := xr2 +2;
       end;
       // check right ...
@@ -1582,11 +1582,11 @@ begin
       while (xl <= xr) do
       begin
         xr2 := xl;
-        while (xr2 < maxX) and IsMatch(xr2+1) do inc(xr2);
+        while (xr2 < maxX) and IsMatch(xr2 + 1) do inc(xr2);
         ffs.Push(xl, xr2, y, dirY);
-        if xr2 >= xr +2 then
+        if xr2 >= xr + 2 then
         begin
-          ffs.Push(xr+2, xr2, y, -dirY);
+          ffs.Push(xr + 2, xr2, y, -dirY);
           break;
         end;
         inc(xl, 2);
@@ -1713,7 +1713,7 @@ begin
   // grayscale luminance as percent where 0% is black and 100% is white
   //(luminance is ignored when preserveColor = true)
   luminance := ClampRange(luminance, 0, 100);
-  b := luminance *255 div 100;
+  b := luminance * 255 div 100;
   customGray := $FF000000 + b shl 16 + b shl 8 + b;
   ClampRange(radius, 1, 5);
   inc(depth);
@@ -1888,13 +1888,13 @@ begin
   for i := 0 to len -1 do
     with srArray[i] do
     begin
-      iPrev := ModEx(i-1, len);
-      iNext := ModEx(i+1, len);
+      iPrev := ModEx(i - 1, len);
+      iNext := ModEx(i + 1, len);
       pt      := path[i];
       prev    := @srArray[iPrev];
       next    := @srArray[iNext];
       pdSqrd  := PerpendicularDistSqrd(path[i], path[iPrev], path[iNext]);
-      isEndPt   := not isClosedPath and ((i = 0) or (i = len -1));
+      isEndPt   := not isClosedPath and ((i = 0) or (i = len - 1));
     end;
 
   current := @srArray[0];
@@ -1999,7 +1999,7 @@ begin
     with srArray[i] do
     begin
       pt      := path[i];
-      segLenSq:= DistanceSqrd(path[i], path[nextI]);
+      segLenSq := DistanceSqrd(path[i], path[nextI]);
       pdSqrd  := PerpendicularDistSqrd(path[i], path[prevI], path[nextI]);
       prev    := @srArray[prevI];
       next    := @srArray[nextI];
@@ -2084,7 +2084,7 @@ begin
   len := Length(path);
   if len < 3 then Exit;
 
-  NewPointDArray(Result, len *3 +1, True);
+  NewPointDArray(Result, len * 3 + 1, True);
   prev := len-1;
   SetLength(pl, len);
   SetLength(unitVecs, len);
@@ -2104,7 +2104,7 @@ begin
     vec := GetAvgUnitVector(unitVecs[i], unitVecs[j]);
 
     angle := arccos(Max(-1,Min(1,(DotProdVecs(unitVecs[i], unitVecs[j])))));
-    d := abs(Pi-angle)/TwoPi;
+    d := abs(Pi-angle) / TwoPi;
     d1 := pl[i] * d;
     d2 := pl[j] * d;
 
@@ -2115,19 +2115,19 @@ begin
     end;
 
     if i = 0 then
-      Result[len*3-1] := TranslatePoint(path[0], -vec.X * d1, -vec.Y * d1)
+      Result[len * 3 - 1] := TranslatePoint(path[0], -vec.X * d1, -vec.Y * d1)
     else
-      Result[i*3-1] := TranslatePoint(path[i], -vec.X * d1, -vec.Y * d1);
-    Result[i*3] := path[i];
-    Result[i*3+1] := TranslatePoint(path[i], vec.X * d2, vec.Y * d2);
+      Result[i * 3 - 1] := TranslatePoint(path[i], -vec.X * d1, -vec.Y * d1);
+    Result[i * 3] := path[i];
+    Result[i * 3 + 1] := TranslatePoint(path[i], vec.X * d2, vec.Y * d2);
   end;
-  Result[len*3] := path[0];
+  Result[len * 3] := path[0];
 
   if pathIsClosed then Exit;
   Result[1] := Result[0];
   dec(len);
-  Result[len*3-1] := Result[len*3];
-  SetLength(Result, Len*3 +1);
+  Result[len * 3 - 1] := Result[len * 3];
+  SetLength(Result, Len * 3 + 1);
 end;
 //------------------------------------------------------------------------------
 
@@ -2157,27 +2157,27 @@ begin
   len := Length(path);
   if len < 3 then Exit;
 
-  NewPointDArray(Result, len *3 +1);
+  NewPointDArray(Result, len * 3 + 1);
   prev := len-1;
   SetLength(pl, len);
   SetLength(unitVecs, len);
   pl[0] := Distance(path[prev], path[0]);
   unitVecs[0] := GetUnitVector(path[prev], path[0]);
-  for i := 0 to len -1 do
+  for i := 0 to len - 1 do
   begin
     if i = prev then
     begin
       j := 0;
     end else
     begin
-      j := i +1;
+      j := i + 1;
       pl[j] := Distance(path[i], path[j]);
       unitVecs[j] := GetUnitVector(path[i], path[j]);
     end;
     vec := GetAvgUnitVector(unitVecs[i], unitVecs[j]);
 
-    d1 := pl[i]/2;
-    d2 := pl[j]/2;
+    d1 := pl[i] / 2;
+    d2 := pl[j] / 2;
 
     if maxOffset > 0 then
     begin
@@ -2186,19 +2186,19 @@ begin
     end;
 
     if i = 0 then
-      Result[len*3-1] := TranslatePoint(path[0], -vec.X * d1, -vec.Y * d1)
+      Result[len * 3 - 1] := TranslatePoint(path[0], -vec.X * d1, -vec.Y * d1)
     else
-      Result[i*3-1] := TranslatePoint(path[i], -vec.X * d1, -vec.Y * d1);
-    Result[i*3] := path[i];
-    Result[i*3+1] := TranslatePoint(path[i], vec.X * d2, vec.Y * d2);
+      Result[i * 3 - 1] := TranslatePoint(path[i], -vec.X * d1, -vec.Y * d1);
+    Result[i * 3] := path[i];
+    Result[i * 3 + 1] := TranslatePoint(path[i], vec.X * d2, vec.Y * d2);
   end;
-  Result[len*3] := path[0];
+  Result[len * 3] := path[0];
 
   if pathIsClosed then Exit;
   Result[1] := Result[0];
   dec(len);
-  Result[len*3-1] := Result[len*3];
-  SetLength(Result, Len*3 +1);
+  Result[len * 3 - 1] := Result[len * 3];
+  SetLength(Result, Len * 3 + 1);
 end;
 //------------------------------------------------------------------------------
 
@@ -2222,12 +2222,12 @@ var
 begin
 	tt := t * t;
 	ttt := tt * t;
-  tensionEx := (1-tension) * 0.5;
-  m0 := (v3 - v1)*tensionEx;
-  m1 := (v4 - v2)*tensionEx;
-  a :=  2*v2 - 2*v3 + m0 + m1;
-  b :=  3*v3 -3*v2 -2*m0 - m1;
-  Result := a*ttt + b*tt + m0*t + v2;
+  tensionEx := (1 - tension) * 0.5;
+  m0 := (v3 - v1) * tensionEx;
+  m1 := (v4 - v2) * tensionEx;
+  a :=  2 * v2 - 2 * v3 + m0 + m1;
+  b :=  3 * v3 -3 * v2 -2 * m0 - m1;
+  Result := a * ttt + b * tt + m0 * t + v2;
 end;
 //------------------------------------------------------------------------------
 
@@ -2237,7 +2237,7 @@ var
   len: integer;
 begin
   len := Length(path);
-  SetLengthUninit(path, len +1);
+  SetLengthUninit(path, len + 1);
   path[len] := pt;
 end;
 //------------------------------------------------------------------------------
@@ -2258,7 +2258,7 @@ begin
   highI := len -1;
   dists[highI] := Distance(path[highI], path[0]);
   for i := 0 to highI-1 do
-    dists[i] := Distance(path[i], path[i+1]);
+    dists[i] := Distance(path[i], path[i + 1]);
 
   if tension > 1 then tension := 1
   else if tension < -1 then tension := -1;
@@ -2271,20 +2271,20 @@ begin
   if isClosedPath then
     for i := 0 to highI do
     begin
-      cnt := Ceil(dists[i]/maxInterval);
+      cnt := Ceil(dists[i] / maxInterval);
       Append(Result, path[i]);
-      for j := 1 to cnt -1 do
+      for j := 1 to cnt - 1 do
       begin
         pt.X := CubicInterpolate(
-          path[ModEx(i-1, len)].X,
+          path[ModEx(i - 1, len)].X,
           path[i].X,
-          path[ModEx(i+1, len)].X,
-          path[ModEx(i+2, len)].X, j/cnt, tension);
+          path[ModEx(i + 1, len)].X,
+          path[ModEx(i + 2, len)].X, j / cnt, tension);
         pt.Y := CubicInterpolate(
-          path[ModEx(i-1, len)].Y,
+          path[ModEx(i - 1, len)].Y,
           path[i].Y,
-          path[ModEx(i+1, len)].Y,
-          path[ModEx(i+2, len)].Y, j/cnt, tension);
+          path[ModEx(i + 1, len)].Y,
+          path[ModEx(i + 2, len)].Y, j / cnt, tension);
         Append(Result, pt);
       end;
     end
@@ -2292,20 +2292,20 @@ begin
   begin
     for i := 0 to highI -1 do
     begin
-      cnt := Ceil(dists[i]/maxInterval);
+      cnt := Ceil(dists[i] / maxInterval);
       Append(Result, path[i]);
       for j := 1 to cnt -1 do
       begin
         pt.X := CubicInterpolate(
-          path[Clamp(i-1, len)].X,
+          path[Clamp(i - 1, len)].X,
           path[Clamp(i, len)].X,
-          path[Clamp(i+1, len)].X,
-          path[Clamp(i+2, len)].X, j/cnt, tension);
+          path[Clamp(i + 1, len)].X,
+          path[Clamp(i + 2, len)].X, j / cnt, tension);
         pt.Y := CubicInterpolate(
-          path[Clamp(i-1, len)].Y,
+          path[Clamp(i - 1, len)].Y,
           path[Clamp(i, len)].Y,
-          path[Clamp(i+1, len)].Y,
-          path[Clamp(i+2, len)].Y, j/cnt, tension);
+          path[Clamp(i + 1, len)].Y,
+          path[Clamp(i + 2, len)].Y, j / cnt, tension);
         Append(Result, pt);
       end;
     end;
@@ -2322,7 +2322,7 @@ var
 begin
   len := Length(paths);
   SetLength(Result, len);
-  for i := 0 to len -1 do
+  for i := 0 to len - 1 do
     Result[i] := SmoothPath(paths[i], isClosedPath, tension, shapeTolerance);
 end;
 
@@ -2411,14 +2411,14 @@ var
   wIdeal, mIdeal: double;
 begin
   NewIntegerArray(Result, boxCnt, True);
-  wIdeal := Sqrt((12*stdDev*stdDev/boxCnt)+1); // Ideal averaging filter width
+  wIdeal := Sqrt((12 * stdDev * stdDev / boxCnt) + 1); // Ideal averaging filter width
   wl := Floor(wIdeal); if not Odd(wl) then dec(wl);
   mIdeal :=
-    (-3*stdDev*stdDev +0.25*boxCnt*wl*wl +boxCnt*wl +0.75*boxCnt)/(wl+1);
+    (-3 * stdDev * stdDev + 0.25 * boxCnt * wl * wl + boxCnt * wl + 0.75 * boxCnt) / (wl + 1);
   m := Floor(mIdeal) div 2;   // nb: variation on Ivan Kutskir's code.
-  wl := (wl -1) div 2;        //    It's better to do this here
-  wu := wl+1;                 //    than later in both BoxBlurH & BoxBlurV
-  for i := 0 to boxCnt -1 do
+  wl := (wl - 1) div 2;        //    It's better to do this here
+  wu := wl + 1;                 //    than later in both BoxBlurH & BoxBlurV
+  for i := 0 to boxCnt - 1 do
     if i < m then
       Result[i] := wl else
       Result[i] := wu;
@@ -2516,7 +2516,7 @@ begin
     end;
 
     // Skip "val.Color" calculation if both for-loops are skipped anyway
-    stdDevW := w - stdDev*2 - 1;
+    stdDevW := w - stdDev * 2 - 1;
     if (ti <= re) or (stdDevW > 0) then
     begin
       if w > 4 then // prevent the call-overhead if it would be slower than the inline version
@@ -2615,11 +2615,11 @@ begin
     ti := i;
     li := ti;
     ri := ti + stdDev * w;
-    re := ti +w *(h-1); // idx of last pixel in column
+    re := ti +w * (h - 1); // idx of last pixel in column
     fv.Reset(src[ti]);
-    val.Reset(src[ti], stdDev +1);
-    for j := 0 to stdDev -1 -ovr do
-      val.Add(src[ti + j *w]);
+    val.Reset(src[ti], stdDev + 1);
+    for j := 0 to stdDev - 1 - ovr do
+      val.Add(src[ti + j * w]);
     if ovr > 0 then val.Add(clNone32, ovr);
     for j := 0 to stdDev do
     begin
@@ -2634,7 +2634,7 @@ begin
     end;
 
     // Skip "val.Color" calculation if both for-loops are skipped anyway
-    stdDevH := h - stdDev*2 - 1;
+    stdDevH := h - stdDev * 2 - 1;
     if (ti <= re) or (stdDevH > 0) then
     begin
       if stdDevH > 4 then // prevent the call-overhead if it would be slower than the inline version

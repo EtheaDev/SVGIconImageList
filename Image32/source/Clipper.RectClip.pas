@@ -340,7 +340,7 @@ begin
   if Assigned(op.edge) then Exit;
   op.edge := @edge;
   len := Length(edge);
-  SetLength(edge, len+1);
+  SetLength(edge, len + 1);
   edge[len] := op;
 end;
 //------------------------------------------------------------------------------
@@ -618,7 +618,7 @@ var
   path: TPath64;
 begin
   result := nil;
-  len:= Length(paths);
+  len := Length(paths);
   for i := 0 to len -1 do
   begin
     path := paths[i];
@@ -637,7 +637,7 @@ begin
     ExecuteInternal(path);
     CheckEdges;
     for j := 0 to 3 do
-      TidyEdgePair(j, fEdges[j*2], fEdges[j*2 +1]);
+      TidyEdgePair(j, fEdges[j * 2], fEdges[j * 2 + 1]);
 
     for j := 0 to fResults.Count -1 do
       AppendPath(Result, GetPath(j));
@@ -822,7 +822,7 @@ begin
         begin
           if startLocsCW then j := i else j := 3 - i;
           Add(fRectPath[j]);
-          AddToEdge(fEdges[j*2], fResults[0]);
+          AddToEdge(fEdges[j * 2], fResults[0]);
         end;
       end;
     end;
@@ -896,9 +896,9 @@ begin
           if combinedSet and (1 shl j) <> 0 then
           begin
             if IsHeadingClockwise(op2.prev.pt, op2.pt, j) then
-              AddToEdge(fEdges[j*2], op2)
+              AddToEdge(fEdges[j * 2], op2)
             else
-              AddToEdge(fEdges[j*2+1], op2);
+              AddToEdge(fEdges[j * 2 + 1], op2);
           end;
       end;
       edgeSet1 := edgeSet2;
@@ -1134,7 +1134,7 @@ var
 begin
   result := nil;
 
-  len:= Length(paths);
+  len := Length(paths);
   for i := 0 to len -1 do
   begin
     pathrec := GetBounds(paths[i]);

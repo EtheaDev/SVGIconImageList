@@ -95,7 +95,7 @@ begin
           Cardinal(palentries[TransparentColorIndex]) := 0;
 
       img.SetSize(Width, Height);
-      rec := Rect(Left, Top, Left+ Width, Top +Height);
+      rec := Rect(Left, Top, Left + Width, Top + Height);
       pb := Data;
       pc := PARGB(img.PixelBase);
       for i := 1 to Width * Height do

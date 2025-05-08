@@ -731,13 +731,13 @@ var
 begin
   //rowSize = img32.Width *3 then rounded up to a multiple of 4
   rowSize := GetRowSize(24, img32.Width);
-  delta := rowSize - (img32.Width *3);
+  delta := rowSize - (img32.Width * 3);
   totalBytes := rowSize * img32.Height;
   setLength(buffer, totalBytes);
   fillChar(buffer[0], totalBytes, 0);
   pb := @buffer[0];
   pc := img32.PixelBase;
-  for i := 0 to img32.Height -1 do
+  for i := 0 to img32.Height - 1 do
   begin
     for j := 0 to img32.Width -1 do
     begin

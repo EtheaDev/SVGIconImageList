@@ -106,7 +106,7 @@ begin
   scale := Power(10, decimalPlaces);
   tmp := Union( Minkowski(ScalePath(Pattern, scale),
     ScalePath(Path, scale), true, PathIsClosed), frNonZero);
-  Result := ScalePathsD(tmp, 1/scale);
+  Result := ScalePathsD(tmp, 1 / scale);
 end;
 //------------------------------------------------------------------------------
 
@@ -125,7 +125,7 @@ begin
   scale := Power(10, decimalPlaces);
   tmp := Union( Minkowski(ScalePath(Pattern, scale),
     ScalePath(Path, scale), false, PathIsClosed), frNonZero);
-  Result := ScalePathsD(tmp, 1/scale);
+  Result := ScalePathsD(tmp, 1 / scale);
 end;
 //------------------------------------------------------------------------------
 

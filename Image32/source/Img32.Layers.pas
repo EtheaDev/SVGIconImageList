@@ -3,7 +3,7 @@ unit Img32.Layers;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.8                                                             *
-* Date      :  11 Febuary 2025                                                 *
+* Date      :  9 April 2025                                                    *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Layered images support                                          *
@@ -16,6 +16,7 @@ interface
 
 uses
   SysUtils, Classes, Math, Types,
+  {$IFDEF USE_FILE_STORAGE} TypInfo, {$ENDIF}
   Img32, Img32.Storage, Img32.Draw, Img32.Extra,
   Img32.Vector, Img32.Transform;
 type
@@ -60,22 +61,24 @@ type
     fTop            : double;
     fWidth          : double;
     fHeight         : double;
-    fOuterMargin    : double;
+    fOuterMargin    : double;   // the drawing margin around a layer
     fImage          : TImage32;
-    fMergeImage     : TImage32; //contains a merge of child images
-    fClipImage      : TImage32; //used to restrict child drawing inside a layer
+    fMergeImage     : TImage32; // contains a merge of child images
+    fClipImage      : TImage32; // used to restrict child drawing inside a layer
     fVisible        : Boolean;
     fOpacity        : Byte;
     fCursorId       : integer;
     fUserData       : TObject;
-    fBlendFunc      : TBlendFunction; //defaults to BlendToAlpha
+    fBlendFunc      : TBlendFunction;   // defaults to BlendToAlpha
     fLayeredImage   : TLayeredImage32;
-    fClipPath       : TPathsD;  //used in conjunction with fClipImage
-{$IFNDEF NO_STORAGE}
+    fClipPath       : TPathsD;          // used in conjunction with fClipImage
+    fNonLayerChilds : Boolean;
+{$IFDEF USE_FILE_STORAGE}
     fStreamingRec   : TRectWH;
+    procedure SetLeft(value: double);
+    procedure SetTop(value: double);
 {$ENDIF}
     function  GetMidPoint: TPointD;
-    procedure SetVisible(value: Boolean);
     procedure SetHeight(value: double);
     procedure SetWidth(value: double);
     procedure SetBlendFunc(func: TBlendFunction);
@@ -91,31 +94,41 @@ type
   protected
     fIsDesignLayer  : Boolean;
     fUpdateInfo     : TUpdateInfo;
+    // children may not always be TLayer32 objects
+    function  GetStorageChild(index: integer): TStorage;
+    function  AddStorageChild(storeClass: TStorageClass): TStorage;
+    function  InsertStorageChild(idx: integer; storeClass: TStorageClass): TStorage;
+    function  ChildNotTLayer32(childIdx: integer): Boolean;
+    procedure SetVisible(value: Boolean); virtual;
     procedure SetDesignerLayer(value: Boolean);
     procedure SetOuterMargin(value: double); virtual;
     function  GetUpdateNeeded: Boolean;
     procedure DoBeforeMerge; virtual;
+    procedure DoAfterMerge; virtual;
     procedure PreMerge(hideDesigners: Boolean); virtual;
+    procedure MergeChild(child: TLayer32;
+      dstImg: TImage32; hideDesigners: Boolean; const updateRect: TRect);
     procedure Merge(hideDesigners: Boolean; updateRect: TRect);
     function  GetLayerAt(const pt: TPointD; ignoreDesigners: Boolean): TLayer32;
     function  RemoveChildFromList(index: integer): TStorage; override;
-    function  GetInnerRectD: TRectD;
-    function  GetInnerBounds: TRectD;
-    function  GetOuterBounds: TRectD;
-{$IFNDEF NO_STORAGE}
+    function  GetInnerRectD: TRectD;   // in client (ie layer) coordinates
+    function  GetInnerBounds: TRectD;  // in fLayeredImage coordinates
+    function  GetOuterBounds: TRectD;  // margin inflated GetInnerBounds
+{$IFDEF USE_FILE_STORAGE}
     procedure BeginRead; override;
-    function  ReadProperty(const propName, propVal: string): Boolean; override;
-    procedure WriteProperties; override;
     procedure EndRead; override;
 {$ENDIF}
     procedure SetOpacity(value: Byte); virtual;
     procedure ImageChanged(Sender: TImage32); virtual;
     procedure UpdateLayeredImage(newLayeredImage: TLayeredImage32);
     property  UpdateInfo: TUpdateInfo read fUpdateInfo;
-    property  UpdateNeeded : Boolean read GetUpdateNeeded;
+    property  UpdateNeeded  : Boolean read GetUpdateNeeded;
+    property  MergeImage    : TImage32 read fMergeImage; // a merge of child images
   public
-    constructor Create(parent: TStorage = nil; const name: string = ''); overload; override;
-    constructor Create(parent: TLayer32; const name: string = ''); reintroduce; overload; virtual;
+    constructor Create(parent: TStorage = nil;
+      const name: string = ''); overload; override;
+    constructor Create(parent: TLayer32;
+      const name: string = ''); reintroduce; overload; virtual;
     destructor Destroy; override;
     function   BringForwardOne: Boolean;
     function   SendBackOne: Boolean;
@@ -143,37 +156,46 @@ type
 
     function   AddChild(layerClass: TLayer32Class;
       const name: string = ''): TLayer32; reintroduce; virtual;
-    function   InsertChild(layerClass: TLayer32Class;
-      index: integer; const name: string = ''): TLayer32; reintroduce; overload; virtual;
-    function   InsertChild(index: integer; storeClass: TStorageClass): TStorage;  overload; override;
+    function   InsertChild(index: integer; layerClass: TLayer32Class;
+      const name: string = ''): TLayer32; reintroduce; overload; virtual;
+    function   InsertChild(index: integer;
+      storeClass: TStorageClass): TStorage;  overload; override;
     procedure  ClearChildren; override;
+    function   Contains(layer: TLayer32): Boolean;
 
     property   Child[index: integer]: TLayer32 read GetChild; default;
     //ClipPath: defines a region that's inside the layer's rectangular region.
     //Portions of child layers residing outside this region  will be clipped.
     property   ClipPath: TPathsD read fClipPath write SetClipPath;
     procedure  Offset(dx, dy: double); overload; virtual;
-    property   IsDesignerLayer: Boolean read fIsDesignLayer write SetDesignerLayer;
+    property   IsDesignerLayer: Boolean
+      read fIsDesignLayer write SetDesignerLayer;
     property   InnerBounds: TRectD read GetInnerBounds;
     property   InnerRect: TRectD read GetInnerRectD;
     property   OuterBounds: TRectD read GetOuterBounds;
-    property   CursorId: integer read fCursorId write fCursorId;
-    property   Height: double read fHeight write SetHeight;
     property   Image: TImage32 read fImage;
-    property   Left: double read fLeft;
     property   MidPoint: TPointD read GetMidPoint;
-    property   Opacity: Byte read fOpacity write SetOpacity;
-    property   OuterMargin: double read fOuterMargin write SetOuterMargin;
     property   Parent: TLayer32 read GetLayer32Parent write SetLayer32Parent;
     property   Root: TGroupLayer32 read GetRoot;
     property   RootOwner: TLayeredImage32 read fLayeredImage;
-    property   Top: double read fTop;
-    property   Visible: Boolean read fVisible write SetVisible;
-    property   Width: double read fWidth write SetWidth;
     property   UserData: TObject read fUserData write fUserData;
     property   BlendFunc: TBlendFunction read fBlendFunc write SetBlendFunc;
     property   PrevLayerInGroup: TLayer32 read GetPrevLayerInGroup;
     property   NextLayerInGroup: TLayer32 read GetNextLayerInGroup;
+{$IFDEF USE_FILE_STORAGE}
+  published
+    property   Left: double read fLeft write SetLeft;
+    property   Top: double read fTop write SetTop;
+{$ELSE}
+    property   Left: double read fLeft;
+    property   Top: double read fTop;
+{$ENDIF}
+    property   CursorId: integer read fCursorId write fCursorId;
+    property   Height: double read fHeight write SetHeight;
+    property   Opacity: Byte read fOpacity write SetOpacity;
+    property   OuterMargin: double read fOuterMargin write SetOuterMargin;
+    property   Visible: Boolean read fVisible write SetVisible;
+    property   Width: double read fWidth write SetWidth;
   end;
 
   TGroupLayer32 = class(TLayer32)
@@ -218,15 +240,14 @@ type
     procedure Scale(sx, sy: double); virtual;
   protected
     procedure SetPivotPt(const pivot: TPointD); virtual;
-{$IFNDEF NO_STORAGE}
-    function  ReadProperty(const propName, propVal: string): Boolean; override;
-    procedure WriteProperties; override;
-{$ENDIF}
   public
     constructor Create(parent: TLayer32 = nil; const name: string = ''); override;
     function    Rotate(angleDelta: double): Boolean; virtual;
     procedure Reset;
     procedure Offset(dx, dy: double); override;
+{$IFDEF USE_FILE_STORAGE}
+  published
+{$ENDIF}
     property  Angle: double read fAngle write SetAngle;
     property  PivotPt: TPointD read GetPivotPt write SetPivotPt;
     property  AutoPivot: Boolean read fAutoPivot write SetAutoPivot;
@@ -242,9 +263,6 @@ type
     procedure RepositionAndDraw;
     function  GetRelativePaths: TPathsD;
   protected
-    // we need to accommodate drawing bezier splines on TVectorLayer32 where
-    // the drawn path goes well outside the stored control points (Paths).
-    //procedure SetOuterMargin(value: double); override;
     procedure SetPaths(const newPaths: TPathsD); virtual;
     procedure Draw; virtual;
   public
@@ -294,6 +312,7 @@ type
   private
     fSizingStyle: TSizingStyle;
   public
+    constructor Create(parent: TLayer32 = nil; const name: string = ''); override;
     property SizingStyle: TSizingStyle read fSizingStyle write fSizingStyle;
   end;
 
@@ -384,10 +403,6 @@ type
     procedure SetResampler(newSamplerId: integer);
     function GetRepaintNeeded: Boolean;
   protected
-{$IFNDEF NO_STORAGE}
-    function  ReadProperty(const propName, propVal: string): Boolean; override;
-    procedure WriteProperties; override;
-{$ENDIF}
     property  InvalidRect: TRectD read fInvalidRect;
   public
     constructor Create(parent: TStorage = nil; const name: string = ''); overload; override;
@@ -395,7 +410,8 @@ type
     procedure SetSize(width, height: integer);
     procedure Clear;
     procedure Invalidate;
-    function  InsertChild(index: integer; storeClass: TStorageClass): TStorage; override;
+    function  InsertChild(index: integer;
+      storeClass: TLayer32Class): TLayer32; reintroduce; overload; virtual;
     function  AddLayer(layerClass: TLayer32Class = nil;
       parent: TLayer32 = nil; const name: string = ''): TLayer32;
     function  InsertLayer(layerClass: TLayer32Class; parent: TLayer32;
@@ -404,7 +420,7 @@ type
     procedure DeleteLayer(layerIndex: integer;
       parent: TLayer32 = nil); overload;
     function  FindLayerNamed(const name: string): TLayer32;
-    function   GetLayerAt(const pt: TPoint; ignoreDesigners: Boolean = false): TLayer32; overload;
+    function  GetLayerAt(const pt: TPoint; ignoreDesigners: Boolean = false): TLayer32; overload;
     function  GetLayerAt(const pt: TPointD; ignoreDesigners: Boolean = false): TLayer32; overload;
     function  GetMergedImage(hideDesigners: Boolean = false): TImage32; overload;
     function  GetMergedImage(hideDesigners: Boolean;
@@ -412,17 +428,20 @@ type
     function  DetachRoot: TGroupLayer32;
     function  AttachRoot(newRoot: TGroupLayer32): Boolean;
 
-    property Resampler: integer read fResampler write SetResampler;
-    property BackgroundColor: TColor32 read fBackColor write SetBackColor;
     property Bounds: TRect read fBounds;
     property Count: integer read GetRootLayersCount;
-    property Height: integer read GetHeight write SetHeight;
     property Image: TImage32 read GetImage;
     property Layer[index: integer]: TLayer32 read GetLayer; default;
     property MidPoint: TPointD read GetMidPoint;
     property Root: TGroupLayer32 read fRoot;
-    property Width: integer read GetWidth write SetWidth;
     property RepaintNeeded : Boolean read GetRepaintNeeded;
+{$IFDEF USE_FILE_STORAGE}
+  published
+{$ENDIF}
+    property BackgroundColor: TColor32 read fBackColor write SetBackColor;
+    property Resampler: integer read fResampler write SetResampler;
+    property Height: integer read GetHeight write SetHeight;
+    property Width: integer read GetWidth write SetWidth;
   end;
 
 function CreateSizingButtonGroup(targetLayer: TLayer32;
@@ -481,7 +500,7 @@ resourcestring
   rsCreateButtonGroupError = 'CreateButtonGroup - invalid target layer';
   rsUpdateRotateGroupError = 'UpdateRotateGroup - invalid group';
   rsLayeredImage32Error    = 'TLayeredImage32: ''root'' must be a TGroupLayer32';
-  rsLayer32Error           = 'TLayer32 - children must also be TLayer32';
+  rsLayer32Error           = 'TLayer32 child expected';
   rsVectorLayer32Error     = 'TVectorLayer32 - updating Paths during draw events will cause recursion.';
 
 //------------------------------------------------------------------------------
@@ -659,15 +678,15 @@ end;
 
 procedure TLayer32.SetLayer32Parent(parent: TLayer32);
 begin
-  if inherited parent = parent then Exit;
-  inherited SetParent(parent);
+  if inherited Parent = parent then Exit;
+  SetParent(parent);
   if Visible then Invalidate;
 end;
 //------------------------------------------------------------------------------
 
 function TLayer32.GetUpdateNeeded: Boolean;
 begin
-     Result := (fUpdateInfo.updateMethod <> umNone);
+  Result := (fUpdateInfo.updateMethod <> umNone);
 end;
 //------------------------------------------------------------------------------
 
@@ -706,9 +725,11 @@ end;
 
 procedure TLayer32.ImageChanged(Sender: TImage32);
 begin
+{$IFDEF USE_FILE_STORAGE}
   if (StorageState = ssLoading) then Exit;
-  fWidth := Image.Width -fOuterMargin *2;
-  fHeight := Image.Height -fOuterMargin *2;
+{$ENDIF}
+  fWidth := Image.Width -fOuterMargin * 2;
+  fHeight := Image.Height -fOuterMargin * 2;
   Invalidate;
 end;
 //------------------------------------------------------------------------------
@@ -717,10 +738,12 @@ procedure TLayer32.SetSize(width, height: double);
 var
   w,h: integer;
 begin
+{$IFDEF USE_FILE_STORAGE}
   if StorageState = ssDestroying then Exit;
+{$ENDIF}
   fWidth := width; fHeight := height;
-  w := Ceil(fWidth + fOuterMargin *2);
-  h := Ceil(fHeight + fOuterMargin *2);
+  w := Ceil(fWidth + fOuterMargin * 2);
+  h := Ceil(fHeight + fOuterMargin * 2);
   Image.SetSize(w, h);
 end;
 //------------------------------------------------------------------------------
@@ -730,8 +753,8 @@ begin
   fWidth := newBounds.Width;
   fHeight := newBounds.Height;
   Image.BlockNotify;
-  Image.SetSize(Ceil(fWidth + fOuterMargin *2),
-    Ceil(fHeight + fOuterMargin *2));
+  Image.SetSize(Ceil(fWidth + fOuterMargin * 2),
+    Ceil(fHeight + fOuterMargin * 2));
   Image.UnBlockNotify;
   PositionAt(newBounds.Left, newBounds.Top);
   Invalidate;
@@ -805,15 +828,37 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+{$IFDEF USE_FILE_STORAGE}
+procedure TLayer32.SetLeft(value: double);
+begin
+  fLeft := value;
+  fStreamingRec.Left := value;
+end;
+//------------------------------------------------------------------------------
+
+procedure TLayer32.SetTop(value: double);
+begin
+  fTop := value;
+  fStreamingRec.Top := value;
+end;
+//------------------------------------------------------------------------------
+{$ENDIF}
+
 procedure TLayer32.SetHeight(value: double);
 begin
   SetSize(fWidth, value);
+{$IFDEF USE_FILE_STORAGE}
+  fStreamingRec.Height := fHeight;
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
 procedure TLayer32.SetWidth(value: double);
 begin
   SetSize(value, fHeight);
+{$IFDEF USE_FILE_STORAGE}
+  fStreamingRec.Width := fWidth;
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
@@ -822,13 +867,13 @@ begin
   if fOuterMargin = value then Exit;
   fOuterMargin := value;
   Image.BlockNotify;
-  Image.SetSize(Ceil(fWidth + fOuterMargin *2),
-    Ceil(fHeight + fOuterMargin *2));
+  Image.SetSize(Ceil(fWidth + fOuterMargin * 2),
+    Ceil(fHeight + fOuterMargin * 2));
   Image.UnBlockNotify;
 end;
 //------------------------------------------------------------------------------
 
-{$IFNDEF NO_STORAGE}
+{$IFDEF USE_FILE_STORAGE}
 procedure TLayer32.BeginRead;
 var
   stgParent: TStorage;
@@ -844,47 +889,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TLayer32.ReadProperty(const propName, propVal: string): Boolean;
-begin
-  Result := inherited ReadProperty(propName, propVal);
-  if Result then Exit;
-  if propName = 'Left' then
-    fStreamingRec.Left := GetDoubleProp(propVal, Result)
-  else if propName = 'Top' then
-    fStreamingRec.Top := GetDoubleProp(propVal, Result)
-  else if propName = 'Width' then
-    fStreamingRec.Width := GetDoubleProp(propVal, Result)
-  else if propName = 'Height' then
-    fStreamingRec.Height := GetDoubleProp(propVal, Result)
-  else if propName = 'OuterMargin' then
-    OuterMargin := GetIntProp(propVal, Result)
-  else if propName = 'Visible' then
-    fVisible := GetBoolProp(propVal, Result)
-  else if propName = 'Opacity' then
-    fOpacity := GetIntProp(propVal, Result)
-  else if propName = 'CursorId' then
-    fCursorId := GetIntProp(propVal, Result);
-end;
-//------------------------------------------------------------------------------
-
 procedure TLayer32.EndRead;
 begin
   if fStreamingRec.IsValid then
       SetInnerBounds(fStreamingRec.RectD);
-end;
-//------------------------------------------------------------------------------
-
-procedure TLayer32.WriteProperties;
-begin
-  inherited;
-  WriteDoubleProp('Left', Left);
-  WriteDoubleProp('Top', Top);
-  WriteDoubleProp('Width', Width);
-  WriteDoubleProp('Height', Height);
-  if CursorId <> 0 then WriteIntProp('CursorId', CursorId);
-  if Opacity < 255 then WriteIntProp('Opacity', Opacity);
-  if OuterMargin > 0 then WriteDoubleProp('OuterMargin', OuterMargin);
-  if not Visible then WriteBoolProp('Visible', false);
 end;
 //------------------------------------------------------------------------------
 {$ENDIF}
@@ -919,8 +927,7 @@ end;
 
 function TLayer32.BringToFront: Boolean;
 begin
-  Result := assigned(Parent) and
-    (index < Parent.ChildCount -1);
+  Result := assigned(Parent) and (index < Parent.ChildCount -1);
   if not Result then Exit;
   Parent.Childs.Move(index, Parent.ChildCount -1);
   Parent.ReindexChilds(index);
@@ -1002,6 +1009,8 @@ begin
   if not assigned(Parent) or not assigned(newParent) then
     Exit;
 
+  Invalidate; // at old location
+
   //make sure we don't create circular parenting
   layer := newParent;
   while Assigned(layer) and (layer is TLayer32) do
@@ -1026,7 +1035,8 @@ begin
     Parent.Childs.Move(Index, idx);
     Parent.ReindexChilds(idx);
   end;
-  Invalidate;
+  fUpdateInfo.updateMethod := umNone;
+  Invalidate; // at new position :)
   Result := true;
 end;
 //------------------------------------------------------------------------------
@@ -1046,6 +1056,20 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function TLayer32.GetStorageChild(index: integer): TStorage;
+begin
+  Result := inherited GetChild(index);
+end;
+//------------------------------------------------------------------------------
+
+function TLayer32.Contains(layer: TLayer32): Boolean;
+begin
+  while Assigned(layer.Parent) and (layer.Parent <> self) do
+    layer := layer.Parent;
+  Result := Assigned(layer.Parent);
+end;
+//------------------------------------------------------------------------------
+
 procedure TLayer32.ClearChildren;
 begin
   inherited;
@@ -1057,25 +1081,48 @@ end;
 function TLayer32.AddChild(layerClass: TLayer32Class;
   const name: string = ''): TLayer32;
 begin
-  Result := InsertChild(layerClass, MaxInt, name);
+  Result := InsertChild(MaxInt, layerClass, name);
 end;
 //------------------------------------------------------------------------------
 
-function TLayer32.InsertChild(layerClass: TLayer32Class;
-  index: integer; const name: string = ''): TLayer32;
+function TLayer32.AddStorageChild(storeClass: TStorageClass): TStorage;
 begin
-  Result := inherited InsertChild(index, layerClass) as TLayer32;
-  if name = '' then
-    Result.Name := Result.ClassName else
-    Result.Name := name;
+  Result := InsertStorageChild(MaxInt, storeClass);
+end;
+//------------------------------------------------------------------------------
+
+function TLayer32.InsertStorageChild(idx: integer;
+  storeClass: TStorageClass): TStorage;
+begin
+  Result := inherited InsertChild(idx, storeClass);
+  if not (Result is TLayer32) then fNonLayerChilds := true;
+end;
+//------------------------------------------------------------------------------
+
+function TLayer32.ChildNotTLayer32(childIdx: integer): Boolean;
+begin
+  Result := not (GetStorageChild(childIdx) is TLayer32);
+end;
+//------------------------------------------------------------------------------
+
+function TLayer32.InsertChild(index: integer; layerClass: TLayer32Class;
+  const name: string = ''): TLayer32;
+begin
+  Result := layerClass.Create(self, name) as TLayer32;
+  if index < ChildCount -1 then
+  begin
+    Childs.Move(Result.Index, index);
+    ReindexChilds(index);
+  end;
 end;
 //------------------------------------------------------------------------------
 
 function TLayer32.InsertChild(index: integer; storeClass: TStorageClass): TStorage;
 begin
+  // must use explicit InsertStorageChild() for non-TLayer32 children
   if not storeClass.InheritsFrom(TLayer32) then
     raise Exception.Create(rsLayer32Error);
-  Result := InsertChild(TLayer32Class(storeClass), index, '');
+  Result := InsertChild(index, TLayer32Class(storeClass), '');
 end;
 //------------------------------------------------------------------------------
 
@@ -1118,6 +1165,11 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+procedure TLayer32.DoAfterMerge;
+begin
+end;
+//------------------------------------------------------------------------------
+
 procedure TLayer32.PreMerge(hideDesigners: Boolean);
 var
   i: integer;
@@ -1127,6 +1179,8 @@ begin
   //this method is recursive and updates each group's fInvalidRect
   for i := 0 to ChildCount -1 do
   begin
+    if fNonLayerChilds and ChildNotTLayer32(i) then Continue;
+
     childLayer := Child[i];
     with childLayer do
     begin
@@ -1140,13 +1194,15 @@ begin
         rec := Parent.MakeAbsolute(fUpdateInfo.priorPosition);
         with fLayeredImage do
           fInvalidRect := UnionRect(fInvalidRect, rec);
+
+        // and repeat with updated fUpdateInfo.priorPosition
         fUpdateInfo.priorPosition := OuterBounds;
         rec := Parent.MakeAbsolute(fUpdateInfo.priorPosition);
         with fLayeredImage do
           fInvalidRect := UnionRect(fInvalidRect, rec);
       end;
 
-      // premerge children
+      // premerge children - updates each visible child's fInvalidRect
       DoBeforeMerge;
       PreMerge(hideDesigners);
     end;
@@ -1154,44 +1210,18 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TLayer32.Merge(hideDesigners: Boolean; updateRect: TRect);
+procedure TLayer32.MergeChild(child: TLayer32;
+  dstImg: TImage32; hideDesigners: Boolean; const updateRect: TRect);
 var
-  i: integer;
-  childLayer: TLayer32;
-  img, childImg, childImg2: TImage32;
-  rec, rec2, dstRect, srcRect: TRect;
+  childImg  : TImage32;
+  childImg2 : TImage32;
+  srcRect   : TRect;
+  dstRect   : TRect;
+  rec, rec2 : TRect;
 begin
-  //layers with children will merge to fMergeImage to preserve its own image.
-  //that fMergeImage will then merge with its parent fMergeImage until root.
-
-  if not (self is TGroupLayer32) then
-    TranslateRect(updateRect, -Floor(fLeft), -Floor(fTop));
-
-  if (self is TGroupLayer32) or (ChildCount = 0) then
-  begin
-    //safe to merge any child images onto self.Image
-    img := fImage;
-  end else
-  begin
-    if not Assigned(fMergeImage) then
-      fMergeImage := TImage32.Create;
-    fMergeImage.Assign(fImage);
-    img := fMergeImage;
-  end;
-
-  {$IF not defined(FPC) and (CompilerVersion <= 26.0)}
-  // Delphi 7-XE5 have a problem with "continue" and the
-  // code analysis, marking "childImg" as "not initialized"
-  childImg := nil;
-  {$IFEND}
-  //merge redraw all children
-  for i := 0 to ChildCount -1 do
-  begin
-    childLayer := Child[i];
-    with childLayer do
+    with child do
     begin
-      if not visible or (hideDesigners and IsDesignerLayer) then
-         Continue;
+      if not visible or (hideDesigners and IsDesignerLayer) then Exit;
 
       //recursive merge
       if (fUpdateInfo.updateMethod <> umNone) then
@@ -1216,12 +1246,12 @@ begin
         Types.IntersectRect(dstRect, dstRect, self.Image.Bounds);
       end;
 
-      if IsEmptyRect(dstRect) then Continue;
+      if IsEmptyRect(dstRect) then Exit;
 
       //get srcRect (offset to childLayer coords)
       //and further adjust dstRect to accommodate OuterMargin
-      srcRect.Left := Floor(dstRect.Left - Left + fOuterMargin);
-      srcRect.Top := Floor(dstRect.Top - Top + fOuterMargin);
+      srcRect.Left := Floor(dstRect.Left - fLeft + fOuterMargin);
+      srcRect.Top := Floor(dstRect.Top - fTop + fOuterMargin);
       srcRect.Right := srcRect.Left + RectWidth(dstRect);
       srcRect.Bottom := srcRect.Top + RectHeight(dstRect);
     end;
@@ -1235,33 +1265,67 @@ begin
     //DRAW THE CHILD  ONTO THE PARENT'S IMAGE
 
     childImg2 := nil;
-    img.BlockNotify;
     try
-      if (childLayer.Opacity < 254) or Assigned(fClipPath) then
+      if (child.Opacity < 254) or Assigned(fClipPath) then
       begin
         childImg2 := TImage32.Create(childImg);
-        childImg2.ReduceOpacity(childLayer.Opacity);
+        childImg2.ReduceOpacity(child.Opacity);
         if Assigned(fClipImage) then
         begin
           //use the clipping mask to 'trim' childLayer's image
           rec := fClipImage.Bounds;
           rec2 := rec;
           TranslateRect(rec2,
-            Floor(childLayer.fOuterMargin -childLayer.Left -fOuterMargin),
-            Floor(childLayer.fOuterMargin -childLayer.Top -fOuterMargin));
+            Floor(child.fOuterMargin -child.Left -fOuterMargin),
+            Floor(child.fOuterMargin -child.Top -fOuterMargin));
           childImg2.CopyBlend(fClipImage, rec, rec2, BlendMaskLine);
         end;
       end else
         childImg2 := childImg;
 
-      if Assigned(childLayer.BlendFunc) then
-        img.CopyBlend(childImg2, srcRect, dstRect, childLayer.BlendFunc) else
-        img.Copy(childImg2, srcRect, dstRect);
+      if Assigned(child.BlendFunc) then
+        dstImg.CopyBlend(childImg2, srcRect, dstRect, child.BlendFunc) else
+        dstImg.Copy(childImg2, srcRect, dstRect);
     finally
       if childImg2 <> childImg then
         childImg2.Free;
-      img.UnblockNotify;
     end;
+end;
+//------------------------------------------------------------------------------
+
+procedure TLayer32.Merge(hideDesigners: Boolean; updateRect: TRect);
+var
+  i: integer;
+  img: TImage32;
+begin
+  //layers with children will merge to fMergeImage to preserve its own image.
+  //that fMergeImage will then merge with its parent fMergeImage until root.
+  if not (self is TGroupLayer32) then
+    TranslateRect(updateRect, -Floor(fLeft), -Floor(fTop));
+
+  if (self is TGroupLayer32) or (ChildCount = 0) then
+  begin
+    //safe to merge any child images onto self.Image
+    img := fImage;
+  end else
+  begin
+    if not Assigned(fMergeImage) then
+      fMergeImage := TImage32.Create;
+    fMergeImage.Assign(fImage);
+    img := fMergeImage;
+  end;
+
+  img.BlockNotify;
+  try
+    //merge redraw all children
+    for i := 0 to ChildCount -1 do
+    begin
+      if fNonLayerChilds and ChildNotTLayer32(i) then Continue;
+      MergeChild(child[i], img, hideDesigners, updateRect);
+    end;
+  finally
+    DoAfterMerge;
+    img.UnblockNotify;
   end;
 
   with fUpdateInfo do
@@ -1283,16 +1347,17 @@ begin
 
   if (self is TGroupLayer32) then
     pt2 := pt else
-    pt2 := TranslatePoint(pt, -Left, -Top);
+    pt2 := TranslatePoint(pt, -fLeft, -fTop);
 
   //if 'pt2' is outside the clip mask then don't continue
   if Assigned(fClipImage) then
     if TARGB(fClipImage.Pixel[
-      Round(pt2.X+ fOuterMargin),
-      Round(pt2.Y+ fOuterMargin)]).A < 128 then Exit;
+      Round(pt2.X + fOuterMargin),
+      Round(pt2.Y + fOuterMargin)]).A < 128 then Exit;
 
   for i := ChildCount -1 downto 0 do
   begin
+    if fNonLayerChilds and ChildNotTLayer32(i) then Continue;
     childLayer := Child[i];
     with childLayer do
       if not Visible or not PtInRect(InnerBounds, pt2) or
@@ -1308,8 +1373,8 @@ begin
         else
         begin
           if TARGB(fHitTest.htImage.Pixel[
-            Round(pt2.X -left + fOuterMargin),
-            Round(pt2.Y -top + fOuterMargin)]).A >= 128 then
+            Round(pt2.X -fLeft + fOuterMargin),
+            Round(pt2.Y -fTop + fOuterMargin)]).A >= 128 then
               Result := childLayer;
           if Assigned(Result) and not childLayer.HasChildren then Exit;
         end;
@@ -1338,15 +1403,9 @@ begin
   Result := nil;
   for i := 0 to ChildCount -1 do
   begin
-    if Child[i] is TLayer32 then
-    begin
-      Result := Child[i].FindLayerNamed(name);
-      if assigned(Result) then Break;
-    end else if SameText(self.Name, name) then
-    begin
-      Result := Child[i];
-      Break;
-    end;
+    if fNonLayerChilds and ChildNotTLayer32(i) then Continue;
+    Result := Child[i].FindLayerNamed(name);
+    if assigned(Result) then Break;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -1357,7 +1416,9 @@ var
 begin
   fLayeredImage := newLayeredImage;
   for i := 0 to ChildCount -1 do
-    Child[i].UpdateLayeredImage(newLayeredImage);
+    if fNonLayerChilds and ChildNotTLayer32(i) then
+      Continue else
+      Child[i].UpdateLayeredImage(newLayeredImage);
 end;
 
 //------------------------------------------------------------------------------
@@ -1379,7 +1440,9 @@ begin
   rec := nullRectD;
   fOuterMargin := 0;
   for i := 0 to ChildCount -1 do
-    rec := UnionRect(rec, Child[i].OuterBounds);
+    if fNonLayerChilds and ChildNotTLayer32(i) then
+      Continue else
+      rec := UnionRect(rec, Child[i].OuterBounds);
   Image.BlockNotify;
   SetInnerBounds(rec);
   Image.UnblockNotify;
@@ -1420,7 +1483,9 @@ begin
   Invalidate;
   PositionAt(fLeft + dx, fTop + dy);
   for i := 0 to ChildCount -1 do
-    Child[i].Offset(dx, dy);
+    if fNonLayerChilds and ChildNotTLayer32(i) then
+      Continue else
+      Child[i].Offset(dx, dy);
 end;
 
 //------------------------------------------------------------------------------
@@ -1557,31 +1622,6 @@ begin
   fAutoPivot := val;
   fPivotPt := InvalidPointD;
 end;
-//------------------------------------------------------------------------------
-
-{$IFNDEF NO_STORAGE}
-function TRotLayer32.ReadProperty(const propName, propVal: string): Boolean;
-begin
-  Result := inherited ReadProperty(propName, propVal);
-  if Result then Exit
-  else if propName = 'Angle' then
-    fAngle := GetDoubleProp(propVal, Result)
-  else if propName = 'AutoPivot' then
-    fAutoPivot := GetBoolProp(propVal, Result)
-  else if propName = 'PivotPt' then
-    fPivotPt := GetPointDProp(propVal, Result)
-  else Result := false;
-end;
-//------------------------------------------------------------------------------
-
-procedure TRotLayer32.WriteProperties;
-begin
-  inherited;
-  WriteDoubleProp('Angle', Angle);
-  WritePointDProp('PivotPt', PivotPt);
-  WriteBoolProp('AutoPivot', AutoPivot)
-end;
-{$ENDIF}
 
 //------------------------------------------------------------------------------
 // TVectorLayer32 class
@@ -1622,7 +1662,7 @@ end;
 
 function  TVectorLayer32.GetRelativePaths: TPathsD;
 begin
-  Result := TranslatePath(fPaths, -Left + fOuterMargin, -Top  + fOuterMargin);
+  Result := TranslatePath(fPaths, -fLeft + fOuterMargin, -fTop  + fOuterMargin);
 end;
 //------------------------------------------------------------------------------
 
@@ -1642,7 +1682,7 @@ begin
     mat := IdentityMatrix;
     rec := Img32.Vector.GetBounds(fPaths);
     MatrixTranslate(mat, -rec.Left, -rec.Top);
-    MatrixScale(mat, w/Width, h/Height);
+    MatrixScale(mat, w / Width, h / Height);
     MatrixTranslate(mat, newBounds.Left, newBounds.Top);
     MatrixApply(mat, fPaths);
     if fAutoPivot then fPivotPt := InvalidPointD;
@@ -1658,9 +1698,9 @@ end;
 procedure TVectorLayer32.Offset(dx,dy: double);
 begin
   inherited;
-  fPaths := TranslatePath(fPaths, dx,dy);
+  fPaths := TranslatePath(fPaths, dx, dy);
   if fAutoPivot and not PointsEqual(fPivotPt, InvalidPointD) then
-    fPivotPt := TranslatePoint(fPivotPt, dx,dy);
+    fPivotPt := TranslatePoint(fPivotPt, dx, dy);
 end;
 //------------------------------------------------------------------------------
 
@@ -1821,7 +1861,7 @@ begin
       try
         if fAutoCrop then
           fCropMargins := SymmetricCropTransparent(Image);
-        PositionAt(Left + fCropMargins.X, Top + fCropMargins.Y);
+        PositionAt(fLeft + fCropMargins.X, fTop + fCropMargins.Y);
         MasterImage.Assign(Image);
       finally
         Image.UnblockNotify;
@@ -1881,12 +1921,12 @@ begin
         fScaleY := newBounds.Width / MasterImage.Height;
       end else
       begin
-        tanA := sinA/cosA;
+        tanA := sinA / cosA;
         // adjust for rotational cropping
         rx := newBounds.Width + fCropMargins.X * 2;
         ry := newBounds.Height + fCropMargins.Y * 2;
-        x := (rx /cosA - tanA * ry / cosA) / (1 - tanA*tanA);
-        y := (ry - sinA * x) /cosA;
+        x := (rx / cosA - tanA * ry / cosA) / (1 - tanA * tanA);
+        y := (ry - sinA * x) / cosA;
 
         if (x <= 0) or (y <= 0) then
         begin
@@ -1962,6 +2002,21 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+// TSizingGroupLayer32 class
+//------------------------------------------------------------------------------
+
+constructor TSizingGroupLayer32.Create(parent: TLayer32 = nil; const name: string = '');
+begin
+  inherited;
+  SetDesignerLayer(true);
+{$IFDEF USE_FILE_STORAGE}
+  IgnoreOnWrite := true;
+{$ENDIF}
+end;
+//------------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
 // TRotatingGroupLayer32 class
 //------------------------------------------------------------------------------
 
@@ -1969,6 +2024,9 @@ constructor TRotatingGroupLayer32.Create(parent: TLayer32; const name: string);
 begin
   inherited;
   SetDesignerLayer(true);
+{$IFDEF USE_FILE_STORAGE}
+  IgnoreOnWrite := true;
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
@@ -2002,7 +2060,7 @@ begin
   begin
     SetInnerBounds(rec2);
     q := DPIAware(2);
-    pt := TranslatePoint(pivot, -Left, -Top);
+    pt := TranslatePoint(pivot, -fLeft, -fTop);
     DrawDashedLine(Image, Circle(pt, dist - q),
       dashes, nil, q, clRed32, esPolygon);
   end;
@@ -2076,6 +2134,9 @@ constructor TButtonGroupLayer32.Create(parent: TLayer32 = nil; const name: strin
 begin
   inherited;
   SetDesignerLayer(true);
+{$IFDEF USE_FILE_STORAGE}
+  IgnoreOnWrite := true;
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
@@ -2088,7 +2149,7 @@ end;
 function TButtonGroupLayer32.InsertButton(const pt: TPointD;
   btnIdx: integer): TButtonDesignerLayer32;
 begin
-  result := TButtonDesignerLayer32(InsertChild(fBtnLayerClass, btnIdx));
+  result := TButtonDesignerLayer32(InsertChild(btnIdx, fBtnLayerClass));
   with result do
   begin
     SetButtonAttributes(fBtnShape, FBtnSize, fBtnColor);
@@ -2110,6 +2171,9 @@ begin
   fEnabled := true;
   fHitTest.enabled := fEnabled;
   SetButtonAttributes(bsRound, DefaultButtonSize, clGreen32);
+{$IFDEF USE_FILE_STORAGE}
+  IgnoreOnWrite := true;
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
@@ -2161,7 +2225,10 @@ begin
   fResampler := DefaultResampler;
   fLastUpdateType := utUndefined;
 
+{$IFDEF USE_FILE_STORAGE}
   if StorageState = ssLoading then Exit;
+{$ENDIF}
+  // automatically create a TGroupLayer32 root control
   fRoot := AddChild(TGroupLayer32) as TGroupLayer32;
 end;
 //------------------------------------------------------------------------------
@@ -2173,33 +2240,6 @@ begin
   fRoot.SetSize(width, Height);
 end;
 //------------------------------------------------------------------------------
-
-{$IFNDEF NO_STORAGE}
-function  TLayeredImage32.ReadProperty(const propName, propVal: string): Boolean;
-begin
-  if propName = 'Resampler' then
-    Resampler := GetIntProp(propVal, Result)
-  else if propName = 'BackgroundColor' then
-    BackgroundColor := GetColorProp(propVal, Result)
-  else if propName = 'Width' then
-    Width := GetIntProp(propVal, Result)
-  else if propName = 'Height' then
-    Height := GetIntProp(propVal, Result)
-  else
-    Result := false;
-end;
-//------------------------------------------------------------------------------
-
-procedure TLayeredImage32.WriteProperties;
-begin
-  inherited;
-  WriteIntProp('Resampler', Resampler);
-  WriteColorProp('BackgroundColor', BackgroundColor);
-  WriteIntProp('Width', Width);
-  WriteIntProp('Height', Height);
-end;
-//------------------------------------------------------------------------------
-{$ENDIF}
 
 procedure TLayeredImage32.SetSize(width, height: integer);
 begin
@@ -2264,10 +2304,22 @@ end;
 //------------------------------------------------------------------------------
 
 procedure TLayeredImage32.Invalidate;
+
+  procedure InvalidateAll(layer: TLayer32);
+  var
+    i: integer;
+  begin
+    layer.Invalidate;
+    for i := 0 to layer.ChildCount -1 do
+      if layer.fNonLayerChilds and layer.ChildNotTLayer32(i) then Continue
+      else InvalidateAll(layer[i]);
+  end;
+
 begin
   if not Assigned(fRoot) then Exit;
   fInvalidRect := RectD(fBounds);
   fLastUpdateType := utUndefined;
+  InvalidateAll(fRoot);
 end;
 //------------------------------------------------------------------------------
 
@@ -2295,7 +2347,7 @@ end;
 
 function TLayeredImage32.GetLayer(index: integer): TLayer32;
 begin
-  if Assigned(fRoot) then
+  if GetRootLayersCount > 0 then
     Result := fRoot[index] else
     Result := nil;
 end;
@@ -2349,17 +2401,23 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TLayeredImage32.InsertChild(index: integer; storeClass: TStorageClass): TStorage;
+function TLayeredImage32.InsertChild(index: integer; storeClass: TLayer32Class): TLayer32;
 begin
-  Result := inherited InsertChild(index, storeClass);
-  if (StorageState = ssLoading) and (ChildCount = 1) then
+  if ChildCount = 0 then
   begin
-    if not (Result is TGroupLayer32) then
-      raise Exception.Create(rsLayeredImage32Error);
-    fRoot := TGroupLayer32(Result);
-    fRoot.Name := rsRoot;
-    fRoot.fLayeredImage := self;
-  end;
+    Result := inherited InsertChild(index, storeClass) as TLayer32;
+{$IFDEF USE_FILE_STORAGE}
+    if (StorageState = ssLoading) then
+    begin
+      if not (Result is TGroupLayer32) then
+        raise Exception.Create(rsLayeredImage32Error);
+      fRoot := TGroupLayer32(Result);
+      fRoot.Name := rsRoot;
+      fRoot.fLayeredImage := self;
+    end;
+{$ENDIF}
+  end else
+    Result := fRoot.InsertChild(index, storeClass) as TLayer32;
 end;
 //------------------------------------------------------------------------------
 
@@ -2380,7 +2438,7 @@ begin
     Exit;
   end;
   if not Assigned(parent) then parent := fRoot;
-  Result := parent.InsertChild(layerClass, index, name);
+  Result := parent.InsertChild(index, layerClass, name);
 end;
 //------------------------------------------------------------------------------
 
@@ -2603,8 +2661,8 @@ begin
         with group do
           for i := 0 to 3 do
           begin
-            Child[i*2].PositionCenteredAt(corners[i]);
-            Child[i*2 +1].PositionCenteredAt(edges[i]);
+            Child[i * 2].PositionCenteredAt(corners[i]);
+            Child[i * 2 + 1].PositionCenteredAt(edges[i]);
           end;
       end;
   end;
@@ -2745,14 +2803,14 @@ end;
 procedure InitDashes;
 begin
   setLength(dashes, 2);
-  dashes[0] := dpiAware1 *2; dashes[1] := dpiAware1 *4;
+  dashes[0] := dpiAware1 * 2; dashes[1] := dpiAware1 * 4;
 end;
 
 initialization
   InitDashes;
-  DefaultButtonSize := dpiAware1*10;
+  DefaultButtonSize := dpiAware1 * 10;
 
-{$IFNDEF NO_STORAGE}
+{$IFDEF USE_FILE_STORAGE}
   RegisterStorageClass(TLayeredImage32);
   RegisterStorageClass(TLayer32);
   RegisterStorageClass(TGroupLayer32);

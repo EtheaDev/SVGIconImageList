@@ -3,7 +3,7 @@ unit Img32;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.8                                                             *
-* Date      :  24 Febuary 2025                                                 *
+* Date      :  20 March 2025                                                   *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  The core module of the Image32 library                          *
@@ -439,7 +439,9 @@ type
   PHsl = ^THsl;
   TArrayofHSL = array of THsl;
 
-  TTriState = (tsUnknown = 0, tsYes = 1, tsChecked = 1, tsNo = 2, tsUnchecked = 2);
+  // TTriState - assigning multiple enum const for a given value prevents streaming
+  // TTriState = (tsUnknown = 0, tsYes = 1, tsChecked = 1, tsNo = 2, tsNo = UnChecked);
+  TTriState = (tsUnknown, tsYes, tsNo);
 
   PPointD = ^TPointD;
   TPathD = array of TPointD;       //nb: watch for ambiguity with Clipper.pas
@@ -551,7 +553,7 @@ type
     {$IFDEF INLINE} inline; {$ENDIF}
   function IncPColor32(pc: Pointer; cnt: Integer): PColor32; {$IFDEF INLINE} inline; {$ENDIF}
 
-  procedure NormalizeAngle(var angle: double; tolerance: double = Pi/360);
+  procedure NormalizeAngle(var angle: double; tolerance: double = Pi / 360);
   function GrayScale(color: TColor32): TColor32; {$IFDEF INLINE} inline; {$ENDIF}
 
   //DPIAware: Useful for DPIAware sizing of images and their container controls.
@@ -581,15 +583,15 @@ type
   procedure GetResamplerList(stringList: TStringList);
 
 const
-  TwoPi = Pi *2;
+  TwoPi = Pi * 2;
   angle0   = 0;
-  angle1   = Pi/180;
-  angle15  = Pi /12;
-  angle30  = angle15 *2;
-  angle45  = angle15 *3;
-  angle60  = angle15 *4;
-  angle75  = angle15 *5;
-  angle90  = Pi /2;
+  angle1   = Pi / 180;
+  angle15  = Pi / 12;
+  angle30  = angle15 * 2;
+  angle45  = angle15 * 3;
+  angle60  = angle15 * 4;
+  angle75  = angle15 * 5;
+  angle90  = Pi / 2;
   angle105 = Pi - angle75;
   angle120 = Pi - angle60;
   angle135 = Pi - angle45;
@@ -621,9 +623,9 @@ var
 
   //Both MulTable and DivTable are used in blend functions
   //MulTable[a,b] = a * b / 255
-  MulTable: array [Byte,Byte] of Byte;
+  MulTable: array [Byte, Byte] of Byte;
   //DivTable[a,b] = a * 255/b (for a &lt;= b)
-  DivTable: array [Byte,Byte] of Byte;
+  DivTable: array [Byte, Byte] of Byte;
 
   //Sigmoid: weight byte values towards each end
   Sigmoid: array[Byte] of Byte;
@@ -660,6 +662,8 @@ var
   procedure NewColor32Array(var a: TArrayOfColor32; count: nativeint;
     uninitialized: boolean = False);
   procedure NewIntegerArray(var a: TArrayOfInteger; count: nativeint;
+    uninitialized: boolean = False);
+  procedure NewDoubleArray(var a: TArrayOfDouble; count: nativeint;
     uninitialized: boolean = False);
   procedure NewByteArray(var a: TArrayOfByte; count: nativeint;
     uninitialized: boolean = False);
@@ -852,11 +856,26 @@ begin
 {$ELSE}
   if a <> nil then
   begin
-    if uninitialized and CanReuseDynArray(a, count) then
-      Exit;
+    if uninitialized and CanReuseDynArray(a, count) then Exit;
     a := nil;
   end;
   Pointer(a) := NewSimpleDynArray(count, SizeOf(Integer), uninitialized);
+{$IFEND}
+end;
+//------------------------------------------------------------------------------
+
+procedure NewDoubleArray(var a: TArrayOfDouble; count: nativeint;
+  uninitialized: boolean = False);
+begin
+{$IF COMPILERVERSION < 16}
+  SetLength(a, count);
+{$ELSE}
+  if a <> nil then
+  begin
+    if uninitialized and CanReuseDynArray(a, count) then Exit;
+    a := nil;
+  end;
+  Pointer(a) := NewSimpleDynArray(count, SizeOf(Double), uninitialized);
 {$IFEND}
 end;
 //------------------------------------------------------------------------------
@@ -868,8 +887,7 @@ begin
 {$ELSE}
   if a <> nil then
   begin
-    if uninitialized and CanReuseDynArray(a, count) then
-      Exit;
+    if uninitialized and CanReuseDynArray(a, count) then Exit;
     a := nil;
   end;
   Pointer(a) := NewSimpleDynArray(count, SizeOf(Byte), uninitialized);
@@ -948,7 +966,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure NormalizeAngle(var angle: double; tolerance: double = Pi/360);
+procedure NormalizeAngle(var angle: double; tolerance: double = Pi / 360);
 var
   aa: double;
 begin
@@ -2072,7 +2090,7 @@ begin
   percent := percent mod 100;
   if percent < 0 then inc(percent, 100);
   hsl := RgbToHsl(color);
-  hsl.hue := (hsl.hue + Round(percent*255/100)) mod 256;
+  hsl.hue := (hsl.hue + Round(percent * 255 / 100)) mod 256;
   result := HslToRgb(hsl);
 end;
 //------------------------------------------------------------------------------
@@ -2159,8 +2177,8 @@ end;
 
 function TRectD.MidPoint: TPointD;
 begin
-  Result.X := (Right + Left)/2;
-  Result.Y := (Bottom + Top)/2;
+  Result.X := (Right + Left) / 2;
+  Result.Y := (Bottom + Top) / 2;
 end;
 //------------------------------------------------------------------------------
 
@@ -2485,7 +2503,7 @@ var
   len: integer;
 begin
   len := Length(newPixels);
-  Result := (len > 0)and (len = Width * height);
+  Result := (len > 0) and (len = Width * height);
   if Result then fPixels := System.Copy(newPixels, 0, len);
 end;
 //------------------------------------------------------------------------------
@@ -3064,7 +3082,7 @@ begin
   if IsEmpty or (length(filename) < 5) then Exit;
   //use the process's current working directory if no path supplied ...
   if ExtractFilePath(filename) = '' then
-    filename := GetCurrentDir + '\'+ filename;
+    filename := GetCurrentDir + '\' + filename;
   fileFormatClass := GetImageFormatClass(ExtractFileExt(filename));
   if assigned(fileFormatClass) then
     with fileFormatClass.Create do
@@ -3444,7 +3462,7 @@ end;
 
 procedure TImage32.CopyToDc(dstDc: HDC; x,y: Integer; transparent: Boolean);
 begin
-  CopyToDc(Bounds, Types.Rect(x,y, x+Width, y+Height),
+  CopyToDc(Bounds, Types.Rect(x,y, x + Width, y + Height),
     dstDc, transparent);
 end;
 //------------------------------------------------------------------------------
@@ -3455,7 +3473,7 @@ var
   recW, recH: integer;
 begin
   RectWidthHeight(srcRect, recW, recH);
-  CopyToDc(srcRect, Types.Rect(x,y, x+recW, y+recH), dstDc, transparent);
+  CopyToDc(srcRect, Types.Rect(x,y, x + recW, y + recH), dstDc, transparent);
 end;
 //------------------------------------------------------------------------------
 
@@ -3747,7 +3765,7 @@ begin
       row^ := a[widthLess1 - j];
       inc(row);
     end;
-    dec(row, fWidth *2);
+    dec(row, fWidth * 2);
   end;
   Changed;
 end;
@@ -4139,7 +4157,7 @@ begin
         if x > x2 then x2 := x;
       end;
 
-  Result := Types.Rect(x1, y1, x2+1, y2+1);
+  Result := Types.Rect(x1, y1, x2 + 1, y2 + 1);
 end;
 //------------------------------------------------------------------------------
 
@@ -4460,7 +4478,7 @@ begin
 
   Sigmoid[128] := 128;
   for i := 1 to 127 do
-    Sigmoid[128+i] := 128 + Round(127 * sin(angle90 * i/127));
+    Sigmoid[128 + i] := 128 + Round(127 * sin(angle90 * i / 127));
   for i := 0 to 127 do
     Sigmoid[i] := 255- Sigmoid[255-i];
 end;

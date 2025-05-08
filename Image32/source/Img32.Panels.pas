@@ -342,7 +342,7 @@ var
   hsl: THsl;
 begin
   hsl := RgbToHsl(Color32(color));
-  hsl.lum := ClampByte(hsl.lum - (percent/100 * hsl.lum));
+  hsl.lum := ClampByte(hsl.lum - (percent / 100 * hsl.lum));
   Result := HslToRgb(hsl) and $FFFFFF;
 end;
 
@@ -505,13 +505,13 @@ begin
   if p < fScaleMin then
   begin
     if fScale <= fScaleMin then Exit;
-    scaleDelta := fScaleMin/fScale;
+    scaleDelta := fScaleMin / fScale;
   end else if p > fScaleMax then
   begin
     if fScale >= fScaleMax then Exit;
-    scaleDelta := fScaleMax/fScale;
+    scaleDelta := fScaleMax / fScale;
   end;
-  q := 1 - 1/scaleDelta;
+  q := 1 - 1 / scaleDelta;
   marg := GetInnerMargin;
   pt1 := ClientToImage(pt);
   pt2 := ClientToImage(Types.Point(marg, marg));
@@ -698,8 +698,8 @@ var
 begin
   pt := GetDstOffset;
   marg := GetInnerMargin;
-  Result.X := Round((clientPt.X -pt.X -marg)/fScale) +fScrollbarHorz.srcOffset;
-  Result.Y := Round((clientPt.Y -pt.Y -marg)/fScale) +fScrollbarVert.srcOffset;
+  Result.X := Round((clientPt.X -pt.X -marg) / fScale) + fScrollbarHorz.srcOffset;
+  Result.Y := Round((clientPt.Y -pt.Y -marg) / fScale) + fScrollbarVert.srcOffset;
 end;
 //------------------------------------------------------------------------------
 
@@ -710,8 +710,8 @@ var
 begin
   pt := GetDstOffset;
   marg := GetInnerMargin;
-  Result.X := Round((surfacePt.X -fScrollbarHorz.srcOffset)*fScale +marg +pt.X);
-  Result.Y := Round((surfacePt.Y -fScrollbarVert.srcOffset)*fScale +marg +pt.Y);
+  Result.X := Round((surfacePt.X - fScrollbarHorz.srcOffset) * fScale + marg + pt.X);
+  Result.Y := Round((surfacePt.Y - fScrollbarVert.srcOffset) * fScale + marg + pt.Y);
 end;
 //------------------------------------------------------------------------------
 
@@ -725,8 +725,8 @@ begin
     (fScrollbarVert.maxSrcOffset = 0);
   if not Result then Exit;
   marg := GetInnerMargin;
-  innerW := ClientWidth - marg*2;
-  innerH := ClientHeight - marg*2;
+  innerW := ClientWidth - marg * 2;
+  innerH := ClientHeight - marg * 2;
   pt2 := ClientToImage(Types.Point(marg + innerW div 2, marg + innerH div 2));
   with fScrollbarHorz do
   begin
@@ -969,7 +969,7 @@ begin
   dstRec := innerRec;
   srcRec := dstRec;
   TranslateRect(srcRec, -marg, -marg);
-  ScaleRect(srcRec, 1/fScale);
+  ScaleRect(srcRec, 1 / fScale);
   // if the scaled drawing is smaller than InnerClientRect then center it
   pt := GetDstOffset;
   if pt.X > 0 then
@@ -1095,7 +1095,7 @@ begin
         if not fAllowZoom then Exit;
         if not (gfBegin in EventInfo.Flags) then
         begin
-          p := 1 + (EventInfo.Distance - FLastDistance)/fImageSize.cx;
+          p := 1 + (EventInfo.Distance - FLastDistance) / fImageSize.cx;
           ScaleAtPoint(p, EventInfo.Location);
         end;
         FLastDistance := EventInfo.Distance;
@@ -1256,7 +1256,7 @@ begin
         begin
           if not AllowZoom then Exit
           else if ssShift in shiftState then
-            SetScale((Message.CharCode - Ord('0')) /10)
+            SetScale((Message.CharCode - Ord('0')) / 10)
           else
             SetScale(Message.CharCode - Ord('0'));
         end;
@@ -1389,10 +1389,10 @@ var
   filename: string;
 begin
   Msg.Result := 0;
-  hDrop:= Msg.wParam;
+  hDrop := Msg.wParam;
   filenameLen := DragQueryFile(hDrop, 0, nil, 0);
   SetLength(filename, filenameLen);
-  DragQueryFile(hDrop, 0, Pointer(filename), filenameLen+1);
+  DragQueryFile(hDrop, 0, Pointer(filename), filenameLen + 1);
   DragFinish(hDrop);
   if assigned(fOnFileDrop) then fOnFileDrop(Self, filename)
   else if (Lowercase(ExtractFileExt(filename)) = '.bmp') then

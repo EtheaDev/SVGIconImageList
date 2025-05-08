@@ -498,11 +498,9 @@ var
   LWidth, LHeight: Integer;
   LOrigin: TPointF;
 begin
+  LSVG := FSVG;
   if not UsingSVGText then
-    LSVG := SVGIconItem.SVG
-
-  else
-    LSVG := FSVG;
+    LSVG.Source := SVGIconItem.SVG.Source;
 
   if not LSVG.IsEmpty then
   begin

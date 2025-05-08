@@ -2,11 +2,11 @@ unit Img32.Storage;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7                                                             *
-* Date      :  6 January 2025                                                  *
+* Version   :  4.8                                                             *
+* Date      :  7 April 2025                                                    *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
-* Purpose   :  Object persistence                                              *
+* Purpose   :  TLayer32 based object persistence                               *
 * License   :  https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
@@ -14,29 +14,34 @@ interface
 
 {$I Img32.inc}
 
+{$IFDEF USE_FILE_STORAGE}
+  {$TYPEINFO ON}
+{$ENDIF}
+
 uses
-  SysUtils, Classes, Img32;
+  SysUtils, Classes, {$IFDEF USE_FILE_STORAGE} TypInfo, {$ENDIF} Img32;
 
 type
   TStorageState = (ssNormal, ssLoading, ssSaving, ssDestroying);
 
   TStorage = class;
   TStorageClass = class of TStorage;
-{$IFNDEF NO_STORAGE}
+{$IFDEF USE_FILE_STORAGE}
   TStorageManager = class;
 {$ENDIF}
 
   TStorage = class(TInterfacedObj)
   private
-    fParent   : TStorage;
-{$IFNDEF NO_STORAGE}
-    fManager  : TStorageManager;
+    fParent         : TStorage;
+{$IFDEF USE_FILE_STORAGE}
+    fStgState       : TStorageState;
+    fManager        : TStorageManager;
+    fIgnoreOnWrite  : Boolean;
 {$ENDIF}
-    fChilds   : TList;
-    fIndex    : integer;
-    fName     : string;
-    fStgState : TStorageState;
-    fStgId    : integer;
+    fChilds         : TList;
+    fIndex          : integer;
+    fName           : string;
+    fStgId          : integer;
     function  GetChildCount: integer;
     function  GetHasChildren: Boolean;
   protected
@@ -46,14 +51,14 @@ type
     procedure ReindexChilds(startFrom: integer);
     procedure CheckChildIndex(index: integer); virtual;
     function  RemoveChildFromList(index: integer): TStorage; virtual;
-{$IFNDEF NO_STORAGE}
+{$IFDEF USE_FILE_STORAGE}
     procedure BeginRead; virtual;
     function  ReadProperty(const propName, propVal: string): Boolean; virtual;
     procedure EndRead; virtual;
     procedure WriteProperties; virtual;
-    procedure WriteStorageHeader(var objId: integer);
-    procedure WriteStorageContent(var objId: integer);
-    procedure WriteStorageFooter;
+    function  CheckSkipWriteProperty(propInfo: PPropInfo): Boolean; virtual;
+    procedure WriteStorage;
+    procedure WriteEnumProp(const propName, propVal: string);
     procedure WriteIntProp(const propName: string; propVal: integer);
     procedure WriteCardinalProp(const propName: string; propVal: Cardinal);
     procedure WriteBoolProp(const propName: string; propVal: Boolean);
@@ -63,8 +68,6 @@ type
     procedure WriteRectDProp(const propName: string; propVal: TRectD);
     procedure WritePathDProp(const propName: string; propVal: TPathD);
     procedure WriteLocalStorageProp(const propName: string; propVal: TStorage);
-    procedure WriteExternalProp(const propName: string; propVal: TObject);
-    procedure WriteEventProp(const propName: string; propVal: TNotifyEvent);
     procedure WriteStrProp(const propName, propVal: string);
 {$ENDIF}
   public
@@ -74,84 +77,80 @@ type
     procedure ClearChildren; virtual;
     function  AddChild(storeClass: TStorageClass): TStorage; virtual;
     function  InsertChild(index: integer; storeClass: TStorageClass): TStorage; virtual;
-    procedure DeleteChild(index: integer);
+    procedure DeleteChild(index: integer); virtual;
     function  IsOwnedBy(obj: TStorage): Boolean; overload;
     function  IsOwnedBy(objClass: TStorageClass): Boolean; overload;
-{$IFNDEF NO_STORAGE}
-    function  FindByName(const objName: string): TStorage;
-    function  FindById(const objId: integer): TStorage;
-    function  FindByClass(stgClass: TStorageClass): TStorage;
-    function  FindByClassAndName(stgClass: TStorageClass;
-      const objName: string): TStorage;
+{$IFDEF USE_FILE_STORAGE}
+//    function  StorageToId(obj: TStorage): integer;
+    function  FindChildByName(const objName: string): TStorage;
+    function  FindChildByID(const objId: integer): TStorage;
+    function  FindChildByClass(stgClass: TStorageClass): TStorage;
+    property  StorageManager  : TStorageManager read fManager;
+    property  IgnoreOnWrite   : Boolean write fIgnoreOnWrite;
+    property  StorageState    : TStorageState read fStgState write fStgState;
 {$ENDIF}
     property  Child[index: integer]: TStorage read GetChild;
-    property  Childs: TList read fChilds;
-    property  ChildCount: integer read GetChildCount;
-    property  HasChildren: Boolean read GetHasChildren;
-    property  Index  : integer read fIndex;
-    property  LoadId : integer read fStgId;
-    property  Name   : string read fName write SetName;
-    property  Parent : TStorage read fParent write SetParent;
-{$IFNDEF NO_STORAGE}
-    property  StorageManager: TStorageManager read fManager;
+    property  Childs          : TList read fChilds;
+    property  ChildCount      : integer read GetChildCount;
+    property  HasChildren     : Boolean read GetHasChildren;
+    property  Index           : integer read fIndex;
+    property  Parent          : TStorage read fParent write SetParent;
+{$IFDEF USE_FILE_STORAGE}
+  published
 {$ENDIF}
-    property  StorageState : TStorageState read fStgState;
+    property  Name            : string read fName write SetName;
+    property  Id              : integer read fStgId write fStgId;
   end;
 
-{$IFNDEF NO_STORAGE}
+{$IFDEF USE_FILE_STORAGE}
   TStorageManager = class(TStorage)
   private
     fDesignScreenRes  : double;
-    fDesignFormScale  : double;
-    fXmlStr           : Utf8String;
-    fCurrLevel        : integer;
+    fDesignScale      : double;
+    fWriteStr         : Utf8String;
+    fWriteLevel       : integer;
   protected
-    procedure DoBeforeLoad; virtual;
-    procedure DoAfterChildLoad(child: TStorage); virtual;
-    procedure DoAfterLoad; virtual;
+    procedure SetDesignScale(value: double); virtual;
+    procedure BeginRead; override;
+    procedure EndRead; override;
     procedure DoBeforeWrite; virtual;
-    function GetEventName(event: TNotifyEvent): string; virtual;
-    function GetExternPropName(prop: TObject): string; virtual;
-    function ReadInfoProperty(const propName, propVal: string): Boolean; virtual;
-    procedure WriteCustomProperties; virtual;
+    procedure LoadStoredObjects(const utf8: UTF8String); virtual;
+    procedure WriteAllObject; virtual;
+    function  GetExternalPropName(obj: TObject): string; virtual;
+    function  GetExternalEvent(const method: TMethod; out textId: string): Boolean; virtual;
   public
     constructor Create(parent:  TStorage = nil; const name: string = ''); override;
+    destructor Destroy; override;
     procedure LoadFromFile(const filename: string);
+    procedure LoadFromText(const text: Utf8String);
     procedure LoadFromStream(stream: TStream);
     procedure LoadFromResource(const resName: string; resType: PChar);
-    procedure AddWriteString(const str: Utf8String);
-    procedure SaveToFile(const filename: string;
-      aScale: double; const classesToIgnore: array of TStorageClass);
-    class function GetStorageClass(const storageClassname: string): TStorageClass;
+    procedure WriteLn(const str: Utf8String);
+    procedure Write(const str: Utf8String);
+    procedure SaveToFile(const filename: string; aScale: double);
+    function SaveToText(aScale: double): Utf8String;
+    procedure SaveToStream(stream: TStream; aScale: double);
     function FindObjectByClass(storageClass: TStorageClass;
       parent: TStorage = nil): TStorage;
     function FindObjectByName(const name: string; parent: TStorage = nil): TStorage;
-    function FindObjectByLoadId(id: integer): TStorage;
-    property DesignScreenRes: double read fDesignScreenRes;
-    property DesignFormScale: double read
-      fDesignFormScale write fDesignFormScale;
+  published
+    property DesignResolution: double read fDesignScreenRes write fDesignScreenRes;
+    property DesignScale: double read fDesignScale write SetDesignScale;
   end;
 
-  TStorageInfo = class(TStorage)
-  protected
-    function  ReadProperty(const propName, propVal: string): Boolean; override;
-    procedure WriteProperties; override;
-  end;
-  function GetIntProp(const str: string; out success: Boolean): integer;
-  function GetBoolProp(const str: string; out success: Boolean): Boolean;
-  function GetCardProp(const str: string; out success: Boolean): Cardinal;
-  function GetDoubleProp(const str: string; out success: Boolean): Double;
-  function GetStringProp(const str: string; out success: Boolean): string;
-  function GetStorageProp(const str: string; out success: Boolean): TStorage;
-  function GetColorProp(const str: string; out success: Boolean): TColor32;
   function GetPointDProp(const str: string; out success: Boolean): TPointD;
   procedure RegisterStorageClass(storageClass: TStorageClass);
+
+  function GetStorageClass(const storageClassname: string): TStorageClass;
+  function HasPublishedProperty(const className, propName: string): Boolean;
+  function SimpleXmlEncode(const Data: string): string;
+  function SimpleXmlDecode(const Data: string): string;
+
 {$ENDIF}
 
 implementation
 
-resourcestring
-  rsClassNotRegistered = 'Error: %s is not a registered TStorage class';
+uses Img32.Layers;
 
 type
   TLoadPtrRec = record
@@ -169,9 +168,8 @@ type
 
 var
   classList       : TStringList;
-{$IFNDEF NO_STORAGE}
-  objIdList       : TList;
 
+{$IFDEF USE_FILE_STORAGE}
 const
   squote  = '''';
   dquote  = '"';
@@ -276,7 +274,27 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function SimpleHtmlDecode(const Data: string): string;
+function SimpleXmlEncode(const Data: string): string;
+var
+  i: Integer;
+begin
+  result := '';
+  for i := 1 to length(Data) do
+    case Data[i] of
+      #10 : result := result + '&#10;';
+      #9  : result := result + '&#9;'; //string arrays :)
+      '<' : result := result + '&lt;';
+      '>' : result := result + '&gt;';
+      '&' : result := result + '&amp;';
+      '''': result := result + '&apos;';
+      '"' : result := result + '&quot;';
+    else
+      result := result + Data[i];
+    end;
+end;
+//------------------------------------------------------------------------------
+
+function SimpleXmlDecode(const Data: string): string;
 var
   i, j: Integer;
   inSpecial: Boolean;
@@ -289,7 +307,7 @@ begin
     begin
       if Data[i] <> ';' then Continue;
       inSpecial := false;
-      case Data[j+1] of
+      case Data[j + 1] of
         'g': result := result + '>';
         'l': result := result + '<';
         'q': result := result + '"';
@@ -299,7 +317,7 @@ begin
             'p' : result := result + '''';
           end;
         '#': result := result +
-          Chr(StrToIntDef(Copy(Data, j+2, i-j-2), 32));
+          Chr(StrToIntDef(Copy(Data, j + 2, i - j - 2), 32));
       end;
     end
     else if Data[i] = '&' then
@@ -368,7 +386,7 @@ begin
     inc(cnt);
     if cnt = buffSize then
     begin
-      buffSize := buffSize*2;
+      buffSize := buffSize * 2;
       SetLength(Result, buffSize);
     end;
     while (i < len) and (str[i] = space) do inc(i);
@@ -398,7 +416,7 @@ begin
   if isNeg then inc(startIdx);
   Result := (startIdx <= len) and
     (str[startIdx] >= '0') and (str[startIdx] <= '9');
-  if not Result then Exit;; //error
+  if not Result then Exit; //error
   for i := startIdx to len do
   begin
     j := Ord(str[startIdx]) - 48;
@@ -429,7 +447,7 @@ begin
     inc(cnt);
     if cnt = buffSize then
     begin
-      buffSize := buffSize*2;
+      buffSize := buffSize * 2;
       SetLength(Result, buffSize);
     end;
     while (i < len) and (str[i] = space) do inc(i);
@@ -444,62 +462,6 @@ begin
   while (i < len) and (str[i] = space) do inc(i);
   while (i < len) and (str[i] <> ']') do inc(i);
   success := str[i] = ']';
-end;
-//------------------------------------------------------------------------------
-
-function GetIntProp(const str: string; out success: Boolean): integer;
-begin
-  success := TryStrToInt(str, Result);
-end;
-//------------------------------------------------------------------------------
-
-function GetCardProp(const str: string; out success: Boolean): Cardinal;
-begin
-  success := TryStrToUInt(str, Result);
-end;
-//------------------------------------------------------------------------------
-
-function GetDoubleProp(const str: string; out success: Boolean): Double;
-begin
-  success := TryStrToFloat(str, Result);
-end;
-//------------------------------------------------------------------------------
-
-function GetStringProp(const str: string; out success: Boolean): string;
-begin
-  Result := SimpleHtmlDecode(str);
-  success := true;
-end;
-//------------------------------------------------------------------------------
-
-function GetStorageProp(const str: string; out success: Boolean): TStorage;
-var
-  pp: UInt64;
-begin
-  success := TryStrToUInt64('$'+str, pp);
-  //workaround for either 32bit an 64bit pointers
-  if success then
-    Result := TObject(pp) as TStorage else
-    Result := nil;
-end;
-//------------------------------------------------------------------------------
-
-function GetColorProp(const str: string; out success: Boolean): TColor32;
-begin
-  if (Length(str) > 7) and (UpCase(str[1]) = 'C') then
-  begin
-    success := ConvertColorConst(str, Result);
-  end else
-    success := TryStrToUInt('$'+str, Cardinal(Result));
-end;
-//------------------------------------------------------------------------------
-
-function GetBoolProp(const str: string; out success: Boolean): Boolean;
-var
-  i: integer;
-begin
-  success := TryStrToInt(str, i);
-  if success then Result := i <> 0 else Result := False;
 end;
 //------------------------------------------------------------------------------
 
@@ -637,26 +599,6 @@ end;
 // Write to XML string functions
 //------------------------------------------------------------------------------
 
-function SimpleHtmlEncode(const Data: string): string;
-var
-  i: Integer;
-begin
-  result := '';
-  for i := 1 to length(Data) do
-    case Data[i] of
-      #10 : result := result + '&#10;';
-      #9  : result := result + '&#9;'; //string arrays :)
-      '<' : result := result + '&lt;';
-      '>' : result := result + '&gt;';
-      '&' : result := result + '&amp;';
-      '''': result := result + '&apos;';
-      '"' : result := result + '&quot;';
-    else
-      result := result + Data[i];
-    end;
-end;
-//------------------------------------------------------------------------------
-
 function BooleanToStr(val: Boolean): string;
 const
   bool: array[Boolean] of string = ('0','1');
@@ -698,11 +640,11 @@ var
   i, len: integer;
 begin
   len := Length(path);
-  SetLength(Result, len*2);
-  for i := 0 to len -1 do
+  SetLength(Result, len * 2);
+  for i := 0 to len - 1 do
   begin
-    Result[i*2]     := path[i].X;
-    Result[i*2 +1]  := path[i].Y;
+    Result[i * 2]     := path[i].X;
+    Result[i * 2 + 1] := path[i].Y;
   end;
 end;
 //------------------------------------------------------------------------------
@@ -745,228 +687,13 @@ begin
   end;
   Result := Result + UTF8String(s) +' ]';
 end;
-//------------------------------------------------------------------------------
-
-function PointerToString(p: Pointer): string;
-begin
-  Result := Format('%p',[p]);
-end;
-//------------------------------------------------------------------------------
-
-function StorageToId(obj: TStorage): integer;
-var
-  i: integer;
-begin
-  Result := 0;
-  for i := 0 to objIdList.Count -1 do
-    if obj = objIdList[i] then
-    begin
-      Result := i;
-      Exit;
-    end;
-end;
 
 //------------------------------------------------------------------------------
 // Reading from and Writing to XML streams
 //------------------------------------------------------------------------------
 
-procedure LoadStoredObjects(const utf8: UTF8String; storeManager: TStorageManager);
-var
-  loadingObjectsList  : TList;
-  loadingPtrProps     : TList;
-  xmlCurr, xmlEnd, c  : PUTF8Char;
-  attName, attVal     : Utf8String;
-  clssName: string;
-  storeClass          : TStorageClass;
-  currChild           : TStorage;
-  loadPtrRec          : PLoadPtrRec;
-  i, cnt              : Integer;
-  savedDecSep         : Char;
-
-  function SkipComment(var c: PUTF8Char; endC: PUTF8Char): Boolean;
-  var
-    str: Utf8String;
-  begin
-    while SkipBlanks(c, endC) and
-      GetWord(c, endC, str) and (str <> '-->') do;
-    Result := (str = '-->');
-  end;
-
+procedure TStorageManager.LoadStoredObjects(const utf8: UTF8String);
 begin
-  if not Assigned(storeManager) or (utf8 = '') then Exit;
-  savedDecSep := {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator;
-  loadingPtrProps := TList.Create;
-  loadingObjectsList := TList.Create;
-  try
-    {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator := '.';
-    xmlCurr := PUTF8Char(utf8);
-    xmlEnd := xmlCurr;
-    inc(xmlEnd, Length(utf8));
-    currChild := storeManager;
-    currChild.fStgState := ssLoading;
-    while (xmlCurr <= xmlEnd) do
-    begin
-      //get next storage object class
-      if not SkipBlanks(xmlCurr, xmlEnd) or
-        (xmlCurr^ <> '<') then Break;
-      inc(xmlCurr);
-      if (xmlCurr^ = '!') then //comment
-      begin
-        if not CheckChar(xmlCurr, xmlEnd, 1, '-') or
-          not CheckChar(xmlCurr, xmlEnd, 2, '-') then
-            Break;
-        inc(xmlCurr, 3);
-        if SkipComment(xmlCurr, xmlEnd) then
-          Continue else
-          Break;
-      end
-      else if (xmlCurr^ = '/') then
-      begin
-        //ending the current child
-        inc(xmlCurr);
-        c := xmlCurr;
-        GetNameLength(xmlCurr, xmlEnd);
-        clssName := string(MakeUTF8String(c, xmlCurr));
-        if (currChild = storeManager) or
-          not SameText(clssName, currChild.ClassName) or
-          not SkipBlanks(xmlCurr, xmlEnd) or
-          (xmlCurr^ <> '>') then Break;
-        currChild.EndRead;
-        currChild.fStgState := ssNormal;
-        storeManager.DoAfterChildLoad(currChild);
-        inc(xmlCurr); //'>'
-        currChild := currChild.Parent;
-        Continue;
-      end;
-      //get next object's classname and create
-      c := xmlCurr;
-      GetNameLength(xmlCurr, xmlEnd);
-      clssName := string(MakeUTF8String(c, xmlCurr));
-      storeClass := TStorageManager.GetStorageClass(clssName);
-      if not Assigned(storeClass) then
-        raise Exception.CreateFmt(rsClassNotRegistered, [clssName]);
-      currChild := currChild.AddChild(storeClass);
-      //get attributes
-      while SkipBlanks(xmlCurr, xmlEnd) do
-      begin
-        if (xmlCurr^ = '<') then //assume a comment
-        begin
-          if not CheckChar(xmlCurr, xmlEnd, 1, '!') or
-            not CheckChar(xmlCurr, xmlEnd, 2, '-') or
-            not CheckChar(xmlCurr, xmlEnd, 3, '-') then Break;
-          inc(xmlCurr, 4);
-          if SkipComment(xmlCurr, xmlEnd) then Continue
-          else Break;
-        end
-        else if (xmlCurr^ < '?') then Break;
-        attName := GetAttribName(xmlCurr, xmlEnd);
-        attVal := GetAttribValue(xmlCurr, xmlEnd);
-        if (attName = '') then Break;
-        if attName[1] = '@' then //local pointer (delay these)
-        begin
-          New(loadPtrRec);
-          loadPtrRec.loadObj := currChild;
-          loadPtrRec.propName := string(attName);
-          Delete(loadPtrRec.propName, 1,1);
-          loadPtrRec.propVal  := string(attVal);
-          loadPtrRec.propValI := StrToIntDef(string(attVal), -1);
-          loadingPtrProps.Add(loadPtrRec);
-        end
-        else if (attName = 'ObjId') then
-        begin
-          currChild.fStgId := StrToIntDef(string(attVal), -1);
-          //if currId is valid then add currChild to loadingObjectsList
-          if (currChild.fStgId >= 0) then
-          begin
-            //but first add nil for any missing objects
-            for i := loadingObjectsList.Count to currChild.fStgId -1 do
-              loadingObjectsList.Add(nil);
-            if currChild.fStgId < loadingObjectsList.Count then
-              loadingObjectsList[currChild.fStgId] := currChild else
-              loadingObjectsList.Add(currChild);
-          end;
-        end
-        else
-          currChild.ReadProperty(string(attName), string(attVal));
-      end;
-      SkipBlanks(xmlCurr, xmlEnd);
-      if (xmlCurr^ <> '>') then break;
-      inc(xmlCurr);
-    end;
-    //finally lookup and linkup pointers
-    cnt := loadingObjectsList.Count;
-    for i := loadingPtrProps.Count -1 downto 0 do
-      with PLoadPtrRec(loadingPtrProps[i])^ do
-        begin
-          if (propValI >= 0) and (propValI < cnt) then
-            loadObj.ReadProperty(propName,
-              PointerToString(loadingObjectsList[propValI]));
-          Dispose(PLoadPtrRec(loadingPtrProps[i]));
-        end;
-  finally
-    loadingObjectsList.Free;
-    loadingPtrProps.Free;
-    {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator := savedDecSep;
-  end;
-end;
-//------------------------------------------------------------------------------
-
-procedure SaveStoredObjects(storageManager: TStorageManager;
-  startIdx: integer; const classesToIgnore: array of TStorageClass);
-
-  function ClassInIgnoreList(aclass: TClass): Boolean;
-  var
-    i: integer;
-  begin
-    Result := true;
-    for i := 0 to High(classesToIgnore) do
-      if aclass = classesToIgnore[i] then Exit;
-    Result := False;
-  end;
-
-  procedure AddToObjIdList(obj: TStorage);
-  var
-    i: integer;
-  begin
-    if ClassInIgnoreList(obj.ClassType) then
-    begin
-      obj.fStgId := -1 //use storageId to flag ignored.
-    end else
-    begin
-      obj.fStgId := 0;
-      objIdList.Add(obj);
-      for i := 0 to obj.ChildCount -1 do
-          AddToObjIdList(obj.Child[i]);
-    end;
-  end;
-
-var
-  i           : integer;
-  objId       : integer;
-  savedDecSep : Char;
-begin
-  if not Assigned(storageManager) then Exit;
-
-  savedDecSep := {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator;
-  {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator := '.';
-  storageManager.fCurrLevel := 0;
-  objId := startIdx;
-  objIdList := TList.Create;
-  try
-    //build objIdList but don't include the storagemanager
-    //itself in the list, just its descendants
-    //objIdList.Add(nil); // dummy for TStorageInfo
-    for i := 0 to storageManager.ChildCount -1 do
-      AddToObjIdList(storageManager.Child[i]);
-    //it's OK to write storage now that we have object ids.
-    for i := 0 to storageManager.ChildCount -1 do
-      with TStorage(storageManager.Childs[i]) do
-          if fStgId >= 0 then
-            WriteStorageContent(objId);
-  finally
-    objIdList.Free;
-    {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator := savedDecSep;
-  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -1005,31 +732,37 @@ begin
     ms.Free;
   end;
 end;
+//------------------------------------------------------------------------------
+{$ENDIF}
+
+{$IFDEF USE_FILE_STORAGE}
+
+function GetStorageClass(const storageClassname: string): TStorageClass;
+var
+  i: integer;
+begin
+  if classList.Find(storageClassname, i) then
+    Result := TStorageClass(classList.Objects[i]) else
+    Result := nil;
+end;
+//------------------------------------------------------------------------------
+
+function HasPublishedProperty(const className, propName: string): Boolean;
+begin
+  Result := TypInfo.IsPublishedProp(GetStorageClass(ClassName), propName);
+end;
+
 {$ENDIF}
 
 //------------------------------------------------------------------------------
 // TStorage
 //------------------------------------------------------------------------------
 
-constructor TStorage.Create(parent:  TStorage; const name: string);
+constructor TStorage.Create(parent: TStorage; const name: string);
 begin
   fChilds := TList.Create;
   fName := name;
-  if Assigned(parent) then
-  begin
-    fIndex := parent.fChilds.Add(self);
-    fParent := parent;
-{$IFNDEF NO_STORAGE}
-    if Assigned(parent.fManager) then
-    begin
-      fManager := parent.fManager;
-      fStgState := fManager.fStgState;
-    end;
-  end;
-  if fStgState = ssLoading then BeginRead;
-{$ELSE}
-  end;
-{$ENDIF}
+  Self.Parent := parent;
 end;
 //------------------------------------------------------------------------------
 
@@ -1046,7 +779,9 @@ end;
 procedure TStorage.Free;
 begin
   if Self = nil then Exit;
+{$IFDEF USE_FILE_STORAGE}
   fStgState := ssDestroying;
+{$ENDIF}
   inherited Free;
 end;
 //------------------------------------------------------------------------------
@@ -1093,8 +828,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-{$IFNDEF NO_STORAGE}
-function TStorage.FindByName(const objName: string): TStorage;
+{$IFDEF USE_FILE_STORAGE}
+
+function TStorage.FindChildByName(const objName: string): TStorage;
 var
   i: integer;
 begin
@@ -1106,13 +842,13 @@ begin
   Result := nil;
   for i := 0 to ChildCount -1 do
     begin
-      Result := TStorage(Child[i]).FindByName(objName);
+      Result := TStorage(Child[i]).FindChildByName(objName);
       if Assigned(Result) then Break;
     end;
 end;
 //------------------------------------------------------------------------------
 
-function TStorage.FindById(const objId: integer): TStorage;
+function TStorage.FindChildByID(const objId: integer): TStorage;
 var
   i: integer;
 begin
@@ -1124,13 +860,13 @@ begin
   Result := nil;
   for i := 0 to ChildCount -1 do
     begin
-      Result := TStorage(Child[i]).FindById(objId);
+      Result := TStorage(Child[i]).FindChildByID(objId);
       if Assigned(Result) then Break;
     end;
 end;
 //------------------------------------------------------------------------------
 
-function TStorage.FindByClass(stgClass: TStorageClass): TStorage;
+function TStorage.FindChildByClass(stgClass: TStorageClass): TStorage;
 var
   i: integer;
 begin
@@ -1142,26 +878,7 @@ begin
   Result := nil;
   for i := 0 to ChildCount -1 do
     begin
-      Result := TStorage(Child[i]).FindByClass(stgClass);
-      if Assigned(Result) then Break;
-    end;
-end;
-//------------------------------------------------------------------------------
-
-function TStorage.FindByClassAndName(stgClass: TStorageClass;
-  const objName: string): TStorage;
-var
-  i: integer;
-begin
-  if (self is stgClass) and SameText(objName, Name) then
-  begin
-    Result := self;
-    Exit;
-  end;
-  Result := nil;
-  for i := 0 to ChildCount -1 do
-    begin
-      Result := TStorage(Child[i]).FindByClassAndName(stgClass, objName);
+      Result := TStorage(Child[i]).FindChildByClass(stgClass);
       if Assigned(Result) then Break;
     end;
 end;
@@ -1178,46 +895,54 @@ end;
 //------------------------------------------------------------------------------
 
 function TStorage.ReadProperty(const propName, propVal: string): Boolean;
+var
+  pi: PPropInfo;
 begin
-  if propName = 'Name' then
-    fName := GetStringProp(propVal, Result)
-else
-  Result := false;
+  Result := False;
+  if IsPublishedProp(self, propName) then
+  try
+    pi := GetPropInfo(self.ClassType, propName);
+    case pi.PropType^.Kind of
+      tkEnumeration: SetEnumProp(self, propName, propVal);
+      tkInteger: SetOrdProp(self, pi, Cardinal(strToIntDef(propVal, 0)));
+      tkFloat: SetFloatProp(self, propName, strToFloatDef(propVal, 0.0));
+      tkUString: SetPropValue(self, propName, propVal);
+      else Exit; // eg methods and classes aren't handled here
+    end;
+    Result := true;
+  except
+    Result := False;
+  end;
 end;
 //------------------------------------------------------------------------------
 
 procedure TStorage.WriteIntProp(const propName: string; propVal: integer);
 begin
-  fManager.AddWriteString(
-    UTF8String(format('  %s="%d"'#10, [propName, propVal])));
+  fManager.WriteLn(UTF8String(format('  %s="%d"', [propName, propVal])));
 end;
 //------------------------------------------------------------------------------
 
 procedure TStorage.WriteCardinalProp(const propName: string; propVal: Cardinal);
 begin
-  fManager.AddWriteString(
-    UTF8String(format('  %s="%s"'#10, [propName, UIntToStr(propVal)])));
+  fManager.WriteLn(UTF8String(format('  %s="%s"', [propName, UIntToStr(propVal)])));
 end;
 //------------------------------------------------------------------------------
 
 procedure TStorage.WriteBoolProp(const propName: string; propVal: Boolean);
 begin
-  fManager.AddWriteString(
-    UTF8String(format('  %s="%s"'#10, [propName, BooleanToStr(propVal)])));
+  fManager.WriteLn(UTF8String(format('  %s="%s"', [propName, BooleanToStr(propVal)])));
 end;
 //------------------------------------------------------------------------------
 
 procedure TStorage.WriteColorProp(const propName: string; propVal: TColor32);
 begin
-  fManager.AddWriteString(
-    UTF8String(format('  %s="%8.8x"'#10, [propName, propVal])));
+  fManager.WriteLn(UTF8String(format('  %s="$%8.8x"', [propName, propVal])));
 end;
 //------------------------------------------------------------------------------
 
 procedure TStorage.WriteDoubleProp(const propName: string; propVal: double);
 begin
-  fManager.AddWriteString(
-    UTF8String(format('  %s="%1.2f"'#10, [propName, propVal])));
+  fManager.WriteLn(UTF8String(format('  %s="%1.2f"', [propName, propVal])));
 end;
 //------------------------------------------------------------------------------
 
@@ -1226,8 +951,7 @@ var
   da: TArrayOfDouble;
 begin
   da := PointDToDblArray(propVal);
-  fManager.AddWriteString(
-    UTF8String(format('  %s="%s"'#10, [propName, DoubleArrayToStr(da)])));
+  fManager.WriteLn(UTF8String(format('  %s="%s"', [propName, DoubleArrayToStr(da)])));
 end;
 //------------------------------------------------------------------------------
 
@@ -1236,8 +960,7 @@ var
   da: TArrayOfDouble;
 begin
   da := RectDToDblArray(propVal);
-  fManager.AddWriteString(
-    UTF8String(format('  %s="%s"'#10, [propName, DoubleArrayToStr(da)])));
+  fManager.WriteLn(UTF8String(format('  %s="%s"', [propName, DoubleArrayToStr(da)])));
 end;
 //------------------------------------------------------------------------------
 
@@ -1246,75 +969,158 @@ var
   da: TArrayOfDouble;
 begin
   da := PathDToDblArray(propVal);
-  fManager.AddWriteString(
-    UTF8String(format('  %s="%s"'#10, [propName, DoubleArrayToStr(da)])));
+  fManager.WriteLn(
+    UTF8String(format('  %s="%s"', [propName, DoubleArrayToStr(da)])));
 end;
 //------------------------------------------------------------------------------
 
 procedure TStorage.WriteStrProp(const propName, propVal: string);
 begin
-  fManager.AddWriteString(
-    UTF8String(format('  %s="%s"'#10, [propName, SimpleHtmlEncode(propVal)])));
+  fManager.WriteLn(
+    UTF8String(format('  %s="%s"', [propName, SimpleXmlEncode(propVal)])));
+end;
+//------------------------------------------------------------------------------
+
+procedure TStorage.WriteEnumProp(const propName, propVal: string);
+begin
+  fManager.WriteLn(UTF8String(format('  %s="%s"', [propName, propVal])));
 end;
 //------------------------------------------------------------------------------
 
 procedure TStorage.WriteLocalStorageProp(const propName: string; propVal: TStorage);
 begin
   if not Assigned(propVal) then Exit;
-  fManager.AddWriteString(UTF8String(format('  @%s="%d"'#10,
-    [propName, StorageToId(propVal)])));
+  fManager.WriteLn(UTF8String(format('  %s="%d"',[propName, propVal.id])));
 end;
 //------------------------------------------------------------------------------
 
-procedure TStorage.WriteExternalProp(const propName: string; propVal: TObject);
-begin
-  if not Assigned(propVal) then Exit;
-  fManager.AddWriteString(UTF8String(format('  ?%s="%s"'#10,
-    [propName, fManager.GetExternPropName(propVal)])));
-end;
-//------------------------------------------------------------------------------
-
-procedure TStorage.WriteEventProp(const propName: string; propVal: TNotifyEvent);
-begin
-  fManager.AddWriteString(
-    UTF8String(format('  ?%s="%s"'#10,
-      [propName, fManager.GetEventName(propVal)])));
-end;
-//------------------------------------------------------------------------------
-
-procedure TStorage.WriteStorageHeader(var objId: integer);
-begin
-  fManager.AddWriteString(UTF8String(Format('<%s '#10, [ClassName])));
-  WriteProperties;
-  fManager.AddWriteString(UTF8String(Format('  ObjId="%d">'#10, [objId])));
-  inc(objId);
-end;
-//------------------------------------------------------------------------------
-
-procedure TStorage.WriteStorageContent(var objId: integer);
+procedure TStorage.WriteStorage;
 var
   i: integer;
 begin
-  WriteStorageHeader(objId);
-  inc(fManager.fCurrLevel);
-  for i := 0 to ChildCount -1 do
-    with TStorage(fChilds[i]) do
-      if fStgId >= 0 then
-        WriteStorageContent(objId);
-  dec(fManager.fCurrLevel);
-  WriteStorageFooter;
+  if fIgnoreOnWrite then Exit;
+
+  // start object element
+  fManager.WriteLn(UTF8String(Format('<%s ', [ClassName])));
+
+  // write object properties
+  WriteProperties;
+  fManager.Write('>');
+
+  // write object's children
+  if ChildCount > 0 then
+  begin
+    inc(fManager.fWriteLevel);
+    for i := 0 to ChildCount -1 do
+      with TStorage(fChilds[i]) do
+        WriteStorage;
+    dec(fManager.fWriteLevel);
+  end;
+
+  // end object element
+  fManager.WriteLn(UTF8String(Format('</%s>', [ClassName])));
 end;
 //------------------------------------------------------------------------------
 
-procedure TStorage.WriteStorageFooter;
+function TStorage.CheckSkipWriteProperty(propInfo: PPropInfo): Boolean;
 begin
-  fManager.AddWriteString(UTF8String(Format('</%s>'#10, [ClassName])));
+  // Return TRUE when writing of a specific published property
+  // is handled in this method (in a descendant class)
+  // and hence bypass the default storage writing.
+
+  // For example, in a descendant storage class
+  // only write a Font property if it differs from its parent's Font
+  // //  var propName := string(propInfo.Name);
+  // //  if (propName <> 'Font') or not Assigned(parent) or
+  // //    not HasPublishedProperty(parent.Classname, propName) then Exit;
+  // //  Result := GetObjectProp(self, propName) = GetObjectProp(Parent, propName);
+
+  Result := False; // ie use the default writing
 end;
 //------------------------------------------------------------------------------
 
 procedure TStorage.WriteProperties;
+var
+  i, j: integer;
+  c: cardinal;
+  d: double;
+  m: TMethod;
+  propName: string;
+  s: UnicodeString;
+  obj: TObject;
+  propInfos: PPropList;
+  typeInfo: PTypeInfo;
+  typeData: PTypeData;
 begin
-  if Name <> '' then WriteStrProp('Name', Name);
+  typeInfo := PTypeInfo(ClassType.ClassInfo);
+  typeData := GetTypeData(typeInfo);
+  GetMem(propInfos, typeData.PropCount * Sizeof(PPropInfo));
+  try
+    GetPropInfos(typeInfo, propInfos);
+    for i := 0 to typeData.PropCount -1 do
+      with propInfos^[i]^ do
+      begin
+        //
+        if CheckSkipWriteProperty(propInfos^[i]) then Continue;
+
+        propName := string(name);
+        case PropType^.Kind of
+          tkEnumeration:
+          begin
+            s := GetEnumProp(self, propName);
+            WriteEnumProp(propName, s);
+          end;
+          tkInteger:
+          begin
+            if GetTypeData(PropType^).OrdType = otULong then
+            begin
+              c := GetOrdProp(self, propName);
+              if pos('Color', propName) > 0 then
+                WriteColorProp(propName, c) else
+                WriteCardinalProp(propName, c);
+            end else
+            begin
+              j := GetOrdProp(self, propName);
+              WriteIntProp(propName, j);
+            end;
+          end;
+          tkFloat:
+          begin
+            d := GetFloatProp(self, propName);
+            WriteDoubleProp(propName, d);
+          end;
+          tkUString:
+          begin
+            s := GetStrProp(self, propName);
+            if s <> '' then WriteStrProp(propName, s);
+          end;
+          tkClass:
+          begin
+            obj := GetObjectProp(self, propName);
+            if obj is TStorage then
+              WriteLocalStorageProp(propName, TStorage(obj))
+            else
+            begin
+              s := storageManager.GetExternalPropName(obj);
+              if s <> '' then WriteStrProp(propName, s);
+            end;
+          end;
+          tkMethod:
+          begin
+            m := GetMethodProp(self, propName);
+            if storageManager.GetExternalEvent(m, s) then
+              WriteStrProp(propName, s);
+          end;
+          tkRecord:
+          begin
+//            if PropType^.Kind = tkClass then beep;
+//            if PropType^.Name = '' then beep;
+          end;
+        end;
+      end;
+  finally
+    FreeMem(propInfos);
+  end;
 end;
 //------------------------------------------------------------------------------
 {$ENDIF}
@@ -1362,8 +1168,17 @@ begin
   if Assigned(fParent) then
     fParent.RemoveChildFromList(fIndex);
   fParent := parent;
-  if Assigned(fParent) then
-    Self.fIndex := fParent.fChilds.Add(self);
+  if not Assigned(fParent) then Exit;
+  Self.fIndex := fParent.fChilds.Add(self);
+{$IFDEF USE_FILE_STORAGE}
+  if Assigned(Parent.fManager) then
+  begin
+    fManager := Parent.fManager;
+    fStgState := fManager.fStgState;
+  end;
+  if fStgState = ssLoading then BeginRead;
+{$ENDIF}
+
 end;
 //------------------------------------------------------------------------------
 
@@ -1401,7 +1216,7 @@ begin
   TStorage(fChilds[index]).Free;
 end;
 
-{$IFNDEF NO_STORAGE}
+{$IFDEF USE_FILE_STORAGE}
 //------------------------------------------------------------------------------
 // TStorageManager
 //------------------------------------------------------------------------------
@@ -1410,23 +1225,42 @@ constructor TStorageManager.Create(parent:  TStorage; const name: string);
 begin
   inherited Create(nil, name); // TStorageManager should never have a parent
   fManager := self;
-  fDesignFormScale := 1;
+  fDesignScale := 1;
+  fDesignScreenRes := 1;
 end;
 //------------------------------------------------------------------------------
 
-procedure TStorageManager.DoBeforeLoad;
+destructor TStorageManager.Destroy;
+begin
+  inherited;
+end;
+//------------------------------------------------------------------------------
+
+procedure TStorageManager.SetDesignScale(value: double);
+begin
+  if value <= 0 then Exit;
+  fDesignScale := value;
+end;
+//------------------------------------------------------------------------------
+
+procedure TStorageManager.BeginRead;
 begin
   ClearChildren;
 end;
 //------------------------------------------------------------------------------
 
-procedure TStorageManager.DoAfterChildLoad(child: TStorage);
+procedure TStorageManager.EndRead;
 begin
+  if fDesignScale = 0 then fDesignScale := 1;
 end;
 //------------------------------------------------------------------------------
 
-procedure TStorageManager.DoAfterLoad;
+procedure TStorageManager.LoadFromText(const text: Utf8String);
 begin
+  if text = '' then Exit;
+  BeginRead;
+  LoadStoredObjects(text);
+  EndRead;
 end;
 //------------------------------------------------------------------------------
 
@@ -1436,9 +1270,7 @@ var
 begin
   SetLength(utf8, stream.Size - stream.Position);
   stream.ReadBuffer(utf8[1], stream.Size - stream.Position);
-  DoBeforeLoad;
-  LoadStoredObjects(utf8, self);
-  DoAfterLoad;
+  LoadFromText(utf8);
 end;
 //------------------------------------------------------------------------------
 
@@ -1468,89 +1300,123 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function TStorageManager.GetEventName(event: TNotifyEvent): string;
+procedure TStorageManager.WriteAllObject;
+
+  procedure RecursiveAddToObjIdList(obj: TStorage; var idx: integer);
+  var
+    i: integer;
+  begin
+     obj.fStgId := idx; Inc(idx);
+    for i := 0 to obj.ChildCount -1 do
+        RecursiveAddToObjIdList(obj.Child[i], idx);
+  end;
+
+var
+  i, idx : integer;
+  savedDecSep : Char;
 begin
-  //override this in descendant storagemanager classes
+
+  savedDecSep := {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator;
+  {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator := '.';
+  try
+    // assign a unique Id for each stored object
+    idx := 1;
+    for i := 0 to ChildCount -1 do
+      RecursiveAddToObjIdList(Child[i], idx);
+
+    DoBeforeWrite;
+
+    // open the storageManager object
+    fWriteStr := UTf8String(Format('<%s ', [ClassName]));
+    WriteProperties;
+    fManager.Write('>');
+
+      fWriteLevel := 1;
+      for i := 0 to ChildCount -1 do
+        TStorage(Childs[i]).WriteStorage;
+
+    // close the storageManager object
+    WriteLn(UTF8String(Format('</%s>', [ClassName])));
+    WriteLn('');
+  finally
+    //objIdList.Clear;
+    {$IFDEF FORMATSETTINGS}FormatSettings.{$ENDIF}DecimalSeparator := savedDecSep;
+  end;
+end;
+//------------------------------------------------------------------------------
+
+procedure TStorageManager.WriteLn(const str: Utf8String);
+begin
+  fWriteStr := fWriteStr + #10 + WriteSpaces(fWriteLevel) + str;
+end;
+//------------------------------------------------------------------------------
+
+procedure TStorageManager.Write(const str: Utf8String);
+begin
+  fWriteStr := fWriteStr + str;
+end;
+//------------------------------------------------------------------------------
+
+function TStorageManager.GetExternalPropName(obj: TObject): string;
+begin
   Result := '';
 end;
 //------------------------------------------------------------------------------
 
-function TStorageManager.GetExternPropName(prop: TObject): string;
+function TStorageManager.GetExternalEvent(const method: TMethod; out textId: string): Boolean;
 begin
-  //override this in descendant storagemanager classes
-  Result := '';
+  textId := '';
+  result := False;
 end;
 //------------------------------------------------------------------------------
 
-procedure TStorageManager.AddWriteString(const str: Utf8String);
-begin
-  fXmlStr := fXmlStr + WriteSpaces(fCurrLevel) + str;
-end;
-//------------------------------------------------------------------------------
 
 procedure TStorageManager.DoBeforeWrite;
 begin
 end;
 //------------------------------------------------------------------------------
 
-function TStorageManager.ReadInfoProperty(const propName, propVal: string): Boolean;
+function TStorageManager.SaveToText(aScale: double): Utf8String;
 begin
-  if propName = 'DesignResolution' then
-  begin
-    fDesignScreenRes := GetDoubleProp(propVal, Result);
-  end else if propName = 'DesignScale' then
-  begin
-    fDesignFormScale := GetDoubleProp(propVal, Result);
-    if fDesignFormScale = 0 then fDesignFormScale := 1;
-  end
-  else Result := false;
+  if ChildCount = 0 then Exit;
+  fDesignScale := aScale;
+  fWriteStr := ''; //empty the write buffer (just in case)
+  WriteAllObject;
+  Result := fWriteStr;
+  fWriteStr := '';
 end;
 //------------------------------------------------------------------------------
 
-procedure TStorageManager.WriteCustomProperties;
-begin
-end;
-//------------------------------------------------------------------------------
-
-procedure TStorageManager.SaveToFile(const filename: string;
-  aScale: double; const classesToIgnore: array of TStorageClass);
+procedure TStorageManager.SaveToStream(stream: TStream; aScale: double);
 var
-  len: integer;
+  len   : integer;
+  text  : Utf8String;
+begin
+  if ChildCount = 0 then Exit;
+  text := SaveToText(aScale);
+  len := Length(text);
+  if len > 0 then
+    stream.WriteBuffer(text[1], len);
+end;
+//------------------------------------------------------------------------------
+
+procedure TStorageManager.SaveToFile(const filename: string; aScale: double);
+var
   fs: TFileStream;
 begin
   if ChildCount = 0 then Exit;
-  fDesignFormScale := aScale;
-  fXmlStr := ''; //empty the write buffer (just in case)
-  DoBeforeWrite;
-  if not (Child[0] is TStorageInfo) then
-    InsertChild(0, TStorageInfo);
-  SaveStoredObjects(self, 0, classesToIgnore);
-  len := Length(fXmlStr);
   fs := TFileStream.Create(filename, fmCreate);
   try
-    if len > 0 then
-      fs.WriteBuffer(fXmlStr[1], len);
+    SaveToStream(fs, aScale);
   finally
     fs.Free;
   end;
-  fXmlStr := '';
-end;
-//------------------------------------------------------------------------------
-
-class function TStorageManager.GetStorageClass(
-  const storageClassname: string): TStorageClass;
-var
-  i: integer;
-begin
-  if classList.Find(storageClassname, i) then
-    Result := TStorageClass(classList.Objects[i]) else
-    Result := nil;
 end;
 //------------------------------------------------------------------------------
 
 function TStorageManager.FindObjectByClass(storageClass: TStorageClass;
   parent: TStorage): TStorage;
-  function FindByClass(so: TStorage): TStorage;
+  function FindChildByClass(so: TStorage): TStorage;
   var
     i: integer;
   begin
@@ -1560,7 +1426,7 @@ function TStorageManager.FindObjectByClass(storageClass: TStorageClass;
     begin
       for i := 0 to so.ChildCount -1 do
       begin
-        Result := FindByClass(so.Child[i]);
+        Result := FindChildByClass(so.Child[i]);
         if Assigned(Result) then Exit;
       end;
       Result := nil;
@@ -1568,41 +1434,15 @@ function TStorageManager.FindObjectByClass(storageClass: TStorageClass;
   end;
 begin
   if Assigned(parent) then
-    Result := FindByClass(parent) else
-    Result := FindByClass(self);
-end;
-//------------------------------------------------------------------------------
-
-function TStorageManager.FindObjectByLoadId(id: integer): TStorage;
-  function FindById(so: TStorage): TStorage;
-  var
-    i, highI: integer;
-  begin
-    if id = so.fStgId then
-    begin
-      Result := so;
-      Exit;
-    end;
-    Result := nil;
-    highI := so.ChildCount -1;
-    if (id < so.fStgId) or (HighI < 0) then Exit;
-    if id >= so.Child[highI].fStgId then
-      Result := FindById(so.Child[highI])
-    else
-      for i := 0 to highI -1 do
-      begin
-       Result := FindById(so.Child[i]);
-       if Assigned(Result) then break;
-      end;
-  end;
-begin
-  Result := FindById(self);
+    Result := FindChildByClass(parent) else
+    Result := FindChildByClass(self);
 end;
 //------------------------------------------------------------------------------
 
 function TStorageManager.FindObjectByName(const name: string;
   parent: TStorage): TStorage;
-  function FindByName(so: TStorage): TStorage;
+
+  function FindChildByName(so: TStorage): TStorage;
   var
     i,highI: integer;
   begin
@@ -1615,52 +1455,36 @@ function TStorageManager.FindObjectByName(const name: string;
     highI := so.ChildCount -1;
     for i := 0 to highI do
     begin
-     Result := FindByName(so.Child[i]);
+     Result := FindChildByName(so.Child[i]);
      if Assigned(Result) then break;
     end;
   end;
+
 begin
   if Assigned(parent) then
-    Result := FindByName(parent) else
-    Result := FindByName(self);
+    Result := FindChildByName(parent) else
+    Result := FindChildByName(self);
 end;
 
-//------------------------------------------------------------------------------
-// TStorageInfo
-//------------------------------------------------------------------------------
-
-function TStorageInfo.ReadProperty(const propName, propVal: string): Boolean;
-begin
-  Result := StorageManager.ReadInfoProperty(propName, propVal);
-end;
-//------------------------------------------------------------------------------
-
-procedure TStorageInfo.WriteProperties;
-begin
-  inherited;
-  if StorageManager.fDesignScreenRes > 0 then
-    WriteDoubleProp('DesignResolution', StorageManager.fDesignScreenRes) else
-    WriteDoubleProp('DesignResolution', DpiAwareOne);
-  WriteDoubleProp('DesignScale', StorageManager.fDesignFormScale);
-  StorageManager.WriteCustomProperties;
-end;
 {$ENDIF}
 
 //------------------------------------------------------------------------------
 // Storage class registration
 //------------------------------------------------------------------------------
 
-procedure RegisterStorageClass(storageClass: TStorageClass);
-begin
-  classList.AddObject(storageClass.ClassName, Pointer(storageClass));
-end;
-//------------------------------------------------------------------------------
-
 procedure InitStorageClassRegister;
 begin
+  if Assigned(classList) then Exit;
   classList := TStringList.Create;
   classList.Duplicates := dupIgnore;
   classList.Sorted := true;
+end;
+//------------------------------------------------------------------------------
+
+procedure RegisterStorageClass(storageClass: TStorageClass);
+begin
+  if not Assigned(classList) then InitStorageClassRegister;
+  classList.AddObject(storageClass.ClassName, Pointer(storageClass));
 end;
 //------------------------------------------------------------------------------
 
@@ -1674,8 +1498,10 @@ end;
 
 initialization
   InitStorageClassRegister;
-{$IFNDEF NO_STORAGE}
-  RegisterStorageClass(TStorageInfo);
+{$IFDEF USE_FILE_STORAGE}
+  // register any storage classes that are
+  // contained by TStorageManager or its descendant
+  // but do this in the unit in which the are defined.
 {$ENDIF}
 
 finalization

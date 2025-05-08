@@ -88,6 +88,7 @@
         <DCCReference Include="..\..\Image32\source\Img32.SVG.Path.pas"/>
         <DCCReference Include="..\..\Image32\source\Img32.SVG.Reader.pas"/>
         <DCCReference Include="..\..\Image32\Source\Img32.Clipper2.pas"/>
+        <DCCReference Include="..\..\Image32\Source\Img32.TextChunks.pas"/>
         <DCCReference Include="..\..\Image32\source\Clipper.pas"/>
         <DCCReference Include="..\..\Image32\source\Clipper.Core.pas"/>
         <DCCReference Include="..\..\Image32\source\Clipper.Engine.pas"/>
@@ -117,6 +118,11 @@
                 <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
+                <Platform value="Android">False</Platform>
+                <Platform value="Android64">False</Platform>
+                <Platform value="iOSDevice64">False</Platform>
+                <Platform value="iOSSimulator">False</Platform>
+                <Platform value="Linux64">False</Platform>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">True</Platform>
             </Platforms>

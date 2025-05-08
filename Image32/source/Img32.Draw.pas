@@ -447,10 +447,10 @@ begin
   // Precondition: the background to text drawn onto 'img' must be transparent
 
   // 85 + (2 * 57) + (2 * 28) == 255
-  primeTbl := PByteArray(@MulTable[85 + centerWeighting *2]);
+  primeTbl := PByteArray(@MulTable[85 + centerWeighting * 2]);
   nearTbl  := PByteArray(@MulTable[57]);
   farTbl   := PByteArray(@MulTable[28 - centerWeighting]);
-  SetLength(rowBuffer, img.Width +4);
+  SetLength(rowBuffer, img.Width + 4);
 
   for h := 0 to img.Height -1 do
   begin
@@ -467,16 +467,16 @@ begin
     while w < img.Width do
     begin
       dst.R := primeTbl[srcArr[w].A] +
-        nearTbl[srcArr[w-1].A] + farTbl[srcArr[w-2].A] +
-        nearTbl[srcArr[w+1].A] + farTbl[srcArr[w+2].A];
+        nearTbl[srcArr[w - 1].A] + farTbl[srcArr[w - 2].A] +
+        nearTbl[srcArr[w + 1].A] + farTbl[srcArr[w + 2].A];
       inc(w);
       dst.G := primeTbl[srcArr[w].A] +
-        nearTbl[srcArr[w-1].A] + farTbl[srcArr[w-2].A] +
-        nearTbl[srcArr[w+1].A] + farTbl[srcArr[w+2].A];
+        nearTbl[srcArr[w - 1].A] + farTbl[srcArr[w - 2].A] +
+        nearTbl[srcArr[w + 1].A] + farTbl[srcArr[w + 2].A];
       inc(w);
       dst.B := primeTbl[srcArr[w].A] +
-        nearTbl[srcArr[w-1].A] + farTbl[srcArr[w-2].A] +
-        nearTbl[srcArr[w+1].A] + farTbl[srcArr[w+2].A];
+        nearTbl[srcArr[w - 1].A] + farTbl[srcArr[w - 2].A] +
+        nearTbl[srcArr[w + 1].A] + farTbl[srcArr[w + 2].A];
       inc(w);
       dst.A := 255;
       inc(dst);
@@ -710,7 +710,7 @@ begin
   if len = 1 then Exit;
 
   reciprocalDistTimes255 := 0;
-  step := 1/(len-1);
+  step := 1 / (len - 1);
   pos := step;
   offset2 := 0;
   i := 1; j := 1;
@@ -721,7 +721,7 @@ begin
     color1 := color2;
     color2 := gradColors[i].color;
     if dist > 0 then
-      reciprocalDistTimes255 := 255/dist; // 1/dist*255
+      reciprocalDistTimes255 := 255 / dist; // 1/dist*255
     while (pos <= dist) and (j < len) do
     begin
       result[j] := BlendColorUsingMask(color1, color2, Round(pos * reciprocalDistTimes255));
@@ -857,8 +857,8 @@ begin
     if dy > 0 then dydx := 1 else dydx := -1;
   end else
   begin
-    dxdy := dx/dy;
-    dydx := dy/absDx;
+    dxdy := dx / dy;
+    dydx := dy / absDx;
   end;
 
   // TRIM EDGES THAT CROSS CLIPPING BOUNDARIES (EXCEPT THE LEFT BOUNDARY)
@@ -1911,7 +1911,7 @@ begin
     (fGradientColors[i].offset <= offsetFrac) do inc(i);
   SetLength(fGradientColors, len +1);
   Move(fGradientColors[i],
-    fGradientColors[i+1], (len -i) * SizeOf(TGradientColor));
+    fGradientColors[i + 1], (len - i) * SizeOf(TGradientColor));
   fGradientColors[i] := gradColor;
 end;
 
@@ -1947,7 +1947,7 @@ begin
     fIsVert := true;
     dx := (fEndPt.X - fStartPt.X);
     dy := (fEndPt.Y - fStartPt.Y);
-    dxdy := dx/dy;
+    dxdy := dx / dy;
 
     fColorsCnt := Ceil(dy + dxdy * (fEndPt.X - fStartPt.X));
     MakeColorGradient(fGradientColors, fColorsCnt, fColors);
@@ -1973,7 +1973,7 @@ begin
     fIsVert := false;
     dx := (fEndPt.X - fStartPt.X);
     dy := (fEndPt.Y - fStartPt.Y);
-    dydx := dy/dx; //perpendicular slope
+    dydx := dy / dx; //perpendicular slope
 
     fColorsCnt := Ceil(dx + dydx * (fEndPt.Y - fStartPt.Y));
     MakeColorGradient(fGradientColors, fColorsCnt, fColors);
@@ -2082,13 +2082,13 @@ begin
   if radX >= radY then
   begin
     fScaleX     := 1;
-    fScaleY     := radX/radY;
+    fScaleY     := radX / radY;
     fColorsCnt := Ceil(radX) +1;
   end else
   begin
-    fScaleX     := radY/radX;
+    fScaleX     := radY / radX;
     fScaleY     := 1;
-    fColorsCnt := Ceil(radY) +1;
+    fColorsCnt := Ceil(radY) + 1;
   end;
 end;
 // ------------------------------------------------------------------------------
@@ -2107,7 +2107,7 @@ begin
     opacityTable := PByteArray(@MulTable[Opacity]);
     for i := x1 to x2 do
     begin
-      dist := Hypot((y - fCenterPt.Y) *fScaleY, (i - fCenterPt.X) *fScaleX);
+      dist := Hypot((y - fCenterPt.Y) * fScaleY, (i - fCenterPt.X) * fScaleX);
       color := fColors[fBoundsProc(Trunc(dist), fColorsCnt)];
       pDst^ := BlendToAlpha3(pDst^, color, opacityTable[Ord(alpha^)]);
       inc(pDst); inc(alpha);
@@ -2116,7 +2116,7 @@ begin
   begin
     for i := x1 to x2 do
     begin
-      dist := Hypot((y - fCenterPt.Y) *fScaleY, (i - fCenterPt.X) *fScaleX);
+      dist := Hypot((y - fCenterPt.Y) * fScaleY, (i - fCenterPt.X) * fScaleX);
       color := fColors[fBoundsProc(Trunc(dist), fColorsCnt)];
       pDst^ := BlendToAlpha3(pDst^, color, Ord(alpha^));
       inc(pDst); inc(alpha);
@@ -2159,7 +2159,7 @@ begin
 
   fFocusPt.X := focus.X - fCenterPt.X;
   fFocusPt.Y := focus.Y - fCenterPt.Y;
-  fColorsCnt := Ceil(Hypot(fA*2, fB*2)) +1;
+  fColorsCnt := Ceil(Hypot(fA * 2, fB * 2)) + 1;
   fAA := fA * fA;
   fBB := fB * fB;
 end;
@@ -2186,10 +2186,10 @@ begin
     if (pt.X = fFocusPt.X) then //vertical line
     begin
       // let x = pt.X, then y*y = b*b(1 - Sqr(pt.X)/aa)
-      qq := (1 - Sqr(pt.X)/fAA);
+      qq := (1 - Sqr(pt.X) / fAA);
       if (qq > 1) then qq := 1
       else if (qq < 0) then qq := 0;
-      q := Sqrt(fBB*qq);
+      q := Sqrt(fBB * qq);
       ellipsePt.X := pt.X;
       if pt.Y >= fFocusPt.Y then
         ellipsePt.Y := q else
@@ -2198,12 +2198,12 @@ begin
       dist2 := abs(ellipsePt.Y - fFocusPt.Y);
       if dist2 = 0 then
         q := 1 else
-        q := dist/ dist2;
+        q := dist / dist2;
     end else
     begin
       // using simultaneous equations and substitution
       // given y = mx + c
-      m := (pt.Y - fFocusPt.Y)/(pt.X - fFocusPt.X);
+      m := (pt.Y - fFocusPt.Y) / (pt.X - fFocusPt.X);
       c := pt.Y - m * pt.X;
       // given (x*x)/aa + (y*y)/bb = 1
       // (x*x)/aa*bb + (y*y) = bb
@@ -2211,16 +2211,16 @@ begin
       // bb/aa *(x*x) + (m*m)*(x*x) + 2*m*x*c +c*c = b*b
       // (bb/aa +(m*m)) *(x*x) + 2*m*c*(x) + (c*c) - bb = 0
       // solving quadratic equation
-      qa := (fBB/fAA +(m*m));
-      qb := 2*m*c;
-      qc := (c*c) - fBB;
-      qs := (qb*qb) - 4*qa*qc;
+      qa := (fBB / fAA +(m * m));
+      qb := 2 * m * c;
+      qc := (c * c) - fBB;
+      qs := (qb * qb) - 4 * qa * qc;
       if qs >= 0 then
       begin
         qs := Sqrt(qs);
         if pt.X <= fFocusPt.X then
-          ellipsePt.X := (-qb -qs)/(2 * qa) else
-          ellipsePt.X := (-qb +qs)/(2 * qa);
+          ellipsePt.X := (-qb -qs) / (2 * qa) else
+          ellipsePt.X := (-qb +qs) / (2 * qa);
         ellipsePt.Y := m * ellipsePt.X + c;
 
         // Use sqr'ed distances (Sqrt(a^2+b^2)/Sqrt(x^2+y^2) => Sqrt((a^2+b^2)/(x^2+y^2))
@@ -2228,7 +2228,7 @@ begin
         dist2 := Sqr(ellipsePt.X - fFocusPt.X) + Sqr(ellipsePt.Y - fFocusPt.Y);
         if dist2 = 0 then
           q := 1 else
-          q := Sqrt(dist/dist2);
+          q := Sqrt(dist / dist2);
       end else
         q := 1; //shouldn't happen :)
     end;
@@ -2348,7 +2348,7 @@ begin
   d00 := (v0.X * v0.X + v0.Y * v0.Y);
   d01 := (v0.X * v1.X + v0.Y * v1.Y);
   d11 := (v1.X * v1.X + v1.Y * v1.Y);
-  invDenom := 1/(d00 * d11 - d01 * d01);
+  invDenom := 1 / (d00 * d11 - d01 * d01);
 end;
 // ------------------------------------------------------------------------------
 
@@ -2417,8 +2417,8 @@ var
   path: TPathD;
 begin
   if radius <= 1 then
-    path := Rectangle(pt.X-radius, pt.Y-radius, pt.X+radius, pt.Y+radius) else
-    path := Ellipse(RectD(pt.X-radius, pt.Y-radius, pt.X+radius, pt.Y+radius));
+    path := Rectangle(pt.X - radius, pt.Y - radius, pt.X + radius, pt.Y + radius) else
+    path := Ellipse(RectD(pt.X - radius, pt.Y-radius, pt.X + radius, pt.Y + radius));
   DrawPolygon(img, path, frEvenOdd, color);
 end;
 // ------------------------------------------------------------------------------
@@ -2428,7 +2428,7 @@ procedure DrawPoint(img: TImage32; const pt: TPointD;
 var
   path: TPathD;
 begin
-  path := Ellipse(RectD(pt.X -radius, pt.Y -radius, pt.X +radius, pt.Y +radius));
+  path := Ellipse(RectD(pt.X - radius, pt.Y - radius, pt.X + radius, pt.Y + radius));
   DrawPolygon(img, path, frEvenOdd, renderer);
 end;
 // ------------------------------------------------------------------------------
@@ -2871,7 +2871,7 @@ begin
 
   rec := GetBounds(polygons);
   RectWidthHeight(rec, w, h);
-  tmpImg := TImage32.Create(w *3, h);
+  tmpImg := TImage32.Create(w * 3, h);
   try
     tmpPolygons := TranslatePath(polygons, -rec.Left, -rec.Top);
     tmpPolygons := ScalePath(tmpPolygons, 3, 1);

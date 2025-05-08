@@ -31,3 +31,7 @@ Extensive documentation can be found [**here**](http://www.angusj.com/image32/Do
 
 ![drawing](https://github.com/user-attachments/assets/7682e9bf-bbc6-4ad0-8988-b5bf9eb982ab)<br>
 <a href="http://www.angusj.com/image32/Videos/drawing.mp4" target="_blank"><b>Drawing video</b></a><br>
+
+![ctrldemo](https://www.angusj.com/image32/Images/ctrldemo.png)<br>
+<a href="http://www.angusj.com/image32/Videos/experimental.mp4" target="_blank"><b>No VCL &amp; no FMX 'experimental' app video</b></a><br>
+

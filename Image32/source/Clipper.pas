@@ -173,9 +173,9 @@ begin
   SetLength(Result, len);
   for i := 0 to len -1 do
   begin
-    Result[i].X := ints[i*3];
-    Result[i].Y := ints[i*3 +1];
-    Result[i].z := ints[i*3 +2];
+    Result[i].X := ints[i * 3];
+    Result[i].Y := ints[i * 3 + 1];
+    Result[i].z := ints[i * 3 + 2];
   end;
 end;
 //------------------------------------------------------------------------------
@@ -188,9 +188,9 @@ begin
   SetLength(Result, len);
   for i := 0 to len -1 do
   begin
-    Result[i].X := dbls[i*3];
-    Result[i].Y := dbls[i*3 +1];
-    Result[i].Z := Round(dbls[i*3 +2]);
+    Result[i].X := dbls[i * 3];
+    Result[i].Y := dbls[i * 3 +1];
+    Result[i].Z := Round(dbls[i * 3 + 2]);
   end;
 end;
 //------------------------------------------------------------------------------
@@ -204,8 +204,8 @@ begin
   SetLength(Result, len);
   for i := 0 to len -1 do
   begin
-    Result[i].X := ints[i*2];
-    Result[i].Y := ints[i*2 +1];
+    Result[i].X := ints[i * 2];
+    Result[i].Y := ints[i * 2 + 1];
   end;
 end;
 //------------------------------------------------------------------------------
@@ -218,8 +218,8 @@ begin
   SetLength(Result, len);
   for i := 0 to len -1 do
   begin
-    Result[i].X := dbls[i*2];
-    Result[i].Y := dbls[i*2 +1];
+    Result[i].X := dbls[i * 2];
+    Result[i].Y := dbls[i * 2 + 1];
   end;
 end;
 //------------------------------------------------------------------------------
@@ -232,7 +232,7 @@ begin
   if (Length(Poly.Polygon) > 0) then
   begin
     i := Length(Paths);
-    SetLength(Paths, i +1);
+    SetLength(Paths, i + 1);
     Paths[i] := Poly.Polygon;
   end;
   for i := 0 to Poly.Count - 1 do
@@ -405,7 +405,7 @@ var
 begin
   CheckPrecisionRange(precision);
   scale := Power(10, precision);
-  invScale := 1/scale;
+  invScale := 1 / scale;
   pp := ScalePaths(paths, scale, scale);
 
   with TClipperOffset.Create(miterLimit, ArcTolerance) do
@@ -459,7 +459,7 @@ begin
   rec := Rect64(ScaleRect(rect, scale));
   tmpPath := ScalePath(path, scale);
   tmpPath := RectClip(rec, tmpPath);
-  Result := ScalePathD(tmpPath, 1/scale);
+  Result := ScalePathD(tmpPath, 1 / scale);
 end;
 //------------------------------------------------------------------------------
 
@@ -480,7 +480,7 @@ begin
   finally
     Free;
   end;
-  Result := ScalePathsD(tmpPaths, 1/scale);
+  Result := ScalePathsD(tmpPaths, 1 / scale);
 end;
 //------------------------------------------------------------------------------
 
@@ -528,7 +528,7 @@ begin
   rec := Rect64(ScaleRect(rect, scale));
   tmpPath := ScalePath(path, scale);
   tmpPaths := RectClipLines(rec, tmpPath);
-  Result := ScalePathsD(tmpPaths, 1/scale);
+  Result := ScalePathsD(tmpPaths, 1 / scale);
 end;
 //------------------------------------------------------------------------------
 
@@ -551,7 +551,7 @@ begin
   finally
     Free;
   end;
-  Result := ScalePathsD(tmpPaths, 1/scale);
+  Result := ScalePathsD(tmpPaths, 1 / scale);
 end;
 //------------------------------------------------------------------------------
 
@@ -754,7 +754,7 @@ begin
   if not isOpenPath then
   begin
     while (i < len -1) and
-      IsCollinear(p[len -1], p[i], p[i+1]) do inc(i);
+      IsCollinear(p[len -1], p[i], p[i + 1]) do inc(i);
     while (i < len -1) and
       IsCollinear(p[len -2], p[len -1], p[i]) do dec(len);
   end;
@@ -766,12 +766,12 @@ begin
     Exit;
   end;
 
-  SetLength(Result, len -i);
+  SetLength(Result, len - i);
 
   Result[0] := p[i];
   j := 0;
-  for i := i+1 to len -2 do
-    if not IsCollinear(result[j], p[i], p[i+1]) then
+  for i := i + 1 to len -2 do
+    if not IsCollinear(result[j], p[i], p[i + 1]) then
     begin
       inc(j);
       result[j] := p[i];
@@ -782,17 +782,17 @@ begin
     inc(j);
     result[j] := p[len-1];
   end
-  else if not IsCollinear(result[j], p[len-1], result[0]) then
+  else if not IsCollinear(result[j], p[len - 1], result[0]) then
   begin
     inc(j);
-    result[j] := p[len-1];
+    result[j] := p[len - 1];
   end else
   begin
     while (j > 1) and
-      IsCollinear(result[j-1], result[j], result[0]) do dec(j);
-    if j < 2 then j := -1;
+      IsCollinear(result[j - 1], result[j], result[0]) do dec(j);
+    if j < 2 then j := - 1;
   end;
-  SetLength(Result, j +1);
+  SetLength(Result, j + 1);
 end;
 //------------------------------------------------------------------------------
 
@@ -805,7 +805,7 @@ begin
   scale := power(10, precision);
   p := ScalePath(path, scale);
   p := TrimCollinear(p, isOpenPath);
-  Result := ScalePathD(p, 1/scale);
+  Result := ScalePathD(p, 1 / scale);
 end;
 //------------------------------------------------------------------------------
 
@@ -881,19 +881,19 @@ begin
   with srArray[highI] do
   begin
     pt      := path[highI];
-    prev    := @srArray[highI-1];
+    prev    := @srArray[highI - 1];
     next    := @srArray[0];
     pdSqrd  := Iif(isClosedPath,
-      PerpendicDistSqrd(path[highI], path[highI-1], path[0]), invalidD);
+      PerpendicDistSqrd(path[highI], path[highI - 1], path[0]), invalidD);
   end;
 
   for i := 1 to highI -1 do
     with srArray[i] do
     begin
       pt      := path[i];
-      prev    := @srArray[i-1];
-      next    := @srArray[i+1];
-      pdSqrd  := PerpendicDistSqrd(path[i], path[i-1], path[i+1]);
+      prev    := @srArray[i - 1];
+      next    := @srArray[i + 1];
+      pdSqrd  := PerpendicDistSqrd(path[i], path[i - 1], path[i + 1]);
     end;
 
   first := @srArray[0];
@@ -949,7 +949,7 @@ begin
   scale := power(10, decimalPrecision);
   p := ScalePath(path, scale);
   p := SimplifyPath(p, shapeTolerance, isClosedPath);
-  Result := ScalePathD(p, 1/scale);
+  Result := ScalePathD(p, 1 / scale);
 end;
 //------------------------------------------------------------------------------
 
@@ -962,7 +962,7 @@ begin
   scale := power(10, decimalPrecision);
   pp := ScalePaths(paths, scale);
   pp := SimplifyPaths(pp, shapeTolerance, isClosedPath);
-  Result := ScalePathsD(pp, 1/scale);
+  Result := ScalePathsD(pp, 1 / scale);
 end;
 //------------------------------------------------------------------------------
 

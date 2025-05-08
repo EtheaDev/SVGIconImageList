@@ -399,29 +399,29 @@ begin
   // cc = m0
   // dd = t(0)
 
-  m0 {aka t'(0)} := (c.A - a.A) /2;
-  m1 {aka t'(1)} := (d.A - b.A) /2;
-  aa := 2*b.A - 2*c.A + m0 + m1;
-  bb := 3*c.A -3*b.A -2*m0 - m1;
-  Res.A := ClampByte(aa*t3 + bb*t2 + m0*t1 + b.A);
+  m0 {aka t'(0)} := (c.A - a.A) / 2;
+  m1 {aka t'(1)} := (d.A - b.A) / 2;
+  aa := 2 * b.A - 2 * c.A + m0 + m1;
+  bb := 3 * c.A -3 * b.A -2 * m0 - m1;
+  Res.A := ClampByte(aa * t3 + bb * t2 + m0 * t1 + b.A);
 
-  m0 := (c.R - a.R) /2;
-  m1 := (d.R - b.R) /2;
-  aa := 2*b.R - 2*c.R + m0 + m1;
-  bb := 3*c.R -3*b.R -2*m0 - m1;
-  Res.R := ClampByte(aa*t3 + bb*t2 + m0*t1 + b.R);
+  m0 := (c.R - a.R) / 2;
+  m1 := (d.R - b.R) / 2;
+  aa := 2 * b.R - 2 * c.R + m0 + m1;
+  bb := 3 * c.R - 3 * b.R - 2 * m0 - m1;
+  Res.R := ClampByte(aa * t3 + bb * t2 + m0 * t1 + b.R);
 
-  m0 := (c.G - a.G) /2;
-  m1 := (d.G - b.G) /2;
-  aa := 2*b.G - 2*c.G + m0 + m1;
-  bb := 3*c.G -3*b.G -2*m0 - m1;
-  Res.G := ClampByte(aa*t3 + bb*t2 + m0*t1 + b.G);
+  m0 := (c.G - a.G) / 2;
+  m1 := (d.G - b.G) / 2;
+  aa := 2 * b.G - 2 * c.G + m0 + m1;
+  bb := 3 * c.G -3 * b.G -2 * m0 - m1;
+  Res.G := ClampByte(aa * t3 + bb * t2 + m0 * t1 + b.G);
 
-  m0 := (c.B - a.B) /2;
-  m1 := (d.B - b.B) /2;
-  aa := 2*b.B - 2*c.B + m0 + m1;
-  bb := 3*c.B -3*b.B -2*m0 - m1;
-  Res.B := ClampByte(aa*t3 + bb*t2 + m0*t1 + b.B);
+  m0 := (c.B - a.B) / 2;
+  m1 := (d.B - b.B) / 2;
+  aa := 2 * b.B - 2 * c.B + m0 + m1;
+  bb := 3 * c.B - 3 * b.B - 2 * m0 - m1;
+  Res.B := ClampByte(aa * t3 + bb * t2 + m0 * t1 + b.B);
 end;
 //------------------------------------------------------------------------------
 
@@ -440,7 +440,7 @@ begin
   begin
     if x < -0.5 then
     begin
-      xFrac := Round((1+x) *255);
+      xFrac := Round((1 + x) * 255);
       bceX := eaPreStart;
     end
     else if (x < 0) or
@@ -454,15 +454,15 @@ begin
     begin
       // the following is a workaround to avoid the increment in eaPostEnd
       bceX := eaPreStart;         // ie anti-aliase but without increment
-      xFrac := Round((1-x) *127); // reversed because 'end' not 'start'
+      xFrac := Round((1 - x) * 127); // reversed because 'end' not 'start'
     end else
     begin
-      xFrac := Round(frac(x) *255);
+      xFrac := Round(frac(x) * 255);
       bceX := eaPostStart;
     end;
   end else
   begin
-    xFrac := Round(frac(x) *255);
+    xFrac := Round(frac(x) * 255);
     if x > iw - 1 then
     begin
       if x > iw - 0.5 then bceX := eaPostEnd
@@ -476,7 +476,7 @@ begin
   begin
     if y < -0.5 then
     begin
-      yFrac := Round((1+y) *255);
+      yFrac := Round((1 + y) * 255);
       bceY := eaPreStart;
     end
     else if (y < 0) or
@@ -490,15 +490,15 @@ begin
     begin
       // the following is a workaround to avoid the increment in eaPostEnd
       bceY := eaPreStart;         // ie anti-aliase but without increment
-      yFrac := Round((1-y) *127); // reversed because 'end' not 'start'
+      yFrac := Round((1 - y) * 127); // reversed because 'end' not 'start'
     end else
     begin
-      yFrac := Round(frac(y) *255);
+      yFrac := Round(frac(y) * 255);
       bceY := eaPostStart;
     end;
   end else
   begin
-    yFrac := Round(frac(y) *255);
+    yFrac := Round(frac(y) * 255);
     if y > ih - 1 then
     begin
       if y > ih - 0.5 then bceY := eaPostEnd
@@ -508,8 +508,8 @@ begin
       bceY := eaCenterFill;
   end;
 
-  x := Max(0, Min(iw -1, x -1));
-  y := Max(0, Min(ih -1, y -1));
+  x := Max(0, Min(iw - 1, x - 1));
+  y := Max(0, Min(ih - 1, y - 1));
   pi := Trunc(y) * iw + Trunc(x);
 
   for i := 0 to 3 do
@@ -734,20 +734,20 @@ var
   pc: PColor32;
   scaledX: TArrayOfInteger;
 begin
-  sx := Image.Width/newWidth * 256;
-  sy := Image.Height/newHeight * 256;
+  sx := Image.Width / newWidth * 256;
+  sy := Image.Height / newHeight * 256;
   NewColor32Array(tmp, newWidth * newHeight, True);
 
   NewIntegerArray(scaledX, newWidth, True);
-  for x := 0 to newWidth -1 do
-    scaledX[x] := Round((x+1) * sx);
+  for x := 0 to newWidth - 1 do
+    scaledX[x] := Round((x + 1) * sx);
 
   y256 := 0;
   pc := @tmp[0];
   for y := 0 to newHeight - 1 do
   begin
     x256 := 0;
-    yy256 := Round((y+1) * sy);
+    yy256 := Round((y + 1) * sy);
     for x := 0 to newWidth - 1 do
     begin
       xx256 := scaledX[x];
@@ -824,7 +824,7 @@ var
   mat: TMatrixD;
 begin
   mat := IdentityMatrix;
-  MatrixScale(mat, newWidth/Image.Width, newHeight/Image.Height);
+  MatrixScale(mat, newWidth / Image.Width, newHeight / Image.Height);
   AffineTransformImage(Image, TargetImage, mat);
 end;
 
@@ -835,18 +835,18 @@ procedure InitByteExponents;
 var
   i: integer;
 const
-  inv255     : double = 1/255;
-  inv255sqrd : double = 1/(255*255);
-  inv255cubed: double = 1/(255*255*255);
+  inv255     : double = 1 / 255;
+  inv255sqrd : double = 1 / (255 * 255);
+  inv255cubed: double = 1 / (255 * 255 * 255);
   piDiv256   : double = Pi / 256;
 begin
   for i := 0 to 255 do
   begin
-    byteFrac[i]  := i     *inv255;
-    byteFracSq[i]  := i*i   *inv255sqrd;
-    byteFracCubed[i] := i*i*i *inv255cubed;
+    byteFrac[i]  := i * inv255;
+    byteFracSq[i]  := i * i * inv255sqrd;
+    byteFracCubed[i] := i * i * i * inv255cubed;
 
-    sinWeighted[i] := Round((Sin(i * piDiv256 - Pi/2) +1) /2 * 255);
+    sinWeighted[i] := Round((Sin(i * piDiv256 - Pi / 2) + 1) / 2 * 255);
   end;
 end;
 //------------------------------------------------------------------------------

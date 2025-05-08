@@ -202,7 +202,7 @@ constructor TPathSegLayer.Create(parent: TLayer32; const name: string);
 begin
   inherited Create(parent, name);
   fOwner := Parent.Parent as TSvgPathLayer;
-  OuterMargin := Max(fOwner.Margin, Ceil(DefaultButtonSize /2));
+  OuterMargin := Max(fOwner.Margin, Ceil(DefaultButtonSize / 2));
 end;
 //------------------------------------------------------------------------------
 
@@ -222,13 +222,13 @@ begin
   if not Assigned(Paths) or not Assigned(Paths[0]) then Exit;
   Image.Clear; //Image.Clear($10FF0000); //debugging :)
   if Focused then c := Owner.fStrokeColor2 else c := Owner.fStrokeColor;
-  p := OffsetPath(Paths[0], -Left+OuterMargin, -Top+OuterMargin);
+  p := OffsetPath(Paths[0], -Left + OuterMargin, -Top + OuterMargin);
   DrawLine(Image, p, Owner.StrokeWidth, c, esRound);
 
   //UpdateHitTestMaskFromImage;
   //draw a wider stroke to define the HT region
   HitTest.htImage.SetSize(Image.Width, Image.Height);
-  DrawLine(HitTest.htImage, p, Owner.StrokeWidth*2, clBlack32, esRound);
+  DrawLine(HitTest.htImage, p, Owner.StrokeWidth * 2, clBlack32, esRound);
 end;
 //------------------------------------------------------------------------------
 
@@ -601,11 +601,11 @@ begin
           if IsLeftCtrl then
           begin
             dx := mp.X - ai.rec.Left;
-            ai.rec.Left := ai.rec.Left + dx + a*dx;
+            ai.rec.Left := ai.rec.Left + dx + a * dx;
           end else
           begin
             dx := mp.X - ai.rec.Right;
-            ai.rec.Right := ai.rec.Right + dx + a*dx;
+            ai.rec.Right := ai.rec.Right + dx + a * dx;
           end;
 
           if ai.rec.Normalize then
@@ -643,7 +643,7 @@ begin
           sa := GetRotatedEllipticalAngleFromPoint(ai.rec,
             ai.rectAngle, ai.startPos);
           sp := GetPtOnRotatedEllipseFromAngle(ai.rec, ai.rectAngle, sa);
-          dx := (ai.startpos.X - sp.X); dy:= (ai.startpos.Y - sp.Y);
+          dx := (ai.startpos.X - sp.X); dy := (ai.startpos.Y - sp.Y);
           OffsetRect(ai.rec, dx, dy);
           ai.endPos := OffsetPoint(ai.endPos, dx, dy);
 
@@ -673,11 +673,11 @@ begin
           if IsTopCtrl then
           begin
             dy := mp.Y - ai.rec.Top;
-            ai.rec.Top := ai.rec.Top + dy + a*dy;
+            ai.rec.Top := ai.rec.Top + dy + a * dy;
           end else
           begin
             dy := mp.Y - ai.rec.Bottom;
-            ai.rec.Bottom := ai.rec.Bottom + dy + a*dy;
+            ai.rec.Bottom := ai.rec.Bottom + dy + a * dy;
           end;
           if ai.rec.Normalize then
           begin
@@ -686,7 +686,7 @@ begin
             ReverseArc;
           end;
           sp := GetPtOnRotatedEllipseFromAngle(ai.rec, ai.rectAngle, sa);
-          dx := (ai.startpos.X - sp.X); dy:= (ai.startpos.Y - sp.Y);
+          dx := (ai.startpos.X - sp.X); dy := (ai.startpos.Y - sp.Y);
           OffsetRect(ai.rec, dx, dy);
           ai.endPos := GetPtOnRotatedEllipseFromAngle(ai.rec, ai.rectAngle, ea);
 
@@ -823,18 +823,18 @@ begin
   //NB: THE FIRST LAYER IN THIS GROUP IS THE DESIGNER LAYER
   for i := 1 to Result.ChildCount div 3 do
   begin
-    with TButtonDesignerLayer32(Result[i*3-2]) do
+    with TButtonDesignerLayer32(Result[i * 3 - 2]) do
     begin
       Color := controlBtnColor;
       Draw;
     end;
-    with TButtonDesignerLayer32(Result[i*3-1]) do
+    with TButtonDesignerLayer32(Result[i * 3 - 1]) do
     begin
       Color := controlBtnColor;
       Draw;
       //make sure 'control' buttons are on top of adjacent 'end' buttons
       //move every second ctrl button on top of the following button
-      Move(Result, i*3);
+      Move(Result, i * 3);
     end;
   end;
 end;
@@ -858,16 +858,16 @@ begin
     for i := 0 to Length(ctrlPts) div 3 -1 do
     begin
       p[0] := pt;
-      p[1] := ctrlPts[i*3];
+      p[1] := ctrlPts[i * 3];
       p := OffsetPath(p, -designer.Left, -designer.Top);
       DrawDashedLine(designer.Image, p, dashes,
-        nil, Self.Owner.StrokeWidth/2, clRed32, esRound);
-      pt := ctrlPts[i*3+2];
-      p[0] := ctrlPts[i*3+1];
+        nil, Self.Owner.StrokeWidth / 2, clRed32, esRound);
+      pt := ctrlPts[i * 3 + 2];
+      p[0] := ctrlPts[i * 3 + 1];
       p[1] := pt;
       p := OffsetPath(p, -designer.Left, -designer.Top);
       DrawDashedLine(designer.Image, p, dashes,
-        nil, Self.Owner.StrokeWidth/2, clRed32, esRound);
+        nil, Self.Owner.StrokeWidth / 2, clRed32, esRound);
     end;
   end;
 end;
@@ -894,11 +894,11 @@ begin
   //NB: THE FIRST LAYER IN THIS GROUP IS THE DESIGNER LAYER
   //and control buttons need to be on top of adjacent 'end' buttons
   for i := 1 to Result.ChildCount div 2 do
-    with TButtonDesignerLayer32(Result[i*2-1]) do
+    with TButtonDesignerLayer32(Result[i * 2 - 1]) do
     begin
       Color := controlBtnColor;
       Draw;
-      Move(Result, i*2);
+      Move(Result, i * 2);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -921,16 +921,16 @@ begin
     for i := 0 to High(ctrlPts) div 2 do
     begin
       p[0] := pt;
-      p[1] := ctrlPts[i*2];
+      p[1] := ctrlPts[i * 2];
       p := OffsetPath(p, -designer.Left, -designer.Top);
       DrawDashedLine(designer.Image, p, dashes,
-        nil, Self.Owner.StrokeWidth/2, clRed32, esRound);
-      pt := ctrlPts[i*2+1];
-      p[0] := ctrlPts[i*2];
+        nil, Self.Owner.StrokeWidth / 2, clRed32, esRound);
+      pt := ctrlPts[i * 2 + 1];
+      p[0] := ctrlPts[i * 2];
       p[1] := pt;
       p := OffsetPath(p, -designer.Left, -designer.Top);
       DrawDashedLine(designer.Image, p, dashes,
-        nil, Self.Owner.StrokeWidth/2, clRed32, esRound);
+        nil, Self.Owner.StrokeWidth / 2, clRed32, esRound);
     end;
   end;
 end;
@@ -946,11 +946,11 @@ begin
   Result := inherited CreateBtnGroup;
   //NB: THE FIRST LAYER IN THIS GROUP IS THE DESIGNER LAYER
   for i := 1 to Result.ChildCount div 2 do
-    with TButtonDesignerLayer32(Result[i*2-1]) do
+    with TButtonDesignerLayer32(Result[i * 2 - 1]) do
     begin
       Color := controlBtnColor;
       Draw;
-      Move(Result, i*2);
+      Move(Result, i * 2);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -970,11 +970,11 @@ begin
     designer.SetInnerBounds(GetCtrlBounds);
     for i := 0 to High(ctrlPts) div 2 do
     begin
-      p[0] := ctrlPts[i*2];
-      p[1] := ctrlPts[i*2+1];
+      p[0] := ctrlPts[i * 2];
+      p[1] := ctrlPts[i * 2 + 1];
       p := OffsetPath(p, -designer.Left, -designer.Top);
       DrawDashedLine(designer.Image, p, dashes,
-        nil, Self.Owner.StrokeWidth/2, clRed32, esRound);
+        nil, Self.Owner.StrokeWidth / 2, clRed32, esRound);
     end;
   end;
 end;
@@ -1202,16 +1202,16 @@ begin
   begin
     w := RectWidth(destRect);
     h := RectHeight(destRect);
-    scale := Min(w/RectWidth(srcRect), h/RectHeight(srcRect));
+    scale := Min(w / RectWidth(srcRect), h / RectHeight(srcRect));
   end else
     scale := 1;
 
   svgPath.ScaleAndOffset(scale,
-    destRect.Left + Round(-srcRect.Left *scale),
-    destRect.Top + Round(-srcRect.top*scale));
+    destRect.Left + Round(-srcRect.Left * scale),
+    destRect.Top + Round(-srcRect.top * scale));
 
   with svgPath do
-    for i := 0 to Count -1 do
+    for i := 0 to Count - 1 do
     begin
       subPath := AddChild(TSubPathLayer) as TSubPathLayer;
       subPath.Init(svgPath[i]);
