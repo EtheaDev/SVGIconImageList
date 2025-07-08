@@ -34,7 +34,7 @@
 {$IF DEFINED(FPC)}
   {$DEFINE USING_LCL}
   {$DEFINE USING_VCL_LCL}
-{$ELSEIF defined(ANDROID) OR defined(IOS) OR defined(OSX)}
+{$ELSEIF declared(FireMonkeyVersion) OR DEFINED(FRAMEWORK_FMX)}
   {$DEFINE USING_FMX}
 {$ELSE}
   {$DEFINE USING_VCL}
@@ -63,6 +63,9 @@
   {$IF COMPILERVERSION < 15}
     Your version of Delphi is not supported (Image32 requires Delphi version 7 or above)
   {$IFEND}
+  {$IF COMPILERVERSION <16}
+    {$DEFINE DELPHI_COMPILER_BEFORE_16}
+  {$IFEND}  
   {$IF COMPILERVERSION < 23}
     {$DEFINE CPUX86}                            // CPUX86 was added in Delphi XE2 (added Win64 compiler)
   {$IFEND}
@@ -96,7 +99,8 @@
             {$IF COMPILERVERSION >= 23}         //DelphiXE2
               {$DEFINE USES_NAMESPACES}
               {$DEFINE FORMATSETTINGS}
-              {$DEFINE TROUNDINGMODE}   
+              {$DEFINE TROUNDINGMODE}
+              {$DEFINE LIST_DELETERANGE}          //added TList.DeleteRange
               {$DEFINE UITYPES}                   //added UITypes unit
               {$DEFINE XPLAT_GENERICS}            //cross-platform generics support
               {$DEFINE STYLESERVICES}             //added StyleServices unit

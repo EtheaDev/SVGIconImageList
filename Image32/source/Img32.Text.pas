@@ -897,7 +897,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function SameText(const text1, text2: Utf8String): Boolean; overload;
+function SameUtf8Text(const text1, text2: Utf8String): Boolean;
 var
   len: integer;
 begin
@@ -2123,7 +2123,7 @@ begin
   gm.paths := Img32.Vector.ScalePath(gm.paths, imgSize / rec.Width, imgSize / rec.Height);
   img := TImage32.Create(imgSize,imgSize);
   try
-    DrawPolygon(img, gm.paths, frEvenOdd, clBlack32);
+    DrawPolygon(img, gm.paths, frEvenOdd, clBlack32, true);
     accum := 0;
     p := PARGB(img.PixelBase);
     for i := 0 to imgSize * imgSize do
@@ -2972,7 +2972,7 @@ var
   dc: HDC;
 begin
   Result := nil;
-  if faceName = '' then Exit;
+  if (faceName = '') or (Length(faceName) > LF_FACESIZE) then Exit;
   FillChar(lf, sizeof(lf), 0);
   lf.lfCharSet := charSet;
   Move(faceName[1], lf.lfFaceName[0], Length(faceName) * SizeOf(Char));
@@ -3018,7 +3018,7 @@ begin
   Result := 0;
   if (text = '') or not assigned(font) or not font.IsValidFont then Exit;
   glyphs := font.GetTextOutline(x,y, text, Result);
-  DrawPolygon(image, glyphs, frNonZero, textColor);
+  DrawPolygon(image, glyphs, frNonZero, textColor, true);
 end;
 //------------------------------------------------------------------------------
 
@@ -3031,7 +3031,7 @@ begin
   if (text = '') or not assigned(font) or
     not font.IsValidFont then Exit;
   glyphs := font.GetTextOutline(x,y, text, Result);
-  DrawPolygon(image, glyphs, frNonZero, renderer);
+  DrawPolygon(image, glyphs, frNonZero, renderer, true);
 end;
 //------------------------------------------------------------------------------
 
@@ -3070,7 +3070,7 @@ begin
     else dy := rec.Top + font.Ascent;
   end;
   glyphs := TranslatePath(glyphs, dx, dy);
-  DrawPolygon(image, glyphs, frNonZero, textColor);
+  DrawPolygon(image, glyphs, frNonZero, textColor, true);
 end;
 //------------------------------------------------------------------------------
 
@@ -3090,7 +3090,7 @@ begin
   end;
   glyphs := font.GetAngledTextGlyphs(x, y,
     text, angleRadians, rotatePt, Result);
-  DrawPolygon(image, glyphs, frNonZero, textColor);
+  DrawPolygon(image, glyphs, frNonZero, textColor, true);
 end;
 //------------------------------------------------------------------------------
 
@@ -3107,7 +3107,7 @@ begin
     cr := TColorRenderer.Create(textColor) else
     cr := TAliasedColorRenderer.Create(textColor);
   try
-    DrawPolygon(image, glyphs, frNonZero, cr);
+    DrawPolygon(image, glyphs, frNonZero, cr, true);
   finally
     cr.Free;
   end;
@@ -3276,7 +3276,7 @@ begin
   for Result := 0 to fFontList.Count -1 do
   begin
     fi2 := TFontReader(fFontList[Result]).FontInfo;
-    if SameText(fi.fullFaceName, fi2.fullFaceName) and
+    if SameUtf8Text(fi.fullFaceName, fi2.fullFaceName) and
       (fi.macStyles = fi2.macStyles) then Exit;
     end;
   Result := -1;
@@ -3512,7 +3512,7 @@ function TFontManager.GetBestMatchFont(const fontInfo: TFontInfo): TFontReader;
     // third priority (shl 3)
     if name1 = '' then
       Result := 0 else
-    if SameText(name1, name2) then Result := 0 else Result := 4;
+    if SameUtf8Text(name1, name2) then Result := 0 else Result := 4;
   end;
 
   function GetFullNameDiff(const fiToMatch: TFontInfo;
@@ -3525,9 +3525,9 @@ function TFontManager.GetBestMatchFont(const fontInfo: TFontInfo): TFontReader;
     if Assigned(fiToMatch.familyNames) then
     begin
       for i := 0 to High(fiToMatch.familyNames) do
-        if SameText(fiToMatch.familyNames[i], candidateName) then Exit;
+        if SameUtf8Text(fiToMatch.familyNames[i], candidateName) then Exit;
     end
-    else if SameText(fiToMatch.faceName, candidateName) then Exit;
+    else if SameUtf8Text(fiToMatch.faceName, candidateName) then Exit;
     Result := 2;
   end;
 

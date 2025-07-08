@@ -3,7 +3,7 @@ unit Img32.SVG.Reader;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.8                                                             *
-* Date      :  11 March 2025                                                   *
+* Date      :  6 July 2025                                                     *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
@@ -163,13 +163,12 @@ type
     fCustomRendererCache: TCustomRendererCache;
     fRootElement      : TSvgElement;
     fFontCache        : TFontCache;
-    fUsePropScale     : Boolean;
-    fSimpleDraw       : Boolean;
-    fSimpleDrawList   : TList;
+    fKeepAspectRatio  : Boolean;
     function  LoadInternal: Boolean;
     function  GetIsEmpty: Boolean;
     function  GetTempImage: TImage32;
     procedure SetBlurQuality(quality: integer);
+    procedure ResetPaths;
   protected
     userSpaceBounds : TRectD;
     currentColor    : TColor32;
@@ -179,7 +178,6 @@ type
     property  BackgndImage   : TImage32 read fBackgndImage;
     property  TempImage      : TImage32 read GetTempImage;
   public
-    procedure CalcViewBoxOfRootElement;
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
@@ -187,6 +185,7 @@ type
     function  LoadFromStream(stream: TStream): Boolean;
     function  LoadFromFile(const filename: string): Boolean;
     function  LoadFromString(const str: string): Boolean;
+    function  GetImageSize: TSize;
 
     // The following two methods are deprecated and intended only for ...
     // https://github.com/EtheaDev/SVGIconImageList
@@ -200,20 +199,8 @@ type
     // KeepAspectRatio: this property has also been added for the convenience of
     // the third-party SVGIconImageList. (IMHO it should always = true)
     property  KeepAspectRatio: Boolean
-      read fUsePropScale write fUsePropScale;
+      read fKeepAspectRatio write fKeepAspectRatio;
     property  RootElement     : TSvgElement read fRootElement;
-    // RecordSimpleDraw: record simple drawing instructions
-    property  RecordSimpleDraw: Boolean read fSimpleDraw write fSimpleDraw;
-    // SimpleDrawList: list of PSimpleDrawData records;
-    property  SimpleDrawList  : TList read fSimpleDrawList;
-  end;
-
-  PSimpleDrawData = ^TSimpleDrawData;
-  TSimpleDrawData = record
-    paths     : TPathsD;
-    fillRule  : TFillRule;
-    color     : TColor32;
-    tag       : integer;
   end;
 
 var
@@ -675,7 +662,7 @@ const
     fillRule: frNegative; fillEl: '';
     strokeColor: clInvalid; strokeOpacity: InvalidD;
     strokeWidth: (rawVal: InvalidD; unitType: utNumber);
-    strokeCap: esPolygon; strokeJoin: jsMiter; strokeMitLim: 0.0; strokeEl : '';
+    strokeCap: esClosed; strokeJoin: jsMiter; strokeMitLim: 0.0; strokeEl : '';
     dashArray: nil; dashOffset: 0;
     fontInfo: (family: tfUnknown; familyNames: nil; size: 0; spacing: 0.0;
     spacesInText: sitUndefined; textLength: 0; italic: sfsUndefined;
@@ -773,7 +760,7 @@ begin
       drawDat.strokeOpacity := strokeOpacity;
     if strokeWidth.IsValid then
       drawDat.strokeWidth := strokeWidth;
-    if strokeCap = esPolygon then
+    if strokeCap = esClosed then
       drawDat.strokeCap := strokeCap;
     if strokeJoin <> jsMiter then
       drawDat.strokeJoin := strokeJoin;
@@ -944,49 +931,79 @@ end;
 function FixSpaces(const text: UnicodeString; trimLeadingSpace: Boolean): UnicodeString;
 var
   i,j, len: integer;
+  P: PWideChar;
 begin
   //changes \r\n\t chars to spaces
   //and trims consecutive spaces
   len  := Length(text);
-  SetLength(Result, len);
-  if len = 0 then Exit;
-
-  if trimLeadingSpace then
+  if len = 0 then
   begin
-    i := 1;
-    while (i <= len) and (text[i] <= #32) do inc(i);
-    if i > len then
-    begin
-      Result := '';
-      Exit;
-    end;
-    Result[1] := text[i];
-    inc(i);
-  end else
+    Result := '';
+    Exit;
+  end;
+  // Find first non whitespace
+  i := 1;
+  while (i <= len) and (text[i] > #32) do inc(i);
+  if i > len then
   begin
-    // allow a single leading space char
-    if text[1] <= #32 then
-      Result[1] := #32
-    else
-      Result[1] := text[1];
-    i := 2;
+    // There are no whitespaces
+    Result := text;
+    Exit;
   end;
 
-  j := 1;
+  SetLength(Result, len);
+  j := 0; // P is zero-based
+  if i > 1 then
+  begin
+    // Copy all the leading non-whitespace characters
+    Move(text[1], Result[1], (i - 1) * SizeOf(WideChar));
+    j := (i - 1) - 1; // P is zero-based
+  end;
+
+  // use PWideChar to prevent UniqueString() calls, that the compiler
+  // inserts for every write access to Result[].
+  P := PWideChar(Result);
+
+  if i = 1 then
+  begin
+    if trimLeadingSpace then
+    begin
+      while (i <= len) and (text[i] <= #32) do inc(i);
+      if i > len then
+      begin
+        Result := '';
+        Exit;
+      end;
+      P[0] := text[i];
+      inc(i);
+    end else
+    begin
+      // allow a single leading space char
+      if text[1] <= #32 then
+        P[0] := #32
+      else
+        P[0] := text[1];
+      i := 2;
+    end;
+  end;
+
   for i := i to len do
   begin
     if (text[i] <= #32) then
     begin
-      if (Result[j] = #32) then Continue;
+      if (P[j] = #32) then Continue;
       inc(j);
-      Result[j] := #32;
+      P[j] := #32;
     end else
     begin
       inc(j);
-      Result[j] := text[i];
+      P[j] := text[i];
     end;
   end;
-  SetLength(Result, j);
+
+  inc(j); // P is zero-based, but Result isn't
+  if Length(Result) <> j then
+    SetLength(Result, j);
 end;
 //------------------------------------------------------------------------------
 
@@ -996,7 +1013,7 @@ var
 begin
   Result := false;
   for i := 1 to Length(text) do
-    if (text[i] > #32) and (text[i] <> #160) then Exit;
+    if (text[i] > #32) and (text[i] <> WideChar($A0)) then Exit;
   Result := true;
 end;
 //------------------------------------------------------------------------------
@@ -2679,8 +2696,28 @@ begin
   clipPathEl := FindRefElement(drawDat.clipElRef);
   filterEl := FindRefElement(drawDat.filterElRef);
 
-  useTmpImage :=
-    Assigned(clipPathEl) or Assigned(filterEl) or Assigned(maskEl);
+  useTmpImage := Assigned(filterEl) or Assigned(maskEl);
+
+  if not useTmpImage and Assigned(clipPathEl) and (fDrawData.fillRule = frNegative) then
+  begin
+    // if Self.drawPathsO and Self.drawPathsC are completly inside
+    // clipPathEl.drawPathsC, then we can draw directly on the target
+    // image instead of using "usingTempImage=true" and the costly CopyBlend()
+    drawDat.clipElRef := '';
+    di := drawDat;
+    TClipPathElement(clipPathEl).GetPaths(di);
+    if IsSimpleRectanglePath(TClipPathElement(clipPathEl).drawPathsC, clipRec2) then
+    begin
+      clipRec := GetBoundsD(TClipPathElement(clipPathEl).drawPathsC);
+      if ((drawPathsO = nil) or RectInRect(clipRec, GetBoundsD(drawPathsO))) and
+         ((drawPathsC = nil) or RectInRect(clipRec, GetBoundsD(drawPathsC))) then
+      begin
+        clipPathEl := nil; // no clipping required as all painting is inside the clipRec
+      end;
+    end;
+  end;
+
+  useTmpImage := useTmpImage or Assigned(clipPathEl);
 
   if useTmpImage then
   begin
@@ -3022,13 +3059,13 @@ begin
         RoughOutline(strokePaths, sw, joinStyle, endStyle, miterLim, scale);
     end else
     begin
-      endStyle := esPolygon;
+      endStyle := esClosed;
       strokePaths :=
         RoughOutline(paths, sw, joinStyle, endStyle, miterLim, scale);
     end;
   end else
   begin
-    if fDrawData.strokeCap = esPolygon then
+    if fDrawData.strokeCap = esClosed then
       endStyle := esButt else
       endStyle := fDrawData.strokeCap;
     if Assigned(dashArray) then
@@ -3344,6 +3381,7 @@ end;
 procedure TRectElement.GetPaths(const drawDat: TDrawData);
 var
   radXY : TPointD;
+  scale : TPointD;
   bounds: TRectD;
   path  : TPathD;
 begin
@@ -3354,12 +3392,16 @@ begin
   if bounds.IsEmpty then Exit;
   pathsLoaded := true;
 
+  MatrixExtractScale(drawDat.matrix, scale.X, scale.Y);
   radXY := radius.GetPoint(bounds, GetRelFracLimit);
+  radXY := ScalePoint(radXY, scale.X, scale.Y);
   if (radXY.X > 0) or (radXY.Y > 0) then
   begin
     if (radXY.X <= 0) then radXY.X := radXY.Y
     else if (radXY.Y <= 0) then radXY.Y := radXY.X;
+    bounds := ScaleRect(bounds, scale.X, scale.Y);
     path := RoundRect(bounds, radXY);
+    path := ScalePath(path, 1/scale.X, 1/scale.Y)
   end else
     path := Rectangle(bounds);
   AppendPath(drawPathsC, path);
@@ -5512,11 +5554,9 @@ begin
   fRadGradRenderer     := TSvgRadialGradientRenderer.Create;
   fCustomRendererCache := TCustomRendererCache.Create;
   fIdList              := TSvgIdNameHashMap.Create;
-  fSimpleDrawList      := TList.Create;
-
-  fBlurQuality        := 1; //0: draft (faster); 1: good; 2: excellent (slow)
-  currentColor        := clBlack32;
-  fUsePropScale       := true;
+  fBlurQuality         := 1; //0: draft (faster); 1: good; 2: excellent (slow)
+  currentColor         := clBlack32;
+  fKeepAspectRatio     := true;
 end;
 //------------------------------------------------------------------------------
 
@@ -5530,15 +5570,11 @@ begin
   fRadGradRenderer.Free;
   fCustomRendererCache.Free;
   FreeAndNil(fFontCache);
-  fSimpleDrawList.Free;
-
   inherited;
 end;
 //------------------------------------------------------------------------------
 
 procedure TSvgReader.Clear;
-var
-  i: integer;
 begin
   FreeAndNil(fRootElement);
   fSvgParser.Clear;
@@ -5547,17 +5583,48 @@ begin
   fRadGradRenderer.Clear;
   currentColor := clBlack32;
   userSpaceBounds := NullRectD;
-  for i := 0 to fSimpleDrawList.Count -1 do
-    Dispose(PSimpleDrawData(fSimpleDrawList[i]));
-  fSimpleDrawList.Clear;
 end;
 //------------------------------------------------------------------------------
 
-procedure TSvgReader.CalcViewBoxOfRootElement;
+function TSvgReader.GetImageSize: TSize;
 begin
-  fRootElement.viewboxWH.Width := fRootElement.elRectWH.width.GetValue(defaultSvgWidth, 0);
-  fRootElement.viewboxWH.height := fRootElement.elRectWH.height.GetValue(defaultSvgHeight, 0);
+  with fRootElement do
+    if viewboxWH.IsEmpty then
+    begin
+      if elRectWH.IsValid then
+      begin
+        Result.cx := Round(elRectWH.width.GetValue(defaultSvgWidth, 0));
+        Result.cy := Round(elRectWH.height.GetValue(defaultSvgHeight, 0));
+      end else
+      begin
+        // should never happen
+        Result.cx := defaultSvgWidth;
+        Result.cy := defaultSvgHeight;
+      end;
+    end else
+    begin
+      Result.cx := Round(viewboxWH.Width);
+      Result.cy := Round(viewboxWH.Height);
+    end;
 end;
+//------------------------------------------------------------------------------
+
+procedure InternalResetPaths(el: TBaseElement);
+var
+  i: integer;
+begin
+  if el is TShapeElement then
+    TShapeElement(el).pathsLoaded := False;
+  for i := 0 to el.ChildCount -1 do
+    InternalResetPaths(el[i]);
+end;
+//------------------------------------------------------------------------------
+
+procedure TSvgReader.ResetPaths;
+begin
+  InternalResetPaths(fRootElement);
+end;
+//------------------------------------------------------------------------------
 
 procedure TSvgReader.DrawImage(img: TImage32; scaleToImage: Boolean);
 var
@@ -5569,12 +5636,12 @@ begin
   with fRootElement do
   begin
     if viewboxWH.IsEmpty then
-    begin
-      CalcViewBoxOfRootElement;
-      if not elRectWH.IsValid then Exit;  // should never happen
-      viewboxWH.Width := elRectWH.width.GetValue(defaultSvgWidth, 0);
-      viewboxWH.height := elRectWH.height.GetValue(defaultSvgHeight, 0);
-    end;
+      with GetImageSize do
+      begin
+        viewboxWH.Width := cx;
+        viewboxWH.height := cy;
+        if viewboxWH.IsEmpty then Exit; // should never happen
+      end;
 
     fBackgndImage := img;
     di := fDrawData;
@@ -5592,13 +5659,14 @@ begin
 
     if scaleToImage and not img.IsEmpty then
     begin
-      //nb: the calculated vbox.width and vbox.height are ignored here since
-      //we're scaling the SVG image to the display image. However we still
-      //need to call GetViewbox (above) to make sure that viewboxWH is filled.
-      if fUsePropScale then
+      // scale the SVG image to the display region.
+      // nb: viewboxWH must be valid to reach here.
+
+      if fKeepAspectRatio then
       begin
         scale := GetScaleForBestFit(
-          viewboxWH.Width, viewboxWH.Height, img.Width, img.Height);
+          {src} viewboxWH.Width, viewboxWH.Height,
+          {dst} img.Width, img.Height);
         scaleH := scale;
       end else
       begin
@@ -5617,17 +5685,12 @@ begin
   if fBkgndColor <> clNone32 then
     img.Clear(fBkgndColor);
 
-//  // Delay the creation of the TempImage until it is actually needed.
-//  // Not all SVGs need it.
-//  fTempImageWidth := img.Width;
-//  fTempImageHeight := img.Height;
-
+  // Delay the creation of the TempImage until it is actually needed.
   img.BeginUpdate;
   try
+    ResetPaths; // force path redrawing
     fRootElement.Draw(img, di);
   finally
-//    fTempImageWidth := 0;
-//    fTempImageHeight := 0;
     FreeAndNil(fTempImage);
     img.EndUpdate;
   end;

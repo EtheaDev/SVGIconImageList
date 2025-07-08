@@ -120,7 +120,7 @@ type
     {$ENDIF}
     function IsImageIndexStored: Boolean;
   protected
-    procedure UpdateImage; virtual;
+    procedure UpdateImageName; virtual;
     {$IFDEF D10_4+}
     procedure CheckImageIndexes;
     {$ENDIF}
@@ -381,7 +381,7 @@ end;
 
 procedure TSVGIconImage.ImageListChange(Sender: TObject);
 begin
-  UpdateImage;
+  UpdateImageName;
   Invalidate;
 end;
 
@@ -423,13 +423,13 @@ begin
     FImageName := Value;
     if (FImageList <> nil) and FImageList.IsImageNameAvailable then
       FImageIndex := FImageList.GetIndexByName(FImageName);
-    UpdateImage;
+    UpdateImageName;
     Invalidate;
   end;
 end;
 {$ENDIF}
 
-procedure TSVGIconImage.UpdateImage;
+procedure TSVGIconImage.UpdateImageName;
 begin
 {$IFDEF D10_4+}
   if (FImageList <> nil) and FImageList.IsImageNameAvailable then
@@ -697,7 +697,9 @@ begin
        FImageName := FImageList.GetNameByIndex(FImageIndex);
     {$ENDIF}
     CheckAutoSize;
-    UpdateImage;
+    UpdateImageName;
+    if (FImageIndex = -1) {$IFDEF D10_4+}and (FImageName = ''){$ENDIF} then
+      SVG.Clear;
     Invalidate;
   end;
 end;
@@ -717,7 +719,7 @@ begin
       FImageList.RegisterChanges(FImageChangeLink);
       FImageList.FreeNotification(Self);
     end;
-    UpdateImage;
+    UpdateImageName;
     Invalidate;
   end;
 end;

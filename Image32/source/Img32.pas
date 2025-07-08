@@ -836,7 +836,7 @@ end;
 
 procedure NewColor32Array(var a: TArrayOfColor32; count: nativeint; uninitialized: boolean);
 begin
-{$IF COMPILERVERSION < 16}
+{$IFDEF DELPHI_COMPILER_BEFORE_16}
   SetLength(a, count);
 {$ELSE}
   if a <> nil then
@@ -845,13 +845,13 @@ begin
     a := nil;
   end;
   Pointer(a) := NewSimpleDynArray(count, SizeOf(TColor32), uninitialized);
-{$IFEND}
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
 procedure NewIntegerArray(var a: TArrayOfInteger; count: nativeint; uninitialized: boolean);
 begin
-{$IF COMPILERVERSION < 16}
+{$IFDEF DELPHI_COMPILER_BEFORE_16}
   SetLength(a, count);
 {$ELSE}
   if a <> nil then
@@ -860,14 +860,14 @@ begin
     a := nil;
   end;
   Pointer(a) := NewSimpleDynArray(count, SizeOf(Integer), uninitialized);
-{$IFEND}
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
 procedure NewDoubleArray(var a: TArrayOfDouble; count: nativeint;
   uninitialized: boolean = False);
 begin
-{$IF COMPILERVERSION < 16}
+{$IFDEF DELPHI_COMPILER_BEFORE_16}
   SetLength(a, count);
 {$ELSE}
   if a <> nil then
@@ -876,13 +876,13 @@ begin
     a := nil;
   end;
   Pointer(a) := NewSimpleDynArray(count, SizeOf(Double), uninitialized);
-{$IFEND}
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
 procedure NewByteArray(var a: TArrayOfByte; count: nativeint; uninitialized: boolean);
 begin
-{$IF COMPILERVERSION < 16}
+{$IFDEF DELPHI_COMPILER_BEFORE_16}
   SetLength(a, count);
 {$ELSE}
   if a <> nil then
@@ -891,13 +891,13 @@ begin
     a := nil;
   end;
   Pointer(a) := NewSimpleDynArray(count, SizeOf(Byte), uninitialized);
-{$IFEND}
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
 procedure NewPointDArray(var a: TPathD; count: nativeint; uninitialized: boolean);
 begin
-{$IF COMPILERVERSION < 16}
+{$IFDEF DELPHI_COMPILER_BEFORE_16}
   SetLength(a, count);
 {$ELSE}
   if a <> nil then
@@ -907,7 +907,7 @@ begin
     a := nil;
   end;
   Pointer(a) := NewSimpleDynArray(count, SizeOf(TPointD), uninitialized);
-{$IFEND}
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
@@ -920,31 +920,31 @@ end;
 
 procedure SetLengthUninit(var a: TArrayOfInteger; count: nativeint);
 begin
-{$IF COMPILERVERSION < 16}
+{$IFDEF DELPHI_COMPILER_BEFORE_16}
   SetLength(a, count);
 {$ELSE}
   Pointer(a) := InternSetSimpleDynArrayLengthUninit(Pointer(a), count, SizeOf(Integer));
-{$IFEND}
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
 procedure SetLengthUninit(var a: TArrayOfByte; count: nativeint);
 begin
-{$IF COMPILERVERSION < 16}
+{$IFDEF DELPHI_COMPILER_BEFORE_16}
   SetLength(a, count);
 {$ELSE}
   Pointer(a) := InternSetSimpleDynArrayLengthUninit(Pointer(a), count, SizeOf(Byte));
-{$IFEND}
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
 procedure SetLengthUninit(var a: TPathD; count: nativeint);
 begin
-{$IF COMPILERVERSION < 16}
+{$IFDEF DELPHI_COMPILER_BEFORE_16}
   SetLength(a, count);
 {$ELSE}
   Pointer(a) := InternSetSimpleDynArrayLengthUninit(Pointer(a), count, SizeOf(TPointD));
-{$IFEND}
+{$ENDIF}
 end;
 //------------------------------------------------------------------------------
 
@@ -2177,8 +2177,8 @@ end;
 
 function TRectD.MidPoint: TPointD;
 begin
-  Result.X := (Right + Left) / 2;
-  Result.Y := (Bottom + Top) / 2;
+  Result.X := (Right + Left) * 0.5;
+  Result.Y := (Bottom + Top) * 0.5;
 end;
 //------------------------------------------------------------------------------
 
@@ -4472,7 +4472,7 @@ begin
       MulTable[i, j] := Round(i * j * div255);
       if i >= j then
         DivTable[i, j] := 255 else
-        DivTable[i, j] := Round(i * $FF / j);
+        DivTable[i, j] := Round(i * 255 / j);
     end;
   end;
 

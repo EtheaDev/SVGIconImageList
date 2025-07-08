@@ -3,7 +3,7 @@ unit Img32.Draw;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.8                                                             *
-* Date      :  2 February 2025                                                 *
+* Date      :  1 July 2025                                                     *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
@@ -341,17 +341,28 @@ type
     patternOffset: PDouble; lineWidth: double; endStyle: TEndStyle;
     joinStyle: TJoinStyle = jsAuto); overload;
 
+  // DrawPolygon: the 'unweighted' parameter will need explaining. While
+  // antialiasing along polygon edges is very good, it isn't perfect.
+  // And this imperfection is best seen where 2 polygons have touching edges.
+  // Between these touching edges, there is usually a very small amount of
+  // 'bleed-through' from the pixels behind, and this can mostly be corrected
+  // by increasing antialiased pixel opacity (or weight) by 25%. While the
+  // default behaviour is to apply this additional weighting to polygons, there
+  // are some polygons (eg text) where this weighting will almost never be
+  // required, and where it might even degrade the quality of these edges.
   procedure DrawPolygon(img: TImage32; const polygon: TPathD;
-    fillRule: TFillRule; color: TColor32); overload;
+    fillRule: TFillRule; color: TColor32; unweighted: Boolean = false); overload;
   procedure DrawPolygon(img: TImage32; const polygon: TPathD;
-    fillRule: TFillRule; renderer: TCustomRenderer); overload;
+    fillRule: TFillRule; renderer: TCustomRenderer;
+    unweighted: Boolean = false); overload;
   procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
-    fillRule: TFillRule; color: TColor32); overload;
+    fillRule: TFillRule; color: TColor32; unweighted: Boolean = false); overload;
   procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
     fillRule: TFillRule; color: TColor32;
-    rendererCache: TCustomRendererCache); overload;
+    rendererCache: TCustomRendererCache; unweighted: Boolean = false); overload;
   procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
-    fillRule: TFillRule; renderer: TCustomRenderer); overload;
+    fillRule: TFillRule; renderer: TCustomRenderer;
+    unweighted: Boolean = false); overload;
 
   procedure DrawInvertedPolygon(img: TImage32; const polygon: TPathD;
     fillRule: TFillRule); overload;
@@ -390,10 +401,10 @@ type
   procedure DrawAlphaMask(img: TImage32;
     const mask: TArrayOfByte; color: TColor32 = clBlack32);
 
-  procedure Rasterize(const paths: TPathsD;
-    const clipRec: TRect; fillRule: TFillRule; renderer: TCustomRenderer); overload;
-  procedure Rasterize(img: TImage32; const paths: TPathsD;
-    const clipRec: TRect; fillRule: TFillRule; renderer: TCustomRenderer); overload;
+  procedure Rasterize(const paths: TPathsD; const clipRec: TRect;
+    fillRule: TFillRule; renderer: TCustomRenderer; unweighted: Boolean); overload;
+  procedure Rasterize(img: TImage32; const paths: TPathsD; const clipRec: TRect;
+    fillRule: TFillRule; renderer: TCustomRenderer; unweighted: Boolean); overload;
 
 implementation
 
@@ -404,6 +415,10 @@ const
 {$ENDIF CPUX86}
 
 type
+  // TFillByteBufferProc:
+  // FPC generates wrong code if the "count" param isn't NativeInt
+  TFillByteBufferProc =
+    procedure(byteBuffer: PByte; windingAccum: PDouble; count: nativeint; unweighted: Boolean);
 
   // A horizontal scanline contains any number of line fragments. A fragment
   // can be a number of pixels wide but it can't be more than one pixel high.
@@ -811,10 +826,10 @@ end;
 // ------------------------------------------------------------------------------
 
 procedure SplitEdgeIntoFragments(const pt1, pt2: TPointD;
-  const scanlines: TArrayOfScanline; fragments: PFragment; const clipRec: TRect);
+  const scanlines: TArrayOfScanline; fragments: PFragment; maxX, maxY: integer);
 var
   x,y, dx,dy, absDx, dydx, dxdy: double;
-  i, scanlineY, maxY, maxX: integer;
+  i, scanlineY, botY, topY: integer;
   psl: PScanLine;
   pFrag: PFragment;
   bot, top: TPointD;
@@ -832,9 +847,10 @@ begin
     if dy > -0.0001 then Exit;           //ignore near horizontals
     bot := pt2; top := pt1;
   end;
+  botY := Trunc(bot.Y);
+  topY := Trunc(top.Y);
   // exclude edges that are completely outside the top or bottom clip region
-  RectWidthHeight(clipRec, maxX, maxY);
-  if (top.Y >= maxY) or (bot.Y <= 0) then Exit;
+  if (topY >= maxY) or (bot.Y <= 0) then Exit;
 
   dx := pt2.X - pt1.X;
   absDx := abs(dx);
@@ -848,7 +864,7 @@ begin
     // but still update maxX for each scanline the edge passes
     if bot.X > maxX then
     begin
-      for i := Min(maxY, Trunc(bot.Y)) downto Max(0, Trunc(top.Y)) do
+      for i := Min(maxY, botY) downto Max(0, topY) do
         scanlines[i].maxX := maxX;
       Exit;
     end;
@@ -866,13 +882,13 @@ begin
   begin
     if top.X >= maxX then
     begin
-      for i := Min(maxY, Trunc(bot.Y)) downto Max(0, Trunc(top.Y)) do
+      for i := Min(maxY, botY) downto Max(0, topY) do
         scanlines[i].maxX := maxX;
       Exit;
     end;
     // here the edge must be oriented bottom-right to top-left
     y := bot.Y - (bot.X - maxX) * Abs(dydx);
-    for i := Min(maxY, Trunc(bot.Y)) downto Max(0, Trunc(y)) do
+    for i := Min(maxY, botY) downto Max(0, Trunc(y)) do
       scanlines[i].maxX := maxX;
     bot.Y := y;
     if bot.Y <= 0 then Exit;
@@ -882,7 +898,7 @@ begin
   begin
     // here the edge must be oriented bottom-left to top-right
     y := top.Y + (top.X - maxX) * Abs(dydx);
-    for i := Min(maxY, Trunc(y)) downto Max(0, Trunc(top.Y)) do
+    for i := Min(maxY, Trunc(y)) downto Max(0, topY) do
       scanlines[i].maxX := maxX;
     top.Y := y;
     if top.Y >= maxY then Exit;
@@ -955,12 +971,12 @@ end;
 // ------------------------------------------------------------------------------
 
 procedure InitializeScanlines(const polygons: TPathsD;
-  const scanlines: TArrayOfScanline; fragments: PFragment; const clipRec: TRect);
+  const scanlines: TArrayOfScanline; fragments: PFragment; maxX, maxY: integer);
 var
   i,j, highJ: integer;
   pt1, pt2: PPointD;
 begin
- for i := 0 to high(polygons) do
+  for i := 0 to high(polygons) do
   begin
     highJ := high(polygons[i]);
     if highJ < 2 then continue;
@@ -968,7 +984,7 @@ begin
     pt2 := @polygons[i][0];
     for j := 0 to highJ do
     begin
-      SplitEdgeIntoFragments(pt1^, pt2^, scanlines, fragments, clipRec);
+      SplitEdgeIntoFragments(pt1^, pt2^, scanlines, fragments, maxX, maxY);
       pt1 := pt2;
       inc(pt2);
     end;
@@ -980,7 +996,7 @@ procedure ProcessScanlineFragments(var scanline: TScanLine;
   fragments: PFragment; const buffer: TArrayOfDouble);
 var
   i,j, leftXi,rightXi: integer;
-  fracX, yy, q{, windDir}: double;
+  fracX, yy, q: double;
   left, right, dy, dydx: double;
   frag: PFragment;
   pd: PDouble;
@@ -1008,7 +1024,6 @@ begin
     if (leftXi = rightXi) then
     begin
       // the fragment is only one pixel wide
-      //if dydx < 0 then windDir := -1.0 else windDir := 1.0;
       if dydx < 0 then dy := -dy;
 
       if leftXi < scanline.minX then
@@ -1018,13 +1033,13 @@ begin
       pd := @buffer[leftXi];
       if (left <= 0) then
       begin
-        pd^ := pd^ + dy {* windDir};
+        pd^ := pd^ + dy;
       end else
       begin
         q := (left + right) * 0.5 - leftXi;
-        pd^ := pd^ + (1-q) * dy {* windDir};
+        pd^ := pd^ + (1-q) * dy;
         inc(pd);
-        pd^ := pd^ + q * dy {* windDir};
+        pd^ := pd^ + q * dy;
       end;
     end else
     begin
@@ -1062,7 +1077,7 @@ end;
 {$RANGECHECKS OFF} // negative array index is used
 { CPU register optimized implementations. Every data type must be exactly the one used. }
 procedure FillByteBufferEvenOdd(byteBuffer: PByte;
-  windingAccum: PDouble; count: nativeint);
+  windingAccum: PDouble; count: nativeint; unweighted: Boolean);
 var
   accum: double;
   lastValue: integer;
@@ -1096,21 +1111,30 @@ begin
 
     accum := accum + PDoubleArray(windingAccum)[count];
 
-    // EvenOdd
-    lastValue := Trunc(Abs(accum) * 1275) mod 2550; // mul 5
-    if lastValue > 1275 then
-      lastValue := (2550 - lastValue) shr 2 else    // div 4
-      lastValue := lastValue shr 2;                 // div 4
-    if lastValue > 255 then lastValue := 255;
+    // generally only accentuate antialias by 25% for polygons, not for lines
+    if unweighted then
+    begin
+      lastValue := Trunc(Abs(accum) * 255) mod 510;
+      if lastValue > 255 then
+        lastValue := 510 - lastValue;
+    end else
+    begin
+      lastValue := Trunc(Abs(accum) * 1275) mod 2550; // mul 5
+      if lastValue > 1275 then
+        lastValue := 2550 - lastValue;
+      lastValue := lastValue shr 2;                   // div 4
+      if lastValue > 255 then lastValue := 255;
+    end;
 
     buf[count] := Byte(lastValue);
     PDoubleArray(windingAccum)[count] := 0;
     inc(count); // walk towards zero
   end;
 end;
+// ------------------------------------------------------------------------------
 
 procedure FillByteBufferNonZero(byteBuffer: PByte;
-  windingAccum: PDouble; count: nativeint);
+  windingAccum: PDouble; count: nativeint; unweighted: Boolean);
 var
   accum: double;
   lastValue: integer;
@@ -1144,8 +1168,10 @@ begin
 
     accum := accum + PDoubleArray(windingAccum)[count];
 
-    // NonZero
-    lastValue := Trunc(Abs(accum) * 318);
+    // Generally only accentuate antialias by 25% for polygons, not for lines
+    if unweighted then
+      lastValue := Trunc(Abs(accum) * 255) else
+      lastValue := Trunc(Abs(accum) * 318);
     if lastValue > 255 then lastValue := 255;
 
     buf[count] := Byte(lastValue);
@@ -1153,9 +1179,10 @@ begin
     inc(count); // walk towards zero
   end;
 end;
+// ------------------------------------------------------------------------------
 
 procedure FillByteBufferPositive(byteBuffer: PByte;
-  windingAccum: PDouble; count: nativeint);
+  windingAccum: PDouble; count: nativeint; unweighted: Boolean);
 var
   accum: double;
   lastValue: integer;
@@ -1193,7 +1220,10 @@ begin
     lastValue := 0;
     if accum > 0.002 then
     begin
-      lastValue := Trunc(accum * 318);
+      // generally only accentuate antialias by 25% for polygons, not for lines
+      if unweighted then
+        lastValue := Trunc(accum * 255) else
+        lastValue := Trunc(accum * 318);
       if lastValue > 255 then lastValue := 255;
     end;
 
@@ -1202,9 +1232,10 @@ begin
     inc(count); // walk towards zero
   end;
 end;
+// ------------------------------------------------------------------------------
 
 procedure FillByteBufferNegative(byteBuffer: PByte;
-  windingAccum: PDouble; count: nativeint);
+  windingAccum: PDouble; count: nativeint; unweighted: Boolean);
 var
   accum: double;
   lastValue: integer;
@@ -1242,7 +1273,10 @@ begin
     lastValue := 0;
     if accum < -0.002 then
     begin
-      lastValue := Trunc(accum * -318);
+      // generally only accentuate antialias by 25% for polygons, not for lines
+      if unweighted then
+        lastValue := Trunc(accum * -255) else
+        lastValue := Trunc(accum * -318);
       if lastValue > 255 then lastValue := 255;
     end;
 
@@ -1254,9 +1288,10 @@ end;
 {$IFDEF RANGECHECKS_ENABLED}
   {$RANGECHECKS ON}
 {$ENDIF}
+// ------------------------------------------------------------------------------
 
 procedure Rasterize(const paths: TPathsD; const clipRec: TRect;
-  fillRule: TFillRule; renderer: TCustomRenderer);
+  fillRule: TFillRule; renderer: TCustomRenderer; unweighted: Boolean);
 var
   i, xli,xri, maxW, maxH: integer;
   clipRec2: TRect;
@@ -1268,9 +1303,7 @@ var
   scanline: PScanline;
   skippedScanlines: integer;
   skipRenderer: boolean;
-
-  // FPC generates wrong code if "count" isn't NativeInt
-  FillByteBuffer: procedure(byteBuffer: PByte; windingAccum: PDouble; count: nativeint);
+  FillByteBuffer: TFillByteBufferProc;
 begin
   // See also https://nothings.org/gamedev/rasterize/
   if not assigned(paths) or not assigned(renderer) then Exit;
@@ -1285,9 +1318,11 @@ begin
   end;
 
   if (clipRec2.Left = 0) and (clipRec2.Top = 0) then
-    paths2 := paths
-  else
+    paths2 := paths else
     paths2 := TranslatePath(paths, -clipRec2.Left, -clipRec2.Top);
+
+//  // Translating each path by (0.5, 0.5) will more correctly center it
+//  paths2 := TranslatePath(paths, 0.5 -clipRec2.Left, 0.5 -clipRec2.Top);
 
   // Delphi's Round() function is *much* faster than Trunc(),
   // and even a little faster than Trunc() above (except
@@ -1301,7 +1336,7 @@ begin
     SetLength(scanlines, maxH +1);
     SetLength(windingAccum, maxW +2);
     AllocateScanlines(paths2, scanlines, fragments, maxH, maxW-1);
-    InitializeScanlines(paths2, scanlines, fragments, clipRec2);
+    InitializeScanlines(paths2, scanlines, fragments, maxW, maxH);
 
     case fillRule of
       frEvenOdd:
@@ -1358,12 +1393,12 @@ begin
       xli := scanline.minX;
       xri := Min(maxW -1, scanline.maxX +1);
 
-      // a 25% weighting has been added to the alpha channel to minimize any
-      // background bleed-through where polygons join with a common edge.
+      // When 'weighted' = true, the alpha channel value is increased by 25% to
+      // minimize background bleed-through between polygons with touching edges.
 
       // FillByteBuffer overwrites every byte in byteBuffer[xli..xri] and also resets
       // windingAccum[xli..xri] to 0.
-      FillByteBuffer(@byteBuffer[xli], @windingAccum[xli], xri - xli +1);
+      FillByteBuffer(@byteBuffer[xli], @windingAccum[xli], xri - xli +1, unweighted);
 
       renderer.RenderProc(clipRec2.Left + xli, clipRec2.Left + xri,
         clipRec2.Top + i, @byteBuffer[xli]);
@@ -1389,12 +1424,12 @@ begin
 end;
 // ------------------------------------------------------------------------------
 
-procedure Rasterize(img: TImage32; const paths: TPathsD;
-  const clipRec: TRect; fillRule: TFillRule; renderer: TCustomRenderer);
+procedure Rasterize(img: TImage32; const paths: TPathsD; const clipRec: TRect;
+  fillRule: TFillRule; renderer: TCustomRenderer; unweighted: Boolean);
 begin
   if renderer.Initialize(img) then
   begin
-    Rasterize(paths, clipRec, fillRule, renderer);
+    Rasterize(paths, clipRec, fillRule, renderer, unweighted);
     renderer.NotifyChange;
   end;
 end;
@@ -2290,7 +2325,8 @@ function IsMidColor(const color: TARGB): Boolean;
 {$IFDEF INLINE} inline; {$ENDIF}
 begin
   // not too dark and not too light :))
-  Result := Abs(color.R + color.G + color.B - 383) < 64;
+  // nb: longint() for FPC compatibility
+  Result := Abs(longint(color.R + color.G + color.B - 383)) < 64;
 end;
 // ------------------------------------------------------------------------------
 
@@ -2575,7 +2611,7 @@ begin
   if (not assigned(lines)) or (not assigned(renderer)) then exit;
   if (lineWidth < MinStrokeWidth) then lineWidth := MinStrokeWidth;
   lines2 := RoughOutline(lines, lineWidth, joinStyle, endStyle, miterLimit);
-  Rasterize(img, lines2, img.bounds, frNonZero, renderer);
+  Rasterize(img, lines2, img.bounds, frNonZero, renderer, true);
 end;
 // ------------------------------------------------------------------------------
 
@@ -2591,7 +2627,7 @@ begin
   lines2 := RoughOutline(lines, lineWidth, joinStyle, endStyle, 2);
   ir := TInverseRenderer.Create;
   try
-    Rasterize(img, lines2, img.bounds, frNonZero, ir);
+    Rasterize(img, lines2, img.bounds, frNonZero, ir, true);
   finally
     ir.free;
   end;
@@ -2613,7 +2649,7 @@ begin
   for i := 0 to High(dashPattern) do
     if dashPattern[i] <= 0 then dashPattern[i] := 1;
 
-  lines := GetDashedPath(line, endStyle = esPolygon, dashPattern, patternOffset);
+  lines := GetDashedPath(line, endStyle = esClosed, dashPattern, patternOffset);
   if Length(lines) = 0 then Exit;
 
   case joinStyle of
@@ -2634,7 +2670,7 @@ begin
     cr := TColorRenderer.Create(color) else
     cr := rendererCache.GetColorRenderer(color);
   try
-    Rasterize(img, lines, img.bounds, frNonZero, cr);
+    Rasterize(img, lines, img.bounds, frNonZero, cr, true);
   finally
     if rendererCache = nil then
       cr.free;
@@ -2670,10 +2706,10 @@ begin
   for i := 0 to High(dashPattern) do
     if dashPattern[i] <= 0 then dashPattern[i] := 1;
 
-  lines := GetDashedPath(line, endStyle = esPolygon, dashPattern, patternOffset);
+  lines := GetDashedPath(line, endStyle = esClosed, dashPattern, patternOffset);
   if Length(lines) = 0 then Exit;
   lines := RoughOutline(lines, lineWidth, joinStyle, endStyle);
-  Rasterize(img, lines, img.bounds, frNonZero, renderer);
+  Rasterize(img, lines, img.bounds, frNonZero, renderer, true);
 end;
 // ------------------------------------------------------------------------------
 
@@ -2712,12 +2748,12 @@ begin
   for i := 0 to High(dashPattern) do
     if dashPattern[i] <= 0 then dashPattern[i] := 1;
 
-  lines := GetDashedPath(line, endStyle = esPolygon, dashPattern, patternOffset);
+  lines := GetDashedPath(line, endStyle = esClosed, dashPattern, patternOffset);
   if Length(lines) = 0 then Exit;
   lines := RoughOutline(lines, lineWidth, joinStyle, endStyle);
   renderer := TInverseRenderer.Create(bkgndImg);
   try
-    Rasterize(img, lines, img.bounds, frNonZero, renderer);
+    Rasterize(img, lines, img.bounds, frNonZero, renderer, true);
   finally
     renderer.Free;
   end;
@@ -2763,31 +2799,31 @@ end;
 // ------------------------------------------------------------------------------
 
 procedure DrawPolygon(img: TImage32; const polygon: TPathD;
-  fillRule: TFillRule; color: TColor32);
+  fillRule: TFillRule; color: TColor32; unweighted: Boolean);
 var
   polygons: TPathsD;
 begin
   if not assigned(polygon) then exit;
   setLength(polygons, 1);
   polygons[0] := polygon;
-  DrawPolygon(img, polygons, fillRule, color);
+  DrawPolygon(img, polygons, fillRule, color, unweighted);
 end;
 // ------------------------------------------------------------------------------
 
 procedure DrawPolygon(img: TImage32; const polygon: TPathD;
-  fillRule: TFillRule; renderer: TCustomRenderer);
+  fillRule: TFillRule; renderer: TCustomRenderer; unweighted: Boolean);
 var
   polygons: TPathsD;
 begin
   if (not assigned(polygon)) or (not assigned(renderer)) then exit;
   setLength(polygons, 1);
   polygons[0] := polygon;
-  Rasterize(img, polygons, img.Bounds, fillRule, renderer);
+  Rasterize(img, polygons, img.Bounds, fillRule, renderer, unweighted);
 end;
 // ------------------------------------------------------------------------------
 
 procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
-  fillRule: TFillRule; color: TColor32);
+  fillRule: TFillRule; color: TColor32; unweighted: Boolean);
 var
   cr: TCustomRenderer;
 begin
@@ -2796,7 +2832,7 @@ begin
     cr := TColorRenderer.Create(color) else
     cr := TAliasedColorRenderer.Create(color);
   try
-    Rasterize(img, polygons, img.bounds, fillRule, cr);
+    Rasterize(img, polygons, img.bounds, fillRule, cr, unweighted);
   finally
     cr.free;
   end;
@@ -2805,7 +2841,7 @@ end;
 
 procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
   fillRule: TFillRule; color: TColor32;
-  rendererCache: TCustomRendererCache);
+  rendererCache: TCustomRendererCache; unweighted: Boolean);
 var
   cr: TCustomColorRenderer;
 begin
@@ -2818,16 +2854,16 @@ begin
       cr := rendererCache.ColorRenderer else
       cr := rendererCache.AliasedColorRenderer;
     cr.SetColor(color);
-    Rasterize(img, polygons, img.bounds, fillRule, cr);
+    Rasterize(img, polygons, img.bounds, fillRule, cr, unweighted);
   end;
 end;
 // ------------------------------------------------------------------------------
 
 procedure DrawPolygon(img: TImage32; const polygons: TPathsD;
-  fillRule: TFillRule; renderer: TCustomRenderer);
+  fillRule: TFillRule; renderer: TCustomRenderer; unweighted: Boolean);
 begin
   if (not assigned(polygons)) or (not assigned(renderer)) then exit;
-  Rasterize(img, polygons, img.bounds, fillRule, renderer);
+  Rasterize(img, polygons, img.bounds, fillRule, renderer, unweighted);
 end;
 // ------------------------------------------------------------------------------
 
@@ -2851,7 +2887,7 @@ begin
   if not assigned(polygons) then exit;
   cr := TInverseRenderer.Create;
   try
-    Rasterize(img, polygons, img.bounds, fillRule, cr);
+    Rasterize(img, polygons, img.bounds, fillRule, cr, false);
   finally
     cr.free;
   end;
@@ -2877,7 +2913,7 @@ begin
     tmpPolygons := ScalePath(tmpPolygons, 3, 1);
     cr := TColorRenderer.Create(clBlack32);
     try
-      Rasterize(tmpImg, tmpPolygons, tmpImg.bounds, fillRule, cr);
+      Rasterize(tmpImg, tmpPolygons, tmpImg.bounds, fillRule, cr, false);
     finally
       cr.Free;
     end;
@@ -2935,7 +2971,7 @@ var
 begin
   er := TEraseRenderer.Create;
   try
-    Rasterize(img, polygons, img.bounds, fillRule, er);
+    Rasterize(img, polygons, img.bounds, fillRule, er, false);
   finally
     er.Free;
   end;

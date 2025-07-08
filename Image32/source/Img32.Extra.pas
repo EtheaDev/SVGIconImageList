@@ -3,7 +3,7 @@ unit Img32.Extra;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.8                                                             *
-* Date      :  2 February 2025                                                 *
+* Date      :  16 April 2025                                                   *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Miscellaneous routines that don't belong in other modules.      *
@@ -346,7 +346,7 @@ begin
       DrawLine(img, p, penWidth, bottomRightColor, esButt);
     end;
   end else
-    DrawLine(img, Rectangle(rec), penWidth, topLeftColor, esPolygon);
+    DrawLine(img, Rectangle(rec), penWidth, topLeftColor, esClosed);
 end;
 //------------------------------------------------------------------------------
 
@@ -1124,7 +1124,7 @@ begin
   try
     SetLength(polygons, 1);
     polygons[0] := path;
-    Rasterize(img, polygons, outsideBounds, fillRule, renderer);
+    Rasterize(img, polygons, outsideBounds, fillRule, renderer, false);
   finally
     renderer.Free;
   end;
@@ -1156,7 +1156,7 @@ begin
   else
     renderer := rendererCache.MaskRenderer;
   try
-    Rasterize(img, paths, outsideBounds, fillRule, renderer);
+    Rasterize(img, paths, outsideBounds, fillRule, renderer, false);
   finally
     if rendererCache = nil then
       renderer.Free;
@@ -1319,7 +1319,7 @@ begin
     if ba3D in buttonAttributes then
       Draw3D(img, Result, frNonZero, lightSize * 2,
         Ceil(lightSize), $CCFFFFFF, $AA000000, lightAngle);
-    DrawLine(img, Result, dpiAware1, clBlack32, esPolygon, jsButt);
+    DrawLine(img, Result, dpiAware1, clBlack32, esClosed, jsButt);
   finally
     img.EndUpdate;
   end;

@@ -47,7 +47,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '4.4.4';
+  SVGIconImageListVersion = '4.4.6';
   DEFAULT_SIZE = 32;
   ZOOM_DEFAULT = 100;
   SVG_INHERIT_COLOR = TAlphaColors.Null;
@@ -246,9 +246,15 @@ uses
   , FMX.Forms
   , FMX.Consts
   {$IFDEF Image32_SVGEngine}
+    {$IFNDEF SvgDisableEngineHint}
+    {$MESSAGE HINT 'Use Delphi native Image32 SVG-Engine for SVGIconImageList'}
+    {$ENDIF}
   , FMX.Image32SVG
   {$ENDIF}
   {$IFDEF Skia_SVGEngine}
+    {$IFNDEF SvgDisableEngineHint}
+    {$MESSAGE HINT 'Use Skia4Delphi "wrapper" SVG-Engine for SVGIconImageList'}
+    {$ENDIF}
   , FMX.ImageSkiaSVG
   {$ENDIF}
   ;

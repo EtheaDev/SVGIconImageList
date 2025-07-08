@@ -122,7 +122,7 @@ begin
     LStream.LoadFromStream(Stream);
     DeleteBuffers;
     LStream.Position := 0;
-    FSvg.Source := LStream.DataString;
+    SetSource(LStream.DataString);
   finally
     LStream.Free;
     // Restore Position

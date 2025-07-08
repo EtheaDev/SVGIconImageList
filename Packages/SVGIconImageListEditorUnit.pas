@@ -2,7 +2,7 @@
 {                                                                              }
 {       SVGIconImageList Component Editor                                      }
 {                                                                              }
-{       Copyright (c) 2019-2024 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2025 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors: Vincent Parrett, Kiriakos Vlahos                         }
 {                                                                              }
@@ -450,7 +450,7 @@ begin
       FEditingList.SvgIconItems.LoadFromFiles(FOpenDialog.Files);
       BuildList(MaxInt);
       FChanged := True;
-//      UpdateGUI;
+      UpdateGUI;
     finally
       Screen.Cursor := crDefault;
     end;
@@ -543,7 +543,6 @@ begin
   finally
     FUpdating := False;
   end;
-  IconImage.Invalidate;      // JR
 end;
 
 procedure TSVGIconImageListEditor.WidthEditChange(Sender: TObject);
@@ -660,7 +659,7 @@ begin
       BuildList(ImageView.Items[ImageView.ItemIndex].ImageIndex);
     finally
       FEditingList.EndUpdate;
-      FEditingList.RecreateBitmaps;       // JR
+      FEditingList.RecreateBitmaps;
       Screen.Cursor := crDefault;
     end;
   end;
@@ -833,11 +832,10 @@ begin
   else if Selected >= ImageView.Items.Count then
     Selected := ImageView.Items.Count - 1;
 
-  UpdateGUI;
   ImageView.ItemIndex := Selected;
+  UpdateGUI;
   if (ImageView.ItemIndex >= 0) and ImageView.CanFocus then
     ImageView.SetFocus;
-  if ImageView.ItemIndex>=0 then ImageView.Selected.MakeVisible(false);
 end;
 
 procedure TSVGIconImageListEditor.DeleteSelectedItems;

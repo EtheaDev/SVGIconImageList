@@ -3,7 +3,7 @@ unit Img32.Transform;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.8                                                             *
-* Date      :  16 January 2025                                                 *
+* Date      :  30 June 2025                                                    *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Affine and projective transformation routines for TImage32      *
@@ -1138,47 +1138,12 @@ end;
 //------------------------------------------------------------------------------
 
 procedure TWeightedColor.Reset;
-{$IFDEF CPUX64}
-var
-  Zero: Int64;
-{$ENDIF CPUX64}
 begin
-  {$IFDEF CPUX64}
-  Zero := 0;
-  fAddCount := Zero;
-  fAlphaTot := Zero;
-  fColorTotR := Zero;
-  fColorTotG := Zero;
-  fColorTotB := Zero;
-  {$ELSE}
   fAddCount := 0;
   fAlphaTot := 0;
   fColorTotR := 0;
   fColorTotG := 0;
   fColorTotB := 0;
-  {$ENDIF CPUX64}
-end;
-//------------------------------------------------------------------------------
-
-procedure TWeightedColor.Reset(c: TColor32; w: Integer);
-var
-  a: Cardinal;
-begin
-  fAddCount := w;
-  a := w * Byte(c shr 24);
-  if a = 0 then
-  begin
-    fAlphaTot := 0;
-    fColorTotB := 0;
-    fColorTotG := 0;
-    fColorTotR := 0;
-  end else
-  begin
-    fAlphaTot := a;
-    fColorTotB := (a * Byte(c));
-    fColorTotG := (a * Byte(c shr 8));
-    fColorTotR := (a * Byte(c shr 16));
-  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -1188,27 +1153,158 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TWeightedColor.Add(c: TColor32; w: Integer);
+{$IFDEF CPUX86} // 32bit NativeInt
+
+procedure TWeightedColor.Reset(c: TColor32; w: Integer);
 var
-  a: Int64;
+  a: SizeInt; // D2007 internal compiler error with NativeInt
+  a64: Int64;
 begin
-  inc(fAddCount, w);
+  fAddCount := w;
   a := Byte(c shr 24);
-  if a <> 0 then
+  if (a = 0) or (w = 0) then
   begin
-    a := a * Cardinal(w);
-    inc(fAlphaTot, a);
-    inc(fColorTotB, (a * Byte(c)));
-    inc(fColorTotG, (a * Byte(c shr 8)));
-    inc(fColorTotR, (a * Byte(c shr 16)));
+    fAlphaTot := 0;
+    fColorTotB := 0;
+    fColorTotG := 0;
+    fColorTotR := 0;
+  end
+  else if (w and $FFFF8000) = 0 then
+  begin
+    // Bits: a(8) + c(8) + w(15+sign) = 31+sign
+    // IOW, safe to use faster 32bit NativeInt (#158)
+    a := a * w;
+    fAlphaTot := a;
+    fColorTotB := (a * Byte(c));
+    fColorTotG := (a * Byte(c shr 8));
+    fColorTotR := (a * Byte(c shr 16));
+  end else
+  begin
+    a64 := a * w;
+    fAlphaTot := a64;
+    fColorTotB := (a64 * Byte(c));
+    fColorTotG := (a64 * Byte(c shr 8));
+    fColorTotR := (a64 * Byte(c shr 16));
   end;
 end;
 //------------------------------------------------------------------------------
 
+procedure TWeightedColor.Add(c: TColor32; w: Integer);
+var
+  a: SizeInt; // D2007 internal compiler error with NativeInt
+  a64: Int64;
+begin
+  inc(fAddCount, w);
+  a := Byte(c shr 24);
+  if a = 0 then Exit;
+  if (w and $FFFF8000) = 0 then
+  begin
+    // Bits: a(8) + c(8) + w(15+sign) = 31+sign
+    // IOW, safe to use faster 32bit NativeInt (#158)
+    a := a * w;
+    inc(fAlphaTot, a);
+    inc(fColorTotB, (a * Byte(c)));
+    inc(fColorTotG, (a * Byte(c shr 8)));
+    inc(fColorTotR, (a * Byte(c shr 16)));
+  end
+  else
+  begin
+    a64 := a * w;
+    inc(fAlphaTot, a64);
+    inc(fColorTotB, (a64 * Byte(c)));
+    inc(fColorTotG, (a64 * Byte(c shr 8)));
+    inc(fColorTotR, (a64 * Byte(c shr 16)));
+  end;
+end;
+//------------------------------------------------------------------------------
+
+procedure TWeightedColor.Subtract(c: TColor32; w: Integer);
+var
+  a: SizeInt; // D2007 internal compiler error with NativeInt
+  a64: Int64;
+begin
+  dec(fAddCount, w);
+  a := Byte(c shr 24);
+  if a = 0 then Exit;
+  if (w and $FFFF8000) = 0 then
+  begin
+    // Bits: a(8) + c(8) + w(15+sign) = 31+sign
+    // IOW, safe to use faster 32bit NativeInt (#158)
+    a := a * w;
+    dec(fAlphaTot, a);
+    dec(fColorTotB, (a * Byte(c)));
+    dec(fColorTotG, (a * Byte(c shr 8)));
+    dec(fColorTotR, (a * Byte(c shr 16)));
+  end
+  else
+  begin
+    a64 := a * w;
+    dec(fAlphaTot, a64);
+    dec(fColorTotB, (a64 * Byte(c)));
+    dec(fColorTotG, (a64 * Byte(c shr 8)));
+    dec(fColorTotR, (a64 * Byte(c shr 16)));
+  end;
+end;
+//------------------------------------------------------------------------------
+
+{$ELSE} // 64bit NativeInt
+
+procedure TWeightedColor.Reset(c: TColor32; w: Integer);
+var
+  a: NativeInt;
+begin
+  fAddCount := w;
+  a := w * Byte(c shr 24);
+  if a = 0 then
+  begin
+    fAlphaTot  := 0;
+    fColorTotB := 0;
+    fColorTotG := 0;
+    fColorTotR := 0;
+  end else
+  begin
+    fAlphaTot  := a;
+    fColorTotB := (a * Byte(c));
+    fColorTotG := (a * Byte(c shr 8));
+    fColorTotR := (a * Byte(c shr 16));
+  end;
+end;
+//------------------------------------------------------------------------------
+
+procedure TWeightedColor.Add(c: TColor32; w: Integer);
+var
+  a: NativeInt;
+begin
+  inc(fAddCount, w);
+  a := w * Byte(c shr 24);
+  if a = 0 then Exit;
+  inc(fAlphaTot, a);
+  inc(fColorTotB, (a * Byte(c)));
+  inc(fColorTotG, (a * Byte(c shr 8)));
+  inc(fColorTotR, (a * Byte(c shr 16)));
+end;
+//------------------------------------------------------------------------------
+
+procedure TWeightedColor.Subtract(c: TColor32; w: Integer);
+var
+  a: NativeInt;
+begin
+  dec(fAddCount, w);
+  a := w * Byte(c shr 24);
+  if a = 0 then Exit;
+  dec(fAlphaTot, a);
+  dec(fColorTotB, (a * Byte(c)));
+  dec(fColorTotG, (a * Byte(c shr 8)));
+  dec(fColorTotR, (a * Byte(c shr 16)));
+end;
+//------------------------------------------------------------------------------
+
+{$ENDIF}
+
 procedure TWeightedColor.Add(c: TColor32);
 // Optimized for w=1
 var
-  a: Int64;
+  a: SizeInt; // D2007 internal compiler error with NativeInt
 begin
   inc(fAddCount);
   a := Byte(c shr 24);
@@ -1230,24 +1326,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure TWeightedColor.Subtract(c: TColor32; w: Integer);
-var
-  a: Int64;
-begin
-  dec(fAddCount, w);
-  a := w * Byte(c shr 24);
-  if a = 0 then Exit;
-  dec(fAlphaTot, a);
-  dec(fColorTotB, (a * Byte(c)));
-  dec(fColorTotG, (a * Byte(c shr 8)));
-  dec(fColorTotR, (a * Byte(c shr 16)));
-end;
-//------------------------------------------------------------------------------
-
 procedure TWeightedColor.Subtract(c: TColor32);
 // Optimized for w=1
 var
-  a: Int64;
+  a: SizeInt; // D2007 internal compiler error with NativeInt
 begin
   dec(fAddCount);
   a := Byte(c shr 24);
@@ -1271,10 +1353,9 @@ end;
 
 function TWeightedColor.AddSubtract(addC, subC: TColor32): Boolean;
 var
-  a: Int64;
+  a: SizeInt; // D2007 internal compiler error with NativeInt
 begin
   // add+subtract => fAddCount stays the same
-
   // skip identical colors
   Result := False;
   if addC = subC then Exit;
@@ -1303,21 +1384,18 @@ end;
 
 function TWeightedColor.AddNoneSubtract(c: TColor32): Boolean;
 var
-  a: Int64;
+  a: SizeInt; // D2007 internal compiler error with NativeInt
 begin
   // add+subtract => fAddCount stays the same
 
   a := Byte(c shr 24);
-  if a > 0 then
-  begin
-    dec(fAlphaTot, a);
-    dec(fColorTotB, (a * Byte(c)));
-    dec(fColorTotG, (a * Byte(c shr 8)));
-    dec(fColorTotR, (a * Byte(c shr 16)));
-    Result := True;
-  end
-  else
-    Result := False;
+  Result := a > 0;
+  if not Result then Exit;
+
+  dec(fAlphaTot, a);
+  dec(fColorTotB, (a * Byte(c)));
+  dec(fColorTotG, (a * Byte(c shr 8)));
+  dec(fColorTotR, (a * Byte(c shr 16)));
 end;
 //------------------------------------------------------------------------------
 

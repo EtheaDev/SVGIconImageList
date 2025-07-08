@@ -1756,7 +1756,7 @@ begin
           Result[len + 1] := UTF8Char($80 or (val and $3f));
           inc(len, 2);
         end;
-      $800 .. $7FFF:
+      $800 .. $FFFF:
         begin
           Result[len] := UTF8Char($E0 or (val shr 12));
           Result[len + 1] := UTF8Char($80 or ((val shr 6) and $3f));

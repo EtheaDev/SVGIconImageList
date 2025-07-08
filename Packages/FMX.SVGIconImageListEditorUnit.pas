@@ -300,6 +300,7 @@ begin
     OpacitySpinBox.Enabled := LIsItemSelected;
     IconName.Enabled := LIsItemSelected;
     SVGText.Enabled := LIsItemSelected;
+    IconControlsPanel.Enabled := LIsItemSelected;
     //ShowCharMapButton.Enabled := (FEditingList.FontName <> '');
     IconsGroupBox.Text := Format(FTotIconsLabel, [FEditingList.Count]);
     SizeSpinBox.Value := FEditingList.Size;

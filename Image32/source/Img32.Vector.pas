@@ -267,6 +267,7 @@ type
   function Rect(const left,top,right,bottom: integer): TRect; overload;
 
   function PtInRect(const rec: TRectD; const pt: TPointD): Boolean; overload;
+  function RectInRect(const outerRec, innerRec: TRectD): Boolean;
 
   function Size(cx, cy: integer): TSize;
   function SizeD(cx, cy: double): TSizeD;
@@ -280,7 +281,8 @@ type
 
   function Area(const path: TPathD): Double; overload;
 
-  function RectsEqual(const rec1, rec2: TRect): Boolean;
+  function RectsEqual(const rec1, rec2: TRect): Boolean; overload;
+  function RectsEqual(const rec1, rec2: TRectD): Boolean; overload;
 
   procedure TranslateRect(var rec: TRect; dx, dy: integer); overload;
   procedure TranslateRect(var rec: TRectD; dx, dy: double); overload;
@@ -600,6 +602,13 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function RectsEqual(const rec1, rec2: TRectD): Boolean;
+begin
+  result := (rec1.Left = rec2.Left) and (rec1.Top = rec2.Top) and
+    (rec1.Right = rec2.Right) and (rec1.Bottom = rec2.Bottom);
+end;
+//------------------------------------------------------------------------------
+
 function Rect(const left, top, right, bottom: integer): TRect;
 begin
   Result.Left := left;
@@ -775,6 +784,15 @@ function PtInRect(const rec: TRectD; const pt: TPointD): Boolean;
 begin
   Result := (pt.X >= rec.Left) and (pt.X < rec.Right) and
     (pt.Y >= rec.Top) and (pt.Y < rec.Bottom);
+end;
+//------------------------------------------------------------------------------
+
+function RectInRect(const outerRec, innerRec: TRectD): Boolean;
+var
+  r: TRectD;
+begin
+  r := UnionRect(outerRec, innerRec);
+  Result := RectsEqual(r, outerRec);
 end;
 //------------------------------------------------------------------------------
 

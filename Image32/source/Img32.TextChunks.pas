@@ -3,7 +3,7 @@ unit Img32.TextChunks;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.8                                                             *
-* Date      :  4 April 2025                                                    *
+* Date      :  9 May 2025                                                      *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Manages navigating, formatting and displaying text.             *
@@ -272,7 +272,7 @@ end;
 
 function TTextChunk.IsBlankSpaces: Boolean;
 begin
-  Result := text[1] = SPACE;
+  Result := (text[1] = SPACE);
 end;
 //------------------------------------------------------------------------------
 
@@ -284,7 +284,14 @@ end;
 
 function TTextChunk.IsText: Boolean;
 begin
-  Result := not CharInSet(text[1], [SPACE, NEWLINE]);
+  // CharInSet is slow in Win32 and generates even slower code for Win64
+  //Result := not CharInSet(text[1], [SPACE, NEWLINE]);
+  case text[1] of
+    SPACE, NEWLINE:
+      Result := False;
+  else
+    Result := True;
+  end;
 end;
 //------------------------------------------------------------------------------
 
@@ -567,7 +574,14 @@ begin
 
   for i := startIdx to endIdx do
     TTextChunk(fList.Items[i]).Free;
+
+{$IF defined(FPC) or not defined(LIST_DELETERANGE)}
+  for i := endIdx-startIdx +1 downto startIdx do
+    fList.Delete(i);
+{$ELSE}
   fList.DeleteRange(startIdx, endIdx-startIdx +1);
+{$IFEND}
+
   // reindex
   for i := startIdx to fList.Count -1 do
     TTextChunk(fList.Items[i]).index := i;
@@ -952,9 +966,12 @@ begin
         AddLine;
         // don't allow spaces to wrap to the front of the following line
 
-        while chnk.IsBlankSpaces and (chnk.index < EndChunkPos.X) do
-          chnk := chnk.Next;
-        currentPos.X := chnk.index;
+        while Assigned(chnk) and chnk.IsBlankSpaces and
+          (chnk.index < EndChunkPos.X) do
+            chnk := chnk.Next;
+        if not Assigned(chnk) then
+          currentPos.X := EndChunkPos.X else
+          currentPos.X := chnk.index;
         chunkIdxAtStartOfLine  := currentPos.X;
         pseudoIdxAtStartOfLine := currentPos.X;
       end;

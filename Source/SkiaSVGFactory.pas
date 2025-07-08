@@ -262,7 +262,8 @@ end;
 
 procedure TSkiaSVG.LoadFromSource;
 begin
-  //FSvg.DOM;
+  FWidth := Round(FSvg.OriginalSize.cx);
+  FHeight := Round(FSvg.OriginalSize.cy);
 end;
 
 procedure TSkiaSVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);

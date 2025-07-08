@@ -28,6 +28,15 @@
   {$DEFINE IgnoreAntiAliasedColor}
 {$IFEND}
 
+//Check correct defines
+{$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine) and NOT DEFINED(PreferNativeSvgSupport)}
+  {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or PreferNativeSvgSupport) into SVGIconImageList.inc)'}
+{$IFEND}
+
+{$IF DEFINED(Image32_SVGEngine) and DEFINED(Skia_SVGEngine)}
+  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine) into SVGIconImageList.inc)'}
+{$IFEND}
+
 // Delphi XE3
 {$IFDEF VER240}
   {$DEFINE D2010+}

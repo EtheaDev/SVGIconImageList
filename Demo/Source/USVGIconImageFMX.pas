@@ -56,7 +56,7 @@ procedure TSVGIconImageForm.FormCreate(Sender: TObject);
 var
   LPath: string;
 begin
-  LPath := GetCurrentDir+PathDelim+'..\svg_examples\flat-color-icons\svg\';
+  LPath := GetCurrentDir+PathDelim+'..\svg_examples\';
   TDirectory.SetCurrentDirectory(LPath);
   FSVGList := TDirectory.GetFiles(LPath, '*.svg');
   FIndex := 0;
