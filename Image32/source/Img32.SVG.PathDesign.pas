@@ -2,10 +2,10 @@ unit Img32.SVG.PathDesign;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.0                                                             *
-* Date      :  10 January 2022                                                 *
+* Version   :  4.9                                                             *
+* Date      :  9 August 2025                                                   *
 * Website   :  https://www.angusj.com                                          *
-* Copyright :  Angus Johnson 2019-2022                                         *
+* Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
 * Purpose   :  Supports designing SVG paths                                    *
 *                                                                              *
@@ -803,11 +803,11 @@ begin
     SetLength(dashes, 2);
     dashes[0] := j; dashes[1] := j;
     DrawDashedLine(designer.Image, p, dashes,
-      nil, dpiAware1, clMaroon32, esPolygon);
+      nil, dpiAware1, clMaroon32, esClosed);
 
     p2 := OffsetPath(p2, -designer.Left, -designer.Top);
     DrawDashedLine(designer.Image, p2, dashes,
-      nil, dpiAware1, clSilver32, esPolygon);
+      nil, dpiAware1, clSilver32, esClosed);
   end;
 end;
 

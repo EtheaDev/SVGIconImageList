@@ -2,8 +2,8 @@ unit Img32.Clipper2;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7                                                             *
-* Date      :  11 March 2025                                                   *
+* Version   :  4.9                                                             *
+* Date      :  9 August 2025                                                   *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Wrapper module for the Clipper library                          *
@@ -68,7 +68,7 @@ uses Clipper, Clipper.Core, Clipper.Engine;
 function ClipperEndType(endStyle: TEndStyle): TClipperEndType;
 begin
   case endStyle of
-    esPolygon: Result := etJoined;
+    esClosed: Result := etJoined;
     esButt: Result := etButt;
     esSquare: Result := etSquare;
     else Result := etRound;

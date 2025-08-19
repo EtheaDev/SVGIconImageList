@@ -2,7 +2,7 @@ unit Clipper.Offset;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Date      :  22 January 2025                                                 *
+* Date      :  4 May 2025                                                      *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2010-2025                                         *
 * Purpose   :  Path Offset (Inflate/Shrink)                                    *
@@ -216,21 +216,30 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function GetLowestPolygonIdx(const paths: TPaths64): integer;
+procedure GetLowestPolygonInfo(const paths: TPaths64;
+  out idx: integer; out IsNegArea: Boolean);
 var
   i,j: integer;
+  a  : double;
   botPt: TPoint64;
 begin
-	Result := -1;
+	idx := -1;
   botPt := Point64(MaxInt64, MinInt64);
   for i := 0 to High(paths) do
   begin
+    a := MaxDouble;
     for j := 0 to High(paths[i]) do
       with paths[i][j] do
       begin
         if (Y < botPt.Y) or
           ((Y = botPt.Y) and (X >= botPt.X)) then Continue;
-        result := i;
+        if a = MaxDouble then
+        begin
+          a := Area(paths[i]);
+          if (a = 0) then Break; // invalid closed path, break from inner loop
+          IsNegArea := a < 0;
+        end;
+        idx := i;
         botPt.X := X;
         botPt.Y := Y;
       end;
@@ -250,8 +259,9 @@ end;
 
 constructor TGroup.Create(const pathsIn: TPaths64; jt: TJoinType; et: TEndType);
 var
-  i, len: integer;
-  isJoined: boolean;
+  i, len    : integer;
+  isJoined  : boolean;
+  isNegArea : Boolean;
 begin
   Self.joinType := jt;
   Self.endType := et;
@@ -268,8 +278,8 @@ begin
     // the lowermost path must be an outer path, so if its orientation is
     // negative, then flag that the whole group is 'reversed' (so negate
     // delta etc.) as this is much more efficient than reversing every path.
-	  lowestPathIdx := GetLowestPolygonIdx(pathsIn);
-    reversed := (lowestPathIdx >= 0) and (Area(pathsIn[lowestPathIdx]) < 0);
+    GetLowestPolygonInfo(pathsIn, lowestPathIdx, isNegArea);
+    reversed := (lowestPathIdx >= 0) and isNegArea;
   end else
     lowestPathIdx := -1;
 end;
@@ -388,8 +398,8 @@ begin
     stepsPer360 := Pi / ArcCos(1 - arcTol / absDelta);
 		if (stepsPer360 > absDelta * Pi) then
 			stepsPer360 := absDelta * Pi;  // avoid excessive precision
-    fStepSin := sin(TwoPi / stepsPer360);
-    fStepCos := cos(TwoPi / stepsPer360);
+    fStepSin := sin(TwoPi/stepsPer360);
+    fStepCos := cos(TwoPi/stepsPer360);
 		if (fGroupDelta < 0.0) then fStepSin := -fStepSin;
     fStepsPerRad := stepsPer360 / TwoPi;
   end;
@@ -418,7 +428,7 @@ begin
         r := absDelta;
         steps := Ceil(fStepsPerRad * TwoPi); //#617
         fOutPath := Path64(Ellipse(
-          RectD(pt0.X - r, pt0.Y-r, pt0.X + r, pt0.Y + r), steps));
+          RectD(pt0.X-r, pt0.Y-r, pt0.X+r, pt0.Y+r), steps));
 {$IFDEF USINGZ}
         for j := 0 to high(fOutPath) do
           fOutPath[j].Z := pt0.Z;
@@ -426,7 +436,7 @@ begin
       end else
       begin
         j := Round(absDelta);
-        rec := Rect64(pt0.X - j, pt0.Y - j, pt0.X + j, pt0.Y + j);
+        rec := Rect64(pt0.X -j, pt0.Y -j, pt0.X+j, pt0.Y+j);
         fOutPath := rec.AsPath;
 {$IFDEF USINGZ}
         for j := 0 to high(fOutPath) do
@@ -463,7 +473,7 @@ begin
   SetLength(fNorms, len);
   if len = 0 then Exit;
   for i := 0 to len-2 do
-    fNorms[i] := GetUnitNormal(fInPath[i], fInPath[i + 1]);
+    fNorms[i] := GetUnitNormal(fInPath[i], fInPath[i+1]);
   fNorms[len -1] := GetUnitNormal(fInPath[len -1], fInPath[0]);
 end;
 //------------------------------------------------------------------------------
@@ -487,7 +497,7 @@ begin
   for i := 0 to fGroupList.Count -1 do
     with TGroup(fGroupList[i]) do
     if endType = etJoined then
-      inc(Result, Length(paths) * 2) else
+      inc(Result, Length(paths) *2) else
       inc(Result, Length(paths));
 end;
 //------------------------------------------------------------------------------
@@ -615,8 +625,8 @@ begin
   fDelta := delta;
   // Miter Limit: see offset_triginometry3.svg
   if fMiterLimit > 1 then
-    fTmpLimit := 2 / Sqr(fMiterLimit) else
-    fTmpLimit := 2.0;
+    fTmpLimit := 2 / Sqr(fMiterLimit) -1 else
+    fTmpLimit := -0.5;
 
   // nb: delta will depend on whether paths are polygons or open
   for i := 0 to fGroupList.Count -1 do
@@ -762,25 +772,25 @@ begin
   if (ln1B.X = ln1A.X) then
   begin
     if (ln2B.X = ln2A.X) then exit; //parallel lines
-    m2 := (ln2B.Y - ln2A.Y) / (ln2B.X - ln2A.X);
+    m2 := (ln2B.Y - ln2A.Y)/(ln2B.X - ln2A.X);
     b2 := ln2A.Y - m2 * ln2A.X;
     Result.X := ln1A.X;
-    Result.Y := m2 * ln1A.X + b2;
+    Result.Y := m2*ln1A.X + b2;
   end
   else if (ln2B.X = ln2A.X) then
   begin
-    m1 := (ln1B.Y - ln1A.Y) / (ln1B.X - ln1A.X);
+    m1 := (ln1B.Y - ln1A.Y)/(ln1B.X - ln1A.X);
     b1 := ln1A.Y - m1 * ln1A.X;
     Result.X := ln2A.X;
-    Result.Y := m1 * ln2A.X + b1;
+    Result.Y := m1*ln2A.X + b1;
   end else
   begin
-    m1 := (ln1B.Y - ln1A.Y) / (ln1B.X - ln1A.X);
+    m1 := (ln1B.Y - ln1A.Y)/(ln1B.X - ln1A.X);
     b1 := ln1A.Y - m1 * ln1A.X;
-    m2 := (ln2B.Y - ln2A.Y) / (ln2B.X - ln2A.X);
+    m2 := (ln2B.Y - ln2A.Y)/(ln2B.X - ln2A.X);
     b2 := ln2A.Y - m2 * ln2A.X;
     if m1 = m2 then exit; //parallel lines
-    Result.X := (b2 - b1) / (m1 - m2);
+    Result.X := (b2 - b1)/(m1 - m2);
     Result.Y := m1 * Result.X + b1;
   end;
 end;
@@ -905,14 +915,14 @@ var
   q: Double;
 begin
   // see offset_triginometry4.svg
-  q := fGroupDelta / (cosA + 1);
+  q := fGroupDelta / (cosA +1);
 {$IFDEF USINGZ}
-  AddPoint(fInPath[j].X + (fNorms[k].X + fNorms[j].X) * q,
-    fInPath[j].Y + (fNorms[k].Y + fNorms[j].Y) * q,
+  AddPoint(fInPath[j].X + (fNorms[k].X + fNorms[j].X)*q,
+    fInPath[j].Y + (fNorms[k].Y + fNorms[j].Y)*q,
     fInPath[j].Z);
 {$ELSE}
-  AddPoint(fInPath[j].X + (fNorms[k].X + fNorms[j].X) * q,
-    fInPath[j].Y + (fNorms[k].Y + fNorms[j].Y) * q);
+  AddPoint(fInPath[j].X + (fNorms[k].X + fNorms[j].X)*q,
+    fInPath[j].Y + (fNorms[k].Y + fNorms[j].Y)*q);
 {$ENDIF}
 end;
 //------------------------------------------------------------------------------
@@ -935,8 +945,8 @@ begin
     stepsPer360 := Pi / ArcCos(1 - arcTol / absDelta);
 		if (stepsPer360 > absDelta * Pi) then
 			stepsPer360 := absDelta * Pi;  // avoid excessive precision
-    fStepSin := sin(TwoPi / stepsPer360);
-    fStepCos := cos(TwoPi / stepsPer360);
+    fStepSin := sin(TwoPi/stepsPer360);
+    fStepCos := cos(TwoPi/stepsPer360);
 		if (fGroupDelta < 0.0) then fStepSin := -fStepSin;
     fStepsPerRad := stepsPer360 / TwoPi;
   end;
@@ -1024,7 +1034,7 @@ begin
   else if (fJoinType = jtMiter) then
   begin
 		// miter unless the angle is sufficiently acute to exceed ML
-    if (cosA > fTmpLimit -1) then DoMiter(j, k, cosA)
+    if (cosA > fTmpLimit) then DoMiter(j, k, cosA)
     else DoSquare(j, k);
   end
   else if (fJoinType = jtRound) then

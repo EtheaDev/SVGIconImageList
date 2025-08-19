@@ -2,8 +2,8 @@ unit Img32.Layers;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.8                                                             *
-* Date      :  9 April 2025                                                    *
+* Version   :  4.9                                                             *
+* Date      :  9 August 2025                                                   *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Layered images support                                          *
@@ -2062,7 +2062,7 @@ begin
     q := DPIAware(2);
     pt := TranslatePoint(pivot, -fLeft, -fTop);
     DrawDashedLine(Image, Circle(pt, dist - q),
-      dashes, nil, q, clRed32, esPolygon);
+      dashes, nil, q, clRed32, esClosed);
   end;
 
   if not assigned(buttonLayerClass) then
@@ -2768,7 +2768,7 @@ begin
     pt2 := TranslatePoint(mp, -rec.Left, -rec.Top);
     DrawDashedLine(designer.Image,
       Circle(pt2, radius -dpiAwareOne),
-      dashes, nil, DPIAware(2), clRed32, esPolygon);
+      dashes, nil, DPIAware(2), clRed32, esClosed);
     Result := Angle;
   end;
 end;

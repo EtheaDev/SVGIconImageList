@@ -2,8 +2,8 @@ unit Img32.Panels;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.8                                                             *
-* Date      :  2 Febuary 2025                                                  *
+* Version   :  4.9                                                             *
+* Date      :  9 August 2025                                                   *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Component that displays images on a TPanel descendant           *
@@ -239,7 +239,7 @@ var
 
 const
   MinImageScale = 0.001;
-  MaxImageScale = 1000;
+  MaxImageScale = 100000;
   tolerance = 0.01;
 
 //------------------------------------------------------------------------------

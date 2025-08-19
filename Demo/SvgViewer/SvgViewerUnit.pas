@@ -144,6 +144,7 @@ var
   LHeight, LWidth: Integer;
 begin
   LHeight := RightPanel.ClientHeight div 2;
+  FrameViewImage32.Height := LHeight;
   FrameViewerD2D.Height := LHeight;
   ControlPanel.Height := LHeight;
   LWidth := (Self.ClientWidth - FilesPanel.Width) div 2;

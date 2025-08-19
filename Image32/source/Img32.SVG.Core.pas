@@ -2,8 +2,8 @@ unit Img32.SVG.Core;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7                                                             *
-* Date      :  12 January 2025                                                 *
+* Version   :  4.9                                                             *
+* Date      :  9 August 2025                                                   *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
@@ -150,6 +150,8 @@ type
     hash      : Cardinal;     //hashed name
     name      : UTF8String;
     value     : UTF8String;
+    namespace : UTF8String;
+    // If you add a managed field, you must adjust DisposeSvgAttrib()
   end;
 
   TSvgParser = class;
@@ -170,6 +172,7 @@ type
     childs      : TList;
     {$ENDIF}
     name        : UTF8String;
+    namespace   : UTF8String;
     owner       : TSvgParser;
     hash        : Cardinal;
     text        : UTF8String;
@@ -205,13 +208,14 @@ type
 
   TSvgParser = class
   private
-    svgStream : TMemoryStream;
+    svgStream : TCustomMemoryStream;
     procedure ParseUtf8Stream;
   public
     classStyles : TClassStylesList;
     xmlHeader   : TXmlEl;
     docType     : TDocTypeEl;
     svgTree     : TSvgXmlEl;
+    svgNamespace: UTF8String; // if empty => no namespace handling
     constructor Create;
     destructor  Destroy; override;
     procedure Clear;
@@ -219,6 +223,8 @@ type
     function  LoadFromFile(const filename: string): Boolean;
     function  LoadFromStream(stream: TStream): Boolean;
     function  LoadFromString(const str: string): Boolean;
+    function  LoadFromUtf8String(const str: UTF8String): Boolean;
+    function  LoadFromUtf8Buffer(str: PUTF8Char; len: NativeInt): Boolean;
   end;
 
   //////////////////////////////////////////////////////////////////////
@@ -306,6 +312,18 @@ var
   LowerCaseTable : array[#0..#$FF] of UTF8Char;
 
 implementation
+
+type
+  TUTF8BufferReadStream = class(TCustomMemoryStream)
+  public
+    constructor Create(ABuffer: PUTF8Char; ASize: NativeInt);
+  end;
+
+constructor TUTF8BufferReadStream.Create(ABuffer: PUTF8Char; ASize: NativeInt);
+begin
+  inherited Create;
+  SetPointer(ABuffer, ASize);
+end;
 
 //------------------------------------------------------------------------------
 // Color Constant HashMap
@@ -441,9 +459,10 @@ end;
 procedure DisposeSvgAttrib(attrib: PSvgAttrib); {$IFDEF INLINE} inline; {$ENDIF}
 begin
   // Dispose(Result) uses RTTI to set the UTF8String fields to nil.
-  // By clearing them outself we can achieve that much faster.
+  // By clearing these fields ourself we can achieve that much faster.
   attrib.name := '';
   attrib.value := '';
+  attrib.namespace := '';
   FreeMem(attrib);
 end;
 //------------------------------------------------------------------------------
@@ -694,6 +713,27 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function SkipBlanksAndXmlComments(c, endC: PUTF8Char): PUTF8Char;
+begin
+  c := SkipBlanksEx(c, endC);
+  while c < endC do
+  begin
+    if (c[0] = '<') and (c[1] = '!') and (c[2] = '-') and (c[3] = '-') then //start comment
+    begin
+      inc(c, 4);
+      // find comment end
+      while (c < endC - 3) and ((c^ <> '-') or not Match(c, '-->')) do
+        inc(c);
+      inc(c, 3);
+      c := SkipBlanksEx(c, endC);
+    end
+    else
+      Break;
+  end;
+  Result := c;
+end;
+//------------------------------------------------------------------------------
+
 function SkipBlanks(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 var
   cc: PUTF8Char;
@@ -793,7 +833,7 @@ begin
   begin
     case Result^ of
       '0'..'9', 'A'..'Z', 'a'..'z', '-': inc(Result);
-      else break;
+    else break;
     end;
   end;
 end;
@@ -1986,7 +2026,7 @@ begin
 
   c := SkipBlanksEx(c, endC);
   if c >= endC then Exit;
-  
+
   if Match(c, '<![cdata[') then inc(c, 9);
 
   while True do
@@ -2079,10 +2119,22 @@ function TXmlEl.ParseHeader(var c: PUTF8Char; endC: PUTF8Char): Boolean;
 var
   style: UTF8String;
   c2: PUTF8Char;
+  i: integer;
 begin
+  Result := Assigned(owner);
+  if not Result then Exit;
+
   c2 := SkipBlanksEx(c, endC);
   c := ParseNameLength(c2, endC);
   ToAsciiLowerUTF8String(c2, c, name);
+
+  // Extract and remove namespace
+  i := PosEx(':', name);
+  if i > 0 then
+  begin
+    namespace := Copy(name, 1, i - 1);
+    Delete(name, 1, i);
+  end;
 
   //load the class's style (ie undotted style) if found.
   style := owner.classStyles.GetStyle(name);
@@ -2091,14 +2143,24 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-class function TXmlEl.ParseAttribName(c: PUTF8Char;
-  endC: PUTF8Char; attrib: PSvgAttrib): PUTF8Char;
+class function TXmlEl.ParseAttribName(c, endC: PUTF8Char; attrib: PSvgAttrib): PUTF8Char;
+var
+  i: integer;
 begin
   Result := SkipBlanksEx(c, endC);
   if Result >= endC then Exit;
   c := Result;
   Result := ParseNameLength(Result, endC);
   ToUTF8String(c, Result, attrib.Name);
+
+  // Extract and remove namespace
+  i := PosEx(':', attrib.name);
+  if i > 0 then
+  begin
+    attrib.namespace := Copy(attrib.name, 1, i - 1);
+    Delete(attrib.name, 1, i);
+  end;
+
   attrib.hash := GetHash(attrib.Name);
 end;
 //------------------------------------------------------------------------------
@@ -2188,12 +2250,23 @@ begin
       Exit;
     end;
 
+    if (attrib.namespace <> '') and (owner.svgNamespace <> '') then
+    begin
+      if (attrib.namespace <> owner.svgNamespace) then
+      begin
+        // We are not interested in this attribute, so skip it
+        DisposeSvgAttrib(attrib);
+        Continue;
+      end;
+      attrib.namespace := '' // reduce memory usage
+    end;
+
     attribs.Add(attrib);
     case attrib.hash of
       hId     : idAttrib := attrib;
       hClass  : classAttrib := attrib;
       hStyle  : styleAttrib := attrib;
-    end;    
+    end;
   end;
 
   if assigned(classAttrib) then
@@ -2360,10 +2433,28 @@ begin
         begin
           //starting a new element
           child := TSvgXmlEl.Create(owner);
-          childs.Add(child);
-          if not child.ParseHeader(c, endC) then break;
-          if not child.selfClosed then
+          if not child.ParseHeader(c, endC) then
+          begin
+            child.Free;
+            break;
+          end;
+
+          try
+            if not child.selfClosed then
               child.ParseContent(c, endC);
+
+            // If we have a TAG that is not part of the svgNamespace, then we skip it
+            if (owner <> nil) and (owner.svgNamespace <> '') then
+            begin
+              if (child.namespace <> '') and (child.namespace <> owner.svgNamespace) then
+                FreeAndNil(child)
+              else
+                child.namespace := ''; //owner.svgNamespace; // reduce memory usage
+            end;
+          finally
+            if child <> nil then
+              childs.Add(child);
+          end;
         end;
       end;
     end
@@ -2533,10 +2624,11 @@ end;
 procedure TSvgParser.Clear;
 begin
   classStyles.Clear;
-  svgStream.Clear;
+  FreeAndNil(svgStream);
   xmlHeader.Clear;
   docType.Clear;
   FreeAndNil(svgTree);
+  svgNamespace := '';
 end;
 //------------------------------------------------------------------------------
 
@@ -2603,15 +2695,51 @@ end;
 //------------------------------------------------------------------------------
 
 function TSvgParser.LoadFromStream(stream: TStream): Boolean;
+var
+  Buf: PUTF8Char;
+  Len: NativeInt;
 begin
   Clear;
   Result := true;
   try
-    svgStream.LoadFromStream(stream);
-    // very few SVG files are unicode encoded, almost all are Utf8
-    // so it's more efficient to parse them all as Utf8 encoded files
-    ConvertUnicodeToUtf8(svgStream);
-    ParseUtf8Stream;
+    try
+      // If we already have a memory stream then we can use it directly
+      // without copying it around.
+      if stream is TCustomMemoryStream then
+      begin
+        // TMemoryStream.LoadFromStream (below) seeks to the stream start and
+        // copies the whole stream instead of reading from the stream's current
+        // position.
+        Buf := TCustomMemoryStream(stream).Memory;
+        Len := stream.Size;
+        //Len := stream.Position;
+        //Inc(Buf, Len);
+        //Len := stream.Size - Len;
+
+        // If we have UTF8, we can parse the stream data directly without
+        // copying it.
+        if not (GetXmlEncoding(Buf, Len) in [eUnicodeLE, eUnicodeBE]) then
+        begin
+          svgStream := TUTF8BufferReadStream.Create(Buf, Len);
+          stream.Seek(0, soEnd); // Keep the behaviour of TMemoryStream.LoadFromStream
+        end
+      end;
+
+      if svgStream = nil then // Fallback for non-UTF-8 and non-MemoryStreams
+      begin
+        // Copy the stream into a MemoryStream
+        svgStream := TMemoryStream.Create;
+        TMemoryStream(svgStream).LoadFromStream(stream);
+        // very few SVG files are unicode encoded, almost all are Utf8
+        // so it's more efficient to parse them all as Utf8 encoded files
+        ConvertUnicodeToUtf8(TMemoryStream(svgStream));
+      end;
+
+      ParseUtf8Stream;
+    finally
+      // Clean up after the SVG was read
+      FreeAndNil(svgStream);
+    end;
   except
     Result := false;
   end;
@@ -2619,53 +2747,110 @@ end;
 //------------------------------------------------------------------------------
 
 function TSvgParser.LoadFromString(const str: string): Boolean;
-var
-  ss: TStringStream;
 begin
-{$IFDEF UNICODE}
-  ss := TStringStream.Create(str, TEncoding.UTF8);
-{$ELSE}
-  ss := TStringStream.Create(UTF8Encode(str));
-{$ENDIF}
+  Result := LoadFromUtf8String(UTF8Encode(str));
+end;
+//------------------------------------------------------------------------------
+
+function TSvgParser.LoadFromUtf8String(const str: UTF8String): Boolean;
+begin
+  Result := LoadFromUtf8Buffer(PUTF8Char(str), Length(str));
+end;
+
+//------------------------------------------------------------------------------
+function TSvgParser.LoadFromUtf8Buffer(str: PUTF8Char; len: NativeInt): Boolean;
+begin
+  Clear;
+  Result := True;
+
+  if len <= 0 then
+    Exit;
+  if str = nil then // invalid parameter
+  begin
+    Result := False;
+    Exit;
+  end;
+
   try
-    Result := LoadFromStream(ss);
+    svgStream := TUTF8BufferReadStream.Create(str, len);
+    try
+      ParseUtf8Stream;
+    except
+      Result := False;
+    end;
   finally
-    ss.Free;
+    FreeAndNil(svgStream);
   end;
 end;
 //------------------------------------------------------------------------------
 
 procedure TSvgParser.ParseUtf8Stream;
 var
-  c, endC: PUTF8Char;
+  c, endC, cc: PUTF8Char;
+  i: Integer;
+  Attr: PSvgAttrib;
+  tag: UTF8String;
 begin
   c := svgStream.Memory;
   endC := c + svgStream.Size;
   SkipBlanks(c, endC);
+
   if Match(c, '<?xml') then
   begin
-    inc(c, 2); //todo: accommodate space after '<' eg using sMatchEl function
+    inc(c, 2);
     if not xmlHeader.ParseHeader(c, endC) then Exit;
     SkipBlanks(c, endC);
   end;
+
+  c := SkipBlanksAndXmlComments(c, endC);
   if Match(c, '<!doctype') then
   begin
     inc(c, 2);
     if not docType.ParseHeader(c, endC) then Exit;
   end;
-  while SkipBlanks(c, endC) do
+
+  svgNamespace := '';
+
+  c := SkipBlanksAndXmlComments(c, endC);
+  while (c < endC) do
   begin
-    if (c^ = '<') and Match(c, '<svg') then
+    if (c^ = '<') then
     begin
-      inc(c);
-      svgTree := TSvgXmlEl.Create(self);
-      if svgTree.ParseHeader(c, endC) and
-        not svgTree.selfClosed then
-          svgTree.ParseContent(c, endC);
+      Inc(c);
+      cc := c;
+      cc := ParseNameLength(cc, endC);
+      ToAsciiLowerUTF8String(c, cc, tag);
+      i := PosEx(':', tag, 1);
+      if Copy(tag, i + 1, MaxInt) <> 'svg' then
+        Continue;  // ie continue searching for the top-most SVG tag
+      if i > 1 then
+        svgNamespace := Copy(tag, 1, i -1);
       break;
     end;
     inc(c);
   end;
+
+  svgTree := TSvgXmlEl.Create(self);
+  if not svgTree.ParseHeader(c, endC) or svgTree.selfClosed then Exit;
+
+  if (svgNamespace <> '') then
+  begin
+    // If the top-most SVG element has a namespace, then make sure it
+    // corresponds to the namespace associated with the xmlns value ...
+    // "http://www.w3.org/2000/svg"
+    for i := 0 to svgTree.GetAttribCount - 1 do
+    begin
+      Attr := svgTree.GetAttrib(i);
+      if (Attr.namespace = 'xmlns') and
+        (Attr.value = 'http://www.w3.org/2000/svg') then
+      begin
+        if svgNamespace <> Attr.name then Exit; //oops!
+        break;
+      end;
+    end;
+  end;
+
+  svgTree.ParseContent(c, endC);
 end;
 
 //------------------------------------------------------------------------------

@@ -2,8 +2,8 @@ unit Img32.Text;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.8                                                             *
-* Date      :  11 March 2025                                                   *
+* Version   :  4.9                                                             *
+* Date      :  14 August 2025                                                  *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  TrueType fonts for TImage32 (without Windows dependencies)      *
@@ -627,6 +627,52 @@ const
 
 //------------------------------------------------------------------------------
 // Miscellaneous functions
+//------------------------------------------------------------------------------
+
+function IsSurrogate(c: WideChar): Boolean;
+  {$IFDEF INLINE} inline; {$ENDIF}
+begin
+  Result := (c >= #$D800) and (c <= #$DFFF);
+end;
+//------------------------------------------------------------------------------
+
+function ConvertSurrogatePair(hiSurrogate, loSurrogate: Cardinal): Cardinal;
+  {$IFDEF INLINE} inline; {$ENDIF}
+begin
+  Result := ((hiSurrogate - $D800) shl 10) + (loSurrogate - $DC00) + $10000;
+end;
+//------------------------------------------------------------------------------
+
+procedure InternalCountFit(const text: UnicodeString;
+  const glyphOffsets: TArrayOfDouble; maxWidth: Double;
+  out charsThatFit: integer; out glyphsThatFit: integer);
+var
+  glyphCnt: integer;
+  hasSurrogates: Boolean;
+begin
+  // nb: glyphOffsets length will always be one more that the no. glyphs
+  // because the first value in the array will always be 0.
+  glyphCnt := High(glyphOffsets);
+  hasSurrogates := Length(text) > glyphCnt;
+  if hasSurrogates then
+  begin
+    charsThatFit := 0;
+    glyphsThatFit := 0;
+    while glyphsThatFit < glyphCnt do
+    begin
+      if glyphOffsets[glyphsThatFit +1] > maxWidth then Break;
+      inc(glyphsThatFit);
+      Inc(charsThatFit);
+      if IsSurrogate(text[charsThatFit]) then inc(charsThatFit);
+    end
+  end else
+  begin
+    glyphsThatFit := glyphCnt;
+    while (glyphsThatFit > 0) and (glyphOffsets[glyphsThatFit] > maxWidth) do
+      Dec(glyphsThatFit);
+    charsThatFit := glyphsThatFit;
+  end;
+end;
 //------------------------------------------------------------------------------
 
 // GetMeaningfulDateTime: returns UTC date & time
@@ -2416,20 +2462,6 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function IsSurrogate(c: WideChar): Boolean;
-  {$IFDEF INLINE} inline; {$ENDIF}
-begin
-  Result := (c >= #$D800) and (c <= #$DFFF);
-end;
-//------------------------------------------------------------------------------
-
-function ConvertSurrogatePair(hiSurrogate, loSurrogate: Cardinal): Cardinal;
-  {$IFDEF INLINE} inline; {$ENDIF}
-begin
-  Result := ((hiSurrogate - $D800) shl 10) + (loSurrogate - $DC00) + $10000;
-end;
-//------------------------------------------------------------------------------
-
 function TFontCache.GetTextCodePoints(const text: UnicodeString): TArrayOfCardinal;
 var
   i,j, len: integer;
@@ -2510,13 +2542,12 @@ function TFontCache.CountCharsThatFit(const text: UnicodeString;
   maxWidth: double): integer;
 var
   offsets: TArrayOfDouble;
+  dummy: integer;
 begin
   Result := 0;
   if not IsValidFont then Exit;
   offsets := GetGlyphOffsets(text);
-  Result := Length(offsets);
-  while offsets[Result - 1] > maxWidth do
-    Dec(Result);
+  InternalCountFit(text, offsets, maxWidth, Result, dummy);
 end;
 //------------------------------------------------------------------------------
 
@@ -3126,27 +3157,29 @@ function GetTextOutlineOnPath(const text: UnicodeString;
   x, y: double; charSpacing: double;
   out charsThatFit: integer; out outX: double): TPathsD;
 var
-  pathLen, pathLenMin1: integer;
+  pathSize, pathSizeMin1, glyphsThatFit: integer;
   cummDists: TArrayOfDouble; // cumulative distances
   i, currentPathIdx: integer;
   textWidth, glyphCenterX, glyphCenterOnPath, dist, dx: double;
   glyph: PGlyphInfo;
+  codePoints: TArrayOfCardinal;
   CharOffsets: TArrayOfDouble;
   unitVector: TPointD;
   tmpPaths: TPathsD;
 begin
   Result := nil;
-  pathLen := Length(path);
-  pathLenMin1 := pathLen -1;
+  pathSize := Length(path);
+  pathSizeMin1 := pathSize -1;
   charsThatFit := Length(text);
-  if (pathLen < 2) or (charsThatFit = 0) then Exit;
+  if (pathSize < 2) or (charsThatFit = 0) then Exit;
 
   CharOffsets := font.GetGlyphOffsets(text, charSpacing);
-  textWidth := CharOffsets[charsThatFit];
-  setLength(cummDists, pathLen +1);
+  textWidth := CharOffsets[High(CharOffsets)];
+
+  setLength(cummDists, pathSize +1);
   cummDists[0] := 0;
   dist := 0;
-  for i := 1 to pathLen - 1 do
+  for i := 1 to pathSize - 1 do
   begin
     dist := dist + Distance(path[i - 1], path[i]);
     cummDists[i] := dist;
@@ -3155,11 +3188,13 @@ begin
   // truncate text that doesn't fit ...
   if textWidth > dist then
   begin
-    Dec(charsThatFit);
-    while CharOffsets[charsThatFit] > dist do Dec(charsThatFit);
+    InternalCountFit(text, CharOffsets, dist, charsThatFit, glyphsThatFit);
     // if possible, break text at a SPACE char
     i := FindLastSpace(text, charsThatFit);
     if i > 0 then charsThatFit := i;
+  end else
+  begin
+    glyphsThatFit := charsThatFit;
   end;
 
   case textAlign of
@@ -3170,16 +3205,18 @@ begin
 
   Result := nil;
   currentPathIdx := 0;
-  for i := 1 to charsThatFit do
+  codePoints := font.GetTextCodePoints(text);
+
+  for i := 0 to glyphsThatFit -1 do
   begin
-    glyph :=  font.GetGlyphInfo(Ord(text[i]));
+    glyph :=  font.GetGlyphInfo(codePoints[i]);
     with glyph^ do
       glyphCenterX := (glyf.xMax - glyf.xMin) * font.Scale * 0.5;
     glyphCenterOnPath := x + glyphCenterX;
-    while (currentPathIdx < pathLenMin1) and
+    while (currentPathIdx < pathSizeMin1) and
       (cummDists[currentPathIdx +1] < glyphCenterOnPath) do
         inc(currentPathIdx);
-    if currentPathIdx = pathLenMin1 then
+    if currentPathIdx = pathSizeMin1 then
     begin
       charsThatFit := i; // nb 1 base vs 0 base :)
       Break;

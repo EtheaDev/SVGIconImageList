@@ -2,9 +2,9 @@ unit Clipper;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Date      :  7 May 2024                                                      *
+* Date      :  5 March 2025                                                    *
 * Website   :  https://www.angusj.com                                          *
-* Copyright :  Angus Johnson 2010-2024                                         *
+* Copyright :  Angus Johnson 2010-2025                                         *
 * Purpose   :  This module provides a simple interface to the Clipper Library  *
 * License   :  https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
@@ -144,8 +144,9 @@ function TrimCollinear(const p: TPath64;
 function TrimCollinear(const path: TPathD;
   precision: integer; isOpenPath: Boolean = false): TPathD; overload;
 
-function PointInPolygon(const pt: TPoint64; const polygon: TPath64):
-  TPointInPolygonResult;
+function PointInPolygon(const pt: TPoint64;
+  const polygon: TPath64): TPointInPolygonResult;
+function Path2ContainsPath1(const path1, path2: TPath64): Boolean; overload;
 
 function SimplifyPath(const path: TPath64;
   shapeTolerance: double; isClosedPath: Boolean = true): TPath64; overload;
@@ -186,10 +187,10 @@ var
 begin
   len := length(dbls) div 3;
   SetLength(Result, len);
-  for i := 0 to len -1 do
+  for i := 0 to len - 1 do
   begin
     Result[i].X := dbls[i * 3];
-    Result[i].Y := dbls[i * 3 +1];
+    Result[i].Y := dbls[i * 3 + 1];
     Result[i].Z := Round(dbls[i * 3 + 2]);
   end;
 end;
@@ -202,7 +203,7 @@ var
 begin
   len := length(ints) div 2;
   SetLength(Result, len);
-  for i := 0 to len -1 do
+  for i := 0 to len - 1 do
   begin
     Result[i].X := ints[i * 2];
     Result[i].Y := ints[i * 2 + 1];
@@ -408,7 +409,7 @@ begin
   invScale := 1 / scale;
   pp := ScalePaths(paths, scale, scale);
 
-  with TClipperOffset.Create(miterLimit, ArcTolerance) do
+  with TClipperOffset.Create(miterLimit, scale * ArcTolerance) do
   try
     AddPaths(pp, jt, et);
     Execute(delta * scale, pp); // reuse pp to receive the solution.
@@ -683,7 +684,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-procedure ShowPolyPathStructure64(pp: TPolyPath64; level: integer;
+procedure ShowPolyPathStructure64(pp: TPolyPath64; ppIdx, level: integer;
   strings: TStrings);
 var
   i: integer;
@@ -692,12 +693,14 @@ begin
   spaces := StringOfChar(' ', level * 2);
   if pp.Count = 1 then plural := '' else plural := 's';
   if pp.IsHole then
-    strings.Add(Format('%sA hole containing %d polygon%s', [spaces, pp.Count, plural]))
+    strings.Add(Format('%sHole (%d) containing %d polygon%s',
+      [spaces, ppIdx, pp.Count, plural]))
   else
-    strings.Add(Format('%sA polygon containing %d hole%s', [spaces, pp.Count, plural]));
+    strings.Add(Format('%sPolygon (%d) containing %d hole%s',
+      [spaces, ppIdx, pp.Count, plural]));
   for i := 0 to pp.Count -1 do
     if pp.child[i].Count> 0 then
-      ShowPolyPathStructure64(pp.child[i], level + 1, strings);
+      ShowPolyPathStructure64(pp.child[i], i, level + 1, strings);
 end;
 //------------------------------------------------------------------------------
 
@@ -710,7 +713,7 @@ begin
     strings.Add(Format('Polytree with just %d polygons.', [polytree.Count]));
   for i := 0 to polytree.Count -1 do
     if polytree[i].Count > 0 then
-      ShowPolyPathStructure64(polytree[i], 1, strings);
+      ShowPolyPathStructure64(polytree[i], i, 1, strings);
 end;
 //------------------------------------------------------------------------------
 
@@ -754,7 +757,7 @@ begin
   if not isOpenPath then
   begin
     while (i < len -1) and
-      IsCollinear(p[len -1], p[i], p[i + 1]) do inc(i);
+      IsCollinear(p[len -1], p[i], p[i+1]) do inc(i);
     while (i < len -1) and
       IsCollinear(p[len -2], p[len -1], p[i]) do dec(len);
   end;
@@ -766,12 +769,12 @@ begin
     Exit;
   end;
 
-  SetLength(Result, len - i);
+  SetLength(Result, len -i);
 
   Result[0] := p[i];
   j := 0;
-  for i := i + 1 to len -2 do
-    if not IsCollinear(result[j], p[i], p[i + 1]) then
+  for i := i+1 to len -2 do
+    if not IsCollinear(result[j], p[i], p[i+1]) then
     begin
       inc(j);
       result[j] := p[i];
@@ -782,17 +785,17 @@ begin
     inc(j);
     result[j] := p[len-1];
   end
-  else if not IsCollinear(result[j], p[len - 1], result[0]) then
+  else if not IsCollinear(result[j], p[len-1], result[0]) then
   begin
     inc(j);
-    result[j] := p[len - 1];
+    result[j] := p[len-1];
   end else
   begin
     while (j > 1) and
-      IsCollinear(result[j - 1], result[j], result[0]) do dec(j);
-    if j < 2 then j := - 1;
+      IsCollinear(result[j-1], result[j], result[0]) do dec(j);
+    if j < 2 then j := -1;
   end;
-  SetLength(Result, j + 1);
+  SetLength(Result, j +1);
 end;
 //------------------------------------------------------------------------------
 
@@ -813,6 +816,12 @@ function PointInPolygon(const pt: TPoint64;
   const polygon: TPath64): TPointInPolygonResult;
 begin
   Result := Clipper.Core.PointInPolygon(pt, polygon);
+end;
+//------------------------------------------------------------------------------
+
+function Path2ContainsPath1(const path1, path2: TPath64): Boolean;
+begin
+  Result := Clipper.Core.Path2ContainsPath1(path1, path2);
 end;
 //------------------------------------------------------------------------------
 
@@ -868,7 +877,7 @@ begin
   minHigh := Iif(isClosedPath, 2, 1);
   if highI < minHigh then Exit;
 
-  SetLength(srArray, highI +1);
+  SetLength(srArray, highI + 1);
   with srArray[0] do
   begin
     pt      := path[0];
@@ -887,7 +896,7 @@ begin
       PerpendicDistSqrd(path[highI], path[highI - 1], path[0]), invalidD);
   end;
 
-  for i := 1 to highI -1 do
+  for i := 1 to highI - 1 do
     with srArray[i] do
     begin
       pt      := path[i];
@@ -919,7 +928,7 @@ begin
   end;
   if highI < minHigh then Exit;
   if not isClosedPath then first := @srArray[0];
-  SetLength(Result, highI +1);
+  SetLength(Result, highI + 1);
   for i := 0 to HighI do
   begin
     Result[i] := first.pt;
@@ -935,7 +944,7 @@ var
 begin
   len := Length(paths);
   SetLength(Result, len);
-  for i := 0 to len -1 do
+  for i := 0 to len - 1 do
     result[i] := SimplifyPath(paths[i], shapeTolerance, isClosedPath);
 end;
 //------------------------------------------------------------------------------

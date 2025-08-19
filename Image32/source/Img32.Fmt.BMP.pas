@@ -2,8 +2,8 @@ unit Img32.Fmt.BMP;
 
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7                                                             *
-* Date      :  6 January 2025                                                  *
+* Version   :  4.9                                                             *
+* Date      :  9 August 2025                                                   *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  BMP file format extension for TImage32                          *
@@ -58,6 +58,7 @@ resourcestring
   s_cf_dib_error = 'TImage32 - clipboard CF_DIB format error';
 
 type
+
   PTriColor32 = ^TTriColor32;
   TTriColor32 = array [0..2] of TColor32;
   TArrayOfByte = array of Byte;
@@ -72,14 +73,14 @@ type
 
   TBitmapInfoHeader = packed record
     biSize: Cardinal;
-    biWidth: Longint;
-    biHeight: Longint;
+    biWidth: integer;
+    biHeight: integer;
     biPlanes: Word;
     biBitCount: Word;
     biCompression: Cardinal;
     biSizeImage: Cardinal;
-    biXPelsPerMeter: Longint;
-    biYPelsPerMeter: Longint;
+    biXPelsPerMeter: integer;
+    biYPelsPerMeter: integer;
     biClrUsed: Cardinal;
     biClrImportant: Cardinal;
   end;
@@ -94,9 +95,9 @@ type
   end;
 
   TCIEXYZ = record
-    ciexyzX: Longint;
-    ciexyzY: Longint;
-    ciexyzZ: Longint;
+    ciexyzX: integer;
+    ciexyzY: integer;
+    ciexyzZ: integer;
   end;
 
   TCIEXYZTriple = record
@@ -107,14 +108,14 @@ type
 
   TBitmapV4Header = packed record
     bV4Size: Cardinal;
-    bV4Width: Longint;
-    bV4Height: Longint;
+    bV4Width: integer;
+    bV4Height: integer;
     bV4Planes: Word;
     bV4BitCount: Word;
     bV4V4Compression: Cardinal;
     bV4SizeImage: Cardinal;
-    bV4XPelsPerMeter: Longint;
-    bV4YPelsPerMeter: Longint;
+    bV4XPelsPerMeter: integer;
+    bV4YPelsPerMeter: integer;
     bV4ClrUsed: Cardinal;
     bV4ClrImportant: Cardinal;
     bV4RedMask: Cardinal;

@@ -47,7 +47,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '4.4.6';
+  SVGIconImageListVersion = '4.4.7';
   DEFAULT_SIZE = 32;
   ZOOM_DEFAULT = 100;
   SVG_INHERIT_COLOR = TAlphaColors.Null;
@@ -263,11 +263,11 @@ procedure PaintToBitmap(const ABitmap: TBitmap; const ASVG: TFmxImageSVG;
   const AZoom: Integer = 100; const AKeepAspectRatio: Boolean = True);
 var
   LRect: TRectF;
-  LWidth, LHeight: Integer;
+  LWidth, LHeight: Single;
 begin
   LWidth := ABitmap.Canvas.Width;
   LHeight := ABitmap.Canvas.Height;
-  LRect := TRect.Create(0, 0, LWidth, LHeight);
+  LRect := TRectF.Create(0, 0, LWidth, LHeight);
   ASVG.PaintToBitmap(ABitmap, AZoom, AKeepAspectRatio);
 end;
 

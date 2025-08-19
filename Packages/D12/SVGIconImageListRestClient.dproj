@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{6b429884-4359-4314-9d3c-af318ff8d6c2}</ProjectGuid>
         <MainSource>SVGIconImageListRestClient.dpk</MainSource>
-        <ProjectVersion>20.3</ProjectVersion>
+        <ProjectVersion>20.2</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>

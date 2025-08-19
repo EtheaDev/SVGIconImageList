@@ -64,13 +64,11 @@ type
     procedure RegisterMessageClass(const AMessageClass: TClass);
 
     { Global instance }
-    class var FDefaultManager: TMessageManager;
     class function GetDefaultManager: TMessageManager; static;
     class function SearchListener(const ArrayToSearch: array of TListenerWithId; Id: Integer; AMinValue, AMaxValue: Integer): Integer;
   public
     constructor Create;
     destructor Destroy; override;
-    class destructor UnInitialize;
     function SubscribeToMessage(const AMessageClass: TClass; const AListener: TMessageListener): Integer; overload;
     function SubscribeToMessage(const AMessageClass: TClass; const AListenerMethod: TMessageListenerMethod): Integer; overload;
     procedure Unsubscribe(const AMessageClass: TClass; Id: Integer; Immediate: Boolean = False); overload;
@@ -84,6 +82,9 @@ type
 implementation
 
 uses System.Types, System.RTLConsts;
+
+var
+  FDefaultManager: TMessageManager;
 
 { TMessageManager }
 
@@ -105,11 +106,6 @@ begin
     FDefaultManager := TMessageManager.Create;
 
   Result := FDefaultManager;
-end;
-
-class destructor TMessageManager.UnInitialize;
-begin
-  FreeAndNil(FDefaultManager);
 end;
 
 procedure TMessageManager.RegisterMessageClass(const AMessageClass: TClass);
@@ -327,6 +323,12 @@ begin
   end;
   Count := N;
 end;
+
+initialization
+  FDefaultManager := nil;
+
+finalization
+  FDefaultManager.Free;
 
 end.
 

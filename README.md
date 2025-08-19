@@ -2,7 +2,7 @@
 
 ## Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 4.4.6 (VCL+FMX)
+### Actual official version 4.4.7 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -101,13 +101,18 @@ You can use [SVG Shell Extensions](https://github.com/EtheaDev/SVGShellExtension
 
 A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/IconFontsImageList](https://github.com/EtheaDev/IconFontsImageList)
 
-### Available from Delphi XE3 to Delphi 12 (VCL and FMX Platforms)
+### Available from Delphi XE3 to Delphi 13 (VCL and FMX Platforms)
 
-![Delphi 12 Support](./Demo/Images/SupportingDelphi.jpg)
+![Delphi 13 Support](./Demo/Images/SupportingDelphi.jpg)
 
 Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
 ### RELEASE NOTES
+18 Aug 2025 - version 4.4.7
+- Added support for Delphi 13 - 32 and 64 bit IDE
+- Aligned to Image32: ver. 4.9 to fix some bugs in TSvgReader
+- Updated Setup for Delphi 13
+
 7 Jul 2025 - Version 4.4.6
 - Aligned to Image32 4.6 Relesed on 6 Jul 2025
 - Fixed FMX Component Editor AV when empty
