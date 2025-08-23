@@ -32,7 +32,8 @@ Uses
   Img32.SVG.Core,    //because is the best engine available with SVGIconImageList.
   Img32.SVG.Reader,  //If you don't want to use it change SVGIconImageList.inc
   Img32.Text,        //Otherwise you must add this search path:
-  Img32.Vector;      //- SVGIconImageList\Image32\Source
+  Img32.Vector,      //- SVGIconImageList\Image32\Source
+  Img32.Transform;
 
 type
   TImage32SVG = class(TInterfacedObject, ISVG)
@@ -43,6 +44,7 @@ type
     FHeight: Single;
     FFixedColor: TColor;
     FApplyFixedColorToRootOnly: Boolean;
+    FApplyDrawFullPathsInCenter: Boolean;
     FGrayScale: Boolean;
     FOpacity: Single;
     FImage32: TImage32;
@@ -73,9 +75,18 @@ type
     {$IFDEF CheckForUnsupportedSvg}
     procedure CheckForUnsupportedSvg;
     {$ENDIF}
+    function GetApplyDrawFullPathsInCenter: Boolean;
+    procedure SetApplyDrawFullPathsInCenter(Value:Boolean);
+    function GetFlipHorizontal: Boolean;
+    procedure SetFlipHorizontal(Value:Boolean);
+    function GetFlipVertically: Boolean;
+    procedure SetFlipVertically(Value:Boolean);
   public
     constructor Create;
     destructor Destroy; override;
+
+    function GetPathBounds: TRectD;
+    function DrawFullPathsInCenter: Boolean;
   end;
 
   TImage32SVGFactory = class(TInterfacedObject, ISVGFactory)
@@ -107,6 +118,20 @@ begin
   inherited;
 end;
 
+function TImage32SVG.DrawFullPathsInCenter;
+var
+  LRect: TRectD;
+begin
+  Result := false;
+  LRect:= GetPathBounds;
+  if LRect.IsEmpty then
+    Exit;
+
+  if Assigned(fSvgReader) then begin
+    Result := Self.fSvgReader.DrawFullPathsInCenter;
+  end;
+end;
+
 procedure TImage32SVG.LoadFromFile(const FileName: string);
 Var
   FileStream: TFileStream;
@@ -119,6 +144,11 @@ begin
   end;
 end;
 
+function TImage32SVG.GetApplyDrawFullPathsInCenter: Boolean;
+begin
+  Result := FApplyDrawFullPathsInCenter;
+end;
+
 function TImage32SVG.GetApplyFixedColorToRootOnly: Boolean;
 begin
   Result := FApplyFixedColorToRootOnly;
@@ -127,6 +157,24 @@ end;
 function TImage32SVG.GetFixedColor: TColor;
 begin
   Result := FFixedColor;
+end;
+
+function TImage32SVG.GetFlipHorizontal: Boolean;
+begin
+  if Assigned(fSvgReader) then begin
+    Result := fSvgReader.FlipHorizontal;
+    Exit;
+  end;
+  Result := false;
+end;
+
+function TImage32SVG.GetFlipVertically: Boolean;
+begin
+  if Assigned(fSvgReader) then begin
+    Result := fSvgReader.FlipVertical;
+    Exit;
+  end;
+  Result := false;
 end;
 
 function TImage32SVG.GetGrayScale: Boolean;
@@ -142,6 +190,14 @@ end;
 function TImage32SVG.GetOpacity: Single;
 begin
   Result := FOpacity;
+end;
+
+function TImage32SVG.GetPathBounds: TRectD;
+begin
+  if Self.fSvgReader <> nil then
+    Result := Self.fSvgReader.GetPathBounds
+  else
+    Result := NullRectD;
 end;
 
 function TImage32SVG.GetSource: string;
@@ -222,6 +278,10 @@ begin
 
   //Draw SVG image to FImage32
   FsvgReader.DrawImage(FImage32, True);
+  if Self.FApplyDrawFullPathsInCenter then begin
+    if Self.DrawFullPathsInCenter then
+      FsvgReader.DrawImage(FImage32, True);
+  end;
 
   //assuming KeepAspectRatio = true, prepare to center
   dx := (R.Width - FImage32.Width) *0.5;
@@ -261,6 +321,20 @@ begin
   Stream.WriteBuffer(Buffer, Length(Buffer))
 end;
 
+procedure TImage32SVG.SetApplyDrawFullPathsInCenter(Value: Boolean);
+var
+  LSource: String;
+begin
+  if FApplyDrawFullPathsInCenter <> Value then begin
+    FApplyDrawFullPathsInCenter := Value;
+    if FApplyDrawFullPathsInCenter then
+      Self.DrawFullPathsInCenter
+    else begin
+      LoadFromSource;
+    end;
+  end;
+end;
+
 procedure TImage32SVG.SetApplyFixedColorToRootOnly(Value: Boolean);
 var
   Color: TColor;
@@ -290,6 +364,20 @@ begin
   else
     FFixedColor := Color;
   FGrayScale := False;
+end;
+
+procedure TImage32SVG.SetFlipHorizontal(Value: Boolean);
+begin
+  if Assigned(fSvgReader) then begin
+    fSvgReader.FlipHorizontal := Value;
+  end;
+end;
+
+procedure TImage32SVG.SetFlipVertically(Value: Boolean);
+begin
+  if Assigned(fSvgReader) then begin
+    fSvgReader.FlipVertical := Value;
+  end;
 end;
 
 procedure TImage32SVG.SetGrayScale(const IsGrayScale: Boolean);
