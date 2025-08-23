@@ -2,8 +2,8 @@ object SVGViewerForm: TSVGViewerForm
   Left = 0
   Top = 0
   Caption = 'SVG Preview & Engine Comparison'
-  ClientHeight = 600
-  ClientWidth = 800
+  ClientHeight = 785
+  ClientWidth = 1072
   Color = clWhite
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -18,14 +18,14 @@ object SVGViewerForm: TSVGViewerForm
     Left = 0
     Top = 0
     Width = 200
-    Height = 600
+    Height = 785
     Align = alLeft
     TabOrder = 0
     object ListBox: TListBox
       Left = 1
       Top = 42
       Width = 198
-      Height = 557
+      Height = 742
       Align = alClient
       ItemHeight = 13
       TabOrder = 0
@@ -60,26 +60,38 @@ object SVGViewerForm: TSVGViewerForm
     end
   end
   object RightPanel: TPanel
-    Left = 500
+    Left = 772
     Top = 0
     Width = 300
-    Height = 600
+    Height = 785
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 1
     inline FrameViewSkia: TFrameView
       Left = 0
-      Top = 300
+      Top = 433
       Width = 300
-      Height = 300
+      Height = 352
       Align = alClient
       TabOrder = 0
+      ExplicitTop = 300
+      ExplicitHeight = 485
+      inherited ClientPanel: TPanel
+        Height = 352
+        StyleElements = [seFont, seClient, seBorder]
+        ExplicitHeight = 485
+        inherited SVGPaintBox: TPaintBox
+          Height = 327
+          ExplicitTop = 88
+          ExplicitHeight = 396
+        end
+      end
     end
     object ControlPanel: TPanel
       Left = 0
       Top = 0
       Width = 300
-      Height = 300
+      Height = 433
       Align = alTop
       BevelOuter = bvNone
       Ctl3D = True
@@ -121,7 +133,7 @@ object SVGViewerForm: TSVGViewerForm
         Left = 3
         Top = 105
         Width = 294
-        Height = 57
+        Height = 88
         Align = alTop
         Caption = 'Aspect'
         TabOrder = 1
@@ -145,16 +157,47 @@ object SVGViewerForm: TSVGViewerForm
           TabOrder = 1
           OnClick = GrayScaleCheckBoxClick
         end
+        object ChkDrawFullPathsInCenter: TCheckBox
+          Left = 124
+          Top = 16
+          Width = 157
+          Height = 17
+          Hint = 'Delphi Image32 engine only currently.'
+          Caption = 'Draw FullPaths In Center'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 2
+          OnClick = ChkDrawFullPathsInCenterClick
+        end
+        object ChkFlipV: TCheckBox
+          Left = 196
+          Top = 34
+          Width = 99
+          Height = 17
+          Caption = 'Flip Vertically'
+          TabOrder = 3
+          OnClick = ChkFlipVClick
+        end
+        object ChkFlipH: TCheckBox
+          Left = 91
+          Top = 34
+          Width = 102
+          Height = 17
+          Caption = 'Flip Horizontal'
+          TabOrder = 4
+          OnClick = ChkFlipHClick
+        end
       end
       object OpacityGroupBox: TGroupBox
         AlignWithMargins = True
         Left = 3
-        Top = 168
+        Top = 199
         Width = 294
         Height = 57
         Align = alTop
         Caption = 'Opacity:'
         TabOrder = 2
+        ExplicitTop = 168
         object OpacityTrackBar: TTrackBar
           Left = 2
           Top = 16
@@ -193,31 +236,81 @@ object SVGViewerForm: TSVGViewerForm
         TabOrder = 3
         StyleElements = [seBorder]
       end
+      object MemoSVG: TMemo
+        Left = 0
+        Top = 259
+        Width = 300
+        Height = 174
+        Align = alClient
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 4
+      end
     end
   end
   object ClientPanel: TPanel
     Left = 200
     Top = 0
-    Width = 300
-    Height = 600
+    Width = 572
+    Height = 785
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 2
     inline FrameViewerD2D: TFrameView
       Left = 0
-      Top = 300
-      Width = 300
-      Height = 300
-      Align = alClient
+      Top = 464
+      Width = 572
+      Height = 321
+      Align = alBottom
       TabOrder = 0
+      ExplicitTop = 464
+      ExplicitWidth = 572
+      ExplicitHeight = 321
+      inherited ClientPanel: TPanel
+        Width = 572
+        Height = 321
+        StyleElements = [seFont, seClient, seBorder]
+        ExplicitWidth = 572
+        ExplicitHeight = 321
+        inherited SVGPaintBox: TPaintBox
+          Width = 570
+          Height = 296
+          ExplicitTop = 96
+          ExplicitWidth = 571
+          ExplicitHeight = 388
+        end
+        inherited TitlePanel: TPanel
+          Width = 570
+          ExplicitWidth = 570
+        end
+      end
     end
     inline FrameViewImage32: TFrameView
       Left = 0
       Top = 0
-      Width = 300
-      Height = 300
-      Align = alTop
+      Width = 572
+      Height = 464
+      Align = alClient
       TabOrder = 1
+      ExplicitWidth = 572
+      ExplicitHeight = 464
+      inherited ClientPanel: TPanel
+        Width = 572
+        Height = 464
+        StyleElements = [seFont, seClient, seBorder]
+        ExplicitWidth = 572
+        ExplicitHeight = 464
+        inherited SVGPaintBox: TPaintBox
+          Width = 570
+          Height = 439
+          ExplicitWidth = 614
+          ExplicitHeight = 271
+        end
+        inherited TitlePanel: TPanel
+          Width = 570
+          ExplicitWidth = 570
+        end
+      end
     end
   end
   object OpenDialog1: TOpenDialog
