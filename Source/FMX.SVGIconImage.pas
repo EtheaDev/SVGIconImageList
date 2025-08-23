@@ -118,6 +118,14 @@ type
     function GetGrayScale: Boolean;
     procedure SetSVGText(AValue: string);
     function GetSVGText: string;
+    function GetKeepAspectRatio: Boolean;
+    procedure SetKeepAspectRatio(const Value: Boolean);
+    procedure SetFlipHorizontal(const Value: Boolean);
+    procedure SetFlipVertical(const Value: Boolean);
+    function GetApplyDrawFullPathsInCenter: Boolean;
+    procedure SetApplyDrawFullPathsInCenter(const Value: Boolean);
+    function GetFlipHorizontal: Boolean;
+    function GetFlipVertical: Boolean;
   protected
     function CreateMultiResBitmap: TFixedMultiResBitmap; override;
   public
@@ -127,10 +135,21 @@ type
     procedure LoadFromFile(const AFileName: string);
     procedure SaveToFile(const AFileName: string);
     function GetFixedBitmap: TSVGIconFixedBitmapItem;
+
+    function GetPathBounds: TRectF;
+    function DrawFullPathsInCenter: Boolean;
+    procedure Assign(Source: TPersistent); override;
+
   published
     property BitmapZoom: Integer read FZoom write SetBitmapZoom default ZOOM_DEFAULT;
     property FixedColor: TAlphaColor read GetFixedColor write SetFixedColor default TAlphaColorRec.Null;
     property GrayScale: Boolean read GetGrayScale write SetGrayScale default False;
+
+    property KeepAspectRatio: Boolean read GetKeepAspectRatio write SetKeepAspectRatio default True;
+    property FlipHorizontal: Boolean read GetFlipHorizontal write SetFlipHorizontal;
+    property FlipVertical: Boolean read GetFlipVertical write SetFlipVertical;
+    property ApplyDrawFullPathsInCenter: Boolean read GetApplyDrawFullPathsInCenter write SetApplyDrawFullPathsInCenter;
+
     property SVGText: string read GetSVGText write SetSVGText;
   end;
 
@@ -242,7 +261,7 @@ begin
   LBitmapHeight := Round(FHeight * Scale);
   LBitmap.Width  := LBitmapWidth;
   LBitmap.Height := LBitmapHeight;
-  PaintToBitmap(LBitmap, FSVG, FZoom);
+  PaintToBitmap(LBitmap, FSVG, FZoom, FSVG.KeepAspectRatio);
   if Assigned(FOwnerCollection) then
     FOwnerCollection.OnDrawImage(Self);
 end;
@@ -305,6 +324,84 @@ end;
 
 { TSVGIconImage }
 
+procedure TSVGIconImage.Assign(Source: TPersistent);
+var
+  LSVG: TSVGIconImage;
+  LSVGBitmap: TSVGIconFixedBitmapItem;
+begin
+  if Source is TSVGIconImage then begin
+    LSVG := TSVGIconImage(Source);
+
+    MultiResBitmap.Assign(LSVG.MultiResBitmap);
+    Align:= LSVG.Align;
+    Anchors:= LSVG.Anchors;
+    BitmapMargins.Assign(LSVG.BitmapMargins);
+    ClipChildren := LSVG.ClipChildren;
+    ClipParent := LSVG.ClipParent;
+    Cursor := LSVG.Cursor;
+    DisableInterpolation := LSVG.DisableInterpolation;
+    DragMode := LSVG.DragMode;
+    EnableDragHighlight := LSVG.EnableDragHighlight;
+    Enabled := LSVG.Enabled;
+    Locked := LSVG.Locked;
+    Height := LSVG.Height;
+    Hint := LSVG.Hint;
+    HitTest := LSVG.HitTest;
+    Padding.Assign(LSVG.Padding);
+    MarginWrapMode := LSVG.MarginWrapMode;
+    Opacity := LSVG.Opacity;
+    Margins.Assign(LSVG.Margins);
+    if LSVG.PopupMenu <> nil then begin
+      if PopupMenu <> nil then
+        PopupMenu.Assign(LSVG.PopupMenu)
+      else
+        PopupMenu := LSVG.PopupMenu;
+    end else
+      PopupMenu := nil;
+
+    RotationAngle := LSVG.RotationAngle;
+    RotationCenter.Assign(LSVG.RotationCenter);
+    Scale := LSVG.Scale;
+    Size.Assign(LSVG.Size);
+    Visible := LSVG.Visible;
+    Width := LSVG.Width;
+    WrapMode := LSVG.WrapMode;
+    ParentShowHint := LSVG.ParentShowHint;
+    ShowHint := LSVG.ShowHint;
+
+    FZoom := LSVG.fZoom;
+    FSVGIconMultiResBitmap.Assign(LSVG.FSVGIconMultiResBitmap);
+
+    Self.SVGText := LSVG.SVGText;
+    LSVGBitmap := Self.GetFixedBitmap;
+
+    if LSVGBitmap <> nil then begin
+      var
+        LSourceFixedBitmap: TSVGIconFixedBitmapItem;
+      LSourceFixedBitmap := LSVG.GetFixedBitmap;
+      if Assigned(LSourceFixedBitmap) then begin
+        var
+          LSourceSVG: TFmxImageSVG;
+        LSourceSVG := LSourceFixedBitmap.SVG;
+
+        if Assigned(LSourceSVG) then begin
+          LSVGBitmap.SVG.LoadFromText(LSVG.GetFixedBitmap.SVG.Source);
+          LSVGBitmap.SVG.FixedColor := LSVG.GetFixedBitmap.SVG.FixedColor;
+          LSVGBitmap.SVG.ApplyFixedColorToRootOnly := LSVG.GetFixedBitmap.SVG.ApplyFixedColorToRootOnly;
+          LSVGBitmap.SVG.GrayScale := LSVG.GetFixedBitmap.SVG.GrayScale;
+          LSVGBitmap.SVG.Opacity := LSVG.GetFixedBitmap.SVG.Opacity;
+          LSVGBitmap.SVG.KeepAspectRatio := LSVG.GetFixedBitmap.SVG.KeepAspectRatio;
+          LSVGBitmap.SVG.FlipVertical := LSVG.GetFixedBitmap.SVG.FlipVertical;
+          LSVGBitmap.SVG.FlipHorizontal := LSVG.GetFixedBitmap.SVG.FlipHorizontal;
+          LSVGBitmap.SVG.ApplyDrawFullPathsInCenter := LSVG.GetFixedBitmap.SVG.ApplyDrawFullPathsInCenter;
+        end;
+
+        Self.Bitmap.Assign(LSVG.Bitmap);
+      end;
+    end;
+  end;
+end;
+
 constructor TSVGIconImage.Create(AOwner: TComponent);
 begin
   inherited;
@@ -322,12 +419,52 @@ begin
   LItem.DrawSVGIcon;
 end;
 
+procedure TSVGIconImage.SetFlipHorizontal(const Value: Boolean);
+var
+  LItem: TSVGIconFixedBitmapItem;
+begin
+  LItem := GetFixedBitmap;
+  LItem.SVG.FlipHorizontal := Value;
+  LItem.DrawSVGIcon;
+end;
+
+procedure TSVGIconImage.SetFlipVertical(const Value: Boolean);
+var
+  LItem: TSVGIconFixedBitmapItem;
+begin
+  LItem := GetFixedBitmap;
+  LItem.SVG.FlipVertical := Value;
+  LItem.DrawSVGIcon;
+end;
+
 function TSVGIconImage.GetFixedColor: TAlphaColor;
 var
   LItem: TSVGIconFixedBitmapItem;
 begin
   LItem := GetFixedBitmap;
   Result := LItem.SVG.FixedColor;
+end;
+
+function TSVGIconImage.GetFlipHorizontal: Boolean;
+var
+  LItem: TSVGIconFixedBitmapItem;
+begin
+  LItem := GetFixedBitmap;
+  if Assigned(LItem) then
+    Result := LItem.SVG.FlipHorizontal
+  else
+    Result := false;
+end;
+
+function TSVGIconImage.GetFlipVertical: Boolean;
+var
+  LItem: TSVGIconFixedBitmapItem;
+begin
+  LItem := GetFixedBitmap;
+  if Assigned(LItem) then
+    Result := LItem.SVG.FlipVertical
+  else
+    Result := false;
 end;
 
 procedure TSVGIconImage.SetGrayScale(AValue: Boolean);
@@ -345,6 +482,26 @@ var
 begin
   LItem := GetFixedBitmap;
   Result := LItem.SVG.GrayScale;
+end;
+
+function TSVGIconImage.GetKeepAspectRatio: Boolean;
+var
+  LItem: TSVGIconFixedBitmapItem;
+begin
+  LItem := GetFixedBitmap;
+  Result := LItem.SVG.KeepAspectRatio;
+end;
+
+function TSVGIconImage.GetPathBounds: TRectF;
+var
+  LItem: TSVGIconFixedBitmapItem;
+begin
+  Result := TRectF.Empty;
+  LItem := GetFixedBitmap;
+  if Assigned(LItem) and Assigned(LItem.SVG) then begin
+    LItem.DrawSVGIcon;
+    Result := LItem.SVG.GetPathBounds;
+  end;
 end;
 
 procedure TSVGIconImage.SetSVGText(AValue: string);
@@ -375,6 +532,19 @@ begin
   FSVGIconMultiResBitmap := nil;
 end;
 
+function TSVGIconImage.DrawFullPathsInCenter: Boolean;
+var
+  LItem: TSVGIconFixedBitmapItem;
+begin
+  LItem := GetFixedBitmap;
+  if Assigned(LItem) and Assigned(LItem.SVG) then begin
+    LItem.DrawSVGIcon; // Must call DrawSVGIcon before DrawFullPathsInCenter;
+    Result := LItem.SVG.DrawFullPathsInCenter;
+    Exit;
+  end;
+  Result := false;
+end;
+
 procedure TSVGIconImage.SetIconSize(const AWidth, AHeight: Single;
   const AZoom: Integer);
 begin
@@ -382,6 +552,25 @@ begin
   inherited height := AHeight;
   FZoom := AZoom;
   FSVGIconMultiResBitmap.UpdateImageSize(AWidth, AHeight, AZoom);
+end;
+
+procedure TSVGIconImage.SetKeepAspectRatio(const Value: Boolean);
+var
+  LItem: TSVGIconFixedBitmapItem;
+begin
+  LItem := GetFixedBitmap;
+  if LItem.SVG.KeepAspectRatio <> Value then begin
+    LItem.SVG.KeepAspectRatio := Value;
+    LItem.DrawSVGIcon;
+  end;
+end;
+
+function TSVGIconImage.GetApplyDrawFullPathsInCenter: Boolean;
+var
+  LItem: TSVGIconFixedBitmapItem;
+begin
+  LItem := GetFixedBitmap;
+  Result := LItem.SVG.ApplyDrawFullPathsInCenter;
 end;
 
 function TSVGIconImage.GetFixedBitmap: TSVGIconFixedBitmapItem;
@@ -412,6 +601,24 @@ procedure TSVGIconImage.SetBounds(X, Y, AWidth, AHeight: Single);
 begin
   inherited;
   SetIconSize(AWidth, AHeight, FZoom);
+end;
+
+procedure TSVGIconImage.SetApplyDrawFullPathsInCenter(const Value: Boolean);
+var
+  LItem: TSVGIconFixedBitmapItem;
+begin
+  LItem := GetFixedBitmap;
+  LItem.SVG.ApplyDrawFullPathsInCenter := Value;
+  if Value then begin
+    LItem.DrawSVGIcon;
+  end
+  else begin
+    var
+      LSVG := LItem.SVGText;
+    LItem.SVGText := '';
+    LItem.SVGText := LSVG;
+    LItem.DrawSVGIcon;
+  end;
 end;
 
 procedure TSVGIconImage.SetBitmapZoom(const AValue: Integer);
