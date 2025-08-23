@@ -31,7 +31,8 @@ Uses
   System.Math.Vectors,
   //Skia engine
   Vcl.Skia,
-  System.Skia;
+  System.Skia,
+  Img32;
 
 type
   { TSkSvgBrushEx }
@@ -61,8 +62,10 @@ type
     FHeight: Integer;
     FFixedColor: TColor;
     FApplyFixedColorToRootOnly: Boolean;
+    FApplyDrawFullPathsInCenter: Boolean;
     FGrayScale: Boolean;
     FOpacity: Single;
+    FFlipHorizontal, FFlipVertically: Boolean;
     // property access methods
     function GetWidth: Single;
     function GetHeight: Single;
@@ -89,9 +92,17 @@ type
     procedure CreateBuffer(const AWidth, AHeight: Integer;
       const AMemDC: HDC; out ABuffer: HBITMAP;
       out AData: Pointer; out AStride: Integer);
+    function GetApplyDrawFullPathsInCenter: Boolean;
+    procedure SetApplyDrawFullPathsInCenter(Value:Boolean);
+    function GetFlipHorizontal: Boolean;
+    procedure SetFlipHorizontal(Value:Boolean);
+    function GetFlipVertically: Boolean;
+    procedure SetFlipVertically(Value:Boolean);
   public
     constructor Create;
     destructor Destroy; override;
+    function GetPathBounds: TRectD;
+    function DrawFullPathsInCenter: Boolean;
   end;
 
   TSkiaSVGFactory = class(TInterfacedObject, ISVGFactory)
@@ -162,6 +173,11 @@ begin
   inherited;
 end;
 
+function TSkiaSVG.DrawFullPathsInCenter: Boolean;
+begin
+  Result := false; // Not implementation.
+end;
+
 procedure TSkiaSVG.CreateBuffer(
   const AWidth, AHeight: Integer;
   const AMemDC: HDC; out ABuffer: HBITMAP;
@@ -220,6 +236,11 @@ begin
   end;
 end;
 
+function TSkiaSVG.GetApplyDrawFullPathsInCenter: Boolean;
+begin
+  Result := FApplyDrawFullPathsInCenter;
+end;
+
 function TSkiaSVG.GetApplyFixedColorToRootOnly: Boolean;
 begin
   Result := FApplyFixedColorToRootOnly;
@@ -228,6 +249,16 @@ end;
 function TSkiaSVG.GetFixedColor: TColor;
 begin
   Result := FFixedColor;
+end;
+
+function TSkiaSVG.GetFlipHorizontal: Boolean;
+begin
+  Result := FFlipHorizontal;
+end;
+
+function TSkiaSVG.GetFlipVertically: Boolean;
+begin
+  Result := FFlipVertically;
 end;
 
 function TSkiaSVG.GetGrayScale: Boolean;
@@ -243,6 +274,14 @@ end;
 function TSkiaSVG.GetOpacity: Single;
 begin
   Result := FOpacity;
+end;
+
+function TSkiaSVG.GetPathBounds: TRectD;
+begin
+  Result.Left := 0;
+  Result.Top := 0;
+  Result.Right := 0;
+  Result.Bottom := 0;
 end;
 
 function TSkiaSVG.GetSource: string;
@@ -268,11 +307,11 @@ end;
 
 procedure TSkiaSVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
 const
-  BlendFunction: TBlendFunction = (BlendOp: AC_SRC_OVER; BlendFlags: 0; SourceConstantAlpha: 255; AlphaFormat: AC_SRC_ALPHA);
+  BlendFunction: Winapi.Windows.TBlendFunction = (BlendOp: AC_SRC_OVER; BlendFlags: 0; SourceConstantAlpha: 255; AlphaFormat: AC_SRC_ALPHA);
 var
   LOldObj: HGDIOBJ;
   LDrawBufferDC: HDC;
-  LBlendFunction: TBlendFunction;
+  LBlendFunction: Winapi.Windows.TBlendFunction;
   LScaleFactor: Single;
 
   function ColorToAlphaColor(Value: TColor): TAlphaColor;
@@ -292,9 +331,34 @@ var
   var
     LSurface: ISkSurface;
     LDestRect: TRectF;
+    FlipMatrix: TMatrix;
   begin
     LSurface := TSkSurface.MakeRasterDirect(TSkImageInfo.Create(FWidth, FHeight), FDrawBufferData, FDrawBufferStride);
     LSurface.Canvas.Clear(TAlphaColors.Null);
+
+    // Prepare scaling for flip
+    FlipMatrix := TMatrix.Identity;
+
+    if FFlipHorizontal then
+    begin
+      // flip around vertical axis through the center
+      FlipMatrix := FlipMatrix *
+                    TMatrix.CreateTranslation(-FWidth/2, 0) *
+                    TMatrix.CreateScaling(-1, 1) *
+                    TMatrix.CreateTranslation(FWidth/2, 0);
+    end;
+
+    if FFlipVertically then
+    begin
+      // flip around horizontal axis through the center
+      FlipMatrix := FlipMatrix *
+                    TMatrix.CreateTranslation(0, -FHeight/2) *
+                    TMatrix.CreateScaling(1, -1) *
+                    TMatrix.CreateTranslation(0, FHeight/2);
+    end;
+
+    LSurface.Canvas.Concat(FlipMatrix);
+
     LScaleFactor := 1;
     LSurface.Canvas.Concat(TMatrix.CreateScaling(LScaleFactor, LScaleFactor));
     LDestRect := RectF(0, 0, FWidth / LScaleFactor, FHeight / LScaleFactor);
@@ -383,6 +447,18 @@ begin
   Stream.WriteBuffer(Buffer, Length(Buffer))
 end;
 
+procedure TSkiaSVG.SetApplyDrawFullPathsInCenter(Value: Boolean);
+begin
+  if FApplyDrawFullPathsInCenter <> Value then begin
+    FApplyDrawFullPathsInCenter := Value;
+    if FApplyDrawFullPathsInCenter then
+      Self.DrawFullPathsInCenter
+    else begin
+      LoadFromSource;
+    end;
+  end;
+end;
+
 procedure TSkiaSVG.SetApplyFixedColorToRootOnly(Value: Boolean);
 var
   Color: TColor;
@@ -412,6 +488,22 @@ begin
   else
     FFixedColor := Color;
   FGrayScale := False;
+end;
+
+procedure TSkiaSVG.SetFlipHorizontal(Value: Boolean);
+begin
+  if FFlipHorizontal <> Value then begin
+    FFlipHorizontal := Value;
+    LoadFromSource;
+  end;
+end;
+
+procedure TSkiaSVG.SetFlipVertically(Value: Boolean);
+begin
+  if FFlipVertically <> Value then begin
+    FFlipVertically := Value;
+    LoadFromSource;
+  end;
 end;
 
 procedure TSkiaSVG.SetGrayScale(const IsGrayScale: Boolean);
