@@ -39,7 +39,8 @@ Uses
   , FMX.MultiResBitmap
   , FMX.Types
   , FMX.Graphics
-  , FMX.Objects;
+  , FMX.Objects
+  , img32;
 
 resourcestring
   SVG_ERROR_PARSING_SVG_TEXT = 'Error parsing SVG Text: %s';
@@ -53,6 +54,8 @@ type
     FApplyFixedColorToRootOnly: Boolean;
     FGrayScale: Boolean;
     FOpacity: Single;
+    FKeepAspectRatio: Boolean;
+    FApplyDrawFullPathsInCenter: Boolean;
     // property access methods
     function GetOpacity: Single;
     procedure SetOpacity(const Opacity: Single);
@@ -73,6 +76,10 @@ type
     //Abstract methods
     procedure LoadFromSource; virtual; abstract;
     procedure LoadFromStream(Stream: TStream); virtual; abstract;
+    function GetFlipHorizontal: Boolean; virtual; abstract;
+    function GetFlipVertical: Boolean; virtual; abstract;
+    procedure SetFlipHorizontal(const Value: Boolean); virtual; abstract;
+    procedure SetFlipVertical(const Value: Boolean); virtual; abstract;
   public
     //Abstract methods
     function IsEmpty: Boolean; virtual; abstract;
@@ -85,16 +92,32 @@ type
     procedure SaveToFile(const FileName: string);
     procedure LoadFromFile(const FileName: string);
     procedure LoadFromText(const ASVGText: string);
+
+    procedure Assign(Source: TPersistent); virtual;
+    function GetPathBounds: TRectF; virtual; abstract;
+    function DrawFullPathsInCenter: Boolean; virtual; abstract;
+
     property Opacity: Single read GetOpacity write SetOpacity;
     property FixedColor: TAlphaColor read GetFixedColor write SetFixedColor;
     property GrayScale: Boolean read GetGrayScale write SetGrayScale;
     property Source: string read GetSource;
     property ApplyFixedColorToRootOnly: Boolean read GetApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly;
+
+    property ApplyDrawFullPathsInCenter: Boolean read FApplyDrawFullPathsInCenter write FApplyDrawFullPathsInCenter;
+    property KeepAspectRatio: Boolean read FKeepAspectRatio write FKeepAspectRatio;
+    property FlipHorizontal: Boolean read GetFlipHorizontal write SetFlipHorizontal;
+    property FlipVertical: Boolean read GetFlipVertical write SetFlipVertical;
   end;
 
 implementation
 
 { TFmxImageSVG }
+procedure TFmxImageSVG.Assign(Source: TPersistent);
+begin
+  inherited;
+
+end;
+
 procedure TFmxImageSVG.Clear;
 Const
   EmptySvg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
@@ -107,6 +130,7 @@ begin
   inherited;
   FFixedColor := TAlphaColorRec.Null;
   FOpacity := 1.0;
+  FKeepAspectRatio := True;
 end;
 
 destructor TFmxImageSVG.Destroy;
