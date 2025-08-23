@@ -3,7 +3,7 @@ unit Img32.Draw;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.9                                                             *
-* Date      :  9 August 2025                                                   *
+* Date      :  23 August 2025                                                  *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
@@ -1690,7 +1690,8 @@ var
 begin
   // CopyBlend excludes ClipRect.Right/Bottom, so we also
   // need to exclude it.
-  if (y < fClipRect.Top) or (y >= fClipRect.Bottom) then Exit;
+  if (y < fClipRect.Top) or (y >= fClipRect.Bottom) or
+    (fClipRect.Right <= 0) or (fClipRect.Bottom <= 0) then Exit;
   if x2 >= fClipRect.Right then x2 := fClipRect.Right - 1;
 
   if x1 < fClipRect.Left then

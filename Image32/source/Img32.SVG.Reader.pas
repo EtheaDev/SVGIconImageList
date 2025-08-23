@@ -3,7 +3,7 @@ unit Img32.SVG.Reader;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.9                                                             *
-* Date      :  9 August 2025                                                   *
+* Date      :  23 August 2025                                                  *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
@@ -1326,7 +1326,8 @@ begin
       if clipEl.fDrawData.fillRule = frNegative then
         fr := frNonZero else
         fr := clipEl.fDrawData.fillRule;
-      EraseOutsidePaths(tmpImg, clipPaths, fr, clipRec, fSvgReader.fCustomRendererCache);
+      EraseOutsidePaths(tmpImg, clipPaths,
+        fr, clipRec, fSvgReader.fCustomRendererCache);
       image.CopyBlend(tmpImg, clipRec, dstClipRec, BlendToAlphaLine);
     finally
       tmpImg.Free;
