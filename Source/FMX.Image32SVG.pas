@@ -57,6 +57,10 @@ type
     //Abstract methods
     procedure LoadFromSource; override;
     procedure LoadFromStream(Stream: TStream); override;
+    function GetFlipHorizontal: Boolean; override;
+    function GetFlipVertical: Boolean; override;
+    procedure SetFlipHorizontal(const Value: Boolean); override;
+    procedure SetFlipVertical(const Value: Boolean); override;
   public
     //Abstract methods
     function IsEmpty: Boolean; override;
@@ -65,6 +69,9 @@ type
 
     constructor Create; override;
     destructor Destroy; override;
+
+    function GetPathBounds:TRectF; override;
+    function DrawFullPathsInCenter: Boolean; override;
   end;
 
 implementation
@@ -93,6 +100,47 @@ begin
   fSvgReader.Free;
   FImage32.Free;
   inherited;
+end;
+
+function TFmxImage32SVG.DrawFullPathsInCenter: Boolean;
+var
+  LRect: TRect;
+begin
+  Result := false;
+
+  if Assigned(fSvgReader) then
+    Result := fSvgReader.DrawFullPathsInCenter;
+end;
+
+function TFmxImage32SVG.GetFlipHorizontal: Boolean;
+begin
+  if Assigned(fSvgReader) then begin
+    Result := fSvgReader.FlipHorizontal;
+    Exit;
+  end;
+  Result := false;
+end;
+
+function TFmxImage32SVG.GetFlipVertical: Boolean;
+begin
+  if Assigned(fSvgReader) then begin
+    Result := fSvgReader.FlipVertical;
+    Exit;
+  end;
+  Result := false;
+end;
+
+function TFmxImage32SVG.GetPathBounds: TRectF;
+var
+  LRectD: TRectD;
+begin
+  if Assigned(fSvgReader) then begin
+    LRectD := fSvgReader.GetPathBounds;
+
+    Result := TRectF.Create(LRectD.Left, LRectD.Top, LRectD.Right, LRectD.Bottom);
+  end
+  else
+    Result := TRectF.Empty;
 end;
 
 function TFmxImage32SVG.IsEmpty: Boolean;
@@ -158,6 +206,11 @@ begin
   //Draw SVG image to FImage32
   FsvgReader.DrawImage(FImage32, True);
 
+  if ApplyDrawFullPathsInCenter then begin
+    if DrawFullPathsInCenter then
+      FsvgReader.DrawImage(FImage32, True);
+  end;
+
   //Apply GrayScale and FixedColor to Image32
   if GrayScale then
     FImage32.Grayscale
@@ -181,6 +234,18 @@ begin
   finally
     ABitmap.Unmap(LDest);
   end;
+end;
+
+procedure TFmxImage32SVG.SetFlipHorizontal(const Value: Boolean);
+begin
+  if Assigned(fSvgReader) then
+    fSvgReader.FlipHorizontal := Value;
+end;
+
+procedure TFmxImage32SVG.SetFlipVertical(const Value: Boolean);
+begin
+  if Assigned(fSvgReader) then
+    fSvgReader.FlipVertical := Value;
 end;
 
 initialization
