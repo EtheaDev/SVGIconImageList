@@ -103,8 +103,6 @@ begin
 end;
 
 function TFmxImage32SVG.DrawFullPathsInCenter: Boolean;
-var
-  LRect: TRect;
 begin
   Result := false;
 
