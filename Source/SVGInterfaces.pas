@@ -14,7 +14,8 @@ Uses
   System.Types,
   System.UITypes,
   System.SysUtils,
-  System.Classes;
+  System.Classes,
+  Img32;
 
 const
   SVG_INHERIT_COLOR = TColors.SysDefault;
@@ -37,6 +38,12 @@ type
     procedure SetFixedColor(const Color: TColor);
     function GetApplyFixedColorToRootOnly: Boolean;
     procedure SetApplyFixedColorToRootOnly(Value:Boolean);
+    function GetApplyDrawFullPathsInCenter: Boolean;
+    procedure SetApplyDrawFullPathsInCenter(Value:Boolean);
+    function GetFlipHorizontal: Boolean;
+    procedure SetFlipHorizontal(Value:Boolean);
+    function GetFlipVertically: Boolean;
+    procedure SetFlipVertically(Value:Boolean);
     function GetSource: string;
     procedure SetSource(const ASource: string);
     // procedures and functions
@@ -47,6 +54,9 @@ type
     procedure LoadFromStream(Stream: TStream);
     procedure LoadFromFile(const FileName: string);
     procedure PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean = True);
+    function GetPathBounds: TRectD;
+    function DrawFullPathsInCenter: Boolean;
+
     // properties
     property Width: Single read GetWidth;
     property Height: Single read GetHeight;
@@ -55,6 +65,10 @@ type
     property FixedColor: TColor read GetFixedColor write SetFixedColor;
     property ApplyFixedColorToRootOnly: Boolean read GetApplyFixedColorToRootOnly
       write SetApplyFixedColorToRootOnly;
+    property FlipHorizontal: Boolean read GetFlipHorizontal write SetFlipHorizontal;
+    property FlipVertically: Boolean read GetFlipVertically write SetFlipVertically;
+    property ApplyDrawFullPathsInCenter: Boolean read GetApplyDrawFullPathsInCenter
+      write SetApplyDrawFullPathsInCenter;
     property Source: string read GetSource write SetSource;
   end;
 
