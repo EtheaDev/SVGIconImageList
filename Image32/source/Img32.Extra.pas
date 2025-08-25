@@ -3,11 +3,11 @@ unit Img32.Extra;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.9                                                             *
-* Date      :  9 August 2025                                                   *
+* Date      :  23 August 2025                                                  *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  Miscellaneous routines that don't belong in other modules.      *
-* License   :  https://www.boost.org/LICENSE_1_0.txt                            *
+* License   :  https://www.boost.org/LICENSE_1_0.txt                           *
 *******************************************************************************)
 
 interface
@@ -1141,7 +1141,10 @@ var
 begin
   if not assigned(paths) then Exit;
   RectWidthHeight(outsideBounds, w, h);
-  if (w <= 0) or (h <= 0)  then Exit;
+
+  if (w <= 0) or (h <= 0) or
+    (outsideBounds.Left >= img.Width) or (outsideBounds.Right <= 0) or
+    (outsideBounds.Top >= img.Height) or (outsideBounds.Bottom <= 0) then Exit;
 
   // We can skip the costly polygon rasterization if the path is
   // a rectangle.
