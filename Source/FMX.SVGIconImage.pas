@@ -326,77 +326,75 @@ end;
 
 procedure TSVGIconImage.Assign(Source: TPersistent);
 var
-  LSVG: TSVGIconImage;
-  LSVGBitmap: TSVGIconFixedBitmapItem;
+  LSrcSVGImg: TSVGIconImage;
+  LFixedBitmap: TSVGIconFixedBitmapItem;
 begin
   if Source is TSVGIconImage then begin
-    LSVG := TSVGIconImage(Source);
-
-    MultiResBitmap.Assign(LSVG.MultiResBitmap);
-    Align:= LSVG.Align;
-    Anchors:= LSVG.Anchors;
-    BitmapMargins.Assign(LSVG.BitmapMargins);
-    ClipChildren := LSVG.ClipChildren;
-    ClipParent := LSVG.ClipParent;
-    Cursor := LSVG.Cursor;
-    DisableInterpolation := LSVG.DisableInterpolation;
-    DragMode := LSVG.DragMode;
-    EnableDragHighlight := LSVG.EnableDragHighlight;
-    Enabled := LSVG.Enabled;
-    Locked := LSVG.Locked;
-    Height := LSVG.Height;
-    Hint := LSVG.Hint;
-    HitTest := LSVG.HitTest;
-    Padding.Assign(LSVG.Padding);
-    MarginWrapMode := LSVG.MarginWrapMode;
-    Opacity := LSVG.Opacity;
-    Margins.Assign(LSVG.Margins);
-    if LSVG.PopupMenu <> nil then begin
+    LSrcSVGImg := TSVGIconImage(Source);
+    Align:= LSrcSVGImg.Align;
+    SetBounds(Self.Position.X, Self.Position.Y, LSrcSVGImg.Width, LSrcSVGImg.Height); // Must call this avoid image stretch problem.
+    Anchors:= LSrcSVGImg.Anchors;
+    BitmapMargins.Assign(LSrcSVGImg.BitmapMargins);
+    ClipChildren := LSrcSVGImg.ClipChildren;
+    ClipParent := LSrcSVGImg.ClipParent;
+    Cursor := LSrcSVGImg.Cursor;
+    DisableInterpolation := LSrcSVGImg.DisableInterpolation;
+    DragMode := LSrcSVGImg.DragMode;
+    EnableDragHighlight := LSrcSVGImg.EnableDragHighlight;
+    Enabled := LSrcSVGImg.Enabled;
+    Locked := LSrcSVGImg.Locked;
+    Hint := LSrcSVGImg.Hint;
+    HitTest := LSrcSVGImg.HitTest;
+    Padding.Assign(LSrcSVGImg.Padding);
+    MarginWrapMode := LSrcSVGImg.MarginWrapMode;
+    Opacity := LSrcSVGImg.Opacity;
+    Margins.Assign(LSrcSVGImg.Margins);
+    if LSrcSVGImg.PopupMenu <> nil then begin
       if PopupMenu <> nil then
-        PopupMenu.Assign(LSVG.PopupMenu)
+        PopupMenu.Assign(LSrcSVGImg.PopupMenu)
       else
-        PopupMenu := LSVG.PopupMenu;
+        PopupMenu := LSrcSVGImg.PopupMenu;
     end else
       PopupMenu := nil;
 
-    RotationAngle := LSVG.RotationAngle;
-    RotationCenter.Assign(LSVG.RotationCenter);
-    Scale := LSVG.Scale;
-    Size.Assign(LSVG.Size);
-    Visible := LSVG.Visible;
-    Width := LSVG.Width;
-    WrapMode := LSVG.WrapMode;
-    ParentShowHint := LSVG.ParentShowHint;
-    ShowHint := LSVG.ShowHint;
+    RotationAngle := LSrcSVGImg.RotationAngle;
+    RotationCenter.Assign(LSrcSVGImg.RotationCenter);
+    Scale := LSrcSVGImg.Scale;
+    Size.Assign(LSrcSVGImg.Size);
+    Visible := LSrcSVGImg.Visible;
+    WrapMode := LSrcSVGImg.WrapMode;
+    ParentShowHint := LSrcSVGImg.ParentShowHint;
+    ShowHint := LSrcSVGImg.ShowHint;
 
-    FZoom := LSVG.fZoom;
-    FSVGIconMultiResBitmap.Assign(LSVG.FSVGIconMultiResBitmap);
+    FZoom := LSrcSVGImg.fZoom;
 
-    Self.SVGText := LSVG.SVGText;
-    LSVGBitmap := Self.GetFixedBitmap;
-
-    if LSVGBitmap <> nil then begin
+    Self.SVGText := LSrcSVGImg.SVGText;
+    LFixedBitmap := Self.GetFixedBitmap;
+    if LFixedBitmap <> nil then begin
       var
-        LSourceFixedBitmap: TSVGIconFixedBitmapItem;
-      LSourceFixedBitmap := LSVG.GetFixedBitmap;
-      if Assigned(LSourceFixedBitmap) then begin
+        LSrcFixedBitmap: TSVGIconFixedBitmapItem;
+      LSrcFixedBitmap := LSrcSVGImg.GetFixedBitmap;
+      if Assigned(LSrcFixedBitmap) then begin
+        LFixedBitmap.Assign(LSrcFixedBitmap);
         var
-          LSourceSVG: TFmxImageSVG;
-        LSourceSVG := LSourceFixedBitmap.SVG;
+          LSVG, LSrcSVG: TFmxImageSVG;
+        LSrcSVG := LSrcFixedBitmap.SVG;
+        LSVG := LFixedBitmap.SVG;
+        if Assigned(LSVG) and Assigned(LSrcSVG) then begin
+          LSVG.FixedColor := LSrcSVG.FixedColor;
+          LSVG.ApplyFixedColorToRootOnly := LSrcSVG.ApplyFixedColorToRootOnly;
+          LSVG.GrayScale := LSrcSVG.GrayScale;
+          LSVG.Opacity := LSrcSVG.Opacity;
+          LSVG.KeepAspectRatio := LSrcSVG.KeepAspectRatio;
+          LSVG.FlipVertical := LSrcSVG.FlipVertical;
+          LSVG.FlipHorizontal := LSrcSVG.FlipHorizontal;
+          LSVG.ApplyDrawFullPathsInCenter := LSrcSVG.ApplyDrawFullPathsInCenter;
+          var
+            LSource: String;
 
-        if Assigned(LSourceSVG) then begin
-          LSVGBitmap.SVG.LoadFromText(LSVG.GetFixedBitmap.SVG.Source);
-          LSVGBitmap.SVG.FixedColor := LSVG.GetFixedBitmap.SVG.FixedColor;
-          LSVGBitmap.SVG.ApplyFixedColorToRootOnly := LSVG.GetFixedBitmap.SVG.ApplyFixedColorToRootOnly;
-          LSVGBitmap.SVG.GrayScale := LSVG.GetFixedBitmap.SVG.GrayScale;
-          LSVGBitmap.SVG.Opacity := LSVG.GetFixedBitmap.SVG.Opacity;
-          LSVGBitmap.SVG.KeepAspectRatio := LSVG.GetFixedBitmap.SVG.KeepAspectRatio;
-          LSVGBitmap.SVG.FlipVertical := LSVG.GetFixedBitmap.SVG.FlipVertical;
-          LSVGBitmap.SVG.FlipHorizontal := LSVG.GetFixedBitmap.SVG.FlipHorizontal;
-          LSVGBitmap.SVG.ApplyDrawFullPathsInCenter := LSVG.GetFixedBitmap.SVG.ApplyDrawFullPathsInCenter;
+          LSVG.LoadFromText(LSrcSVG.Source);
         end;
 
-        Self.Bitmap.Assign(LSVG.Bitmap);
       end;
     end;
   end;
