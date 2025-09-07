@@ -2980,8 +2980,8 @@ end;
 
 procedure TValue.SetValue(val: double; unitTyp: TUnitType);
 begin
-  rawVal  := val;
-  unitType      := unitTyp;
+  rawVal := val;
+  unitType := unitTyp;
 end;
 //------------------------------------------------------------------------------
 
