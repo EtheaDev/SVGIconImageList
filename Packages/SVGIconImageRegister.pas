@@ -264,7 +264,7 @@ begin
   Result := '';
   case Index of
     0: Result := 'SVG I&con ImageList Editor...';
-    1: Result := Format('Ver. %s - (c) Ethea S.r.l. - show help...',[SVGIconImageListVersion]);
+    1: Result := Format('Ver. %s - © Ethea S.r.l. - Open Web Help...',[SVGIconImageListVersion]);
   end;
 end;
 

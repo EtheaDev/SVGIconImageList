@@ -2,7 +2,7 @@
 
 ## Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 4.4.8 (VCL+FMX)
+### Actual official version 4.5.1 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -108,6 +108,12 @@ A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/Ico
 Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
 ### RELEASE NOTES
+17 Oct 2025 - version 4.5.1
+- Aligned to Image32 ver.4.9 of 28 September
+
+07 Sep 2025 - version 4.5.0
+- Aligned to Image32 ver.4.9 to fix some bugs
+
 23 Aug 2025 - version 4.4.8
 - Aligned to Image32 ver.4.9 to fix a serious bug
 

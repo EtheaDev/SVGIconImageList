@@ -2878,7 +2878,7 @@ begin
   begin
     // to get here the unicode char is not supported by fFontReader
     altFontReader :=
-      aFontManager.FindReaderContainingGlyph(codepoint, tfUnknown, glyphIdx);
+      fFontReader.fFontManager.FindReaderContainingGlyph(codepoint, tfUnknown, glyphIdx);
     if Assigned(altFontReader) then
     begin
       altFontReader.GetGlyphInfo(codepoint, dummy, Result^);

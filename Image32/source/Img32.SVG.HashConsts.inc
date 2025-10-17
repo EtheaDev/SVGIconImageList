@@ -56,6 +56,7 @@ const
   hFill_045_Opacity           = $18000C02;    // Fill-Opacity
   hFill_045_Rule              = $5264679F;    // Fill-Rule
   hFilter                     = $49DC73B3;    // Filter
+  hFilterUnits                = $CBA51B65;    // FilterUnits
   hflood_045_color            = $4E87F3B3;    // flood-color
   hflood_045_opacity          = $691CCD42;    // flood-opacity
   hFlowRegion                 = $822E901A;    // FlowRegion

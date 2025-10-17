@@ -2739,8 +2739,8 @@ begin
   // when using an alterate background image,
   // make sure it's the same size as img ...
   if Assigned(bkgndImg) and
-    (bkgndImg.Width <> img.Width) or
-    (bkgndImg.Height <> img.Height) then bkgndImg := nil;
+    ((bkgndImg.Width <> img.Width) or
+    (bkgndImg.Height <> img.Height)) then bkgndImg := nil;
 
   if not assigned(line) or img.IsEmpty then exit;
 

@@ -1,7 +1,8 @@
 unit MakeSVGHashConsts;
 
-//include this unit in a sample application and execute it once
-//to update any new hashes for the Image32_SVG_Reader unit.
+// Include this unit in a sample application and execute it once only
+// to generate hashes for the relevant inc files (and don't forget to
+// copy the new .inc file into the library's source folder).
 
 
 interface
@@ -403,6 +404,7 @@ begin
       AddName('Fill-Rule');
       AddName('Fill');
       AddName('Filter');
+      AddName('FilterUnits');
       AddName('FlowRegion');
       AddName('FlowRoot');
       AddName('Font-Family');
