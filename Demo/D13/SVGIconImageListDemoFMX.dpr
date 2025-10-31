@@ -32,10 +32,12 @@ uses
   FMX.Forms,
   {$IFDEF MSWINDOWS}
   FMX.SVGIconImageListEditorUnit in '..\..\Packages\FMX.SVGIconImageListEditorUnit.pas' {SVGIconImageListEditorFMX},
-  {$ENDIF }
-  UMainFMX in '..\Source\UMainFMX.pas' {SVGIconImageListForm},
+  FMX.Design.Utils in '..\..\Packages\FMX.Design.Utils.pas',
+  FMX.SVGRESTClientFormUnit in '..\..\Packages\FMX.SVGRESTClientFormUnit.pas' {SVGRESTClientSearchForm},
   Browser.IconifyApi in '..\Source\Browser.IconifyApi.pas',
-  FMX.SVGRESTClientFormUnit in '..\..\Packages\FMX.SVGRESTClientFormUnit.pas' {SVGRESTClientSearchForm};
+  FMX.SVGTextPropertyEditorUnit in '..\..\Packages\FMX.SVGTextPropertyEditorUnit.pas' {SVGTextPropertyEditorFormFMX},
+  {$ENDIF }
+  UMainFMX in '..\Source\UMainFMX.pas' {SVGIconImageListForm};
 
 {$R *.res}
 

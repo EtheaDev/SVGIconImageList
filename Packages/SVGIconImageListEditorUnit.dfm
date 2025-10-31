@@ -589,27 +589,56 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
       object IconPanel: TPanel
         Left = 7
         Top = 65
-        Width = 124
+        Width = 100
         Height = 124
         BevelOuter = bvNone
         BorderWidth = 2
-        BorderStyle = bsSingle
-        Color = clWindow
         Ctl3D = False
+        ParentBackground = False
         ParentCtl3D = False
         TabOrder = 6
-        object IconImage: TSVGIconImage
-          AlignWithMargins = True
+        object IconBackgroundPanel: TPanel
           Left = 2
           Top = 2
-          Width = 118
-          Height = 118
-          Margins.Left = 0
-          Margins.Top = 0
-          Margins.Right = 0
-          Margins.Bottom = 0
-          AutoSize = False
+          Width = 96
+          Height = 96
           Align = alClient
+          BevelOuter = bvNone
+          BorderWidth = 2
+          BorderStyle = bsSingle
+          Color = clWindow
+          Ctl3D = False
+          ParentCtl3D = False
+          TabOrder = 1
+          StyleElements = [seFont, seBorder]
+          ExplicitTop = 3
+          object IconImage: TSVGIconImage
+            AlignWithMargins = True
+            Left = 2
+            Top = 2
+            Width = 90
+            Height = 90
+            Margins.Left = 0
+            Margins.Top = 0
+            Margins.Right = 0
+            Margins.Bottom = 0
+            AutoSize = False
+            Align = alClient
+          end
+        end
+        object BackgroundTrackBar: TTrackBar
+          Left = 2
+          Top = 98
+          Width = 96
+          Height = 24
+          Align = alBottom
+          Max = 255
+          Frequency = 8
+          Position = 128
+          PositionToolTip = ptBottom
+          TabOrder = 0
+          OnTracking = BackgroundTrackBarTracking
+          ExplicitLeft = 4
         end
       end
       object NameEdit: TEdit
@@ -621,9 +650,9 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
         OnExit = NameEditExit
       end
       object SVGText: TMemo
-        Left = 136
+        Left = 113
         Top = 65
-        Width = 437
+        Width = 460
         Height = 124
         Hint = 'SVG Text content'
         Anchors = [akLeft, akTop, akRight, akBottom]

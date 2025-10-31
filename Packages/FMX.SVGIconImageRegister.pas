@@ -214,6 +214,8 @@ begin
   ]);
   RegisterComponentEditor(TSVGIconImageList, TSVGIconImageListCompEditorFMX);
   RegisterComponentEditor(TSVGIconImage, TSVGIconImageCompEditorFMX);
+
+  ForceDemandLoadState(dlDisable);
 end;
 
 end.

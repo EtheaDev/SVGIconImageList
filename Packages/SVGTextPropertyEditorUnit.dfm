@@ -39,68 +39,92 @@ object SVGTextPropertyEditorForm: TSVGTextPropertyEditorForm
     BevelOuter = bvNone
     TabOrder = 1
     object paButtons: TPanel
-      Left = 223
+      Left = 146
       Top = 0
-      Width = 516
+      Width = 593
       Height = 33
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 0
       object CancelButton: TButton
-        Left = 356
+        AlignWithMargins = True
+        Left = 432
         Top = 3
         Width = 75
-        Height = 25
+        Height = 27
+        Align = alLeft
         Cancel = True
         Caption = '&Cancel'
         ModalResult = 2
         TabOrder = 4
       end
       object OKButton: TButton
-        Left = 275
+        AlignWithMargins = True
+        Left = 351
         Top = 3
         Width = 75
-        Height = 25
+        Height = 27
+        Margins.Left = 10
+        Align = alLeft
         Caption = '&OK'
         Default = True
         ModalResult = 1
         TabOrder = 3
       end
       object HelpButton: TButton
-        Left = 438
+        AlignWithMargins = True
+        Left = 513
         Top = 3
         Width = 74
-        Height = 25
+        Height = 27
+        Align = alLeft
         Caption = '&Help'
         TabOrder = 5
         OnClick = HelpButtonClick
       end
       object LoadButton: TButton
-        Left = 5
+        AlignWithMargins = True
+        Left = 3
         Top = 3
         Width = 74
-        Height = 25
-        Caption = '&Load...'
+        Height = 27
+        Align = alLeft
+        Caption = '&Load file...'
         TabOrder = 0
         OnClick = LoadButtonClick
       end
       object SaveButton: TButton
-        Left = 85
+        AlignWithMargins = True
+        Left = 163
         Top = 3
         Width = 74
-        Height = 25
+        Height = 27
+        Align = alLeft
         Caption = '&Save...'
         TabOrder = 1
         OnClick = SaveButtonClick
       end
       object ReformatXMLButton: TButton
-        Left = 164
+        AlignWithMargins = True
+        Left = 243
         Top = 3
         Width = 95
-        Height = 25
+        Height = 27
+        Align = alLeft
         Caption = 'Reformat &XML'
         TabOrder = 2
         OnClick = ReformatXMLButtonClick
+      end
+      object LoadWebButton: TButton
+        AlignWithMargins = True
+        Left = 83
+        Top = 3
+        Width = 74
+        Height = 27
+        Align = alLeft
+        Caption = '&Load WEB...'
+        TabOrder = 6
+        OnClick = LoadWebButtonClick
       end
     end
   end

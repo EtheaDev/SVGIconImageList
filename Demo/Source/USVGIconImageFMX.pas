@@ -80,7 +80,7 @@ begin
   ;
 end;
 
-initialization
-  ReportMemoryLeaksOnShutdown := True;
+//initialization
+//  ReportMemoryLeaksOnShutdown := True;
 
 end.

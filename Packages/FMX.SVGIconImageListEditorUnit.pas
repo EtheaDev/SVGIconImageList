@@ -35,11 +35,11 @@ uses
   System.Actions, System.ImageList, System.UIConsts, FMX.Forms, FMX.Graphics, FMX.ActnList, FMX.StdCtrls, FMX.Colors, FMX.ListBox,
   FMX.Controls.Presentation, FMX.ImgList, FMX.Types, FMX.Layouts,
   FMX.SVGIconImageList, FMX.Edit, FMX.EditBox, FMX.SpinBox,
-  FMX.ScrollBox, FMX.Memo, FMX.Dialogs, FMX.Memo.Types, FMX.ComboEdit;
+  FMX.ScrollBox, FMX.Memo, FMX.Dialogs, FMX.Memo.Types, FMX.ComboEdit,
+  FMX.Objects, FMX.Design.Utils;
 
 type
   TSVGIconImageListEditorFMX = class(TForm)
-    ListBoxItemStyleBook: TStyleBook;
     OpenDialog: TOpenDialog;
     BottomPanel: TPanel;
     OKButton: TButton;
@@ -90,6 +90,8 @@ type
     IconControlsPanel: TPanel;
     ApplyToRootOnlyItemCheckBox: TCheckBox;
     AddWebButton: TButton;
+    BackgroundTrackBar: TTrackBar;
+    IconBackGround: TRectangle;
     procedure ClearAllButtonClick(Sender: TObject);
     procedure DeleteButtonClick(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
@@ -124,11 +126,13 @@ type
     procedure FixedColorItemComboColorBoxChange(Sender: TObject);
     procedure FixedColorItemEditChange(Sender: TObject);
     procedure AddWebButtonClick(Sender: TObject);
+    procedure BackgroundTrackBarTracking(Sender: TObject);
   private
     FIconIndexLabel: string;
     FTotIconsLabel: string;
     FUpdating: Boolean;
     FEditingList: TSVGIconImageList;
+    procedure UpdateIconBackgroundColour;
     procedure AddNewItem;
     procedure DeleteSelectedItem;
     procedure ClearAllImages;
@@ -137,6 +141,7 @@ type
     procedure SetImageIconName(IconName: String);
     function SelectedSVGIcon: TSVGIconSourceItem;
     function GetClearAlphaColorString(AColor: TAlphaColor): string;
+  protected
   public
     destructor Destroy; override;
   end;
@@ -163,6 +168,7 @@ uses
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
   ItemPanelHeight: Single;
+  TrackaBarPosition: Single;
 
 function UpdateSVGIconListViewCaptions(const AListBox: TListBox;
   const AShowCaption: Boolean = True): Integer;
@@ -208,7 +214,6 @@ begin
         ZoomSpinBox.Value := FEditingList.Zoom;
         ImageView.Images := FEditingList;
         UpdateSVGIconListView(ImageView);
-        //UpdateGUI;
         if ImageView.Items.Count > 0 then
           ImageView.ItemIndex := 0;
 
@@ -227,6 +232,7 @@ begin
       end;
       SavedBounds := Bounds;
       ItemPanelHeight := ItemPanel.Height;
+      TrackaBarPosition := BackgroundTrackBar.Value;
     finally
       Free;
     end;
@@ -260,6 +266,11 @@ procedure TSVGIconImageListEditorFMX.SVGTextExit(Sender: TObject);
 begin
   SelectedSVGIcon.SVGText := SVGText.Lines.Text;
   UpdateGUI;
+end;
+
+procedure TSVGIconImageListEditorFMX.BackgroundTrackBarTracking(Sender: TObject);
+begin
+  UpdateIconBackgroundColour;
 end;
 
 procedure TSVGIconImageListEditorFMX.AutoSizeCheckBoxClick(Sender: TObject);
@@ -338,6 +349,14 @@ begin
   finally
     FUpdating := False;
   end;
+end;
+
+procedure TSVGIconImageListEditorFMX.UpdateIconBackgroundColour;
+var
+  LGrayValue: Byte;
+begin
+  LGrayValue := Round(BackgroundTrackBar.Value);
+  IconBackGround.Fill.Color := MakeColor(LGrayValue, LGrayValue, LGrayValue);
 end;
 
 procedure TSVGIconImageListEditorFMX.ZoomChange(Sender: TObject);
@@ -569,6 +588,7 @@ end;
 
 procedure TSVGIconImageListEditorFMX.FormCreate(Sender: TObject);
 begin
+  UpdateFormStyleFromIDE(Self);
   Caption := Format(Caption, [SVGIconImageListVersion]);
   {$IFDEF D11+}
   Constraints.MinHeight := 500;
@@ -580,6 +600,7 @@ begin
   FTotIconsLabel := IconsGroupBox.Text;
   IconImage.Images := FEditingList;
   BottomSplitter.Position.X := 1;
+  UpdateIconBackgroundColour;
 end;
 
 procedure TSVGIconImageListEditorFMX.FormDestroy(Sender: TObject);
@@ -643,6 +664,11 @@ begin
   if ItemPanelHeight <> 0 then
     ItemPanel.Height := ItemPanelHeight;
 
+  if TrackaBarPosition <> -1 then
+    BackgroundTrackBar.Value := TrackaBarPosition
+  else
+    BackgroundTrackBar.Value := 128;
+
   if ImageView.CanFocus then
     ImageView.SetFocus;
 end;
@@ -698,5 +724,6 @@ end;
 
 initialization
   ItemPanelHeight := 0;
+  TrackaBarPosition := -1;
 
 end.

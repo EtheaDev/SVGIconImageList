@@ -59,10 +59,10 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
-        <DCC_UsePackage>rtl;IconFontsImageListFMX;SVGIconImageListFMX;SVGIconPackage;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>rtl;IconFontsImageListFMX;SVGIconImageListFMX;SVGIconPackage;SVGIconImageListRestClient;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>rtl;SVGIconImageListRestClient;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -70,7 +70,6 @@
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
-        <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
@@ -90,6 +89,10 @@
         <DCCReference Include="dclfmxstd.dcp"/>
         <DCCReference Include="SVGIconImageListRestClient.dcp"/>
         <DCCReference Include="SVGIconImageListFMX.dcp"/>
+        <DCCReference Include="..\FMX.Design.Utils.pas">
+            <Form>DesignModuleUtils</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
         <DCCReference Include="..\FMX.SVGIconImageRegister.pas"/>
         <DCCReference Include="..\FMX.SVGIconImageListEditorUnit.pas">
             <Form>SVGIconImageListEditorFMX</Form>
@@ -101,15 +104,15 @@
             <Form>SVGRESTClientSearchForm</Form>
             <FormType>fmx</FormType>
         </DCCReference>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
-            <CfgParent>Base</CfgParent>
-        </BuildConfiguration>
-        <BuildConfiguration Include="Release">
-            <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>

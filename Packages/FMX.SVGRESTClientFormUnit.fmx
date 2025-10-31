@@ -103,7 +103,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
         OnKeyDown = CollectionsComboKeyDown
       end
     end
-    object IconsGroupBox: TGroupBox
+    object SearchGroupBox: TGroupBox
       Align = Client
       Size.Width = 482.000000000000000000
       Size.Height = 427.000000000000000000
@@ -133,7 +133,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
         Viewport.Height = 403.000000000000000000
       end
     end
-    object Splitter1: TSplitter
+    object SplitterView: TSplitter
       Align = Right
       Cursor = crHSplit
       MinSize = 20.000000000000000000
@@ -143,7 +143,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
       Size.Height = 427.000000000000000000
       Size.PlatformDefault = False
     end
-    object GroupBox1: TGroupBox
+    object SelectedGroupBox: TGroupBox
       Align = Right
       Position.X = 496.000000000000000000
       Position.Y = 61.000000000000000000

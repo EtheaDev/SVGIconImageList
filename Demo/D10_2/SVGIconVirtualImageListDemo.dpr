@@ -35,6 +35,7 @@ uses
   SVGIconImageListEditorUnit in '..\..\Packages\SVGIconImageListEditorUnit.pas' {SVGIconImageListEditor},
   SVGTextPropertyEditorUnit in '..\..\Packages\SVGTextPropertyEditorUnit.pas' {SVGTextPropertyEditorForm},
   SVGIconSetFormUnit in '..\..\Packages\SVGIconSetFormUnit.pas' {SVGIconSetForm},
+  SVGIconifySearchFormUnit in '..\..\Packages\SVGIconifySearchFormUnit.pas' {SVGIconifySearchForm},
   SVGIconImageList in '..\..\source\SVGIconImageList.pas',
   UDataModule in '..\Source\UDataModule.pas' {ImageDataModule: TDataModule};
 

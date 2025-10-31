@@ -42,15 +42,15 @@ type
     SearchEdit: TEdit;
     OpacityLabel: TLabel;
     MaxIconsEdit: TSpinBox;
-    IconsGroupBox: TGroupBox;
-    SearchView: TListBox;
+    SearchGroupBox: TGroupBox;
+    SearchButton: TButton;
     BottomPanel: TPanel;
     OKButton: TButton;
     CancelButton: TButton;
     HelpButton: TButton;
-    SearchButton: TButton;
-    Splitter1: TSplitter;
-    GroupBox1: TGroupBox;
+    SearchView: TListBox;
+    SplitterView: TSplitter;
+    SelectedGroupBox: TGroupBox;
     SelectedView: TListBox;
     RemovePrefixCheckBox: TCheckBox;
     TrackBar: TTrackBar;
@@ -69,19 +69,26 @@ type
     FIconify: TIconifyApi;
     FSearchList, FSelectedList: TSVGIconImageList;
     FIconsSize: Integer;
+    FSingleIcon: Boolean;
+    FSingleSVGText: string;
     FCollections: TIconifyCollections;
     procedure AddImagesToSource(const ASourceList: TSVGIconImageList);
     procedure UpdateGUI;
     procedure SetIconsSize(const AValue: Integer);
+    procedure SetSingleIcon(const AValue: Boolean);
     procedure LoadCollections;
     function GetIconList: TArray<string>;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     property IconsSize: Integer read FIconsSize write SetIconsSize;
+    property SingleIcon: Boolean read FSingleIcon write SetSingleIcon;
   end;
 
 function SearchSVGIconsFromWeb(var AImageList: TSVGIconImageList): Boolean;
+
+function SearchSVGIconFromWeb(out ASVGText: string;
+  const AIconSize: Integer): Boolean;
 
 implementation
 
@@ -93,6 +100,7 @@ uses
   , Img32.SVG.Core
   {$ENDIF}
   , FMX.SVGIconsUtils
+  , FMX.Design.Utils
   {$IFDEF MSWINDOWS}
   , Winapi.shellApi
   , Winapi.Windows
@@ -100,40 +108,60 @@ uses
   ;
 
 var
-  SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
+  SearchSavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
+  paSelectedGroupWidth: Integer;
+  MaxIcons: Integer;
+
+
+function SearchSVGIconFromWeb(out ASVGText: string;
+  const AIconSize: Integer): Boolean;
+var
+  LForm: TSVGRESTClientSearchForm;
+begin
+  LForm := TSVGRESTClientSearchForm.Create(nil);
+  try
+    LForm.SingleIcon := True;
+    LForm.IconsSize := AIconSize;
+    if paSelectedGroupWidth <> 0 then
+      LForm.SearchGroupBox.Width := paSelectedGroupWidth;
+    if MaxIcons <> 0 then
+      LForm.MaxIconsEdit.Value := MaxIcons;
+    Result := LForm.ShowModal = mrOk;
+      SearchSavedBounds := LForm.Bounds;
+    MaxIcons := Round(LForm.MaxIconsEdit.Value);
+    if Result then
+      ASVGText := LForm.FSingleSVGText;
+  finally
+    LForm.Free;
+  end;
+end;
 
 function SearchSVGIconsFromWeb(var AImageList: TSVGIconImageList): Boolean;
 var
-  LEditor: TSVGRESTClientSearchForm;
+  LForm: TSVGRESTClientSearchForm;
 begin
-  LEditor := TSVGRESTClientSearchForm.Create(nil);
-  with LEditor do
-  begin
+  LForm := TSVGRESTClientSearchForm.Create(nil);
+  try
+    //Screen.Cursor := crHourglass;
     try
-      //Screen.Cursor := crHourglass;
-      try
-        UpdateSVGIconListView(SearchView);
-        //UpdateGUI;
-        if SearchView.Items.Count > 0 then
-          SearchView.ItemIndex := 0;
-
-      finally
-        //Screen.Cursor := crDefault;
-      end;
-      Result := ShowModal = mrOk;
-      if Result then
-      begin
-        //Screen.Cursor := crHourglass;
-        try
-          AddImagesToSource(AImageList);
-        finally
-          //Screen.Cursor := crDefault;
-        end;
-      end;
-      SavedBounds := Bounds;
+      UpdateSVGIconListView(LForm.SearchView);
+      if LForm.SearchView.Items.Count > 0 then
+        LForm.SearchView.ItemIndex := 0;
     finally
-      Free;
+      //Screen.Cursor := crDefault;
     end;
+    if paSelectedGroupWidth <> 0 then
+      LForm.SearchGroupBox.Width := paSelectedGroupWidth;
+    if MaxIcons <> 0 then
+      LForm.MaxIconsEdit.Value := MaxIcons;
+    Result := LForm.ShowModal = mrOk;
+    if Result then
+        LForm.AddImagesToSource(AImageList);
+    SearchSavedBounds := LForm.Bounds;
+    paSelectedGroupWidth := Round(LForm.SelectedGroupBox.Size.Width);
+    MaxIcons := Round(LForm.MaxIconsEdit.Value);
+  finally
+    LForm.Free;
   end;
 end;
 
@@ -251,6 +279,7 @@ end;
 
 procedure TSVGRESTClientSearchForm.FormCreate(Sender: TObject);
 begin
+  UpdateFormStyleFromIDE(Self);
   {$IFDEF D11+}
   Constraints.MinHeight := 500;
   Constraints.MinWidth := 700;
@@ -333,6 +362,13 @@ begin
       TrackBar.Value := FIconsSize;
     UpdateGUI;
   end;
+end;
+
+procedure TSVGRESTClientSearchForm.SetSingleIcon(const AValue: Boolean);
+begin
+  FSingleIcon := AValue;
+  SelectedGroupBox.Visible := not FSingleIcon;
+  SearchView.MultiSelect := not FSingleIcon;
 end;
 
 procedure TSVGRESTClientSearchForm.TrackBarTracking(Sender: TObject);

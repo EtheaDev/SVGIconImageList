@@ -50,6 +50,7 @@ object SVGIconImageForm: TSVGIconImageForm
       Size.PlatformDefault = False
       TabOrder = 1
       Text = 'Next Icon...'
+      TextSettings.Trimming = None
       OnClick = ButtonClick
     end
   end

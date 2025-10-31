@@ -38,6 +38,7 @@ requires
   SVGIconImageListFMX;
 
 contains
+  FMX.Design.Utils in '..\FMX.Design.Utils.pas' {DesignModuleUtils: TDataModule},
   FMX.SVGIconImageRegister in '..\FMX.SVGIconImageRegister.pas',
   FMX.SVGIconImageListEditorUnit in '..\FMX.SVGIconImageListEditorUnit.pas' {SVGIconImageListEditorFMX},
   FMX.SVGTextPropertyEditorUnit in '..\FMX.SVGTextPropertyEditorUnit.pas' {SVGTextPropertyEditorFormFMX},

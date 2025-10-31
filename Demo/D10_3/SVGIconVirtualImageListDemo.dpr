@@ -31,7 +31,7 @@ uses
   Vcl.Forms,
   Vcl.Themes,
   Vcl.Styles,
-  UMainNew in '..\Source\UMainNew.pas' {MainForm},
+  UMain in '..\Source\UMain.pas' {MainForm},
   SVGIconImageListEditorUnit in '..\..\Packages\SVGIconImageListEditorUnit.pas' {SVGIconImageListEditor},
   SVGTextPropertyEditorUnit in '..\..\Packages\SVGTextPropertyEditorUnit.pas' {SVGTextPropertyEditorForm},
   SVGIconSetFormUnit in '..\..\Packages\SVGIconSetFormUnit.pas' {SVGIconSetForm},

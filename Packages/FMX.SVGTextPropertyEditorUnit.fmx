@@ -32,12 +32,12 @@ object SVGTextPropertyEditorFormFMX: TSVGTextPropertyEditorFormFMX
     Size.Width = 739.000000000000000000
     Size.Height = 33.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 1
+    TabOrder = 50
     Top = 223
     object paButtons: TPanel
       Align = Right
-      Position.X = 246.000000000000000000
-      Size.Width = 493.000000000000000000
+      Position.X = 146.000000000000000000
+      Size.Width = 593.000000000000000000
       Size.Height = 33.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
@@ -50,13 +50,14 @@ object SVGTextPropertyEditorFormFMX: TSVGTextPropertyEditorFormFMX
         Margins.Top = 4.000000000000000000
         Margins.Right = 2.000000000000000000
         Margins.Bottom = 4.000000000000000000
-        Position.X = 338.000000000000000000
+        Position.X = 437.000000000000000000
         Position.Y = 4.000000000000000000
         Size.Width = 75.000000000000000000
         Size.Height = 25.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 4
+        TabOrder = 5
         Text = '&Cancel'
+        TextSettings.Trimming = None
         Left = 254
         Top = 3
       end
@@ -68,13 +69,14 @@ object SVGTextPropertyEditorFormFMX: TSVGTextPropertyEditorFormFMX
         Margins.Top = 4.000000000000000000
         Margins.Right = 2.000000000000000000
         Margins.Bottom = 4.000000000000000000
-        Position.X = 259.000000000000000000
+        Position.X = 358.000000000000000000
         Position.Y = 4.000000000000000000
         Size.Width = 75.000000000000000000
         Size.Height = 25.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 3
+        TabOrder = 4
         Text = '&OK'
+        TextSettings.Trimming = None
         Left = 173
         Top = 3
       end
@@ -84,13 +86,14 @@ object SVGTextPropertyEditorFormFMX: TSVGTextPropertyEditorFormFMX
         Margins.Top = 4.000000000000000000
         Margins.Right = 2.000000000000000000
         Margins.Bottom = 4.000000000000000000
-        Position.X = 417.000000000000000000
+        Position.X = 516.000000000000000000
         Position.Y = 4.000000000000000000
-        Size.Width = 74.000000000000000000
+        Size.Width = 75.000000000000000000
         Size.Height = 25.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 5
+        TabOrder = 6
         Text = '&Help'
+        TextSettings.Trimming = None
         OnClick = HelpButtonClick
         Left = 336
         Top = 3
@@ -103,11 +106,12 @@ object SVGTextPropertyEditorFormFMX: TSVGTextPropertyEditorFormFMX
         Margins.Bottom = 4.000000000000000000
         Position.X = 2.000000000000000000
         Position.Y = 4.000000000000000000
-        Size.Width = 74.000000000000000000
+        Size.Width = 75.000000000000000000
         Size.Height = 25.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 0
-        Text = '&Load...'
+        TabOrder = 1
+        Text = '&Load file...'
+        TextSettings.Trimming = None
         OnClick = LoadButtonClick
         Left = 5
         Top = 3
@@ -118,13 +122,14 @@ object SVGTextPropertyEditorFormFMX: TSVGTextPropertyEditorFormFMX
         Margins.Top = 4.000000000000000000
         Margins.Right = 2.000000000000000000
         Margins.Bottom = 4.000000000000000000
-        Position.X = 80.000000000000000000
+        Position.X = 160.000000000000000000
         Position.Y = 4.000000000000000000
-        Size.Width = 74.000000000000000000
+        Size.Width = 75.000000000000000000
         Size.Height = 25.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 2
         Text = '&Save...'
+        TextSettings.Trimming = None
         OnClick = SaveButtonClick
         Left = 85
         Top = 3
@@ -135,15 +140,34 @@ object SVGTextPropertyEditorFormFMX: TSVGTextPropertyEditorFormFMX
         Margins.Top = 4.000000000000000000
         Margins.Right = 2.000000000000000000
         Margins.Bottom = 4.000000000000000000
-        Position.X = 158.000000000000000000
+        Position.X = 239.000000000000000000
         Position.Y = 4.000000000000000000
-        Size.Width = 89.000000000000000000
+        Size.Width = 106.000000000000000000
         Size.Height = 25.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 1
+        TabOrder = 3
         Text = '&Reformat XML'
+        TextSettings.Trimming = None
         OnClick = ReformatXMLButtonClick
         Left = 85
+        Top = 3
+      end
+      object LoadWebButton: TButton
+        Align = Left
+        Margins.Left = 2.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 2.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Position.X = 81.000000000000000000
+        Position.Y = 4.000000000000000000
+        Size.Width = 75.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = '&Load WEB...'
+        TextSettings.Trimming = None
+        OnClick = LoadWebButtonClick
+        Left = 5
         Top = 3
       end
     end

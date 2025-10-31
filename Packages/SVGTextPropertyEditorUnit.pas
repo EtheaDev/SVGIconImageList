@@ -47,13 +47,14 @@ type
     paTitle: TPanel;
     LoadButton: TButton;
     SaveButton: TButton;
-    OpenDialog: TOpenPictureDialog;
-    SaveDialog: TSavePictureDialog;
     ImagePanel: TPanel;
     SVGIconImage: TSVGIconImage;
+    OpenDialog: TOpenPictureDialog;
+    SaveDialog: TSavePictureDialog;
     BottomPanel: TPanel;
     ProportionalCheckBox: TCheckBox;
     ReformatXMLButton: TButton;
+    LoadWebButton: TButton;
     procedure FormResize(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure paImageResize(Sender: TObject);
@@ -61,9 +62,10 @@ type
     procedure LoadButtonClick(Sender: TObject);
     procedure SaveButtonClick(Sender: TObject);
     procedure HelpButtonClick(Sender: TObject);
-    procedure ProportionalCheckBoxClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure ProportionalCheckBoxClick(Sender: TObject);
     procedure ReformatXMLButtonClick(Sender: TObject);
+    procedure LoadWebButtonClick(Sender: TObject);
   private
     procedure UpdateImage;
     procedure UpdateGUI;
@@ -74,7 +76,8 @@ type
     property SVGText: string read GetSVGText write SetSVGText;
   end;
 
-function EditSVGTextProperty(var ASVGText: string): boolean;
+function EditSVGTextProperty(var ASVGText: string;
+  const ACanEdit: Boolean = True): boolean;
 
 implementation
 
@@ -87,9 +90,11 @@ uses
   , System.UITypes
   {$ENDIF}
   , SVGIconImageListBase
+  {$IFDEF UseRESTClientSearch}
+  , SVGRESTClientFormUnit
+  {$ENDIF}
   , SVGInterfaces
   , Xml.XMLDoc
-  //WARNING: you must define this directive to use this unit outside the IDE
   //WARNING: you must define this directive to use this unit outside the IDE
 {$IFNDEF UseSVGEditorsAtRunTime}
   , ToolsAPI
@@ -107,7 +112,8 @@ var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
 
 
-function EditSVGTextProperty(var ASVGText: string): boolean;
+function EditSVGTextProperty(var ASVGText: string;
+  const ACanEdit: Boolean = True): boolean;
 var
   LForm: TSVGTextPropertyEditorForm;
 begin
@@ -115,6 +121,10 @@ begin
   LForm := TSVGTextPropertyEditorForm.Create(nil);
   try
     LForm.SVGText := ASVGText;
+    LForm.SVGTextMemo.ReadOnly := not ACanEdit;
+    LForm.LoadButton.Visible := ACanEdit;
+    LForm.CancelButton.Visible := ACanEdit;
+    LForm.ReformatXMLButton.Visible := ACanEdit;
     if LForm.ShowModal = mrOk then
     begin
       Result := True;
@@ -140,6 +150,9 @@ procedure TSVGTextPropertyEditorForm.FormCreate(Sender: TObject);
   {$IFEND}
 {$ENDIF}
 begin
+{$IFNDEF UseRESTClientSearch}
+  LoadWebButton.Visible := False;
+{$ENDIF}
 {$IFNDEF UseSVGEditorsAtRunTime}
   {$IF (CompilerVersion >= 32.0)}
     {$IF (CompilerVersion <= 34.0)}
@@ -202,6 +215,18 @@ begin
     SVGIconImage.LoadFromFile(OpenDialog.FileName);
     SVGText := SVGIconImage.SVGText;
   end;
+end;
+
+procedure TSVGTextPropertyEditorForm.LoadWebButtonClick(Sender: TObject);
+{$IFDEF UseRESTClientSearch}
+var
+  FSVGText: string;
+{$ENDIF}
+begin
+  {$IFDEF UseRESTClientSearch}
+  if SearchSVGIconFromWeb(FSVGText, 32) then
+    SVGText :=  FSVGText;
+  {$ENDIF}
 end;
 
 procedure TSVGTextPropertyEditorForm.paImageResize(Sender: TObject);

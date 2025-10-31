@@ -130,6 +130,8 @@ type
     AddWebButton: TButton;
     ReplaceWebButton: TButton;
     WebBevel: TBevel;
+    BackgroundTrackBar: TTrackBar;
+    IconBackgroundPanel: TPanel;
     procedure FormCreate(Sender: TObject);
     procedure ApplyButtonClick(Sender: TObject);
     procedure ClearAllButtonClick(Sender: TObject);
@@ -175,6 +177,7 @@ type
     procedure ApplyToRootOnlyItemCheckBoxClick(Sender: TObject);
     procedure AddWebButtonClick(Sender: TObject);
     procedure ReplaceWebButtonClick(Sender: TObject);
+    procedure BackgroundTrackBarTracking(Sender: TObject);
   private
     FOldSVGText: string;
     FOpenDialog: TOpenPictureDialogSvg;
@@ -188,7 +191,7 @@ type
     FUpdating: Boolean;
     FChanged: Boolean;
     FModified: Boolean;
-
+    procedure UpdateIconBackgroundColour;
     procedure BuildList(Selected: Integer);
     procedure UpdateCategories;
     procedure Apply;
@@ -545,6 +548,14 @@ begin
   end;
 end;
 
+procedure TSVGIconImageListEditor.UpdateIconBackgroundColour;
+var
+  LGrayValue: byte;
+begin
+  LGrayValue := BackgroundTrackBar.Position;
+  IconBackgroundPanel.Color := RGB(LGrayValue, LGrayValue, LGrayValue);
+end;
+
 procedure TSVGIconImageListEditor.WidthEditChange(Sender: TObject);
 begin
   if FUpdating then Exit;
@@ -818,6 +829,11 @@ begin
   end;
 end;
 
+procedure TSVGIconImageListEditor.BackgroundTrackBarTracking(Sender: TObject);
+begin
+  UpdateIconBackgroundColour;
+end;
+
 procedure TSVGIconImageListEditor.BuildList(Selected: Integer);
 begin
   FEditingList.BeginUpdate;
@@ -967,6 +983,7 @@ begin
   WebBevel.Visible := False;
   {$ENDIF}
 
+  UpdateIconBackgroundColour;
   FUpdating := False;
   ResetError;
   FEditingList := TSVGIconImageList.Create(Self);

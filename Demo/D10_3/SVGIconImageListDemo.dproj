@@ -97,7 +97,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\Source\UMainNew.pas">
+        <DCCReference Include="..\Source\UMain.pas">
             <Form>MainForm</Form>
         </DCCReference>
         <DCCReference Include="..\..\Packages\SVGIconImageListEditorUnit.pas">

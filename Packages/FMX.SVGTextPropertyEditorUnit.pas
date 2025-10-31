@@ -57,6 +57,7 @@ type
     SaveDialog: TSaveDialog;
     SizeLabel: TLabel;
     ReformatXMLButton: TButton;
+    LoadWebButton: TButton;
     procedure FormResize(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure paImageResize(Sender: TObject);
@@ -67,13 +68,13 @@ type
     procedure FormCreate(Sender: TObject);
     procedure ReformatXMLButtonClick(Sender: TObject);
     procedure SVGTextMemoChangeTracking(Sender: TObject);
+    procedure LoadWebButtonClick(Sender: TObject);
   private
     procedure UpdateImage;
     procedure UpdateGUI;
     function GetSVGText: string;
     procedure SetSVGText(const Value: string);
   public
-    constructor Create(AOwner: TComponent); override;
     property SVGText: string read GetSVGText write SetSVGText;
   end;
 
@@ -89,7 +90,10 @@ uses
   , Winapi.Windows
   , Winapi.shellApi
   , System.Math
-  , Xml.XMLDoc;
+  , Xml.XMLDoc
+  , FMX.Design.Utils
+  , FMX.SVGRESTClientFormUnit
+  ;
 
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
@@ -119,14 +123,10 @@ begin
   end;
 end;
 
-constructor TSVGTextPropertyEditorFormFMX.Create(AOwner: TComponent);
-begin
-  inherited;
-  ;
-end;
-
 procedure TSVGTextPropertyEditorFormFMX.FormCreate(Sender: TObject);
 begin
+  inherited;
+  UpdateFormStyleFromIDE(Self);
   SVGTextMemo.Font.Family := 'Consolas';
   Caption := Format(Caption, [SVGIconImageListVersion]);
 end;
@@ -165,6 +165,14 @@ begin
     SVGIconImage.LoadFromFile(OpenDialog.FileName);
     SVGText := SVGIconImage.SVGText;
   end;
+end;
+
+procedure TSVGTextPropertyEditorFormFMX.LoadWebButtonClick(Sender: TObject);
+var
+  FSVGText: string;
+begin
+  if SearchSVGIconFromWeb(FSVGText, 32) then
+    SVGText :=  FSVGText;
 end;
 
 procedure TSVGTextPropertyEditorFormFMX.paImageResize(Sender: TObject);
