@@ -165,6 +165,9 @@ type
     fRootElement      : TSvgElement;
     fFontCache        : TFontCache;
     fKeepAspectRatio  : Boolean;
+    fFlipHorizontal   : Boolean;
+    fFlipVertical     : Boolean;
+
     function  LoadInternal: Boolean;
     function  GetIsEmpty: Boolean;
     function  GetTempImage: TImage32;
@@ -188,6 +191,9 @@ type
     function  LoadFromString(const str: string): Boolean;
     function  GetImageSize: TSize;
 
+    function GetPathBounds: TRectD;
+    function DrawFullPathsInCenter: Boolean;
+
     // The following two methods are deprecated and intended only for ...
     // https://github.com/EtheaDev/SVGIconImageList
     procedure SetOverrideFillColor(color: TColor32); //deprecated;
@@ -199,9 +205,10 @@ type
     property  IsEmpty         : Boolean read GetIsEmpty;
     // KeepAspectRatio: this property has also been added for the convenience of
     // the third-party SVGIconImageList. (IMHO it should always = true)
-    property  KeepAspectRatio: Boolean
-      read fKeepAspectRatio write fKeepAspectRatio;
+    property  KeepAspectRatio : Boolean read fKeepAspectRatio write fKeepAspectRatio;
     property  RootElement     : TSvgElement read fRootElement;
+    property  FlipHorizontal  : Boolean read fFlipHorizontal write fFlipHorizontal;
+    property  FlipVertical    : Boolean read fFlipVertical write fFlipVertical;
   end;
 
 var
@@ -5638,6 +5645,23 @@ begin
 end;
 //------------------------------------------------------------------------------
 
+function TSvgReader.DrawFullPathsInCenter: Boolean;
+var
+  LRectD: TRectD;
+begin
+  Result := false;
+  LRectD:= GetPathBounds;
+  if LRectD.IsEmpty then
+    Exit;
+
+  Self.RootElement.viewboxWH.Left := LRectD.Left;
+  Self.RootElement.viewboxWH.Top := LRectD.Top;
+  Self.RootElement.viewboxWH.Width := LRectD.Width;
+  Self.RootElement.viewboxWH.Height := LRectD.Height;
+  Result := true;
+end;
+//------------------------------------------------------------------------------
+
 procedure TSvgReader.DrawImage(img: TImage32; scaleToImage: Boolean);
 var
   scale, scaleH: double;
@@ -5660,7 +5684,28 @@ begin
     if di.currentColor = clInvalid then
       di.currentColor := currentColor;
 
+//    MatrixIdentity(di.matrix);
+
     MatrixTranslate(di.matrix, -viewboxWH.Left, -viewboxWH.Top);
+
+    // flips done in *viewbox space* (unit = SVG units), not with -scale
+    if fFlipHorizontal and fFlipVertical then
+    begin
+      MatrixScale(di.matrix, -1, -1);    
+      MatrixTranslate(di.matrix, viewboxWH.Width, viewboxWH.Height);   
+    end else
+    if fFlipHorizontal then
+    begin
+      // mirror around vertical axis of viewbox
+      MatrixScale(di.matrix, -1, 1);
+      MatrixTranslate(di.matrix, viewboxWH.Width, 0);
+    end else
+    if fFlipVertical then
+    begin
+      // mirror around horizontal axis of viewbox
+      MatrixScale(di.matrix, 1, -1);
+      MatrixTranslate(di.matrix, 0, viewboxWH.Height);
+    end;
 
     //the width and height attributes generally indicate the size of the
     //rendered image unless they are percentage values. Nevertheless, these
@@ -5691,7 +5736,6 @@ begin
         Round(viewboxWH.Height * scaleH));
     end else
       img.SetSize(Round(viewboxWH.Width), Round(viewboxWH.Height));
-
   end;
 
   if fBkgndColor <> clNone32 then
@@ -5837,6 +5881,16 @@ function TSvgReader.GetIsEmpty: Boolean;
 begin
   Result := not Assigned(fRootElement);
 end;
+
+function TSvgReader.GetPathBounds: TRectD;
+begin
+  if not Assigned(Self.fRootElement) then begin
+    Result := NullRectD;
+    Exit;
+  end;
+  Result := Self.fRootElement.GetBounds;
+end;
+
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 

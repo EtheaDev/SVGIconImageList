@@ -49,7 +49,8 @@ Uses
   System.UIConsts,
   System.SysUtils,
   System.Classes,
-  System.RegularExpressions;
+  System.RegularExpressions,
+  Img32;
 
   resourcestring
   D2D_ERROR_NOT_AVAILABLE    = 'Windows SVG support is not available';
@@ -64,9 +65,11 @@ type
     fHeight: Single;
     fFixedColor: TColor;
     fApplyFixedColorToRootOnly: Boolean;
+    fApplyDrawFullPathsInCenter: Boolean;
     fGrayScale: Boolean;
     fOpacity: Single;
     fSvgDoc: ID2D1SvgDocument;
+    fFlipHorizontal, fFlipVertically: Boolean;
     // property access methods
     function GetWidth: Single;
     function GetHeight: Single;
@@ -94,8 +97,16 @@ type
     {$IFDEF CheckForUnsupportedSvg}
     procedure CheckForUnsupportedSvg;
     {$ENDIF}
+    function GetApplyDrawFullPathsInCenter: Boolean;
+    procedure SetApplyDrawFullPathsInCenter(Value:Boolean);
+    function GetFlipHorizontal: Boolean;
+    procedure SetFlipHorizontal(Value:Boolean);
+    function GetFlipVertically: Boolean;
+    procedure SetFlipVertically(Value:Boolean);
   public
     constructor Create;
+    function GetPathBounds: TRectD;
+    function DrawFullPathsInCenter: Boolean;
   end;
   TD2DSVGHandler = class(TInterfacedObject, ISVGFactory)
     function NewSvg: ISVG;
@@ -244,6 +255,11 @@ begin
   FOpacity := 1.0;
 end;
 
+function TD2DSVG.DrawFullPathsInCenter: Boolean;
+begin
+  Result := false; // Not implementation.
+end;
+
 procedure TD2DSVG.SvgFromStream(Stream: TStream);
 var
   XStream: IStream;
@@ -321,6 +337,11 @@ begin
   end;
 end;
 
+function TD2DSVG.GetApplyDrawFullPathsInCenter: Boolean;
+begin
+  Result := FApplyDrawFullPathsInCenter;
+end;
+
 function TD2DSVG.GetApplyFixedColorToRootOnly: Boolean;
 begin
   Result := fApplyFixedColorToRootOnly;
@@ -329,6 +350,16 @@ end;
 function TD2DSVG.GetFixedColor: TColor;
 begin
   Result := fFixedColor;
+end;
+
+function TD2DSVG.GetFlipHorizontal: Boolean;
+begin
+  Result := FFlipHorizontal;
+end;
+
+function TD2DSVG.GetFlipVertically: Boolean;
+begin
+  Result := FFlipVertically;
 end;
 
 function TD2DSVG.GetGrayScale: Boolean;
@@ -353,6 +384,14 @@ begin
       Root.GetAttributeValue('opacity', D2D1_SVG_ATTRIBUTE_POD_TYPE_FLOAT,
         @Result, SizeOf(Result));
   end;
+end;
+
+function TD2DSVG.GetPathBounds: TRectD;
+begin
+  Result.Left := 0;
+  Result.Top := 0;
+  Result.Right := 0;
+  Result.Bottom := 0;
 end;
 
 function TD2DSVG.GetSource: string;
@@ -389,12 +428,13 @@ end;
 
 procedure TD2DSVG.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
 var
-  Matrix : TD2DMatrix3X2F;
+  Matrix, FlipMatrix : TD2DMatrix3X2F;
   SvgRect : TRectF;
   RT: ID2D1DCRenderTarget;
   Ratio: Single;
   Root: ID2D1SvgElement;
   NewColor: TD2D1ColorF;
+  Center: TD2DPoint2f;
 begin
   if not Assigned(fSvgDoc) then Exit;
   SvgRect:= R;
@@ -411,6 +451,26 @@ begin
         R.Height/fHeight, Point(0, 0));
     end;
   end;
+
+  // Apply flip horizontal if requested
+  if fFlipHorizontal then
+  begin
+    // Flip horizontally around center of rect
+    Center.X := R.CenterPoint.X;
+    Center.Y := R.CenterPoint.Y;
+    FlipMatrix := TD2DMatrix3X2F.Scale(-1, 1, Center);
+    Matrix := Matrix * FlipMatrix;
+  end;
+
+  if fFlipVertically then
+  begin
+    // Flip vertically around center of rect
+    Center.X := R.CenterPoint.X;
+    Center.Y := R.CenterPoint.Y;
+    FlipMatrix := TD2DMatrix3X2F.Scale(1, -1, Center);
+    Matrix := Matrix * FlipMatrix;
+  end;
+
   //GrayScale
   if fGrayScale then
   begin
@@ -471,6 +531,18 @@ begin
   Stream.WriteBuffer(Buffer, Length(Buffer))
 end;
 
+procedure TD2DSVG.SetApplyDrawFullPathsInCenter(Value: Boolean);
+begin
+  if FApplyDrawFullPathsInCenter <> Value then begin
+    FApplyDrawFullPathsInCenter := Value;
+    if FApplyDrawFullPathsInCenter then
+      Self.DrawFullPathsInCenter
+    else begin
+      LoadFromSource;
+    end;
+  end;
+end;
+
 procedure TD2DSVG.SetApplyFixedColorToRootOnly(AValue: Boolean);
 var
   Color: TColor;
@@ -498,6 +570,26 @@ begin
   else
     fFixedColor := Color;
   fGrayScale := False;
+end;
+
+procedure TD2DSVG.SetFlipHorizontal(Value: Boolean);
+var
+  LSource: String;
+begin
+  if FFlipHorizontal <> Value then begin
+    FFlipHorizontal := Value;
+    LoadFromSource;
+  end;
+end;
+
+procedure TD2DSVG.SetFlipVertically(Value: Boolean);
+var
+  LSource: String;
+begin
+  if FFlipVertically <> Value then begin
+    FFlipVertically := Value;
+    LoadFromSource;
+  end;
 end;
 
 procedure TD2DSVG.SetGrayScale(const IsGrayScale: Boolean);

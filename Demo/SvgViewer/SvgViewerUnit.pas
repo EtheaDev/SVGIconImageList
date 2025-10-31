@@ -31,6 +31,10 @@ type
     OpacityGroupBox: TGroupBox;
     OpacityTrackBar: TTrackBar;
     TitlePanel: TPanel;
+    ChkDrawFullPathsInCenter: TCheckBox;
+    ChkFlipV: TCheckBox;
+    ChkFlipH: TCheckBox;
+    MemoSVG: TMemo;
     procedure FormCreate(Sender: TObject);
     procedure OpenButtonClick(Sender: TObject);
     procedure ListBoxClick(Sender: TObject);
@@ -41,6 +45,9 @@ type
     procedure GrayScaleCheckBoxClick(Sender: TObject);
     procedure ApplyToRootOnlyCheckBoxClick(Sender: TObject);
     procedure KeepCheckBoxClick(Sender: TObject);
+    procedure ChkDrawFullPathsInCenterClick(Sender: TObject);
+    procedure ChkFlipHClick(Sender: TObject);
+    procedure ChkFlipVClick(Sender: TObject);
   private
     FSourcePath: string;
     procedure DrawImage(const AFileName: string);
@@ -62,6 +69,31 @@ uses
   {$IFDEF SKIA}SkiaSVGFactory,{$ENDIF}
   D2DSVGFactory;
 
+function CalculateCenteredViewBox(const ARect: TRect): string;
+begin
+  Result := Format('%d %d %d %d', [ARect.Left, ARect.Top, ARect.Width, ARect.Height]);
+end;
+
+function ReplaceViewBoxString(const ASVGText, ANewViewBox: string): string;
+var
+  StartPos, EndPos: Integer;
+  Prefix, Suffix: string;
+begin
+  StartPos := Pos('viewBox="', ASVGText);
+  if StartPos = 0 then
+    Exit(ASVGText); // viewBox not found, return original
+
+  Inc(StartPos, Length('viewBox="'));
+  EndPos := StartPos;
+  while (EndPos <= Length(ASVGText)) and (ASVGText[EndPos] <> '"') do
+    Inc(EndPos);
+
+  Prefix := Copy(ASVGText, 1, StartPos - Length('viewBox="') - 1);
+  Suffix := Copy(ASVGText, EndPos + 1, MaxInt);
+
+  Result := Prefix + 'viewBox="' + ANewViewBox + '"' + Suffix;
+end;
+
 procedure TSVGViewerForm.ApplyToRootOnlyCheckBoxClick(Sender: TObject);
 begin
   FrameViewerD2D.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
@@ -69,11 +101,37 @@ begin
   FrameViewImage32.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
 end;
 
+procedure TSVGViewerForm.ChkDrawFullPathsInCenterClick(Sender: TObject);
+begin
+  FrameViewerD2D.DrawFullPathsInCenter := chkDrawFullPathsInCenter.Checked;
+  {$IFDEF SKIA}FrameViewSkia.DrawFullPathsInCenter := chkDrawFullPathsInCenter.Checked;{$ENDIF}
+  FrameViewImage32.DrawFullPathsInCenter := chkDrawFullPathsInCenter.Checked;
+end;
+
+procedure TSVGViewerForm.ChkFlipHClick(Sender: TObject);
+begin
+  FrameViewerD2D.FlipHorizontal := chkFlipH.Checked;
+  {$IFDEF SKIA}FrameViewSkia.FlipHorizontal := chkFlipH.Checked;{$ENDIF}
+  FrameViewImage32.FlipHorizontal := chkFlipH.Checked;
+  FrameViewImage32.Repaint;
+end;
+
+procedure TSVGViewerForm.ChkFlipVClick(Sender: TObject);
+begin
+  FrameViewerD2D.FlipVertically := chkFlipV.Checked;
+  {$IFDEF SKIA}FrameViewSkia.FlipVertically := chkFlipV.Checked;{$ENDIF}
+  FrameViewImage32.FlipVertically := chkFlipV.Checked;
+  FrameViewImage32.Repaint;
+end;
+
 procedure TSVGViewerForm.DrawImage(const AFileName: string);
 begin
   FrameViewerD2D.DrawFile(AFileName);
   {$IFDEF SKIA}FrameViewSkia.DrawFile(AFileName);{$ENDIF}
   FrameViewImage32.DrawFile(AFileName);
+
+  if Assigned(MemoSVG) then
+    MemoSVG.Text := FrameViewImage32.SVG.Source;
 end;
 
 procedure TSVGViewerForm.OpacityTrackBarChange(Sender: TObject);
@@ -144,7 +202,6 @@ var
   LHeight, LWidth: Integer;
 begin
   LHeight := RightPanel.ClientHeight div 2;
-  FrameViewImage32.Height := LHeight;
   FrameViewerD2D.Height := LHeight;
   ControlPanel.Height := LHeight;
   LWidth := (Self.ClientWidth - FilesPanel.Width) div 2;
