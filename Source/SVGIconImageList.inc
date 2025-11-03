@@ -1,4 +1,4 @@
-//To silent Hint messege of engine used
+//To silent Hint message of engine used
 {.$DEFINE SvgDisableEngineHint}
 
 //To use old OpenPictureDialog with image preview
@@ -13,18 +13,31 @@
   // which are not supported by Windows SVG. Since it costs some performance,
   // you should only turn it on during debugging or if it's absolutely necessary.
   {.$DEFINE CheckForUnsupportedSvg}
-{$ENDIF}
 
-//if PreferNativeSvgSupport not active or not available:
+{$ELSE}
+//Éf PreferNativeSvgSupport not active or not available:
+
 //use Delphi Engine from Image32 library by Angus Johnson (included into Image32 folder)
-{$DEFINE Image32_SVGEngine}
+{.$DEFINE Image32_SVGEngine}
+
 //or use Engine Skia with skia4delphi wrapper by Vinícius Felipe Botelho Barbosa (included into skia4delphi folder)
 {.$DEFINE Skia_SVGEngine}
 
+{$ENDIF}
+
+//Default engine is Image32 for Windows and Skia_SVGEngine for other platforms, if other is not set via compiler options
+{$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine) and NOT DEFINED(PreferNativeSvgSupport)}
+  {$IF DEFINED(MSWINDOWS)}
+    {$DEFINE Image32_SVGEngine}
+  {$ELSE}
+    {$DEFINE Skia_SVGEngine}
+  {$ENDIF}
+{$IFEND}
+
 // When IgnoreAntiAliasedColor is set it svgs paints well but not perfect on
-// all backgrounds.  Works best with Delphi_SVGEngine
+// all backgrounds.  Works best with Delphi_SVGEngine //TODO: remove if Delphi_SVGEngine not supported anymore?
 {.$DEFINE IgnoreAntiAliasedColor}
-{$IF defined(Delphi_SVGEngine) and not defined(PreferNativeSvgSupport)}
+{$IF DEFINED(Delphi_SVGEngine) and NOT DEFINED(PreferNativeSvgSupport)}
   {$DEFINE IgnoreAntiAliasedColor}
 {$IFEND}
 
