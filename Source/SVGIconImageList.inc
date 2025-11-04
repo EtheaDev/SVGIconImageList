@@ -4,38 +4,61 @@
 //To use old OpenPictureDialog with image preview
 {.$DEFINE OldPictureDialog}
 
-//Prefer Engine Direct2D by Kiriakos Vlahos
-//if supported by Windows Platform (from Windows Creators update)
-{.$DEFINE PreferNativeSvgSupport}
-{.$DEFINE GPUSupport}
-{$IFDEF PreferNativeSvgSupport}
-  // Throw an exception if the SVG contains text elements or class attributes
-  // which are not supported by Windows SVG. Since it costs some performance,
-  // you should only turn it on during debugging or if it's absolutely necessary.
-  {.$DEFINE CheckForUnsupportedSvg}
-{$ENDIF}
+//***********************************************************************
+// Start of VCL Directives
+//***********************************************************************
+  //Prefer Engine Direct2D by Kiriakos Vlahos
+  //if supported by Windows Platform (from Windows Creators update)
+  {.$DEFINE PreferNativeSvgSupport}
+  {.$DEFINE GPUSupport}
+  {$IFDEF PreferNativeSvgSupport}
+    // Throw an exception if the SVG contains text elements or class attributes
+    // which are not supported by Windows SVG. Since it costs some performance,
+    // you should only turn it on during debugging or if it's absolutely necessary.
+    {.$DEFINE CheckForUnsupportedSvg}
+  {$ENDIF}
 
-//if PreferNativeSvgSupport not active or not available:
-//use Delphi Engine from Image32 library by Angus Johnson (included into Image32 folder)
-{$DEFINE Image32_SVGEngine}
-//or use Engine Skia with skia4delphi wrapper by Vinícius Felipe Botelho Barbosa (included into skia4delphi folder)
-{.$DEFINE Skia_SVGEngine}
+  //if PreferNativeSvgSupport not active or not available:
+  //use Delphi Engine from Image32 library by Angus Johnson (included into Image32 folder)
+  {$DEFINE Image32_SVGEngine}
+  //or use Engine Skia with skia4delphi wrapper by Vinícius Felipe Botelho Barbosa (included into skia4delphi folder)
+  {.$DEFINE Skia_SVGEngine}
 
-// When IgnoreAntiAliasedColor is set it svgs paints well but not perfect on
-// all backgrounds.  Works best with Delphi_SVGEngine
-{.$DEFINE IgnoreAntiAliasedColor}
-{$IF defined(Delphi_SVGEngine) and not defined(PreferNativeSvgSupport)}
-  {$DEFINE IgnoreAntiAliasedColor}
-{$IFEND}
+  // When IgnoreAntiAliasedColor is set it svgs paints well but not perfect on
+  // all backgrounds.  Works best with Delphi_SVGEngine
+  {.$DEFINE IgnoreAntiAliasedColor}
+  {$IF defined(Delphi_SVGEngine) and not defined(PreferNativeSvgSupport)}
+    {$DEFINE IgnoreAntiAliasedColor}
+  {$IFEND}
 
-//Check correct defines
-{$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine) and NOT DEFINED(PreferNativeSvgSupport)}
-  {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or PreferNativeSvgSupport) into SVGIconImageList.inc)'}
-{$IFEND}
+  //Check correct defines for VCL Apps
+  {$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine) and NOT DEFINED(PreferNativeSvgSupport)}
+    {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or PreferNativeSvgSupport) into SVGIconImageList.inc)'}
+  {$IFEND}
 
-{$IF DEFINED(Image32_SVGEngine) and DEFINED(Skia_SVGEngine)}
-  {$MESSAGE FATAL 'You must define only one engine (Image32_SVGEngine or Skia_Engine) into SVGIconImageList.inc)'}
-{$IFEND}
+  {$IF DEFINED(Image32_SVGEngine) and DEFINED(Skia_SVGEngine)}
+    {$MESSAGE FATAL 'You must define only one engine for VCL (Image32_SVGEngine or Skia_Engine) into SVGIconImageList.inc)'}
+  {$IFEND}
+//***********************************************************************
+// End of VCL Directives
+//***********************************************************************
+
+//***********************************************************************
+// Start of FMX Directives
+//***********************************************************************
+  //use Delphi Engine from Image32 library by Angus Johnson (included into Image32 folder)
+  {$DEFINE FMX_Image32_SVGEngine}
+  //or use Engine Skia with skia4delphi wrapper by Vinícius Felipe Botelho Barbosa (included into skia4delphi folder)
+  {.$DEFINE FMX_Skia_SVGEngine}
+
+  //Check correct defines for FMX Apps
+  {$IF NOT DEFINED(FMX_Image32_SVGEngine) and NOT DEFINED(FMX_Skia_SVGEngine)}
+    {$MESSAGE FATAL 'You must define at least one engine for FMX (FMX_Image32_SVGEngine or FMX_Skia_Engine) into SVGIconImageList.inc)'}
+  {$IFEND}
+//***********************************************************************
+// End of FMX Directives
+//***********************************************************************
+
 
 // Delphi XE3
 {$IFDEF VER240}

@@ -138,10 +138,10 @@ implementation
 
 uses
   System.Math
-  {$IFDEF Image32_SVGEngine}
+  {$IFDEF FMX_Image32_SVGEngine}
   , FMX.Image32SVG
   {$ENDIF}
-  {$IFDEF Skia_SVGEngine}
+  {$IFDEF FMX_Skia_SVGEngine}
   , FMX.ImageSkiaSVG
   {$ENDIF}
   , FMX.SVGIconImageList
@@ -216,10 +216,10 @@ begin
     FOwnerCollection := Collection as TSVGIconFixedMultiResBitmap;
   FZoom := ZOOM_DEFAULT;
   FOpacity := 1;
-  {$IFDEF Image32_SVGEngine}
+  {$IFDEF FMX_Image32_SVGEngine}
   FSVG := TFmxImage32SVG.Create;
   {$ENDIF}
-  {$IFDEF Skia_SVGEngine}
+  {$IFDEF FMX_Skia_SVGEngine}
   FSVG := TFmxImageSKIASVG.Create;
   {$ENDIF}
 end;

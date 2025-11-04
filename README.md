@@ -2,7 +2,7 @@
 
 ## Three engines to render SVG (Delphi Image32, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 4.5.2 (VCL+FMX)
+### Actual official version 4.5.3 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -60,6 +60,13 @@ There are three implementation:
 
 - A wrapper to the native Windows **Direct2D** implementation
 
+To choose you preferred Engine, you must edit SVGIconImageList.inc in the correct section:
+
+ for VCL, enabling: `{$DEFINE Image32_SVGEngine}` or `{$DEFINE Skia_SVGEngine}`
+
+ for FMX, enabling: `{$DEFINE FMX_Image32_SVGEngine}` or `{$DEFINE FMX_Skia_SVGEngine}`
+
+By Default Image32_SVGEngine is Enabled.
 
 ## Performance comparison
 
@@ -108,6 +115,10 @@ A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/Ico
 Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
 ### RELEASE NOTES
+04 Nov 2025 - version 4.5.3
+- Fixed Delphi 12 Packages for Setup
+- Separated defines for VCL Apps and FMX Apps
+
 31 Oct 2025 - version 4.5.2
 - Aligned to Image32 ver.4.9 of 08 October
 - Added support for Dark-Lite FMX Component Editor

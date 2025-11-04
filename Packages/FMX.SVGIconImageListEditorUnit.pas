@@ -157,7 +157,7 @@ uses
   , Winapi.Windows
   , Winapi.shellApi
   , Xml.XMLDoc
-  {$IFDEF Image32_SVGEngine}
+  {$IFDEF FMX_Image32_SVGEngine}
   , Img32.SVG.Core
   {$ENDIF}
   , FMX.SVGIconsUtils

@@ -96,7 +96,7 @@ implementation
 
 uses
   FMX.ImageSVG
-  {$IFDEF Image32_SVGEngine}
+  {$IFDEF FMX_Image32_SVGEngine}
   , Img32.SVG.Core
   {$ENDIF}
   , FMX.SVGIconsUtils

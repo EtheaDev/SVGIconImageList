@@ -47,7 +47,7 @@ uses
   ;
 
 const
-  SVGIconImageListVersion = '4.5.2';
+  SVGIconImageListVersion = '4.5.3';
   DEFAULT_SIZE = 32;
   ZOOM_DEFAULT = 100;
   SVG_INHERIT_COLOR = TAlphaColors.Null;
@@ -245,13 +245,13 @@ uses
   , System.SysUtils
   , FMX.Forms
   , FMX.Consts
-  {$IFDEF Image32_SVGEngine}
+  {$IFDEF FMX_Image32_SVGEngine}
     {$IFNDEF SvgDisableEngineHint}
     {$MESSAGE HINT 'Use Delphi native Image32 SVG-Engine for SVGIconImageList'}
     {$ENDIF}
   , FMX.Image32SVG
   {$ENDIF}
-  {$IFDEF Skia_SVGEngine}
+  {$IFDEF FMX_Skia_SVGEngine}
     {$IFNDEF SvgDisableEngineHint}
     {$MESSAGE HINT 'Use Skia4Delphi "wrapper" SVG-Engine for SVGIconImageList'}
     {$ENDIF}
@@ -488,10 +488,10 @@ constructor TSVGIconSourceItem.Create(Collection: TCollection);
 begin
   inherited Create(Collection);
 
-  {$IFDEF Image32_SVGEngine}
+  {$IFDEF FMX_Image32_SVGEngine}
   FSVG := TFmxImage32SVG.Create;
   {$ENDIF}
-  {$IFDEF Skia_SVGEngine}
+  {$IFDEF FMX_Skia_SVGEngine}
   FSVG := TFmxImageSKIASVG.Create;
   {$ENDIF}
   FOpacity := -1;
@@ -730,10 +730,10 @@ begin
 
   if Assigned(LItem) then
   begin
-    {$IFDEF Image32_SVGEngine}
+    {$IFDEF FMX_Image32_SVGEngine}
     Result := TFmxImage32SVG.Create;
     {$ENDIF}
-    {$IFDEF Skia_SVGEngine}
+    {$IFDEF FMX_Skia_SVGEngine}
     Result := TFmxImageSKIASVG.Create;
     {$ENDIF}
 
@@ -767,10 +767,10 @@ var
   LErrors: string;
 begin
   Result := 0;
-  {$IFDEF Image32_SVGEngine}
+  {$IFDEF FMX_Image32_SVGEngine}
   LSVG := TFmxImage32SVG.Create;
   {$ENDIF}
-  {$IFDEF Skia_SVGEngine}
+  {$IFDEF FMX_Skia_SVGEngine}
   LSVG := TFmxImageSKIASVG.Create;
   {$ENDIF}
   try
