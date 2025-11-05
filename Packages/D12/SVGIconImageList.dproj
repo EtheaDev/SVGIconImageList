@@ -76,6 +76,7 @@
         <DCCReference Include="..\..\Source\dlgExportPNG.pas">
             <Form>ExportToPNGDialog</Form>
         </DCCReference>
+        <None Include="..\..\Source\SVGIconImageList.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

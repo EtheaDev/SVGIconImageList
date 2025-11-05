@@ -87,6 +87,7 @@
         <DCCReference Include="..\..\Source\FMX.SVGIconImageList.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImage.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconsUtils.pas"/>
+        <None Include="..\..\Source\SVGIconImageList.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
