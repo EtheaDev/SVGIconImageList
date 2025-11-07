@@ -69,3 +69,5 @@ __recovery/
 modules/
 
 Demo/Bin
+unins000.dat
+Packages/*/*.res
