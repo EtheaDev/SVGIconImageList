@@ -97,19 +97,19 @@
         <BuildGroupProject Include="SVGIconImageListRestClient.dproj">
             <ProjectGuid>{6B429884-4359-4314-9D3C-AF318FF8D6C2}</ProjectGuid>
             <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Platforms>Win32;Win64;Win64x</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="SVGImage32Package.dproj">
             <ProjectGuid>{D0A69637-2974-4401-9226-4F66893CB5CE}</ProjectGuid>
             <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Platforms>Win32;Win64;Win64x</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="SVGIconImageList.dproj">
             <ProjectGuid>{B5E8B9F1-C42D-4AFC-AE08-193731C6515B}</ProjectGuid>
             <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Platforms>Win32;Win64;Win64x</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="dclSVGIconImageList.dproj">
@@ -121,7 +121,7 @@
         <BuildGroupProject Include="SVGIconImageListFMX.dproj">
             <ProjectGuid>{45F75DEA-42F2-4C8C-AA3A-0C8FF47BEE1F}</ProjectGuid>
             <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Platforms>Win32;Win64;Win64x</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="dclSVGIconImageListFMX.dproj">
