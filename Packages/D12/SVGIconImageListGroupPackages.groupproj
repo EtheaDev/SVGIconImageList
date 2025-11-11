@@ -131,4 +131,42 @@
             <Enabled>True</Enabled>
         </BuildGroupProject>
     </ItemGroup>
+    <ItemGroup Condition="'$(BuildGroup)'=='Android'">
+        <BuildGroupProject Include="SVGIconImageListRestClient.dproj">
+            <ProjectGuid>{6B429884-4359-4314-9D3C-AF318FF8D6C2}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Android;Android64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="SVGImage32Package.dproj">
+            <ProjectGuid>{D0A69637-2974-4401-9226-4F66893CB5CE}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Android;Android64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="SVGIconImageList.dproj">
+            <ProjectGuid>{B5E8B9F1-C42D-4AFC-AE08-193731C6515B}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64;Win64x</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="dclSVGIconImageList.dproj">
+            <ProjectGuid>{265E39DA-3CDF-4D32-A71B-DE971C864350}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="SVGIconImageListFMX.dproj">
+            <ProjectGuid>{45F75DEA-42F2-4C8C-AA3A-0C8FF47BEE1F}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Android;Android64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="dclSVGIconImageListFMX.dproj">
+            <ProjectGuid>{D45ECCFB-40F6-46F7-8BC3-DBFAA3C12B32}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
 </Project>
