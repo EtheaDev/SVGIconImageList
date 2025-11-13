@@ -95,6 +95,7 @@
         <DCCReference Include="..\..\Image32\source\Clipper.Minkowski.pas"/>
         <DCCReference Include="..\..\Image32\source\Clipper.Offset.pas"/>
         <DCCReference Include="..\..\Image32\source\Clipper.RectClip.pas"/>
+        <None Include="..\..\Image32\source\Img32.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
