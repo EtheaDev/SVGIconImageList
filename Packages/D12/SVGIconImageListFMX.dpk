@@ -45,13 +45,11 @@ requires
 
 contains
   FMX.ImageSVG in '..\..\Source\FMX.ImageSVG.pas',
-  {$IFDEF FMX_Image32_SVGEngine}
+  {$IF DEFINED(FMX_Image32_SVGEngine) AND DEFINED(MSWINDOWS)}
   Img32.FMX in '..\..\Image32\Source\Img32.FMX.pas',
+  {$ENDIF}  
   FMX.Image32SVG in '..\..\Source\FMX.Image32SVG.pas',
-  {$ENDIF}
-  {$IFDEF FMX_Skia_SVGEngine}
   FMX.ImageSkiaSVG in '..\..\Source\FMX.ImageSkiaSVG.pas',
-  {$ENDIF}
   FMX.SVGIconImageList in '..\..\Source\FMX.SVGIconImageList.pas',
   FMX.SVGIconImage in '..\..\Source\FMX.SVGIconImage.pas',
   FMX.SVGIconsUtils in '..\..\Source\FMX.SVGIconsUtils.pas';
