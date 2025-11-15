@@ -84,6 +84,8 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="fmx.dcp"/>
         <DCCReference Include="..\..\Source\FMX.ImageSVG.pas"/>
+        <DCCReference Include="..\..\Source\FMX.Image32SVG.pas"/>
+        <DCCReference Include="..\..\Source\FMX.ImageSkiaSVG.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImageList.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconImage.pas"/>
         <DCCReference Include="..\..\Source\FMX.SVGIconsUtils.pas"/>
