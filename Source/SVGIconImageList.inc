@@ -1,4 +1,4 @@
-//To silent Hint messege of engine used
+﻿//To silent Hint messege of engine used
 {.$DEFINE SvgDisableEngineHint}
 
 //To use old OpenPictureDialog with image preview
@@ -41,8 +41,13 @@
     {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or SVGMagic_Engine or PreferNativeSvgSupport) at SVGIconImageList.inc or Compiler options)'}
   {$IFEND}
 
-  {$IF (DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine)}
-    {$MESSAGE FATAL 'You must define only one engine for VCL (Image32_SVGEngine or Skia_Engine) at SVGIconImageList.inc or Compiler options)'}
+  {$IF (DEFINED(Image32_SVGEngine) and DEFINED(Skia_SVGEngine)) or
+       (DEFINED(Image32_SVGEngine) and DEFINED(SVGMagic_Engine)) or
+       (DEFINED(Image32_SVGEngine) and DEFINED(PreferNativeSvgSupport)) or
+       (DEFINED(Skia_SVGEngine) and DEFINED(SVGMagic_Engine)) or
+       (DEFINED(Skia_SVGEngine) and DEFINED(PreferNativeSvgSupport)) or
+       (DEFINED(SVGMagic_Engine) and DEFINED(PreferNativeSvgSupport)) }
+    {$MESSAGE FATAL 'You must define only one engine for VCL (Image32_SVGEngine or Skia_Engine or SVGMagic_Engine or PreferNativeSvgSupport) at SVGIconImageList.inc or Compiler options)'}
   {$ENDIF}
 //***********************************************************************
 // End of VCL Directives
