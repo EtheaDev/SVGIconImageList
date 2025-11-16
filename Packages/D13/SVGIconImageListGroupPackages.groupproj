@@ -173,16 +173,28 @@
         </BuildGroupProject>
         <BuildGroupProject Include="SVGIconImageList.dproj">
             <ProjectGuid>{6A2D90DB-4A3F-445D-B413-E43EAB660CD0}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64;Win64x</Platforms>
+            <Configurations></Configurations>
+            <Platforms></Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="SVGMagicPackage.dproj">
+            <ProjectGuid>{F225ABEA-5266-44BB-BA7E-D81C77A0F0A1}</ProjectGuid>
+            <Configurations></Configurations>
+            <Platforms></Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>        
         <BuildGroupProject Include="dclSVGIconImageList.dproj">
             <ProjectGuid>{1E417A1F-FB83-4DB2-AC88-C8A00536AE33}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Configurations></Configurations>
+            <Platforms></Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="dclSVGMagicPackage.dproj">
+            <ProjectGuid>{99446A60-957E-4C51-852A-60C618078853}</ProjectGuid>
+            <Configurations></Configurations>
+            <Platforms></Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>        
         <BuildGroupProject Include="SVGIconImageListFMX.dproj">
             <ProjectGuid>{FC313885-EC07-4C74-9F6C-E51D1FE87C33}</ProjectGuid>
             <Configurations>Release</Configurations>
@@ -191,8 +203,8 @@
         </BuildGroupProject>
         <BuildGroupProject Include="dclSVGIconImageListFMX.dproj">
             <ProjectGuid>{9C2782FF-CA7B-4580-80CE-CABF3B1BE790}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Configurations></Configurations>
+            <Platforms></Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
     </ItemGroup>
