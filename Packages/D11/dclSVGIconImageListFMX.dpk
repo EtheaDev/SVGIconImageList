@@ -33,7 +33,6 @@ package dclSVGIconImageListFMX;
 
 requires
   DesignIDE,
-  dclstd,
   dclfmxstd,
   SVGIconImageListRestClient,
   SVGIconImageListFMX;

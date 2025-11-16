@@ -44,6 +44,9 @@ requires
   , Skia.Package.VCL
   , Skia.Package.RTL
   {$ENDIF}
+  {$IFDEF SVGMagic_Engine}
+  , SVGMagicPackage
+  {$ENDIF}
   ;
 
 contains
@@ -63,6 +66,9 @@ contains
   {$ENDIF}
   {$IFDEF Skia_SVGEngine}
   SkiaSVGFactory in '..\..\Source\SkiaSVGFactory.pas',
+  {$ENDIF}
+  {$IFDEF SVGMagic_Engine}
+  SVGMagicFactory in '..\..\Source\SVGMagicFactory.pas',
   {$ENDIF}
   SVGInterfaces in '..\..\Source\SVGInterfaces.pas',
   dlgExportPNG in '..\..\Source\dlgExportPNG.pas' {ExportToPNGDialog};

@@ -25,7 +25,7 @@ object SVGViewerForm: TSVGViewerForm
       Left = 1
       Top = 42
       Width = 198
-      Height = 557
+      Height = 257
       Align = alClient
       ItemHeight = 13
       TabOrder = 0
@@ -58,38 +58,21 @@ object SVGViewerForm: TSVGViewerForm
         OnClick = SetPathButtonClick
       end
     end
-  end
-  object RightPanel: TPanel
-    Left = 500
-    Top = 0
-    Width = 300
-    Height = 600
-    Align = alRight
-    BevelOuter = bvNone
-    TabOrder = 1
-    inline FrameViewSkia: TFrameView
-      Left = 0
-      Top = 300
-      Width = 300
-      Height = 300
-      Align = alClient
-      TabOrder = 0
-    end
     object ControlPanel: TPanel
-      Left = 0
-      Top = 0
-      Width = 300
+      Left = 1
+      Top = 299
+      Width = 198
       Height = 300
-      Align = alTop
+      Align = alBottom
       BevelOuter = bvNone
       Ctl3D = True
       ParentCtl3D = False
-      TabOrder = 1
+      TabOrder = 2
       object ColorGroupBox: TGroupBox
         AlignWithMargins = True
         Left = 3
         Top = 28
-        Width = 294
+        Width = 192
         Height = 71
         Align = alTop
         Caption = 'Fixed Color'
@@ -120,7 +103,7 @@ object SVGViewerForm: TSVGViewerForm
         AlignWithMargins = True
         Left = 3
         Top = 105
-        Width = 294
+        Width = 192
         Height = 57
         Align = alTop
         Caption = 'Aspect'
@@ -150,7 +133,7 @@ object SVGViewerForm: TSVGViewerForm
         AlignWithMargins = True
         Left = 3
         Top = 168
-        Width = 294
+        Width = 192
         Height = 57
         Align = alTop
         Caption = 'Opacity:'
@@ -158,7 +141,7 @@ object SVGViewerForm: TSVGViewerForm
         object OpacityTrackBar: TTrackBar
           Left = 2
           Top = 16
-          Width = 290
+          Width = 188
           Height = 39
           Align = alBottom
           Max = 100
@@ -173,7 +156,7 @@ object SVGViewerForm: TSVGViewerForm
         AlignWithMargins = True
         Left = 1
         Top = 1
-        Width = 298
+        Width = 196
         Height = 23
         Margins.Left = 1
         Margins.Top = 1
@@ -193,6 +176,31 @@ object SVGViewerForm: TSVGViewerForm
         TabOrder = 3
         StyleElements = [seBorder]
       end
+    end
+  end
+  object RightPanel: TPanel
+    Left = 500
+    Top = 0
+    Width = 300
+    Height = 600
+    Align = alRight
+    BevelOuter = bvNone
+    TabOrder = 1
+    inline FrameViewSkia: TFrameView
+      Left = 0
+      Top = 0
+      Width = 300
+      Height = 300
+      Align = alTop
+      TabOrder = 0
+    end
+    inline FrameViewSVGMagic: TFrameView
+      Left = 0
+      Top = 300
+      Width = 300
+      Height = 300
+      Align = alClient
+      TabOrder = 1
     end
   end
   object ClientPanel: TPanel

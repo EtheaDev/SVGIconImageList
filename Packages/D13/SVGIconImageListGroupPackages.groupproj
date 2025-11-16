@@ -9,10 +9,16 @@
         <Projects Include="SVGImage32Package.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="SVGMagicPackage.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="SVGIconImageList.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="dclSVGIconImageList.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="dclSVGMagicPackage.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="SVGIconImageListFMX.dproj">
@@ -47,6 +53,15 @@
     <Target Name="SVGImage32Package:Make">
         <MSBuild Projects="SVGImage32Package.dproj" Targets="Make"/>
     </Target>
+    <Target Name="SVGMagicPackage">
+        <MSBuild Projects="SVGMagicPackage.dproj"/>
+    </Target>
+    <Target Name="SVGMagicPackage:Clean">
+        <MSBuild Projects="SVGMagicPackage.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SVGMagicPackage:Make">
+        <MSBuild Projects="SVGMagicPackage.dproj" Targets="Make"/>
+    </Target>
     <Target Name="SVGIconImageList">
         <MSBuild Projects="SVGIconImageList.dproj"/>
     </Target>
@@ -64,6 +79,15 @@
     </Target>
     <Target Name="dclSVGIconImageList:Make">
         <MSBuild Projects="dclSVGIconImageList.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="dclSVGMagicPackage">
+        <MSBuild Projects="dclSVGMagicPackage.dproj"/>
+    </Target>
+    <Target Name="dclSVGMagicPackage:Clean">
+        <MSBuild Projects="dclSVGMagicPackage.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dclSVGMagicPackage:Make">
+        <MSBuild Projects="dclSVGMagicPackage.dproj" Targets="Make"/>
     </Target>
     <Target Name="SVGIconImageListFMX">
         <MSBuild Projects="SVGIconImageListFMX.dproj"/>
@@ -83,15 +107,6 @@
     <Target Name="dclSVGIconImageListFMX:Make">
         <MSBuild Projects="dclSVGIconImageListFMX.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Build">
-        <CallTarget Targets="SVGIconImageListRestClient;SVGImage32Package;SVGIconImageList;dclSVGIconImageList;SVGIconImageListFMX;dclSVGIconImageListFMX"/>
-    </Target>
-    <Target Name="Clean">
-        <CallTarget Targets="SVGIconImageListRestClient:Clean;SVGImage32Package:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean;SVGIconImageListFMX:Clean;dclSVGIconImageListFMX:Clean"/>
-    </Target>
-    <Target Name="Make">
-        <CallTarget Targets="SVGIconImageListRestClient:Make;SVGImage32Package:Make;SVGIconImageList:Make;dclSVGIconImageList:Make;SVGIconImageListFMX:Make;dclSVGIconImageListFMX:Make"/>
-    </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='ALL'">
         <BuildGroupProject Include="SVGIconImageListRestClient.dproj">
@@ -106,6 +121,12 @@
             <Platforms>Win32;Win64;Win64x</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="SVGMagicPackage.dproj">
+            <ProjectGuid>{F225ABEA-5266-44BB-BA7E-D81C77A0F0A1}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64;Win64x</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="SVGIconImageList.dproj">
             <ProjectGuid>{6A2D90DB-4A3F-445D-B413-E43EAB660CD0}</ProjectGuid>
             <Configurations>Release</Configurations>
@@ -114,6 +135,12 @@
         </BuildGroupProject>
         <BuildGroupProject Include="dclSVGIconImageList.dproj">
             <ProjectGuid>{1E417A1F-FB83-4DB2-AC88-C8A00536AE33}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="dclSVGMagicPackage.dproj">
+            <ProjectGuid>{99446A60-957E-4C51-852A-60C618078853}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
@@ -131,4 +158,13 @@
             <Enabled>True</Enabled>
         </BuildGroupProject>
     </ItemGroup>
+    <Target Name="Build">
+        <CallTarget Targets="SVGIconImageListRestClient;SVGImage32Package;SVGMagicPackage;SVGIconImageList;dclSVGIconImageList;dclSVGMagicPackage;SVGIconImageListFMX;dclSVGIconImageListFMX"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="SVGIconImageListRestClient:Clean;SVGImage32Package:Clean;SVGMagicPackage:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean;dclSVGMagicPackage:Clean;SVGIconImageListFMX:Clean;dclSVGIconImageListFMX:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="SVGIconImageListRestClient:Make;SVGImage32Package:Make;SVGMagicPackage:Make;SVGIconImageList:Make;dclSVGIconImageList:Make;dclSVGMagicPackage:Make;SVGIconImageListFMX:Make;dclSVGIconImageListFMX:Make"/>
+    </Target>
 </Project>

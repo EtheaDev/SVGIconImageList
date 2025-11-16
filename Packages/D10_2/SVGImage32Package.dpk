@@ -63,4 +63,3 @@ contains
   Clipper.RectClip in '..\..\Image32\source\Clipper.RectClip.pas';
 
 end.
-

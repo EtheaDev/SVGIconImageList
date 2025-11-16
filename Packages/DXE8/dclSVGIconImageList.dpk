@@ -40,7 +40,7 @@ contains
   SVGIconImageListEditorUnit in '..\SVGIconImageListEditorUnit.pas' {SVGIconImageListEditor},
   SVGIconImageRegister in '..\SVGIconImageRegister.pas',
   SVGTextPropertyEditorUnit in '..\SVGTextPropertyEditorUnit.pas' {SVGTextPropertyEditorForm},
-  SVGRESTClientFormUnit in '..\..\Packages\SVGRESTClientFormUnit.pas' {SVGRESTClientSearchForm},
+  SVGRESTClientFormUnit in '..\SVGRESTClientFormUnit.pas' {SVGRESTClientSearchForm},
   SVGIconSetFormUnit in '..\SVGIconSetFormUnit.pas' {SVGIconSetForm};
 
 end.

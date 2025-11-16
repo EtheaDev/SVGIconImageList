@@ -43,12 +43,10 @@ resourcestring
   LOAD_IMAGES_TIME = 'Load %d Images in %d msec.';
 
 type
-  TSVGFactory = (svgImage32, svgSkia, svgDirect2D);
-  //TSVGFactory = (svgImage32, svgSkia);
+  TSVGFactory = (svgImage32, svgSkia, svgDirect2D, svgSVGMagic);
 const
   ASVGFactoryNames: Array[TSVGFactory] of string =
-    //('Native Image32', 'Skia4Delphi');
-    ('Native Image32', 'Skia4Delphi', 'Direct2D');
+    ('Native Image32', 'Skia4Delphi', 'Direct2D', 'SVGMagic');
 
 type
   TfmExplorerSVG = class(TForm)
@@ -124,6 +122,7 @@ uses
   , Image32SVGFactory
   , D2DSVGFactory
   , SkiaSVGFactory
+  , SVGMagicFactory
   , SVGIconUtils
   , UITypes;
 
@@ -189,6 +188,8 @@ begin
       SetGlobalSvgFactory(GetImage32SVGFactory);
     svgSkia:
       SetGlobalSvgFactory(GetSkiaSVGFactory);
+    svgSVGMagic:
+      SetGlobalSvgFactory(GetSVGMagicFactory);
   end;
   grpFactory.ItemIndex := Ord(AFactory);
   Caption := Application.Title + ' - ' + ASVGFactoryNames[AFactory];
@@ -201,7 +202,7 @@ var
 begin
   LPath := ParamStr(1);
   if LPath = '' then
-    LPath := ExtractFilePath(ParamStr(0))+'..\..\Demo\svg_examples';
+    LPath := ExtractFilePath(ParamStr(0))+'..\..\svg_examples';
   DirSelection.Directory := LPath;
 end;
 

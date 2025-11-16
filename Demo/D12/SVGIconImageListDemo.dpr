@@ -38,7 +38,6 @@ uses
   UDataModule in '..\Source\UDataModule.pas' {ImageDataModule: TDataModule},
   SVGRESTClientFormUnit in '..\..\Packages\SVGRESTClientFormUnit.pas' {SVGRESTClientSearchForm},
   SVGIconSetFormUnit in '..\..\Packages\SVGIconSetFormUnit.pas' {SVGIconSetForm};
-
 {$R *.res}
 
 begin

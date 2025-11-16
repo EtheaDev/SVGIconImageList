@@ -23,6 +23,8 @@
   {$DEFINE Image32_SVGEngine}
   //or use Engine Skia with skia4delphi wrapper by Vinícius Felipe Botelho Barbosa (included into skia4delphi folder)
   {.$DEFINE Skia_SVGEngine}
+  //or use SVGMagic Engine with SVGMagicFactory
+  {.$DEFINE SVGMagic_Engine}
 
   // When IgnoreAntiAliasedColor is set it svgs paints well but not perfect on
   // all backgrounds.  Works best with Delphi_SVGEngine
@@ -32,8 +34,8 @@
   {$IFEND}
 
   //Check correct defines for VCL Apps
-  {$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine) and NOT DEFINED(PreferNativeSvgSupport)}
-    {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or PreferNativeSvgSupport) into SVGIconImageList.inc)'}
+  {$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine) and NOT DEFINED(PreferNativeSvgSupport) and NOT DEFINED(SVGMagic_Engine)}
+    {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or SVGMagic_Engine or PreferNativeSvgSupport) into SVGIconImageList.inc)'}
   {$IFEND}
 
   {$IF DEFINED(Image32_SVGEngine) and DEFINED(Skia_SVGEngine)}
