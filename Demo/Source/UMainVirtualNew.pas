@@ -128,12 +128,7 @@ implementation
 {$R *.dfm}
 
 uses
-  Image32SVGFactory
-//  , PasSVGFactory
-//  , SkiaSVGFactory
-//  , D2DSVGFactory
-
-  , Themes
+  Themes
   {$IFDEF DXE3+}
   , UITypes
   {$ENDIF}

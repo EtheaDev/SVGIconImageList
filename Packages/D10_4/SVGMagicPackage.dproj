@@ -1,0 +1,153 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{F225ABEA-5266-44BB-BA7E-D81C77A0F0A1}</ProjectGuid>
+        <MainSource>SVGMagicPackage.dpk</MainSource>
+        <ProjectVersion>19.2</ProjectVersion>
+        <FrameworkType>None</FrameworkType>
+        <Base>True</Base>
+        <Config Condition="'$(Config)'==''">Release</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <TargetedPlatforms>3</TargetedPlatforms>
+        <AppType>Package</AppType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_DcuOutput>..\..\Lib\D10_4\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_E>false</DCC_E>
+        <DCC_N>false</DCC_N>
+        <DCC_S>false</DCC_S>
+        <DCC_F>false</DCC_F>
+        <DCC_K>false</DCC_K>
+        <GenDll>true</GenDll>
+        <GenPackage>true</GenPackage>
+        <SanitizedProjectName>SVGMagicPackage</SanitizedProjectName>
+        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
+        <DCC_UnitSearchPath>..\..\SVGMagic\source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_Description>SVGMagic Library - Copyright Ursa Minor Ltd.</DCC_Description>
+        <DllSuffix>$(Auto)</DllSuffix>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+    </PropertyGroup>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="vcl.dcp"/>
+        <DCCReference Include="vclimg.dcp"/>
+        <DCCReference Include="soaprtl.dcp"/>
+        <DCCReference Include="..\..\SVGMagic\source\usp10.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWAnimationTimer.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWCacheHit.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWColor.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWDateTime.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWDesignPatterns.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWFillAndStroke.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWGenericNumber.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWGeometryTools.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWHelpers.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWLine.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWMajorSettings.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWMatrix.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWPadding.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWPoint.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWRect.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSize.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSmartPointer.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWStandardColor.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWTypes.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWVector.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWVersion.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWBlur.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWControlFont.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWControlRenderer.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWGDIPlusGradient.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWGraphicPath.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWRenderer.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWRenderer_GDI.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWRenderer_GDIPlus.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWRendererCommon.pas">
+            <Form>/Included in TWSVG</Form>
+        </DCCReference>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVG.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGAnimation.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGAnimationDescriptor.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGAttribute.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGCheckBoxStyle.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGCommon.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGComponentStyle.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGElements.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGFrameCalculator.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGGDIPlusRasterizer.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGGradients.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGGraphic.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGImage.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGImageButton.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGImageList.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGImageListFactory.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGItems.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGMeasure.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGParser.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGProperties.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGRadioButtonStyle.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGRasterizer.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGStyle.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGTags.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\UTWSVGFilters.pas"/>
+        <DCCReference Include="..\..\SVGMagic\source\Xml.VerySimple.pas"/>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType>Package</Borland.ProjectType>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Source>
+                    <Source Name="MainSource">SVGMagicPackage.dpk</Source>
+                </Source>
+                <Excluded_Packages/>
+            </Delphi.Personality>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">True</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+</Project>

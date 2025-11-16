@@ -19,12 +19,14 @@
   {$ENDIF}
 
   //if PreferNativeSvgSupport not active or not available, will use predefined engine:
-  //if XX_SVGEngine is not set at Compiler Options, one is defined here
-  {$IF NOT (DEFINED(Image32_SVGEngine) or DEFINED(Skia_SVGEngine))}
+  //if XX_SVGEngine is not set at Compiler Options (or PreferNativeSvgSupport defined), one is defined here
+  {$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine) and NOT DEFINED(PreferNativeSvgSupport) and NOT DEFINED(SVGMagic_Engine)}
     //use Delphi Engine from Image32 library by Angus Johnson (included into Image32 folder)
     {$DEFINE Image32_SVGEngine}
-    //or use Engine Skia with skia4delphi wrapper by Vinícius Felipe Botelho Barbosa (included into skia4delphi folder)
+    //or use Engine Skia with skia4delphi wrapper by VinÃ­cius Felipe Botelho Barbosa (included into skia4delphi folder)
     {.$DEFINE Skia_SVGEngine}
+    //or use SVGMagic Engine with SVGMagicFactory
+    {.$DEFINE SVGMagic_Engine}
   {$ENDIF}
 
   // When IgnoreAntiAliasedColor is set it svgs paints well but not perfect on
@@ -35,11 +37,11 @@
   {$ENDIF}
 
   //Check correct defines for VCL Apps
-  {$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine) and NOT DEFINED(PreferNativeSvgSupport)}
-    {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or PreferNativeSvgSupport) at SVGIconImageList.inc or Compiler options)'}
-  {$ENDIF}
+  {$IF NOT DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine) and NOT DEFINED(PreferNativeSvgSupport) and NOT DEFINED(SVGMagic_Engine)}
+    {$MESSAGE FATAL 'You must define at least one engine (Image32_SVGEngine or Skia_Engine or SVGMagic_Engine or PreferNativeSvgSupport) at SVGIconImageList.inc or Compiler options)'}
+  {$IFEND}
 
-  {$IF DEFINED(Image32_SVGEngine) and DEFINED(Skia_SVGEngine)}
+  {$IF (DEFINED(Image32_SVGEngine) and NOT DEFINED(Skia_SVGEngine)}
     {$MESSAGE FATAL 'You must define only one engine for VCL (Image32_SVGEngine or Skia_Engine) at SVGIconImageList.inc or Compiler options)'}
   {$ENDIF}
 //***********************************************************************
@@ -53,7 +55,7 @@
   {$IF NOT (DEFINED(FMX_Image32_SVGEngine) or DEFINED(FMX_Skia_SVGEngine))}
     //use Delphi Engine from Image32 library by Angus Johnson (included into Image32 folder)
     {$DEFINE FMX_Image32_SVGEngine}
-    //or use Engine Skia with skia4delphi wrapper by Vinícius Felipe Botelho Barbosa (included into skia4delphi folder)
+    //or use Engine Skia with skia4delphi wrapper by VinÃ­cius Felipe Botelho Barbosa (included into skia4delphi folder)
     {.$DEFINE FMX_Skia_SVGEngine}
   {$ENDIF}
 

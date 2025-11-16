@@ -1,6 +1,6 @@
 {-----------------------------------------------------------------------------
  Unit Name: UBenchmark
- Author:    Lübbe Onken
+ Author:    Lï¿½bbe Onken
  Purpose:   Main form for SVG Factories Benchmark
  History:
 -----------------------------------------------------------------------------}
@@ -18,13 +18,11 @@ uses
   Vcl.ComCtrls, Vcl.VirtualImageList;
 
 type
-  TSVGFactory = (svgImage32, svgSkia, svgDirect2D);
-  //TSVGFactory = (svgSkia, svgImage32);
+  TSVGFactory = (svgImage32, svgSkia, svgDirect2D, svgSVGMagic);
 
 const
   ASVGFactoryNames: Array[TSVGFactory] of string =
-    ('Native Image32','Skia4Delphi','Direct2D');
-    //('Skia4Delphi','Native Image32');
+    ('Native Image32', 'Skia4Delphi', 'Direct2D', 'SVGMagic');
 
 type
   TfrmBenchmark = class(TForm)
@@ -92,6 +90,7 @@ uses
   Image32SVGFactory,
   D2DSVGFactory,
   SkiaSVGFactory,
+  SVGMagicFactory,
   System.IOUtils,
   System.Math,
   System.StrUtils,
@@ -408,6 +407,8 @@ begin
       SetGlobalSvgFactory(GetImage32SVGFactory);
     svgSkia:
       SetGlobalSvgFactory(GetSkiaSVGFactory);
+    svgSVGMagic:
+      SetGlobalSvgFactory(GetSVGMagicFactory);
   end;
   grpFactory.ItemIndex := Ord(AFactory);
 end;

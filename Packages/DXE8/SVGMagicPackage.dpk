@@ -1,0 +1,102 @@
+package SVGMagicPackage;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE RELEASE}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'SVGMagic Package - Copyright  Ursa Minor Ltd.'}
+{$LIBSUFFIX '220'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  vclimg,
+  soaprtl;
+
+contains
+  //Included in TWCommonPackage
+  usp10 in '..\..\SVGMagic\source\usp10.pas',
+  UTWAnimationTimer in '..\..\SVGMagic\source\UTWAnimationTimer.pas',
+  UTWCacheHit in '..\..\SVGMagic\source\UTWCacheHit.pas',
+  UTWColor in '..\..\SVGMagic\source\UTWColor.pas',
+  UTWDateTime in '..\..\SVGMagic\source\UTWDateTime.pas',
+  UTWDesignPatterns in '..\..\SVGMagic\source\UTWDesignPatterns.pas',
+  UTWFillAndStroke in '..\..\SVGMagic\source\UTWFillAndStroke.pas',
+  UTWGenericNumber in '..\..\SVGMagic\source\UTWGenericNumber.pas',
+  UTWGeometryTools in '..\..\SVGMagic\source\UTWGeometryTools.pas',
+  UTWHelpers in '..\..\SVGMagic\source\UTWHelpers.pas',
+  UTWLine in '..\..\SVGMagic\source\UTWLine.pas',
+  UTWMajorSettings in '..\..\SVGMagic\source\UTWMajorSettings.pas',
+  UTWMatrix in '..\..\SVGMagic\source\UTWMatrix.pas',
+  UTWPadding in '..\..\SVGMagic\source\UTWPadding.pas',
+  UTWPoint in '..\..\SVGMagic\source\UTWPoint.pas',
+  UTWRect in '..\..\SVGMagic\source\UTWRect.pas',
+  UTWSize in '..\..\SVGMagic\source\UTWSize.pas',
+  UTWSmartPointer in '..\..\SVGMagic\source\UTWSmartPointer.pas',
+  UTWStandardColor in '..\..\SVGMagic\source\UTWStandardColor.pas',
+  UTWTypes in '..\..\SVGMagic\source\UTWTypes.pas',
+  UTWVector in '..\..\SVGMagic\source\UTWVector.pas',
+  UTWVersion in '..\..\SVGMagic\source\UTWVersion.pas',
+  //Included in TWRendering Package
+  UTWBlur in '..\..\SVGMagic\source\UTWBlur.pas',
+  UTWControlFont in '..\..\SVGMagic\source\UTWControlFont.pas',
+  UTWControlRenderer in '..\..\SVGMagic\source\UTWControlRenderer.pas',
+  UTWGDIPlusGradient in '..\..\SVGMagic\source\UTWGDIPlusGradient.pas',
+  UTWGraphicPath in '..\..\SVGMagic\source\UTWGraphicPath.pas',
+  UTWRenderer in '..\..\SVGMagic\source\UTWRenderer.pas',
+  UTWRenderer_GDI in '..\..\SVGMagic\source\UTWRenderer_GDI.pas',
+  UTWRenderer_GDIPlus in '..\..\SVGMagic\source\UTWRenderer_GDIPlus.pas',
+  UTWRendererCommon in '..\..\SVGMagic\source\UTWRendererCommon.pas',
+  //Included in TWSVG Package
+  UTWSVG in '..\..\SVGMagic\source\UTWSVG.pas',
+  UTWSVGAnimation in '..\..\SVGMagic\source\UTWSVGAnimation.pas',
+  UTWSVGAnimationDescriptor in '..\..\SVGMagic\source\UTWSVGAnimationDescriptor.pas',
+  UTWSVGAttribute in '..\..\SVGMagic\source\UTWSVGAttribute.pas',
+  UTWSVGCheckBoxStyle in '..\..\SVGMagic\source\UTWSVGCheckBoxStyle.pas',
+  UTWSVGCommon in '..\..\SVGMagic\source\UTWSVGCommon.pas',
+  UTWSVGComponentStyle in '..\..\SVGMagic\source\UTWSVGComponentStyle.pas',
+  UTWSVGElements in '..\..\SVGMagic\source\UTWSVGElements.pas',
+  UTWSVGFrameCalculator in '..\..\SVGMagic\source\UTWSVGFrameCalculator.pas',
+  UTWSVGGDIPlusRasterizer in '..\..\SVGMagic\source\UTWSVGGDIPlusRasterizer.pas',
+  UTWSVGGradients in '..\..\SVGMagic\source\UTWSVGGradients.pas',
+  UTWSVGGraphic in '..\..\SVGMagic\source\UTWSVGGraphic.pas',
+  UTWSVGImage in '..\..\SVGMagic\source\UTWSVGImage.pas',
+  UTWSVGImageButton in '..\..\SVGMagic\source\UTWSVGImageButton.pas',
+  UTWSVGImageList in '..\..\SVGMagic\source\UTWSVGImageList.pas',
+  UTWSVGImageListFactory in '..\..\SVGMagic\source\UTWSVGImageListFactory.pas',
+  UTWSVGItems in '..\..\SVGMagic\source\UTWSVGItems.pas',
+  UTWSVGMeasure in '..\..\SVGMagic\source\UTWSVGMeasure.pas',
+  UTWSVGParser in '..\..\SVGMagic\source\UTWSVGParser.pas',
+  UTWSVGProperties in '..\..\SVGMagic\source\UTWSVGProperties.pas',
+  UTWSVGRadioButtonStyle in '..\..\SVGMagic\source\UTWSVGRadioButtonStyle.pas',
+  UTWSVGRasterizer in '..\..\SVGMagic\source\UTWSVGRasterizer.pas',
+  UTWSVGStyle in '..\..\SVGMagic\source\UTWSVGStyle.pas',
+  UTWSVGTags in '..\..\SVGMagic\source\UTWSVGTags.pas',
+  UTWSVGFilters in '..\..\SVGMagic\source\UTWSVGFilters.pas',
+  Xml.VerySimple in '..\..\SVGMagic\source\Xml.VerySimple.pas';
+
+end.
+

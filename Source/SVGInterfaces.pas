@@ -84,6 +84,11 @@ Uses
     {$MESSAGE HINT 'Use Skia4Delphi "wrapper" SVG-Engine for SVGIconImageList'}
     {$ENDIF}
     SkiaSVGFactory
+  {$ELSEIF DEFINED(SVGMagic_Engine)}
+    {$IFNDEF SvgDisableEngineHint}
+    {$MESSAGE HINT 'Use Delphi native SVGMagic Engine for SVGIconImageList'}
+    {$ENDIF}
+    SVGMagicFactory
   {$IFEND}
   {$IFDEF PreferNativeSvgSupport}
     {$IFNDEF SvgDisableEngineHint}
@@ -109,6 +114,8 @@ begin
       FGlobalSVGFactory := GetImage32SVGFactory;
     {$ELSEIF DEFINED(Skia_SVGEngine)}
       FGlobalSVGFactory := GetSkiaSVGFactory;
+    {$ELSEIF DEFINED(SVGMagic_Engine)}
+      FGlobalSVGFactory := GetSVGMagicFactory;
     {$IFEND}
   end;
   Result := FGlobalSVGFactory;
@@ -130,6 +137,8 @@ begin
     Result := 'Delphi Image32 Engine'
   {$ELSEIF DEFINED(Skia_SVGEngine)}
     Result := 'Skia4delphi Engine'
+  {$ELSEIF DEFINED(SVGMagic_Engine)}
+    Result := 'SVGMagic Engine'
   {$IFEND}
 end;
 

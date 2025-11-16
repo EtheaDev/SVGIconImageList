@@ -1,15 +1,21 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{CA7632FE-2EC3-4AC0-9CC7-D83EF27A531A}</ProjectGuid>
+        <ProjectGuid>{205184C9-5441-42D1-8ECA-E9F19312864E}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
         <Projects Include="SVGImage32Package.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="SVGMagicPackage.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="SVGIconImageList.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="dclSVGIconImageList.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="dclSVGMagicPackage.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -29,6 +35,15 @@
     <Target Name="SVGImage32Package:Make">
         <MSBuild Projects="SVGImage32Package.dproj" Targets="Make"/>
     </Target>
+    <Target Name="SVGMagicPackage">
+        <MSBuild Projects="SVGMagicPackage.dproj"/>
+    </Target>
+    <Target Name="SVGMagicPackage:Clean">
+        <MSBuild Projects="SVGMagicPackage.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SVGMagicPackage:Make">
+        <MSBuild Projects="SVGMagicPackage.dproj" Targets="Make"/>
+    </Target>
     <Target Name="SVGIconImageList">
         <MSBuild Projects="SVGIconImageList.dproj"/>
     </Target>
@@ -47,34 +62,55 @@
     <Target Name="dclSVGIconImageList:Make">
         <MSBuild Projects="dclSVGIconImageList.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Build">
-        <CallTarget Targets="SVGImage32Package;SVGIconImageList;dclSVGIconImageList"/>
+    <Target Name="dclSVGMagicPackage">
+        <MSBuild Projects="dclSVGMagicPackage.dproj"/>
     </Target>
-    <Target Name="Clean">
-        <CallTarget Targets="SVGImage32Package:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean"/>
+    <Target Name="dclSVGMagicPackage:Clean">
+        <MSBuild Projects="dclSVGMagicPackage.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Make">
-        <CallTarget Targets="SVGImage32Package:Make;SVGIconImageList:Make;dclSVGIconImageList:Make"/>
+    <Target Name="dclSVGMagicPackage:Make">
+        <MSBuild Projects="dclSVGMagicPackage.dproj" Targets="Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='ALL'">
         <BuildGroupProject Include="SVGImage32Package.dproj">
-            <ProjectGuid>{b0611561-d37d-4809-a36c-19e36e5a2fbb}</ProjectGuid>
+            <ProjectGuid>{2CD52E11-1ED4-4102-8D51-32480210103C}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="SVGMagicPackage.dproj">
+            <ProjectGuid>{F225ABEA-5266-44BB-BA7E-D81C77A0F0A1}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="SVGIconImageList.dproj">
-            <ProjectGuid>{de2caba8-785f-498a-94f8-5d786b8a2232}</ProjectGuid>
+            <ProjectGuid>{6A2D90DB-4A3F-445D-B413-E43EAB660CD0}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="dclSVGIconImageList.dproj">
-            <ProjectGuid>{797e5966-bf29-4ec0-b010-8e3c6a6339d3}</ProjectGuid>
+            <ProjectGuid>{1E417A1F-FB83-4DB2-AC88-C8A00536AE33}</ProjectGuid>
             <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="dclSVGMagicPackage.dproj">
+            <ProjectGuid>{99446A60-957E-4C51-852A-60C618078853}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
     </ItemGroup>
+    <Target Name="Build">
+        <CallTarget Targets="SVGImage32Package;SVGMagicPackage;SVGIconImageList;dclSVGIconImageList;dclSVGMagicPackage"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="SVGImage32Package:Clean;SVGMagicPackage:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean;dclSVGMagicPackage:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="SVGImage32Package:Make;SVGMagicPackage:Make;SVGIconImageList:Make;dclSVGIconImageList:Make;dclSVGMagicPackage:Make"/>
+    </Target>
 </Project>
