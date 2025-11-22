@@ -31,12 +31,21 @@ package SVGImage32Package;
 {$IMPLICITBUILD OFF}
 
 requires
-  rtl,
+  {$IFNDEF FRAMEWORK_FMX}
   vcl,
-  vclimg;
+  vclimg
+  {$ELSE}
+  fmx
+  {$ENDIF}
+  ;
 
 contains
   Img32 in '..\..\Image32\source\Img32.pas',
+  {$IFNDEF FRAMEWORK_FMX}
+  Img32.Panels in '..\..\Image32\source\Img32.Panels.pas',
+  {$ELSE}
+  Img32.FMX in '..\..\Image32\source\Img32.FMX.pas',
+  {$ENDIF}
   Img32.Fmt.BMP in '..\..\Image32\source\Img32.Fmt.BMP.pas',
   Img32.Panels in '..\..\Image32\source\Img32.Panels.pas',
   Img32.Fmt.PNG in '..\..\Image32\source\Img32.Fmt.PNG.pas',

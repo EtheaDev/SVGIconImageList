@@ -26,7 +26,11 @@
 {******************************************************************************}
 unit FMX.ImageSkiaSVG;
 
+{$INCLUDE ..\..\Source\SVGIconImageList.inc}
+
 interface
+
+{$IF DEFINED(FMX_Skia_SVGEngine)}
 
 Uses
   System.Types
@@ -41,7 +45,7 @@ Uses
   , FMX.Graphics
   , FMX.Objects
   , FMX.ImageSVG
-  , System.Skia       
+  , System.Skia
   , FMX.Skia;
 
 type
@@ -65,7 +69,11 @@ type
     destructor Destroy; override;
   end;
 
+{$ENDIF}
+
 implementation
+
+{$IF DEFINED(FMX_Skia_SVGEngine)}
 
 { TFmxImageSkiaSVG }
 constructor TFmxImageSkiaSVG.Create;
@@ -151,5 +159,7 @@ begin
       Draw(ACanvas, LDestRect, Opacity);
     end);
 end;
+
+{$ENDIF}
 
 end.

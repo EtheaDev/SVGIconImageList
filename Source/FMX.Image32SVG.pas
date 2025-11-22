@@ -26,7 +26,11 @@
 {******************************************************************************}
 unit FMX.Image32SVG;
 
+{$INCLUDE ..\..\Source\SVGIconImageList.inc}
+
 interface
+
+{$IF DEFINED(FMX_Image32_SVGEngine)}
 
 Uses
   System.Types
@@ -67,7 +71,11 @@ type
     destructor Destroy; override;
   end;
 
+{$ENDIF}
+
 implementation
+
+{$IF DEFINED(FMX_Image32_SVGEngine)}
 
 function AlphaToColor32(AlphaColor: TAlphaColor): TColor32;
 var
@@ -189,6 +197,8 @@ initialization
   FontManager.LoadFontReaderFamily('Times New Roman');
   FontManager.LoadFontReaderFamily('Segoe UI');
   FontManager.LoadFontReaderFamily('Segoe UI Emoji');
+{$ENDIF}
+
 {$ENDIF}
 
 end.
