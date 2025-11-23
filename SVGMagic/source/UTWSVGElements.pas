@@ -4209,8 +4209,8 @@ begin
     Relative := isRelative;
 
     // calculate the value length to extract
-    if (len = 1) then
-        valLen := 1
+    if (len <= 1) then
+        valLen := 0
     else
         valLen := len - 1;
 

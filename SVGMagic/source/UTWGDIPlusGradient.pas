@@ -1019,7 +1019,7 @@ begin
     if ((vectorCount = 0) or (index >= vectorCount)) then
         Exit;
 
-    TailElements := vectorCount - index;
+    TailElements := vectorCount - index - 1;
 
     if (TailElements > 0) then
         Move(vectors[index + 1], vectors[index], SizeOf(TWVector2) * TailElements);

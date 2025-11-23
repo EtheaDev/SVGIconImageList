@@ -26,6 +26,7 @@ Uses
   System.SysUtils,
   System.Classes,
   Vcl.Graphics,
+  Xml.VerySimple,
   UTWSVG,
   UTWSVGGraphic,
   UTWSVGRasterizer,
@@ -39,6 +40,7 @@ type
     fSVGGraphic: TWSVGGraphic;
     fRasterizer: TWSVGGDIPlusRasterizer;
     FSource: String;
+    FOriginalSource: String; // Original SVG source without color modifications
     FWidth: Single;
     FHeight: Single;
     FFixedColor: TColor;
@@ -69,6 +71,7 @@ type
     procedure LoadFromSource;
     procedure SourceFromStream(Stream: TStream);
     procedure UpdateSizeInfo;
+    function ApplyFixedColorToSVGSource(const SVGSource: string): string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -104,6 +107,7 @@ procedure TSVGMagic.Clear;
 begin
   fSVG.Clear;
   FSource := '';
+  FOriginalSource := '';
   FWidth := 0;
   FHeight := 0;
 end;
@@ -138,9 +142,9 @@ begin
   // Clear previous SVG data
   fSVG.Clear;
 
-  if FSource <> '' then
+  if FOriginalSource <> '' then
   begin
-    StringStream := TStringStream.Create(FSource, TEncoding.UTF8);
+    StringStream := TStringStream.Create(FOriginalSource, TEncoding.UTF8);
     try
       StringStream.Position := 0;
       if not fSVG.LoadFromStream(StringStream) then
@@ -165,7 +169,8 @@ begin
   try
     Stream.Position := 0;
     LStream.LoadFromStream(Stream);
-    FSource := LStream.DataString;
+    FOriginalSource := LStream.DataString;
+    FSource := FOriginalSource; // Initially same as original
   finally
     LStream.Free;
   end;
@@ -217,8 +222,95 @@ procedure TSVGMagic.SaveToStream(Stream: TStream);
 var
   Buffer: TBytes;
 begin
-  Buffer := TEncoding.UTF8.GetBytes(FSource);
+  // Save the original source (not the modified one with fixed colors)
+  Buffer := TEncoding.UTF8.GetBytes(FOriginalSource);
   Stream.WriteBuffer(Buffer, Length(Buffer))
+end;
+
+function TSVGMagic.ApplyFixedColorToSVGSource(const SVGSource: string): string;
+var
+  ColorStr: string;
+  RgbColor: TColor;
+  R, G, B: Byte;
+  XmlDoc: TXmlVerySimple;
+  StringStream: TStringStream;
+  OutputStringStream: TStringStream;
+
+  procedure ProcessNode(Node: TXMLNode; IsRoot: Boolean);
+  var
+    I: Integer;
+    NodeName: string;
+    HasStroke: Boolean;
+  begin
+    if Node = nil then
+      Exit;
+
+    NodeName := LowerCase(Node.NodeName);
+
+    // Check if this is an SVG element that can have fill/stroke
+    if (NodeName = 'svg') or (NodeName = 'g') or (NodeName = 'path') or
+       (NodeName = 'rect') or (NodeName = 'circle') or (NodeName = 'ellipse') or
+       (NodeName = 'line') or (NodeName = 'polyline') or (NodeName = 'polygon') or
+       (NodeName = 'text') or (NodeName = 'tspan') then
+    begin
+      // Only process if ApplyToRootOnly is false OR this is the root element
+      if (not FApplyFixedColorToRootOnly) or IsRoot then
+      begin
+        // Check if element originally had stroke
+        HasStroke := Node.HasAttribute('stroke');
+
+        // Set fill attribute
+        Node.SetAttribute('fill', ColorStr);
+
+        // Only set stroke if element originally had it
+        if HasStroke then
+          Node.SetAttribute('stroke', ColorStr);
+      end;
+    end;
+
+    // Recursively process child nodes
+    for I := 0 to Node.ChildNodes.Count - 1 do
+      ProcessNode(Node.ChildNodes[I], False);
+  end;
+
+begin
+  Result := SVGSource;
+
+  if (FFixedColor = TColors.SysDefault) or (FFixedColor = TColors.SysNone) then
+    Exit;
+
+  // Convert TColor to RGB
+  RgbColor := ColorToRGB(FFixedColor);
+  R := GetRValue(RgbColor);
+  G := GetGValue(RgbColor);
+  B := GetBValue(RgbColor);
+  ColorStr := Format('rgb(%d,%d,%d)', [R, G, B]);
+
+  XmlDoc := TXmlVerySimple.Create;
+  try
+    // Parse the SVG source
+    StringStream := TStringStream.Create(SVGSource, TEncoding.UTF8);
+    try
+      XmlDoc.LoadFromStream(StringStream);
+    finally
+      StringStream.Free;
+    end;
+
+    // Process the root node (DocumentElement is the public property)
+    if XmlDoc.DocumentElement <> nil then
+      ProcessNode(XmlDoc.DocumentElement, True);
+
+    // Convert back to string
+    OutputStringStream := TStringStream.Create('', TEncoding.UTF8);
+    try
+      XmlDoc.SaveToStream(OutputStringStream);
+      Result := OutputStringStream.DataString;
+    finally
+      OutputStringStream.Free;
+    end;
+  finally
+    XmlDoc.Free;
+  end;
 end;
 
 procedure TSVGMagic.PaintTo(DC: HDC; R: TRectF; KeepAspectRatio: Boolean);
@@ -229,8 +321,11 @@ var
   X, Y: Integer;
   Row: PRGBQuad;
   Gray: Byte;
-  FixedR, FixedG, FixedB: Byte;
   BlendFunc: TBlendFunction;
+  TempSVG: TWSVG;
+  SVGSourceToRender: string;
+  StringStream: TStringStream;
+  NeedTempSVG: Boolean;
 begin
   if IsEmpty then
   begin
@@ -238,6 +333,37 @@ begin
     FillRect(DC, Rect(Round(R.Left), Round(R.Top), Round(R.Right), Round(R.Bottom)), GetStockObject(WHITE_BRUSH));
     Exit;
   end;
+
+  // Check if we need to apply fixed color by modifying the source
+  NeedTempSVG := (FFixedColor <> TColors.SysDefault) and (FFixedColor <> TColors.SysNone) and not FGrayScale;
+
+  // If we need to apply fixed color, create a temporary SVG with modified source
+  if NeedTempSVG then
+  begin
+    SVGSourceToRender := ApplyFixedColorToSVGSource(FOriginalSource);
+    TempSVG := TWSVG.Create;
+    try
+      StringStream := TStringStream.Create(SVGSourceToRender, TEncoding.UTF8);
+      try
+        StringStream.Position := 0;
+        if not TempSVG.LoadFromStream(StringStream) then
+        begin
+          // If loading fails, fall back to original
+          TempSVG.Free;
+          TempSVG := nil;
+          NeedTempSVG := False;
+        end;
+      finally
+        StringStream.Free;
+      end;
+    except
+      TempSVG.Free;
+      TempSVG := nil;
+      NeedTempSVG := False;
+    end;
+  end
+  else
+    TempSVG := nil;
 
   // Create a temporary bitmap for rendering
   Bitmap := TBitmap.Create;
@@ -256,7 +382,11 @@ begin
     Animation.m_pCustomData := nil;
 
     // Render SVG to bitmap using the rasterizer
-    fRasterizer.Draw(fSVG, DestRect, KeepAspectRatio, True, Animation, Bitmap.Canvas);
+    // Use TempSVG if we applied fixed color, otherwise use fSVG
+    if NeedTempSVG and Assigned(TempSVG) then
+      fRasterizer.Draw(TempSVG, DestRect, KeepAspectRatio, True, Animation, Bitmap.Canvas)
+    else
+      fRasterizer.Draw(fSVG, DestRect, KeepAspectRatio, True, Animation, Bitmap.Canvas);
 
     // Apply grayscale if needed (similar to Image32.Grayscale)
     if FGrayScale then
@@ -274,33 +404,6 @@ begin
             Row^.rgbRed := Gray;
             Row^.rgbGreen := Gray;
             Row^.rgbBlue := Gray;
-          end;
-          Inc(Row);
-        end;
-      end;
-    end;
-
-    // Apply fixed color if needed (similar to Image32.SetRGB)
-    // NOTE: SVGMagic doesn't provide easy access to modify element colors before rendering,
-    // so ApplyToRootOnly is not fully supported - all SVG elements get the fixed color
-    if (FFixedColor <> TColors.SysDefault) and (FFixedColor <> TColors.SysNone) and not FGrayScale then
-    begin
-      FixedR := GetRValue(FFixedColor);
-      FixedG := GetGValue(FFixedColor);
-      FixedB := GetBValue(FFixedColor);
-
-      for Y := 0 to Bitmap.Height - 1 do
-      begin
-        Row := Bitmap.ScanLine[Y];
-        for X := 0 to Bitmap.Width - 1 do
-        begin
-          // Only process non-transparent pixels
-          if Row^.rgbReserved > 0 then
-          begin
-            // Replace RGB with FixedColor (like Image32 SetRGB)
-            Row^.rgbRed := FixedR;
-            Row^.rgbGreen := FixedG;
-            Row^.rgbBlue := FixedB;
           end;
           Inc(Row);
         end;
@@ -350,6 +453,8 @@ begin
                        BlendFunc);
   finally
     Bitmap.Free;
+    if Assigned(TempSVG) then
+      TempSVG.Free;
   end;
 end;
 
@@ -380,7 +485,8 @@ end;
 
 function TSVGMagic.GetSource: string;
 begin
-  Result := FSource;
+  // Always return the original source (not the modified one with fixed colors)
+  Result := FOriginalSource;
 end;
 
 function TSVGMagic.GetWidth: Single;
@@ -389,41 +495,29 @@ begin
 end;
 
 procedure TSVGMagic.SetApplyFixedColorToRootOnly(Value: Boolean);
-var
-  Color: TColor;
 begin
   if FApplyFixedColorToRootOnly <> Value then
   begin
     FApplyFixedColorToRootOnly := Value;
-    if FFixedColor <> TColors.SysDefault then
-    begin
-       Color := FFixedColor;
-       FFixedColor := TColors.SysDefault;
-       LoadFromSource;
-       SetFixedColor(Color);
-    end;
   end;
 end;
 
 procedure TSVGMagic.SetFixedColor(const Color: TColor);
 begin
   if Color = FFixedColor then Exit;
-  if (FGrayScale and (Color <> TColors.SysDefault)) or
-    ((FFixedColor <> TColors.SysDefault) and (Color = TColors.SysDefault))
-  then
-    LoadFromSource;
-  if Color < 0  then
+
+  // Convert system color to RGB
+  if Color < 0 then
     FFixedColor := GetSysColor(Color and $000000FF)
   else
     FFixedColor := Color;
+
   FGrayScale := False;
 end;
 
 procedure TSVGMagic.SetGrayScale(const IsGrayScale: Boolean);
 begin
   if IsGrayScale = FGrayScale then Exit;
-  if FGrayScale or (FFixedColor <> TColors.SysDefault) then
-    LoadFromSource;
   FGrayScale := IsGrayScale;
   FFixedColor := TColors.SysDefault;
 end;
@@ -435,9 +529,9 @@ end;
 
 procedure TSVGMagic.SetSource(const ASource: string);
 begin
-  if FSource <> ASource then
+  if FOriginalSource <> ASource then
   begin
-    FSource := ASource;
+    FOriginalSource := ASource;
     LoadFromSource;
   end;
 end;

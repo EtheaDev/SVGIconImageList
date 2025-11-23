@@ -603,8 +603,7 @@ begin
                 // paint the target control content on the overlay
                 try
                     m_pOwnerStyle.m_pOverlay.Canvas.Lock;
-                    m_pTarget.Perform(WM_ERASEBKGND,  m_pOwnerStyle.m_pOverlay.Canvas.Handle,
-                            m_pOwnerStyle.m_pOverlay.Canvas.Handle);
+                    m_pTarget.Perform(WM_ERASEBKGND,  m_pOwnerStyle.m_pOverlay.Canvas.Handle, 0);
                     m_pTarget.Perform(WM_PRINTCLIENT, m_pOwnerStyle.m_pOverlay.Canvas.Handle,
                             PRF_CLIENT);
                 finally
