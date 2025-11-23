@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{2CD52E11-1ED4-4102-8D51-32480210103C}</ProjectGuid>
         <MainSource>SVGImage32Package.dpk</MainSource>
-        <ProjectVersion>20.3</ProjectVersion>
+        <ProjectVersion>20.2</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>

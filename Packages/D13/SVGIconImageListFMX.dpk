@@ -35,7 +35,7 @@ requires
   rtl
   , fmx
   {$IFDEF FMX_Image32_SVGEngine}
-    , SVGImage32Package
+  , SVGImage32Package
   {$ENDIF}
   {$IFDEF FMX_Skia_SVGEngine}
   , Skia.Package.FMX

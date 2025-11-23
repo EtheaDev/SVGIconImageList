@@ -112,13 +112,13 @@
         <BuildGroupProject Include="dclSVGIconImageList.dproj">
             <ProjectGuid>{1E417A1F-FB83-4DB2-AC88-C8A00536AE33}</ProjectGuid>
             <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="dclSVGMagicPackage.dproj">
             <ProjectGuid>{99446A60-957E-4C51-852A-60C618078853}</ProjectGuid>
             <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
     </ItemGroup>
