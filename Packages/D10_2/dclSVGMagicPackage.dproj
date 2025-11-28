@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{99446A60-957E-4C51-852A-60C618078853}</ProjectGuid>
         <MainSource>dclSVGMagicPackage.dpk</MainSource>
-        <ProjectVersion>18.5</ProjectVersion>
+        <ProjectVersion>18.4</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>

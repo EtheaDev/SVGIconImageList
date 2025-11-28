@@ -47,7 +47,10 @@ contains
   FMX.ImageSVG in '..\..\Source\FMX.ImageSVG.pas',
   {$IF DEFINED(FMX_Image32_SVGEngine) AND DEFINED(MSWINDOWS)}
   Img32.FMX in '..\..\Image32\Source\Img32.FMX.pas',
-  {$ENDIF}  
+  {$ENDIF}
+  {$IFDEF FMX_Skia_SVGEngine}
+  SkiaSVGUtils in '..\..\Source\SkiaSVGUtils.pas',
+  {$ENDIF}
   FMX.Image32SVG in '..\..\Source\FMX.Image32SVG.pas',
   FMX.ImageSkiaSVG in '..\..\Source\FMX.ImageSkiaSVG.pas',
   FMX.SVGIconImageList in '..\..\Source\FMX.SVGIconImageList.pas',

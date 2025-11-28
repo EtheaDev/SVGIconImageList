@@ -64,10 +64,10 @@ end;
 *)
 
 procedure UpdateFormStyleFromIDE(const AForm: TForm);
+var
+  LDesignModuleUtils: TDesignModuleUtils;
 {$IFNDEF UseSVGEditorsAtRunTime}
   {$IF (CompilerVersion >= 32.0)}
-  var
-    LDesignModuleUtils: TDesignModuleUtils;
     LStyle: TCustomStyleServices;
   {$IFEND}
 {$ENDIF}
@@ -90,6 +90,10 @@ begin
   end;
   //ChangeFontSettings(AForm, LIsDarkStyle);
   {$IFEND}
+{$ELSE}
+  LDesignModuleUtils := TDesignModuleUtils.Create(AForm);
+  //Light Style at RunTime
+  AForm.StyleBook := LDesignModuleUtils.LightStyleBook;
 {$ENDIF}
 end;
 

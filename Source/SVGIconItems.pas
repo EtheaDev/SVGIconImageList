@@ -24,6 +24,10 @@
 {  limitations under the License.                                              }
 {                                                                              }
 {******************************************************************************}
+/// <summary>
+///   Collection classes for managing SVG icon items.
+///   Contains TSVGIconItem (individual icon) and TSVGIconItems (collection).
+/// </summary>
 unit SVGIconItems;
 
 interface
@@ -42,9 +46,27 @@ uses
 type
   TSVGIconItems = class;
 
+  /// <summary>
+  ///   Message sent when SVG icon items are updated.
+  ///   Used internally to notify image lists of changes to the icon collection.
+  /// </summary>
   TSVGItemsUpdateMessage = class({$IFDEF DXE4+}System.Messaging.{$ELSE}SVGMessaging.{$ENDIF}TMessage)
   end;
 
+  /// <summary>
+  ///   Represents a single SVG icon item within a TSVGIconItems collection.
+  ///   Each item contains the SVG source and rendering attributes.
+  /// </summary>
+  /// <remarks>
+  ///   <para>TSVGIconItem stores:</para>
+  ///   <list type="bullet">
+  ///     <item>The SVG source (via SVG interface or SVGText property)</item>
+  ///     <item>Icon name with optional category (format: "Category\Name")</item>
+  ///     <item>Per-item rendering attributes (FixedColor, GrayScale, etc.)</item>
+  ///   </list>
+  ///   <para>Per-item attributes override the parent image list's attributes
+  ///   when they are set to non-default values.</para>
+  /// </remarks>
   TSVGIconItem = class(TCollectionItem)
   private
     FIconName: string;
@@ -69,27 +91,166 @@ type
     procedure BuildIconName(const ACategory, AName: String);
     procedure SetApplyFixedColorToRootOnly(const Value: Boolean);
   public
+    /// <summary>
+    ///   Applies rendering attributes to the internal ISVG interface.
+    /// </summary>
+    /// <param name="AFixedColor">
+    ///   The fixed color to apply. Overridden by item's FixedColor if set.
+    /// </param>
+    /// <param name="AApplyToRootOnly">
+    ///   Whether to apply color only to root element.
+    /// </param>
+    /// <param name="AOpacity">
+    ///   Opacity value from 0 to 255.
+    /// </param>
+    /// <param name="AGrayScale">
+    ///   Whether to render in grayscale.
+    /// </param>
     procedure ApplyAttributesToInterface(const AFixedColor: TColor;
       const AApplyToRootOnly: Boolean; const AOpacity: Byte; const AGrayScale: Boolean);
+
+    /// <summary>
+    ///   Copies all properties from another TSVGIconItem.
+    /// </summary>
+    /// <param name="Source">
+    ///   The source item to copy from.
+    /// </param>
     procedure Assign(Source: TPersistent); override;
+
+    /// <summary>
+    ///   Returns the display name for this item in the collection editor.
+    /// </summary>
+    /// <returns>
+    ///   The IconName if set, otherwise "SVGIconItem".
+    /// </returns>
     function GetDisplayName: string; override;
+
+    /// <summary>
+    ///   Renders the SVG to a bitmap with the specified attributes.
+    /// </summary>
+    /// <param name="AWidth">
+    ///   The width of the resulting bitmap in pixels.
+    /// </param>
+    /// <param name="AHeight">
+    ///   The height of the resulting bitmap in pixels.
+    /// </param>
+    /// <param name="AFixedColor">
+    ///   The fixed color to apply. Item's FixedColor takes precedence if set.
+    /// </param>
+    /// <param name="AApplyToRootOnly">
+    ///   Whether to apply color only to root element.
+    /// </param>
+    /// <param name="AOpacity">
+    ///   Opacity value from 0 to 255.
+    /// </param>
+    /// <param name="AGrayScale">
+    ///   Whether to render in grayscale.
+    /// </param>
+    /// <param name="AAntiAliasColor">
+    ///   Background color for anti-aliasing. Default is clBtnFace.
+    /// </param>
+    /// <returns>
+    ///   A new TBitmap containing the rendered SVG. Caller must free this bitmap.
+    /// </returns>
     function GetBitmap(const AWidth, AHeight: Integer;
       const AFixedColor: TColor; const AApplyToRootOnly: Boolean; const AOpacity: Byte;
       const AGrayScale: Boolean; const AAntiAliasColor: TColor = clBtnFace): TBitmap;
+
+    /// <summary>
+    ///   Creates a new SVG icon item.
+    /// </summary>
+    /// <param name="Collection">
+    ///   The collection that owns this item.
+    /// </param>
     constructor Create(Collection: TCollection); override;
+
+    /// <summary>
+    ///   Direct access to the ISVG interface for this icon.
+    /// </summary>
     property SVG: ISVG read FSVG write SetSVG;
+
+    /// <summary>
+    ///   The name part of the icon (without category prefix).
+    /// </summary>
+    /// <remarks>
+    ///   For IconName "MyCategory\MyIcon", Name returns "MyIcon".
+    /// </remarks>
     property Name: string read GetName write SetName;
+
+    /// <summary>
+    ///   The category part of the icon name.
+    /// </summary>
+    /// <remarks>
+    ///   For IconName "MyCategory\MyIcon", Category returns "MyCategory".
+    ///   Returns empty string if no category is set.
+    /// </remarks>
     property Category: string read GetCategory write SetCategory;
   published
+    /// <summary>
+    ///   The full icon name including optional category prefix.
+    /// </summary>
+    /// <remarks>
+    ///   Format: "Category\Name" or just "Name" if no category.
+    ///   The backslash (\) character separates category from name.
+    /// </remarks>
     property IconName: string read FIconName write SetIconName;
+
+    /// <summary>
+    ///   The SVG source code as a string.
+    /// </summary>
+    /// <remarks>
+    ///   Setting this property parses and loads the SVG content.
+    ///   Getting returns the current SVG source.
+    /// </remarks>
     property SVGText: string read GetSVGText write SetSVGText;
+
+    /// <summary>
+    ///   A fixed color specific to this icon item.
+    /// </summary>
+    /// <value>
+    ///   Set to SVG_INHERIT_COLOR to inherit from parent image list.
+    ///   Default is SVG_INHERIT_COLOR.
+    /// </value>
+    /// <remarks>
+    ///   When set to a color other than SVG_INHERIT_COLOR, this overrides
+    ///   the parent image list's FixedColor property for this specific icon.
+    /// </remarks>
     property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
+
+    /// <summary>
+    ///   When True, applies FixedColor only to the root SVG element.
+    /// </summary>
+    /// <value>
+    ///   Default is False.
+    /// </value>
     property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default false;
+
+    /// <summary>
+    ///   Background color for anti-aliasing specific to this icon item.
+    /// </summary>
+    /// <value>
+    ///   Default is clBtnFace.
+    /// </value>
     property AntiAliasColor: TColor read FAntiAliasColor write SetAntiAliasColor default clBtnFace;
+
+    /// <summary>
+    ///   Renders this specific icon in grayscale when True.
+    /// </summary>
+    /// <value>
+    ///   Default is False.
+    /// </value>
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
   end;
 
-  {TSVGIconItems}
+  /// <summary>
+  ///   A collection of SVG icon items (TSVGIconItem).
+  ///   Used by TSVGIconImageList and TSVGIconImageCollection to store SVG icons.
+  /// </summary>
+  /// <remarks>
+  ///   TSVGIconItems extends TOwnedCollection to provide SVG-specific functionality
+  ///   including loading from files, searching by name, and notifying parent
+  ///   components of changes.
+  /// </remarks>
   TSVGIconItems = class(TOwnedCollection)
   private
     function GetItem(Index: Integer): TSVGIconItem;
@@ -97,13 +258,81 @@ type
   protected
     procedure Update(Item: TCollectionItem); override;
   public
+    /// <summary>
+    ///   Creates a new SVG icon items collection.
+    /// </summary>
+    /// <param name="AOwner">
+    ///   The component that owns this collection.
+    /// </param>
     constructor Create(AOwner: TComponent);
+
+    /// <summary>
+    ///   Adds a new empty SVG icon item to the collection.
+    /// </summary>
+    /// <returns>
+    ///   The newly created TSVGIconItem.
+    /// </returns>
     function Add: TSVGIconItem;
+
+    /// <summary>
+    ///   Copies all items from another TSVGIconItems collection.
+    /// </summary>
+    /// <param name="Source">
+    ///   The source collection to copy from.
+    /// </param>
     procedure Assign(Source: TPersistent); override;
+
+    /// <summary>
+    ///   Finds an icon item by its name.
+    /// </summary>
+    /// <param name="AIconName">
+    ///   The icon name to search for (case-insensitive).
+    /// </param>
+    /// <returns>
+    ///   The matching TSVGIconItem, or nil if not found.
+    /// </returns>
     function GetIconByName(const AIconName: string): TSVGIconItem;
+
+    /// <summary>
+    ///   Loads an SVG file and adds it to the collection.
+    /// </summary>
+    /// <param name="AFileName">
+    ///   The full path to the SVG file.
+    /// </param>
+    /// <param name="AImageName">
+    ///   Output parameter receiving the name assigned to the icon
+    ///   (filename without extension).
+    /// </param>
+    /// <returns>
+    ///   The newly created TSVGIconItem, or nil if file doesn't exist.
+    /// </returns>
     function LoadFromFile(const AFileName: string;
       out AImageName: string): TSVGIconItem;
+
+    /// <summary>
+    ///   Loads multiple SVG files and adds them to the collection.
+    /// </summary>
+    /// <param name="AFileNames">
+    ///   A TStrings containing the full paths to SVG files.
+    /// </param>
+    /// <param name="AAppend">
+    ///   When True, appends to existing items. When False, clears collection first.
+    ///   Default is True.
+    /// </param>
+    /// <returns>
+    ///   The number of icons successfully loaded.
+    /// </returns>
+    /// <exception cref="Exception">
+    ///   Raised if any files fail to load, with details of all errors.
+    /// </exception>
     function LoadFromFiles(const AFileNames: TStrings; const AAppend: Boolean = True): Integer;
+
+    /// <summary>
+    ///   Provides indexed access to items in the collection.
+    /// </summary>
+    /// <param name="Index">
+    ///   The zero-based index of the item.
+    /// </param>
     property Items[Index: Integer]: TSVGIconItem read GetItem write SetItem; default;
   end;
 

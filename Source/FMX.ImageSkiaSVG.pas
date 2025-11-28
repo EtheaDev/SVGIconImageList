@@ -46,7 +46,8 @@ Uses
   , FMX.Objects
   , FMX.ImageSVG
   , System.Skia
-  , FMX.Skia;
+  , FMX.Skia
+  , SkiaSVGUtils;
 
 type
   TFmxImageSkiaSVG = class(TFmxImageSVG)
@@ -114,7 +115,7 @@ end;
 
 procedure TFmxImageSkiaSVG.LoadFromSource;
 begin
-  FSvg.Source := Source;
+  FSvg.Source := InlineSvgStyle(Source);
 end;
 
 procedure TFmxImageSkiaSVG.LoadFromStream(Stream: TStream);

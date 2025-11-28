@@ -37,8 +37,8 @@ requires
 
 contains
   Img32 in '..\..\Image32\source\Img32.pas',
-  Img32.Fmt.BMP in '..\..\Image32\source\Img32.Fmt.BMP.pas',
   Img32.Panels in '..\..\Image32\source\Img32.Panels.pas',
+  Img32.Fmt.BMP in '..\..\Image32\source\Img32.Fmt.BMP.pas',
   Img32.Fmt.PNG in '..\..\Image32\source\Img32.Fmt.PNG.pas',
   Img32.CQ in '..\..\Image32\source\Img32.CQ.pas',
   Img32.Draw in '..\..\Image32\source\Img32.Draw.pas',

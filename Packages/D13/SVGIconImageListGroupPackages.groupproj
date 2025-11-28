@@ -171,14 +171,14 @@
             <Platforms>Android;Android64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="SVGIconImageList.dproj">
-            <ProjectGuid>{6A2D90DB-4A3F-445D-B413-E43EAB660CD0}</ProjectGuid>
+        <BuildGroupProject Include="SVGMagicPackage.dproj">
+            <ProjectGuid>{F225ABEA-5266-44BB-BA7E-D81C77A0F0A1}</ProjectGuid>
             <Configurations></Configurations>
             <Platforms></Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="SVGMagicPackage.dproj">
-            <ProjectGuid>{F225ABEA-5266-44BB-BA7E-D81C77A0F0A1}</ProjectGuid>
+        <BuildGroupProject Include="SVGIconImageList.dproj">
+            <ProjectGuid>{6A2D90DB-4A3F-445D-B413-E43EAB660CD0}</ProjectGuid>
             <Configurations></Configurations>
             <Platforms></Platforms>
             <Enabled>False</Enabled>
@@ -208,7 +208,7 @@
             <Enabled>False</Enabled>
         </BuildGroupProject>
     </ItemGroup>
-   <ItemGroup Condition="'$(BuildGroup)'=='iOS'">
+    <ItemGroup Condition="'$(BuildGroup)'=='iOS'">
         <BuildGroupProject Include="SVGIconImageListRestClient.dproj">
             <ProjectGuid>{F66FDAC8-4D87-47B8-8DCF-1ED4293C6C67}</ProjectGuid>
             <Configurations>Release</Configurations>
@@ -221,14 +221,14 @@
             <Platforms>iOSDevice64;iOSSimARM64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="SVGIconImageList.dproj">
-            <ProjectGuid>{6A2D90DB-4A3F-445D-B413-E43EAB660CD0}</ProjectGuid>
+        <BuildGroupProject Include="SVGMagicPackage.dproj">
+            <ProjectGuid>{F225ABEA-5266-44BB-BA7E-D81C77A0F0A1}</ProjectGuid>
             <Configurations></Configurations>
             <Platforms></Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="SVGMagicPackage.dproj">
-            <ProjectGuid>{F225ABEA-5266-44BB-BA7E-D81C77A0F0A1}</ProjectGuid>
+        <BuildGroupProject Include="SVGIconImageList.dproj">
+            <ProjectGuid>{6A2D90DB-4A3F-445D-B413-E43EAB660CD0}</ProjectGuid>
             <Configurations></Configurations>
             <Platforms></Platforms>
             <Enabled>False</Enabled>
@@ -271,14 +271,14 @@
             <Platforms>OSX64;OSXARM64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="SVGIconImageList.dproj">
-            <ProjectGuid>{6A2D90DB-4A3F-445D-B413-E43EAB660CD0}</ProjectGuid>
+        <BuildGroupProject Include="SVGMagicPackage.dproj">
+            <ProjectGuid>{F225ABEA-5266-44BB-BA7E-D81C77A0F0A1}</ProjectGuid>
             <Configurations></Configurations>
             <Platforms></Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="SVGMagicPackage.dproj">
-            <ProjectGuid>{F225ABEA-5266-44BB-BA7E-D81C77A0F0A1}</ProjectGuid>
+        <BuildGroupProject Include="SVGIconImageList.dproj">
+            <ProjectGuid>{6A2D90DB-4A3F-445D-B413-E43EAB660CD0}</ProjectGuid>
             <Configurations></Configurations>
             <Platforms></Platforms>
             <Enabled>False</Enabled>

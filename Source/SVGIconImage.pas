@@ -23,6 +23,10 @@
 {  limitations under the License.                                              }
 {                                                                              }
 {******************************************************************************}
+/// <summary>
+///   Components for displaying single SVG images.
+///   Contains TSVGIconImage (visual control) and TSVGGraphic (TGraphic descendant).
+/// </summary>
 unit SVGIconImage;
 
 interface
@@ -50,6 +54,9 @@ uses
 type
   TSVGIconImage = class;
 
+  /// <summary>
+  ///   Action link class for TSVGIconImage to support image index linking with actions.
+  /// </summary>
   TSVGIconImageActionLink = class(TControlActionLink)
   protected
     FClient: TSVGIconImage;
@@ -61,6 +68,32 @@ type
     procedure AssignClient(AClient: TObject); override;
   end;
 
+  /// <summary>
+  ///   A visual control for displaying a single SVG image.
+  ///   Can display SVG from a file, string, or from an ImageList.
+  /// </summary>
+  /// <remarks>
+  ///   <para>TSVGIconImage provides flexible options for displaying SVG images:</para>
+  ///   <list type="bullet">
+  ///     <item>Load from file using FileName property</item>
+  ///     <item>Set SVG source directly using SVGText property</item>
+  ///     <item>Display from ImageList using ImageList and ImageIndex properties</item>
+  ///   </list>
+  ///   <para>Supports rendering attributes like opacity, fixed color, and grayscale.</para>
+  /// </remarks>
+  /// <example>
+  ///   <code>
+  ///   // Display SVG from file
+  ///   SVGIconImage1.FileName := 'icon.svg';
+  ///
+  ///   // Display SVG from ImageList
+  ///   SVGIconImage1.ImageList := SVGIconImageList1;
+  ///   SVGIconImage1.ImageIndex := 0;
+  ///
+  ///   // Apply color transformation
+  ///   SVGIconImage1.FixedColor := clNavy;
+  ///   </code>
+  /// </example>
   TSVGIconImage = class(TGraphicControl)
   strict private
     FSVG: ISVG;
@@ -124,35 +157,185 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure CheckAutoSize;
   public
+    /// <summary>
+    ///   Creates a new SVG icon image control.
+    /// </summary>
+    /// <param name="AOwner">
+    ///   The component that owns this control.
+    /// </param>
     constructor Create(AOwner: TComponent); override;
+
+    /// <summary>
+    ///   Updates the SVG factory reference after a factory change.
+    /// </summary>
+    /// <remarks>
+    ///   Call this method if you switch SVG engines at runtime.
+    /// </remarks>
     procedure UpdateSVGFactory;
+
+    /// <summary>
+    ///   Destroys the SVG icon image control.
+    /// </summary>
     destructor Destroy; override;
+
+    /// <summary>
+    ///   Clears the SVG content from the control.
+    /// </summary>
     procedure Clear;
+
+    /// <summary>
+    ///   Returns the SVG icon item from the linked ImageList.
+    /// </summary>
+    /// <returns>
+    ///   The TSVGIconItem at the current ImageIndex, or nil if not available.
+    /// </returns>
     function SVGIconItem: TSVGIconItem;
+
+    /// <summary>
+    ///   Checks if the control has no SVG content.
+    /// </summary>
+    /// <returns>
+    ///   True if no SVG is loaded; False otherwise.
+    /// </returns>
     function Empty: Boolean;
+
+    /// <summary>
+    ///   Loads an SVG from a file.
+    /// </summary>
+    /// <param name="FileName">
+    ///   The full path to the SVG file.
+    /// </param>
     procedure LoadFromFile(const FileName: string);
+
+    /// <summary>
+    ///   Loads an SVG from a stream.
+    /// </summary>
+    /// <param name="Stream">
+    ///   The stream containing SVG content.
+    /// </param>
     procedure LoadFromStream(Stream: TStream);
+
+    /// <summary>
+    ///   Saves the current SVG to a file.
+    /// </summary>
+    /// <param name="FileName">
+    ///   The full path of the file to create.
+    /// </param>
     procedure SaveToFile(const FileName: string);
+
+    /// <summary>
+    ///   Copies the SVG from another TSVGIconImage.
+    /// </summary>
+    /// <param name="Source">
+    ///   The source TSVGIconImage to copy from.
+    /// </param>
     procedure Assign(Source: TPersistent); override;
+
+    /// <summary>
+    ///   Direct access to the ISVG interface.
+    /// </summary>
     property SVG: ISVG read GetSVG;
+
+    /// <summary>
+    ///   Returns the linked TSVGIconImageListBase if ImageList is of that type.
+    /// </summary>
     property SVGIconImageList: TSVGIconImageListBase read GetIconImageList;
+
+    /// <summary>
+    ///   Returns the TSVGIconImageCollection if ImageList is a TVirtualImageList.
+    /// </summary>
     property SVGIconImageCollection: TSVGIconImageCollection read GetIconImageCollection;
+
     {$IFDEF D10_3+}
+    /// <summary>
+    ///   Returns the linked TVirtualImageList if ImageList is of that type.
+    /// </summary>
     property SVGVirtualImageList: TVirtualImageList read GetVirtualImageList;
     {$ENDIF}
   published
+    /// <summary>
+    ///   Automatically sizes the control to match the SVG dimensions.
+    /// </summary>
     property AutoSize: Boolean read FAutoSize write SetAutoSizeImage;
+
+    /// <summary>
+    ///   Centers the SVG within the control bounds.
+    /// </summary>
+    /// <value>
+    ///   Default is True.
+    /// </value>
     property Center: Boolean read FCenter write SetCenter default True;
+
+    /// <summary>
+    ///   The opacity for rendering the SVG (0-255).
+    /// </summary>
+    /// <value>
+    ///   Default is 255 (fully opaque).
+    /// </value>
     property Opacity: Byte read FOpacity write SetOpacity default 255;
+
+    /// <summary>
+    ///   The ImageList to display icons from.
+    /// </summary>
+    /// <remarks>
+    ///   Can be a TSVGIconImageList, TSVGIconVirtualImageList, or TVirtualImageList.
+    /// </remarks>
     property ImageList: TCustomImageList read FImageList write SetImageList;
+
+    /// <summary>
+    ///   The index of the icon to display from the linked ImageList.
+    /// </summary>
+    /// <value>
+    ///   Default is -1 (no icon selected).
+    /// </value>
     property ImageIndex: TImageIndex read FImageIndex write SetImageIndex stored IsImageIndexStored default -1;
+
     {$IFDEF D10_4+}
+    /// <summary>
+    ///   The name of the icon to display from the linked ImageList.
+    /// </summary>
+    /// <remarks>
+    ///   Available from Delphi 10.4+. Synchronized with ImageIndex.
+    /// </remarks>
     property ImageName: TImageName read FImageName write SetImageName stored IsImageNameStored;
     {$ENDIF}
+
+    /// <summary>
+    ///   The path to an SVG file to display.
+    /// </summary>
     property FileName: TFileName read FFileName write SetFileName;
+
+    /// <summary>
+    ///   The SVG source code as a string.
+    /// </summary>
+    /// <remarks>
+    ///   Setting this property parses and displays the SVG content.
+    ///   This property is only stored if not using ImageList.
+    /// </remarks>
     property SVGText: string read GetSVGText write SetSVGText stored UsingSVGText;
+
+    /// <summary>
+    ///   Fixed color to apply to the SVG.
+    /// </summary>
+    /// <value>
+    ///   Default is SVG_INHERIT_COLOR.
+    /// </value>
     property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
+
+    /// <summary>
+    ///   When True, applies FixedColor only to the root SVG element.
+    /// </summary>
+    /// <value>
+    ///   Default is False.
+    /// </value>
     property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default false;
+
+    /// <summary>
+    ///   Renders the SVG in grayscale when True.
+    /// </summary>
+    /// <value>
+    ///   Default is False.
+    /// </value>
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
     property Align;
     property Anchors;
@@ -186,6 +369,24 @@ type
     property OnStartDrag;
   end;
 
+  /// <summary>
+  ///   A TGraphic descendant for SVG images, allowing SVG to be used in TPicture.
+  /// </summary>
+  /// <remarks>
+  ///   <para>TSVGGraphic registers itself with TPicture to handle .svg files,
+  ///   enabling SVG images to be used anywhere TGraphic is supported:</para>
+  ///   <list type="bullet">
+  ///     <item>TImage.Picture property</item>
+  ///     <item>Loading/saving via TPicture methods</item>
+  ///     <item>Clipboard operations</item>
+  ///   </list>
+  /// </remarks>
+  /// <example>
+  ///   <code>
+  ///   // Use SVG in a standard TImage
+  ///   Image1.Picture.LoadFromFile('icon.svg');
+  ///   </code>
+  /// </example>
   TSVGGraphic = class(TGraphic)
   strict private
     FSVG: ISVG;
@@ -206,28 +407,98 @@ type
     procedure ReadData(Stream: TStream); override;
     procedure WriteData(Stream: TStream); override;
   public
+    /// <summary>
+    ///   Draws the SVG to a canvas within the specified rectangle.
+    /// </summary>
+    /// <param name="ACanvas">
+    ///   The canvas to draw to.
+    /// </param>
+    /// <param name="Rect">
+    ///   The destination rectangle.
+    /// </param>
     procedure Draw(ACanvas: TCanvas; const Rect: TRect); override;
 
+    /// <summary>
+    ///   Creates a new SVG graphic.
+    /// </summary>
     constructor Create; override;
+
+    /// <summary>
+    ///   Clears the SVG content.
+    /// </summary>
     procedure Clear;
 
+    /// <summary>
+    ///   Copies SVG from another TSVGGraphic.
+    /// </summary>
+    /// <param name="Source">
+    ///   The source to copy from.
+    /// </param>
     procedure Assign(Source: TPersistent); override;
+
+    /// <summary>
+    ///   Copies SVG to another TSVGGraphic.
+    /// </summary>
+    /// <param name="Dest">
+    ///   The destination to copy to.
+    /// </param>
     procedure AssignTo(Dest: TPersistent); override;
 
+    /// <summary>
+    ///   Assigns an ISVG interface directly.
+    /// </summary>
+    /// <param name="SVG">
+    ///   The ISVG interface to assign.
+    /// </param>
     procedure AssignSVG(SVG: ISVG);
 
+    /// <summary>
+    ///   Loads SVG from a file.
+    /// </summary>
+    /// <param name="Filename">
+    ///   The full path to the SVG file.
+    /// </param>
     procedure LoadFromFile(const Filename: String); override;
+
+    /// <summary>
+    ///   Loads SVG from a stream.
+    /// </summary>
+    /// <param name="Stream">
+    ///   The stream containing SVG content.
+    /// </param>
     procedure LoadFromStream(Stream: TStream); override;
 
+    /// <summary>
+    ///   Saves SVG to a stream.
+    /// </summary>
+    /// <param name="Stream">
+    ///   The stream to save to.
+    /// </param>
     procedure SaveToStream(Stream: TStream); override;
 
+    /// <summary>
+    ///   Loads SVG from clipboard format (not implemented).
+    /// </summary>
     procedure LoadFromClipboardFormat(AFormat: Word; AData: THandle;
       APalette: HPALETTE); override;
+
+    /// <summary>
+    ///   Saves SVG to clipboard format (not implemented).
+    /// </summary>
     procedure SaveToClipboardFormat(var AFormat: Word; var AData: THandle;
       var APalette: HPALETTE); override;
 
+    /// <summary>
+    ///   The opacity for rendering (0-255).
+    /// </summary>
+    /// <value>
+    ///   Default is 255 (fully opaque).
+    /// </value>
     property Opacity: Byte read FOpacity write SetOpacity;
   published
+    /// <summary>
+    ///   The path to the loaded SVG file.
+    /// </summary>
     property FileName: TFileName read FFileName write SetFileName;
   end;
 

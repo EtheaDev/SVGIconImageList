@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{F225ABEA-5266-44BB-BA7E-D81C77A0F0A1}</ProjectGuid>
         <MainSource>SVGMagicPackage.dpk</MainSource>
-        <ProjectVersion>19.0</ProjectVersion>
+        <ProjectVersion>19.5</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>

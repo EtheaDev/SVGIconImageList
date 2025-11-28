@@ -1,6 +1,6 @@
 {-----------------------------------------------------------------------------
  Unit Name: SkiaSVGFactory
- Author:    Carlo Barazzxetta
+ Author:    Carlo Barazzetta
  Purpose:   High-level encapsulation of Skia Svg functionality using
             Google Skia libraries
 -----------------------------------------------------------------------------}
@@ -31,7 +31,8 @@ Uses
   System.Math.Vectors,
   //Skia engine
   Vcl.Skia,
-  System.Skia;
+  System.Skia,
+  SkiaSVGUtils;
 
 type
   { TSkSvgBrushEx }
@@ -432,7 +433,7 @@ procedure TSkiaSVG.SetSource(const ASource: string);
 begin
   if FSvg.Source <> ASource then
   begin
-    FSvg.Source := ASource;
+    FSvg.Source := InlineSvgStyle(ASource);
     LoadFromSource;
   end;
 end;
@@ -450,7 +451,7 @@ begin
     LStream.LoadFromStream(Stream);
     DeleteBuffers;
     LStream.Position := 0;
-    FSvg.Source := LStream.DataString;
+    FSvg.Source := InlineSvgStyle(LStream.DataString);
   finally
     LStream.Free;
     // Restore Position

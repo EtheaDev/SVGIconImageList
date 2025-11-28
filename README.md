@@ -2,7 +2,7 @@
 
 ## Four engines to render SVG (Delphi Image32, SVGMagic, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 4.6.0 (VCL+FMX)
+### Actual official version 4.6.1 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -138,6 +138,13 @@ A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/Ico
 Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
 ### RELEASE NOTES
+28 Nov 2025 - version 4.6.1
+- Added SkiaSVGUtils.pas to fix Skia rendering
+- Fixed Range Check error for SVGMagic engine
+- Fixed Setup for D10_4 to DXE3
+- Reformat Packages for Build with Android and iOS platforms
+- Reformat Packages for Build with MacOSX platform
+
 16 Nov 2025 - version 4.6.0
 - Added SVGMagic engine support for VCL applications
 - Full support for animated SVG files (available only with SVGMagic Library)
@@ -539,3 +546,5 @@ These components uses the following libraries:
   Copyright [MIT-License](https://github.com/skia4delphi/skia4delphi?tab=MIT-1-ov-file)
 
 Many thanks to **Vincent Parrett** and **Kiriakos Vlahos** for their great contribution.
+
+Thanks to George Birbilis for Package updates, build and test with Android, iOS and OSX platform

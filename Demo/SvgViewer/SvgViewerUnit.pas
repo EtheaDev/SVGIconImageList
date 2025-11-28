@@ -179,4 +179,7 @@ begin
     ListBox.Items[ListBox.ItemIndex]));
 end;
 
+initialization
+  ReportMemoryLeaksOnShutdown := DebugHook <> 0;
+
 end.

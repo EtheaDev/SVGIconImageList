@@ -39,6 +39,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       Size.PlatformDefault = False
       TabOrder = 0
       Text = 'OK'
+      TextSettings.Trimming = None
     end
     object CancelButton: TButton
       Anchors = [akTop, akRight]
@@ -51,6 +52,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       Size.PlatformDefault = False
       TabOrder = 1
       Text = 'Cancel'
+      TextSettings.Trimming = None
     end
     object HelpButton: TButton
       Anchors = [akTop, akRight]
@@ -61,6 +63,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       Size.PlatformDefault = False
       TabOrder = 2
       Text = 'Help'
+      TextSettings.Trimming = None
       OnClick = HelpButtonClick
     end
   end
@@ -85,6 +88,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.PlatformDefault = False
         TabOrder = 1
         Text = 'Add from Disk...'
+        TextSettings.Trimming = None
         OnClick = AddButtonClick
       end
       object DeleteButton: TButton
@@ -95,6 +99,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.PlatformDefault = False
         TabOrder = 3
         Text = 'Delete'
+        TextSettings.Trimming = None
         OnClick = DeleteButtonClick
       end
       object ClearAllButton: TButton
@@ -105,6 +110,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.PlatformDefault = False
         TabOrder = 4
         Text = 'Clear all'
+        TextSettings.Trimming = None
         OnClick = ClearAllButtonClick
       end
       object NewButton: TButton
@@ -115,6 +121,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.PlatformDefault = False
         TabOrder = 0
         Text = 'New'
+        TextSettings.Trimming = None
         OnClick = NewButtonClick
       end
       object AddWebButton: TButton
@@ -125,6 +132,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.PlatformDefault = False
         TabOrder = 2
         Text = 'Add from Web...'
+        TextSettings.Trimming = None
         OnClick = AddWebButtonClick
       end
     end
@@ -373,12 +381,12 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
         DataDetectorTypes = []
         Align = Client
-        Size.Width = 516.000000000000000000
+        Size.Width = 518.000000000000000000
         Size.Height = 157.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
         OnExit = SVGTextExit
-        Viewport.Width = 512.000000000000000000
+        Viewport.Width = 514.000000000000000000
         Viewport.Height = 153.000000000000000000
       end
       object IconControlsPanel: TPanel
@@ -486,31 +494,29 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
       end
       object IconPanel: TPanel
         Align = Left
-        Margins.Left = 8.000000000000000000
-        Margins.Top = 8.000000000000000000
-        Margins.Right = 8.000000000000000000
-        Margins.Bottom = 8.000000000000000000
-        Position.X = 18.000000000000000000
-        Position.Y = 86.000000000000000000
-        Size.Width = 128.000000000000000000
-        Size.Height = 141.000000000000000000
+        Margins.Left = 4.000000000000000000
+        Margins.Top = 2.000000000000000000
+        Margins.Right = 4.000000000000000000
+        Margins.Bottom = 2.000000000000000000
+        Position.X = 14.000000000000000000
+        Position.Y = 80.000000000000000000
+        Size.Width = 134.000000000000000000
+        Size.Height = 153.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         object IconBackGround: TRectangle
           Align = Client
-          Size.Width = 128.000000000000000000
-          Size.Height = 122.000000000000000000
+          Size.Width = 134.000000000000000000
+          Size.Height = 134.000000000000000000
           Size.PlatformDefault = False
           object IconImage: TGlyph
             Margins.Left = 4.000000000000000000
             Margins.Top = 4.000000000000000000
             Margins.Right = 4.000000000000000000
             Margins.Bottom = 4.000000000000000000
-            Align = Top
-            Position.X = 4.000000000000000000
-            Position.Y = 4.000000000000000000
-            Size.Width = 120.000000000000000000
-            Size.Height = 120.000000000000000000
+            Align = Client
+            Size.Width = 126.000000000000000000
+            Size.Height = 126.000000000000000000
             Size.PlatformDefault = False
             ImageIndex = 1
           end
@@ -520,8 +526,8 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
           CanParentFocus = True
           Max = 254.000000000000000000
           Orientation = Horizontal
-          Position.Y = 122.000000000000000000
-          Size.Width = 128.000000000000000000
+          Position.Y = 134.000000000000000000
+          Size.Width = 134.000000000000000000
           Size.Height = 19.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 6
@@ -556,6 +562,7 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Size.PlatformDefault = False
         TabOrder = 0
         Text = 'Reformat XML'
+        TextSettings.Trimming = None
         OnClick = ReformatXMLButtonClick
       end
     end

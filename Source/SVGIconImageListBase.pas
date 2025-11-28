@@ -24,6 +24,10 @@
 {  limitations under the License.                                              }
 {                                                                              }
 {******************************************************************************}
+/// <summary>
+///   Base class for SVG icon image lists providing common functionality
+///   for SVG rendering, opacity control, color transformation, and High-DPI support.
+/// </summary>
 unit SVGIconImageListBase;
 
 interface
@@ -42,10 +46,33 @@ uses
   SvgInterfaces;
 
 const
-  SVGIconImageListVersion = '4.6.0';
+  /// <summary>
+  ///   Current version of the SVGIconImageList library.
+  /// </summary>
+  SVGIconImageListVersion = '4.6.1';
+
+  /// <summary>
+  ///   Default size (width and height) for icons in pixels.
+  /// </summary>
   DEFAULT_SIZE = 16;
 
 type
+  /// <summary>
+  ///   Abstract base class for SVG icon image lists.
+  ///   Provides common functionality for managing collections of SVG icons
+  ///   with support for rendering attributes like opacity, grayscale, and fixed colors.
+  /// </summary>
+  /// <remarks>
+  ///   <para>This class extends TDragImageList and adds SVG-specific capabilities:</para>
+  ///   <list type="bullet">
+  ///     <item>Support for multiple SVG rendering engines</item>
+  ///     <item>High-DPI awareness with automatic scaling (Delphi 10.3+)</item>
+  ///     <item>Color transformation (fixed color, grayscale)</item>
+  ///     <item>Opacity control for normal and disabled states</item>
+  ///     <item>Icon lookup by name</item>
+  ///   </list>
+  ///   <para>Derived classes: TSVGIconImageList, TSVGIconVirtualImageList</para>
+  /// </remarks>
   TSVGIconImageListBase = class(TDragImageList)
   private
     {$IFDEF HiDPISupport}
@@ -122,39 +149,247 @@ type
     procedure AssignTo(Dest: TPersistent); override;
     procedure DoAssign(const Source: TPersistent); virtual;
   public
+    /// <summary>
+    ///   Creates a new instance of the SVG icon image list.
+    /// </summary>
+    /// <param name="AOwner">
+    ///   The component that owns this image list.
+    /// </param>
     constructor Create(AOwner : TComponent);override;
+
+    /// <summary>
+    ///   Destroys the SVG icon image list and releases all resources.
+    /// </summary>
     destructor Destroy;override;
+
+    /// <summary>
+    ///   Copies the properties and icons from another SVG image list or SVG icon items collection.
+    /// </summary>
+    /// <param name="Source">
+    ///   The source object to copy from. Can be TSVGIconImageListBase or TSVGIconItems.
+    /// </param>
     procedure Assign(Source: TPersistent); override;
+
+    /// <summary>
+    ///   Loads SVG icons from a list of file paths.
+    /// </summary>
+    /// <param name="AFileNames">
+    ///   A TStrings containing the full paths to SVG files to load.
+    /// </param>
+    /// <param name="AAppend">
+    ///   When True, appends icons to the existing collection.
+    ///   When False, clears the collection before loading. Default is True.
+    /// </param>
+    /// <returns>
+    ///   The number of icons successfully loaded.
+    /// </returns>
     function LoadFromFiles(const AFileNames: TStrings;
       const AAppend: Boolean = True): Integer;
+
+    /// <summary>
+    ///   Handles DPI changes by scaling the icon dimensions proportionally.
+    /// </summary>
+    /// <param name="Sender">
+    ///   The object that triggered the DPI change.
+    /// </param>
+    /// <param name="OldDPI">
+    ///   The previous DPI value.
+    /// </param>
+    /// <param name="NewDPI">
+    ///   The new DPI value to scale to.
+    /// </param>
+    /// <remarks>
+    ///   This method is called automatically when the form's DPI changes
+    ///   (e.g., when moving to a monitor with different scaling).
+    ///   Can also be called manually to trigger a DPI update.
+    /// </remarks>
     procedure DPIChanged(Sender: TObject; const OldDPI, NewDPI: Integer); virtual;
+
     {$IFDEF D10_4+}
+    /// <summary>
+    ///   Indicates whether image names are available for lookup.
+    /// </summary>
+    /// <returns>
+    ///   Always returns True for SVG icon image lists.
+    /// </returns>
     function IsImageNameAvailable: Boolean; override;
+
+    /// <summary>
+    ///   Gets the image index for a given image name.
+    /// </summary>
+    /// <param name="AName">
+    ///   The name of the image to find.
+    /// </param>
+    /// <returns>
+    ///   The index of the image, or -1 if not found.
+    /// </returns>
     function GetIndexByName(const AName: TImageName): TImageIndex; override;
+
+    /// <summary>
+    ///   Gets the image name for a given index.
+    /// </summary>
+    /// <param name="AIndex">
+    ///   The index of the image.
+    /// </param>
+    /// <returns>
+    ///   The name of the image at the specified index, or empty string if invalid.
+    /// </returns>
     function GetNameByIndex(AIndex: TImageIndex): TImageName; override;
     {$ENDIF}
 
+    /// <summary>
+    ///   The collection of SVG icon items managed by this image list.
+    /// </summary>
     property SVGIconItems: TSVGIconItems read GetSVGIconItems write SetSVGIconItems;
+
+    /// <summary>
+    ///   The number of icons in the image list.
+    /// </summary>
     property Count: Integer read GetCount;
+
+    /// <summary>
+    ///   The global opacity applied to all icons when rendering.
+    /// </summary>
+    /// <value>
+    ///   A value from 0 (fully transparent) to 255 (fully opaque). Default is 255.
+    /// </value>
     property Opacity: Byte read FOpacity write SetOpacity default 255;
+
+    /// <summary>
+    ///   The width of the icons in pixels.
+    /// </summary>
+    /// <value>
+    ///   Default is 16 pixels.
+    /// </value>
     property Width: Integer read GetWidth write SetWidth stored StoreWidth default DEFAULT_SIZE;
+
+    /// <summary>
+    ///   The height of the icons in pixels.
+    /// </summary>
+    /// <value>
+    ///   Default is 16 pixels.
+    /// </value>
     property Height: Integer read GetHeight write SetHeight stored StoreHeight default DEFAULT_SIZE;
+
+    /// <summary>
+    ///   Sets both Width and Height to the same value for square icons.
+    /// </summary>
+    /// <value>
+    ///   Default is 16 pixels.
+    /// </value>
+    /// <remarks>
+    ///   Reading this property returns the larger of Width and Height.
+    ///   Setting this property sets both Width and Height to the same value.
+    /// </remarks>
     property Size: Integer read GetSize write SetSize stored StoreSize default DEFAULT_SIZE;
+
+    /// <summary>
+    ///   A fixed color to apply to all icons, replacing their original colors.
+    /// </summary>
+    /// <value>
+    ///   Set to SVG_INHERIT_COLOR to use original colors. Default is SVG_INHERIT_COLOR.
+    /// </value>
+    /// <remarks>
+    ///   Setting FixedColor to a color other than SVG_INHERIT_COLOR automatically
+    ///   sets GrayScale to False. Useful for monochrome icon sets where you want
+    ///   to apply a consistent color theme.
+    /// </remarks>
     property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
+
+    /// <summary>
+    ///   When True, applies FixedColor only to the root SVG element.
+    /// </summary>
+    /// <value>
+    ///   Default is False (color is applied to all elements).
+    /// </value>
+    /// <remarks>
+    ///   This is useful for SVG icons that have multiple colors where you only
+    ///   want to change the primary/root color.
+    /// </remarks>
     property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default False;
+
+    /// <summary>
+    ///   The background color used for anti-aliasing when rendering icons.
+    /// </summary>
+    /// <value>
+    ///   Default is clBtnFace.
+    /// </value>
     property AntiAliasColor: TColor read FAntiAliasColor write SetAntiAliasColor default clBtnFace;
+
+    /// <summary>
+    ///   Renders all icons in grayscale when set to True.
+    /// </summary>
+    /// <value>
+    ///   Default is False.
+    /// </value>
+    /// <remarks>
+    ///   Setting GrayScale to True automatically sets FixedColor to SVG_INHERIT_COLOR.
+    /// </remarks>
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
+
+    /// <summary>
+    ///   Renders icons in grayscale when they are drawn in a disabled state.
+    /// </summary>
+    /// <value>
+    ///   Default is True.
+    /// </value>
     property DisabledGrayScale: Boolean read FDisabledGrayScale write SetDisabledGrayScale default True;
+
+    /// <summary>
+    ///   The opacity applied to icons when they are drawn in a disabled state.
+    /// </summary>
+    /// <value>
+    ///   A value from 0 to 255. Default is 125 (approximately 50% opacity).
+    /// </value>
     property DisabledOpacity: Byte read FDisabledOpacity write SetDisabledOpacity default 125;
 
     {$IFDEF HiDPISupport}
     {$IFNDEF D10_4+}
+    /// <summary>
+    ///   Enables automatic scaling of icons when the DPI changes.
+    /// </summary>
+    /// <value>
+    ///   Default is True.
+    /// </value>
+    /// <remarks>
+    ///   When True, the image list automatically scales icons when the
+    ///   application moves between monitors with different DPI settings.
+    ///   Available from Delphi 10.3 through 10.3.
+    /// </remarks>
     property Scaled: Boolean read FScaled write FScaled default True;
     {$ENDIF}
     {$ENDIF}
+
+    /// <summary>
+    ///   Provides direct access to SVG interfaces by index.
+    /// </summary>
+    /// <param name="Index">
+    ///   The zero-based index of the icon.
+    /// </param>
+    /// <value>
+    ///   The ISVG interface for the icon at the specified index,
+    ///   or nil if the index is out of range.
+    /// </value>
     property Images[Index: Integer]: ISVG read GetImages write SetImages;
+
+    /// <summary>
+    ///   Provides access to icon names by index.
+    /// </summary>
+    /// <param name="Index">
+    ///   The zero-based index of the icon.
+    /// </param>
+    /// <value>
+    ///   The name of the icon at the specified index,
+    ///   or empty string if the index is out of range.
+    /// </value>
     property Names[Index: Integer]: string read GetNames write SetNames;
   published
+    /// <summary>
+    ///   The color depth of the internal bitmap cache.
+    /// </summary>
+    /// <value>
+    ///   Default is cd32Bit for full alpha channel support.
+    /// </value>
     property ColorDepth default cd32Bit;
   end;
 

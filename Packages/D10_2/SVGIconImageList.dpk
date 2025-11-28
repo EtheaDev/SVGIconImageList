@@ -66,6 +66,7 @@ contains
   {$ENDIF}
   {$IFDEF Skia_SVGEngine}
   SkiaSVGFactory in '..\..\Source\SkiaSVGFactory.pas',
+  SkiaSVGUtils in '..\..\Source\SkiaSVGUtils.pas',
   {$ENDIF}
   {$IFDEF SVGMagic_Engine}
   SVGMagicFactory in '..\..\Source\SVGMagicFactory.pas',

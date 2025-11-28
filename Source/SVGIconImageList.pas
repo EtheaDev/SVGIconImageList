@@ -24,6 +24,11 @@
 {  limitations under the License.                                              }
 {                                                                              }
 {******************************************************************************}
+/// <summary>
+///   Main VCL component for displaying SVG icons in an ImageList.
+///   TSVGIconImageList provides a self-contained SVG icon collection
+///   with support for rendering attributes and High-DPI scaling.
+/// </summary>
 unit SVGIconImageList;
 
 interface
@@ -46,11 +51,46 @@ uses
   ;
 
 type
+  /// <summary>
+  ///   Alias for TSVGIconItem from SVGIconItems unit.
+  /// </summary>
   TSVGIconItem = SVGIconItems.TSVGIconItem;
+
+  /// <summary>
+  ///   Alias for TSVGIconItems from SVGIconItems unit.
+  /// </summary>
   TSVGIconItems = SVGIconItems.TSVGIconItems;
 
-
-  {TSVGIconImageList}
+  /// <summary>
+  ///   An extended ImageList component for VCL applications that displays SVG icons.
+  ///   Provides a self-contained collection of SVG icons with support for
+  ///   resizing, opacity, fixed colors, grayscale, and High-DPI scaling.
+  /// </summary>
+  /// <remarks>
+  ///   <para>TSVGIconImageList is a drop-in replacement for TImageList that uses
+  ///   SVG vector graphics instead of raster images. Benefits include:</para>
+  ///   <list type="bullet">
+  ///     <item>Resolution independence - icons scale perfectly at any size</item>
+  ///     <item>Smaller file size compared to multiple bitmap resolutions</item>
+  ///     <item>Runtime color and opacity modifications</item>
+  ///     <item>Automatic High-DPI scaling (Delphi 10.3+)</item>
+  ///   </list>
+  ///   <para>For Delphi 10.3+, consider using TSVGIconImageCollection with
+  ///   TSVGIconVirtualImageList for better performance when sharing icons
+  ///   across multiple forms or controls.</para>
+  /// </remarks>
+  /// <example>
+  ///   <code>
+  ///   // Load SVG icons programmatically
+  ///   var
+  ///     SVG: ISVG;
+  ///   begin
+  ///     SVG := GlobalSVGFactory.NewSvg;
+  ///     SVG.LoadFromFile('icon.svg');
+  ///     SVGIconImageList1.Add(SVG, 'MyIcon');
+  ///   end;
+  ///   </code>
+  /// </example>
   TSVGIconImageList = class(TSVGIconImageListBase)
   private
     FSVGItems: TSVGIconItems;
@@ -61,41 +101,207 @@ type
     procedure DefineProperties(Filer: TFiler); override;
     procedure DoAssign(const Source: TPersistent); override;
   public
+    /// <summary>
+    ///   Recreates the internal bitmap cache from the SVG sources.
+    ///   Called automatically when properties change.
+    /// </summary>
     procedure RecreateBitmaps; override;
+
+    /// <summary>
+    ///   Creates a new SVG icon image list.
+    /// </summary>
+    /// <param name="AOwner">
+    ///   The component that owns this image list.
+    /// </param>
     constructor Create(AOwner: TComponent); override;
+
+    /// <summary>
+    ///   Destroys the SVG icon image list and releases all resources.
+    /// </summary>
     destructor Destroy; override;
+
+    /// <summary>
+    ///   Adds an SVG icon to the image list.
+    /// </summary>
+    /// <param name="ASVG">
+    ///   The ISVG interface containing the SVG to add.
+    /// </param>
+    /// <param name="AIconName">
+    ///   The name to assign to this icon.
+    /// </param>
+    /// <param name="AGrayScale">
+    ///   When True, renders this icon in grayscale. Default is False.
+    /// </param>
+    /// <param name="AFixedColor">
+    ///   Fixed color for this icon. Default is SVG_INHERIT_COLOR.
+    /// </param>
+    /// <param name="AAntiAliasColor">
+    ///   Background color for anti-aliasing. Default is clBtnFace.
+    /// </param>
+    /// <returns>
+    ///   The index of the newly added icon.
+    /// </returns>
     function Add(const ASVG: ISVG; const AIconName: string;
        const AGrayScale: Boolean = False;
        const AFixedColor: TColor = SVG_INHERIT_COLOR;
        const AAntiAliasColor: TColor = clBtnFace): Integer; overload;
+
+    /// <summary>
+    ///   Adds an SVG icon to the image list with a category.
+    /// </summary>
+    /// <param name="ASVG">
+    ///   The ISVG interface containing the SVG to add.
+    /// </param>
+    /// <param name="AIconName">
+    ///   The name to assign to this icon.
+    /// </param>
+    /// <param name="AIconCategory">
+    ///   The category for this icon (used for organization).
+    /// </param>
+    /// <param name="AGrayScale">
+    ///   When True, renders this icon in grayscale. Default is False.
+    /// </param>
+    /// <param name="AFixedColor">
+    ///   Fixed color for this icon. Default is SVG_INHERIT_COLOR.
+    /// </param>
+    /// <param name="AAntiAliasColor">
+    ///   Background color for anti-aliasing. Default is clBtnFace.
+    /// </param>
+    /// <returns>
+    ///   The index of the newly added icon.
+    /// </returns>
     function Add(const ASVG: ISVG; const AIconName, AIconCategory: string;
        const AGrayScale: Boolean = False;
        const AFixedColor: TColor = SVG_INHERIT_COLOR;
        const AAntiAliasColor: TColor = clBtnFace): Integer; overload;
+
+    /// <summary>
+    ///   Deletes an icon from the image list by index.
+    /// </summary>
+    /// <param name="Index">
+    ///   The zero-based index of the icon to delete.
+    /// </param>
     procedure Delete(const Index: Integer);
+
+    /// <summary>
+    ///   Removes an icon from the image list by name.
+    /// </summary>
+    /// <param name="Name">
+    ///   The name of the icon to remove.
+    /// </param>
     procedure Remove(const Name: string);
+
+    /// <summary>
+    ///   Removes all icons from the image list.
+    /// </summary>
     procedure ClearIcons; override;
+
+    /// <summary>
+    ///   Saves all icons as a bitmap strip to a file.
+    /// </summary>
+    /// <param name="AFileName">
+    ///   The full path of the bitmap file to create.
+    /// </param>
+    /// <remarks>
+    ///   The icons are arranged in a grid pattern to create a square-ish strip.
+    ///   This is useful for exporting icons to bitmap format.
+    /// </remarks>
     procedure SaveToFile(const AFileName: string);
+
+    /// <summary>
+    ///   Paints a specific icon to a canvas at the specified location and size.
+    /// </summary>
+    /// <param name="ACanvas">
+    ///   The canvas to paint to.
+    /// </param>
+    /// <param name="AIndex">
+    ///   The zero-based index of the icon to paint.
+    /// </param>
+    /// <param name="X">
+    ///   The horizontal position in pixels.
+    /// </param>
+    /// <param name="Y">
+    ///   The vertical position in pixels.
+    /// </param>
+    /// <param name="AWidth">
+    ///   The width to render the icon.
+    /// </param>
+    /// <param name="AHeight">
+    ///   The height to render the icon.
+    /// </param>
+    /// <param name="AEnabled">
+    ///   When True, renders normally. When False, applies disabled styling.
+    ///   Default is True.
+    /// </param>
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
       const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
   published
-    //Publishing properties of Custom Class
-    property Width;
-    property Height;
-    property Size;
-    property OnChange;
-    //New properties
-    property SVGIconItems;
-    property Opacity;
-    property FixedColor;
-    property AntiAliasColor;
-    property GrayScale;
-    property DisabledGrayScale;
-    property DisabledOpacity;
     /// <summary>
-    /// Enable and disable scaling with form
+    ///   The width of icons in pixels.
     /// </summary>
+    property Width;
+
+    /// <summary>
+    ///   The height of icons in pixels.
+    /// </summary>
+    property Height;
+
+    /// <summary>
+    ///   Sets both Width and Height to the same value for square icons.
+    /// </summary>
+    property Size;
+
+    /// <summary>
+    ///   Event triggered when the image list contents change.
+    /// </summary>
+    property OnChange;
+
+    /// <summary>
+    ///   The collection of SVG icon items.
+    /// </summary>
+    property SVGIconItems;
+
+    /// <summary>
+    ///   Global opacity applied to all icons (0-255).
+    /// </summary>
+    property Opacity;
+
+    /// <summary>
+    ///   Fixed color applied to all icons.
+    /// </summary>
+    property FixedColor;
+
+    /// <summary>
+    ///   Background color for anti-aliasing.
+    /// </summary>
+    property AntiAliasColor;
+
+    /// <summary>
+    ///   Renders all icons in grayscale when True.
+    /// </summary>
+    property GrayScale;
+
+    /// <summary>
+    ///   Renders disabled icons in grayscale when True.
+    /// </summary>
+    property DisabledGrayScale;
+
+    /// <summary>
+    ///   Opacity applied to disabled icons (0-255).
+    /// </summary>
+    property DisabledOpacity;
+
     {$IFDEF HiDPISupport}
+    /// <summary>
+    ///   Enables automatic scaling when form DPI changes.
+    /// </summary>
+    /// <value>
+    ///   Default is True.
+    /// </value>
+    /// <remarks>
+    ///   When True, icons automatically scale when the application moves
+    ///   between monitors with different DPI settings.
+    /// </remarks>
     property Scaled;
     {$ENDIF}
   end;

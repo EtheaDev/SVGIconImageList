@@ -24,6 +24,10 @@
 {  limitations under the License.                                              }
 {                                                                              }
 {******************************************************************************}
+/// <summary>
+///   Virtual image list component that connects to a TSVGIconImageCollection
+///   for displaying SVG icons with custom rendering attributes.
+/// </summary>
 unit SVGIconVirtualImageList;
 
 interface
@@ -45,6 +49,33 @@ uses
   SVGIconImageCollection;
 
 type
+  /// <summary>
+  ///   A virtual image list that displays icons from a TSVGIconImageCollection
+  ///   with its own rendering attributes.
+  /// </summary>
+  /// <remarks>
+  ///   <para>TSVGIconVirtualImageList allows multiple image lists to share the
+  ///   same icon collection while displaying them with different properties:</para>
+  ///   <list type="bullet">
+  ///     <item>Different sizes for toolbars vs menus</item>
+  ///     <item>Different colors for different themes</item>
+  ///     <item>Different opacity for different states</item>
+  ///   </list>
+  ///   <para>In Delphi 10.3+, inherits from TVirtualImageList for full
+  ///   integration with the VCL virtual image list system.</para>
+  /// </remarks>
+  /// <example>
+  ///   <code>
+  ///   // Create multiple virtual lists from one collection
+  ///   SVGIconVirtualImageList1.ImageCollection := SVGIconImageCollection1;
+  ///   SVGIconVirtualImageList1.Size := 16;  // Small icons
+  ///   SVGIconVirtualImageList1.FixedColor := clNavy;
+  ///
+  ///   SVGIconVirtualImageList2.ImageCollection := SVGIconImageCollection1;
+  ///   SVGIconVirtualImageList2.Size := 32;  // Large icons
+  ///   SVGIconVirtualImageList2.GrayScale := True;
+  ///   </code>
+  /// </example>
   {$IFDEF D10_3+}
   TSVGIconVirtualImageList = class(TVirtualImageList)
   {$ELSE}
@@ -71,7 +102,6 @@ type
     {$ENDIF}
   protected
     {$IFNDEF D10_3+}
-    // override abstract methods
     function GetSVGIconItems: TSVGIconItems; {$IFDEF D10_3+}virtual;{$ELSE}override;{$ENDIF}
     procedure RecreateBitmaps; {$IFDEF D10_3+}virtual;{$ELSE}override;{$ENDIF}
     procedure DoAssign(const source : TPersistent); {$IFDEF D10_3+}virtual;{$ELSE}override;{$ENDIF}
@@ -84,22 +114,103 @@ type
 
   public
     {$IFNDEF D10_3+}
+    /// <summary>
+    ///   Paints an icon to a canvas at the specified location and size.
+    /// </summary>
+    /// <param name="ACanvas">
+    ///   The canvas to paint to.
+    /// </param>
+    /// <param name="AIndex">
+    ///   The index of the icon to paint.
+    /// </param>
+    /// <param name="X">
+    ///   The horizontal position.
+    /// </param>
+    /// <param name="Y">
+    ///   The vertical position.
+    /// </param>
+    /// <param name="AWidth">
+    ///   The width to render the icon.
+    /// </param>
+    /// <param name="AHeight">
+    ///   The height to render the icon.
+    /// </param>
+    /// <param name="AEnabled">
+    ///   When True, renders normally. When False, applies disabled styling.
+    /// </param>
     procedure PaintTo(const ACanvas: TCanvas; const AIndex: Integer;
       const X, Y, AWidth, AHeight: Single; AEnabled: Boolean = True); override;
     {$ELSE}
+    /// <summary>
+    ///   Creates a new virtual image list.
+    /// </summary>
+    /// <param name="AOwner">
+    ///   The component that owns this image list.
+    /// </param>
     constructor Create(AOwner: TComponent); override;
     {$ENDIF}
   published
-    //Publishing properties of Custom Class
+    /// <summary>
+    ///   Event triggered when the image list contents change.
+    /// </summary>
     property OnChange;
-    //New properties
+
     {$IFDEF D10_3+}
+    /// <summary>
+    ///   Fixed color to apply to icons from this virtual list.
+    /// </summary>
+    /// <value>
+    ///   Default is SVG_INHERIT_COLOR.
+    /// </value>
+    /// <remarks>
+    ///   This property overrides the collection's FixedColor when rendering
+    ///   icons through this virtual image list.
+    /// </remarks>
     property FixedColor: TColor read FFixedColor write SetFixedColor default SVG_INHERIT_COLOR;
+
+    /// <summary>
+    ///   When True, applies FixedColor only to root SVG elements.
+    /// </summary>
+    /// <value>
+    ///   Default is False.
+    /// </value>
     property ApplyFixedColorToRootOnly: Boolean read FApplyFixedColorToRootOnly write SetApplyFixedColorToRootOnly default False;
+
+    /// <summary>
+    ///   Background color for anti-aliasing.
+    /// </summary>
+    /// <value>
+    ///   Default is clBtnFace.
+    /// </value>
     property AntiAliasColor: TColor read FAntiAliasColor write SetAntiAliasColor default clBtnFace;
+
+    /// <summary>
+    ///   Renders icons in grayscale when True.
+    /// </summary>
+    /// <value>
+    ///   Default is False.
+    /// </value>
     property GrayScale: Boolean read FGrayScale write SetGrayScale default False;
+
+    /// <summary>
+    ///   Opacity applied to icons (0-255).
+    /// </summary>
+    /// <value>
+    ///   Default is 255 (fully opaque).
+    /// </value>
     property Opacity: Byte read FOpacity write SetOpacity default 255;
+
+    /// <summary>
+    ///   Sets both Width and Height to the same value for square icons.
+    /// </summary>
+    /// <value>
+    ///   Default is 16 pixels.
+    /// </value>
     property Size: Integer read GetSize write SetSize stored StoreSize default DEFAULT_SIZE;
+
+    /// <summary>
+    ///   The TSVGIconImageCollection providing the icons.
+    /// </summary>
     property ImageCollection;
     {$ELSE}
     property Opacity;
@@ -108,13 +219,37 @@ type
     property AntiAliasColor;
     property GrayScale;
     property ApplyFixedColorToRootOnly;
+
+    /// <summary>
+    ///   The TSVGIconImageCollection providing the icons (pre-10.3 version).
+    /// </summary>
     property ImageCollection : TSVGIconImageCollection read FImageCollection write SetImageCollection;
     {$ENDIF}
+
+    /// <summary>
+    ///   The width of icons in pixels.
+    /// </summary>
     property Width;
+
+    /// <summary>
+    ///   The height of icons in pixels.
+    /// </summary>
     property Height;
+
+    /// <summary>
+    ///   Renders disabled icons in grayscale when True.
+    /// </summary>
     property DisabledGrayScale;
+
+    /// <summary>
+    ///   Opacity applied to disabled icons (0-255).
+    /// </summary>
     property DisabledOpacity;
+
     {$IFDEF HiDPISupport}
+    /// <summary>
+    ///   Enables automatic DPI scaling.
+    /// </summary>
     property Scaled;
     {$ENDIF}
   end;

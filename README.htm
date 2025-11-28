@@ -31,7 +31,7 @@ td{
 </style>
 <h1>SVGIconImageList <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg" alt="License"/></a></h1>
 <h2>Four engines to render SVG (Delphi Image32, SVGMagic, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale&hellip;)</h2>
-<h3>Actual official version 4.6.0 (VCL+FMX)</h3>
+<h3>Actual official version 4.6.1 (VCL+FMX)</h3>
 <table>
   <tr>
     <th>Component</th>
@@ -156,6 +156,14 @@ Notice that those components are &ldquo;specific&rdquo; of SVGMagic Library, bec
 <p><img src="./Demo/Images/SupportingDelphi.jpg" alt="Delphi 13 Support"/></p>
 <p>Related links: <a href="https://www.embarcadero.com">embarcadero.com</a> - <a href="https://learndelphi.org">learndelphi.org</a></p>
 <h3>RELEASE NOTES</h3>
+<p>28 Nov 2025 - version 4.6.1</p>
+<ul>
+<li>Added SkiaSVGUtils.pas to fix Skia rendering</li>
+<li>Fixed Range Check error for SVGMagic engine</li>
+<li>Fixed Setup for D10_4 to DXE3</li>
+<li>Reformat Packages for Build with Android and iOS platforms</li>
+<li>Reformat Packages for Build with MacOSX platform</li>
+</ul>
 <p>16 Nov 2025 - version 4.6.0</p>
 <ul>
 <li>Added SVGMagic engine support for VCL applications</li>
@@ -612,3 +620,4 @@ Take care of TSVGIconVirtualImageList.Collection renamed to SVGIconVirtualImageL
 </li>
 </ul>
 <p>Many thanks to <strong>Vincent Parrett</strong> and <strong>Kiriakos Vlahos</strong> for their great contribution.</p>
+<p>Thanks to George Birbilis for Package updates, build and test with Android, iOS and OSX platform</p>
