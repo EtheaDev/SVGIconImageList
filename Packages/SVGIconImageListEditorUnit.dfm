@@ -611,7 +611,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           ParentCtl3D = False
           TabOrder = 1
           StyleElements = [seFont, seBorder]
-          ExplicitTop = 3
           object IconImage: TSVGIconImage
             AlignWithMargins = True
             Left = 2
@@ -637,8 +636,6 @@ object SVGIconImageListEditor: TSVGIconImageListEditor
           Position = 128
           PositionToolTip = ptBottom
           TabOrder = 0
-          OnTracking = BackgroundTrackBarTracking
-          ExplicitLeft = 4
         end
       end
       object NameEdit: TEdit

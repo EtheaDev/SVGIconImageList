@@ -49,7 +49,7 @@ const
   /// <summary>
   ///   Current version of the SVGIconImageList library.
   /// </summary>
-  SVGIconImageListVersion = '4.6.1';
+  SVGIconImageListVersion = '4.6.2';
 
   /// <summary>
   ///   Default size (width and height) for icons in pixels.
