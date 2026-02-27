@@ -2,7 +2,7 @@
 {                                                                              }
 {       SVGViewer: Demo to compare four engines of SVGIconImageList library    }
 {                                                                              }
-{       Copyright (c) 2019-2025 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2026 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {                                                                              }
 {       https://github.com/EtheaDev/SVGIconImageList                           }
@@ -34,7 +34,7 @@ uses
 {$R *.res}
 
 begin
-  Application.Title := 'SVG Preview & Engine Comparison - Copyright (c) 2020-2025 Ethea S.r.l.';
+  Application.Title := 'SVG Preview & Engine Comparison - Copyright (c) 2020-2026 Ethea S.r.l.';
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TSVGViewerForm, SVGViewerForm);

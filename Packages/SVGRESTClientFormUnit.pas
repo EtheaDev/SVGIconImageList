@@ -203,7 +203,7 @@ end;
 procedure TSVGRESTClientSearchForm.UpdateGUI;
 begin
   OKButton.Enabled := FSelectedList.Count > 0;
-  SearchButton.Enabled := (SearchEdit.Text <> '') or (CollectionsCombo.ItemHeight >= 0);
+  SearchButton.Enabled := (SearchEdit.Text <> '') or (CollectionsCombo.ItemIndex > 0);
 end;
 
 procedure TSVGRESTClientSearchForm.AddImage(AStream: TStream;
@@ -222,8 +222,8 @@ var
 begin
   Result := [];
   LPrefix := '';
-  if CollectionsCombo.ItemIndex >= 0 then
-    LPrefix := FCollections[CollectionsCombo.ItemIndex].Prefix;
+  if CollectionsCombo.ItemIndex > 0 then
+    LPrefix := FCollections[CollectionsCombo.ItemIndex - 1].Prefix;
 
   if SearchEdit.Text <> '' then
   begin
@@ -235,7 +235,7 @@ begin
       LSearch.Free;
     end;
   end
-  else if CollectionsCombo.ItemIndex >= 0 then
+  else if CollectionsCombo.ItemIndex > 0 then
   begin
     LCollectionIcons := TIconifyCollectionIcons.Create;
     try
@@ -290,7 +290,7 @@ procedure TSVGRESTClientSearchForm.CollectionsComboKeyDown(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
   if (key = VK_BACK) or (key = VK_DELETE) then
-    CollectionsCombo.ItemIndex := -1;
+    CollectionsCombo.ItemIndex := 0;
 end;
 
 constructor TSVGRESTClientSearchForm.Create(AOwner: TComponent);
@@ -410,8 +410,10 @@ begin
     FCollections.Clear;
     CollectionsCombo.Clear;
     FIconify.Collections(FCollections);
+    CollectionsCombo.Items.Add('(All collections)');
     for LCollection in FCollections do
       CollectionsCombo.Items.Add(LCollection.Name);
+    CollectionsCombo.ItemIndex := 0;
   end;
 end;
 

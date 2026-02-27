@@ -59,7 +59,8 @@ implementation
 
 uses
   Winapi.GDIPAPI, System.IOUtils, System.Types, FileCtrl,
-  Image32SVGFactory, SVGMagicFactory,
+  Image32SVGFactory,
+  {$IFNDEF VER270}SVGMagicFactory,{$ENDIF}
   {$IFDEF SKIA}SkiaSVGFactory,{$ENDIF}
   D2DSVGFactory;
 
@@ -68,7 +69,7 @@ begin
   FrameViewerD2D.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
   {$IFDEF SKIA}FrameViewSkia.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;{$ENDIF}
   FrameViewImage32.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
-  FrameViewSVGMagic.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;
+  {$IFNDEF VER270}FrameViewSVGMagic.ApplyFixedColorToRootOnly := ApplyToRootOnlyCheckBox.Checked;{$ENDIF}
 end;
 
 procedure TSVGViewerForm.DrawImage(const AFileName: string);
@@ -76,7 +77,7 @@ begin
   FrameViewerD2D.DrawFile(AFileName);
   {$IFDEF SKIA}FrameViewSkia.DrawFile(AFileName);{$ENDIF}
   FrameViewImage32.DrawFile(AFileName);
-  FrameViewSVGMagic.DrawFile(AFileName);
+  {$IFNDEF VER270}FrameViewSVGMagic.DrawFile(AFileName);{$ENDIF}
 end;
 
 procedure TSVGViewerForm.OpacityTrackBarChange(Sender: TObject);
@@ -84,7 +85,7 @@ begin
   FrameViewerD2D.Opacity := OpacityTrackBar.position / 100;
   {$IFDEF SKIA}FrameViewSkia.Opacity := OpacityTrackBar.position / 100;{$ENDIF}
   FrameViewImage32.Opacity := OpacityTrackBar.position / 100;
-  FrameViewSVGMagic.Opacity := OpacityTrackBar.position / 100;
+  {$IFNDEF VER270}FrameViewSVGMagic.Opacity := OpacityTrackBar.position / 100;{$ENDIF}
 end;
 
 procedure TSVGViewerForm.OpenButtonClick(Sender: TObject);
@@ -142,7 +143,12 @@ begin
   FrameViewSkia.Visible := False;
   {$ENDIF}
   FrameViewImage32.InitViewer('Delphi Image32', GetImage32SVGFactory);
+  {$IFNDEF VER270}
   FrameViewSVGMagic.InitViewer('SVGMagic', GetSVGMagicFactory);
+  {$ELSE}
+  FrameViewSVGMagic.Visible := False;
+  {$ENDIF}
+  RightPanel.Visible := FrameViewSkia.Visible or FrameViewSVGMagic.Visible;
 end;
 
 procedure TSVGViewerForm.FormResize(Sender: TObject);
@@ -152,7 +158,7 @@ begin
   LHeight := RightPanel.ClientHeight div 2;
   FrameViewImage32.Height := LHeight;
   FrameViewerD2D.Height := LHeight;
-  ControlPanel.Height := LHeight;
+  {$IFDEF SKIA}FrameViewSkia.Height := LHeight;{$ENDIF}
   LWidth := (Self.ClientWidth - FilesPanel.Width) div 2;
   RightPanel.Width := LWidth;
 end;

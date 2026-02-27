@@ -3,7 +3,7 @@ unit Img32.SVG.Reader;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.9                                                             *
-* Date      :  28 September 2025                                               *
+* Date      :  20 December 2025                                                *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
@@ -245,6 +245,9 @@ type
   end;
 
   TGroupElement = class(TShapeElement)
+  private
+    procedure DrawChildrenAndFilter(image: TImage32; const drawDat: TDrawData;
+      filterEl: TBaseElement; useTmpImage: Boolean);
   protected
     procedure Draw(image: TImage32; drawDat: TDrawData); override;
   end;
@@ -791,6 +794,8 @@ end;
 //------------------------------------------------------------------------------
 
 procedure UpdateFontInfo(var drawDat: TDrawData; thisElement: TBaseElement);
+var
+  fontValue: TValue;
 begin
   with thisElement.fDrawData do
   begin
@@ -803,7 +808,12 @@ begin
       drawDat.fontInfo.familyNames := fontInfo.familyNames;
 
     if fontInfo.size > 0 then
-      drawDat.fontInfo.size := fontInfo.size;
+    begin
+      // Convert fontsize+unitType to pixels
+      fontValue.SetValue(fontInfo.size, fontInfo.sizeUnitType);
+      drawDat.fontInfo.size := fontValue.GetValue(drawDat.fontInfo.size, 1);
+      drawDat.fontInfo.sizeUnitType := utPixel;
+    end;
     if fontInfo.spacing <> 0 then
       drawDat.fontInfo.spacing := fontInfo.spacing;
     if fontInfo.textLength > 0 then
@@ -1283,6 +1293,7 @@ var
   clipPaths : TPathsD;
   clipRec   : TRect;
   dstClipRec: TRect;
+  filterEl  : TBaseElement;
   offsetX, offsetY: integer;
   fr: TFillRule;
 begin
@@ -1296,6 +1307,9 @@ begin
 
   maskEl := TMaskElement(FindRefElement(drawDat.maskElRef));
   clipEl := TClipPathElement(FindRefElement(drawDat.clipElRef));
+  filterEl := FindRefElement(drawDat.filterElRef);
+  drawDat.filterElRef := ''; // don't inherit to children
+
   if Assigned(clipEl) then
   begin
     drawDat.clipElRef := '';
@@ -1326,7 +1340,7 @@ begin
     //nb: it's not safe to use fReader.TempImage when calling DrawChildren
     tmpImg := TImage32.Create(Min(image.Width, clipRec.Right), Min(image.Height, clipRec.Bottom));
     try
-      DrawChildren(tmpImg, drawDat);
+      DrawChildrenAndFilter(tmpImg, drawDat, filterEl, False);
       if clipEl.fDrawData.fillRule = frNegative then
         fr := frNonZero else
         fr := clipEl.fDrawData.fillRule;
@@ -1362,13 +1376,62 @@ begin
 
     tmpImg := TImage32.Create(Min(image.Width, clipRec.Right), Min(image.Height, clipRec.Bottom));
     try
-      DrawChildren(tmpImg, drawDat);
+      DrawChildrenAndFilter(tmpImg, drawDat, filterEl, False);
       TMaskElement(maskEl).ApplyMask(tmpImg, drawDat);
       image.CopyBlend(tmpImg, clipRec, dstClipRec, BlendToAlphaLine);
     finally
       tmpImg.Free;
     end;
-  end else
+  end
+  else
+    DrawChildrenAndFilter(image, drawDat, filterEl, True);
+end;
+//------------------------------------------------------------------------------
+
+procedure TGroupElement.DrawChildrenAndFilter(image: TImage32;
+  const drawDat: TDrawData; filterEl: TBaseElement; useTmpImage: Boolean);
+var
+  clipRec2: TRectD;
+  clipRec: TRect;
+  tmpImg: TImage32;
+begin
+  // Draw the children into the image and apply an optional group-filter to the image.
+  if Assigned(filterEl) then
+  begin
+    clipRec2 := drawDat.bounds;
+    with TFilterElement(filterEl) do
+    begin
+      MatrixExtractScale(DrawData.matrix, fScale);
+
+      if fUnits = hUserSpaceOnUse then
+        clipRec2 := GetAdjustedBounds(fSvgReader.userSpaceBounds) else
+        clipRec2 := GetAdjustedBounds(clipRec2);
+      if clipRec2.IsEmpty then Exit;
+    end;
+    MatrixApply(drawDat.matrix, clipRec2);
+    clipRec := Rect(clipRec2);
+    Types.IntersectRect(clipRec, clipRec, image.Bounds);
+
+    if useTmpImage then
+    begin
+      tmpImg := TImage32.Create(Min(image.Width, clipRec.Right), Min(image.Height, clipRec.Bottom));
+      try
+        DrawChildren(tmpImg, drawDat);
+        with TFilterElement(filterEl) do
+          Apply(tmpImg, clipRec, drawDat.matrix);
+        image.CopyBlend(tmpImg, clipRec, clipRec, BlendToAlphaLine);
+      finally
+        tmpImg.Free;
+      end;
+    end
+    else
+    begin
+      DrawChildren(image, drawDat);
+      with TFilterElement(filterEl) do
+        Apply(image, clipRec, drawDat.matrix);
+    end;
+  end
+  else
     DrawChildren(image, drawDat);
 end;
 
@@ -2067,6 +2130,7 @@ var
 begin
   MatrixExtractScale(matrix, fScale);
   fFilterBounds := filterBounds;
+
   Types.IntersectRect(fObjectBounds, fObjectBounds, img.Bounds);
   fSrcImg := img;
 
@@ -2764,6 +2828,7 @@ begin
           if fUnits = hUserSpaceOnUse then
             clipRec := GetAdjustedBounds(fSvgReader.userSpaceBounds) else
             clipRec := GetAdjustedBounds(clipRec);
+          if clipRec.IsEmpty then Exit;
         end;
       end;
       MatrixApply(drawDat.matrix, clipRec);
@@ -4614,12 +4679,14 @@ end;
 
 procedure FontSize_Attrib(aOwnerEl: TBaseElement; const value: UTF8String);
 var
-  num: double;
   c, endC: PUTF8Char;
+  tmp: TValue;
 begin
   c := PUTF8Char(value); endC := c + Length(value);
-  if not ParseNextNum(c, endC, false, num) then Exit;
-  aOwnerEl.fDrawData.FontInfo.size := num;
+  tmp.Init;
+  if not ParseNextNumEx(c, endC, false, tmp.rawVal, tmp.unitType) then Exit;
+  aOwnerEl.fDrawData.fontInfo.size := tmp.rawVal;
+  aOwnerEl.fDrawData.fontInfo.sizeUnitType := tmp.unitType;
 end;
 //------------------------------------------------------------------------------
 
@@ -5796,8 +5863,9 @@ var
   bestFontReader: TFontReader;
   fi: TFontInfo;
 begin
-  if svgFontInfo.family = tfUnknown then
-    fi.family := tfSerif else
+  FillChar(fi, SizeOf(fi), 0);
+  fi.fontFormat := ffTrueType;
+  if svgFontInfo.family <> tfUnknown then
     fi.family := svgFontInfo.family;
   fi.faceName := ''; //just match to a family here, not to a specific facename
   fi.macStyles := [];

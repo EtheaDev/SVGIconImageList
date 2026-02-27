@@ -3,7 +3,7 @@
 {       SVGIconImageList: An extended ImageList for Delphi/VCL                 }
 {       to simplify use of SVG Icons (resize, opacity and more...)             }
 {                                                                              }
-{       Copyright (c) 2019-2025 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2026 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {       Contributors: Vincent Parrett, Kiriakos Vlahos                         }
 {                                                                              }
@@ -49,7 +49,7 @@ const
   /// <summary>
   ///   Current version of the SVGIconImageList library.
   /// </summary>
-  SVGIconImageListVersion = '4.6.2';
+  SVGIconImageListVersion = '4.7.0';
 
   /// <summary>
   ///   Default size (width and height) for icons in pixels.

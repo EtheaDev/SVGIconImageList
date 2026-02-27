@@ -3,7 +3,7 @@
 {       SVG Icon ImageList: An extended ImageList for Delphi/VLC+FMX           }
 {       to simplify use of Icons (resize, opacity and more...)                 }
 {                                                                              }
-{       Copyright (c) 2019-2025 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2026 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {                                                                              }
 {       https://github.com/EtheaDev/SVGIconImageList                           }
@@ -65,6 +65,7 @@ type
     procedure CollectionsComboKeyDown(Sender: TObject; var Key: Word;
       var KeyChar: Char; Shift: TShiftState);
     procedure CollectionsComboChange(Sender: TObject);
+    procedure SearchEditTyping(Sender: TObject);
   private
     FIconify: TIconifyApi;
     FSearchList, FSelectedList: TSVGIconImageList;
@@ -169,9 +170,9 @@ end;
 
 procedure TSVGRESTClientSearchForm.UpdateGUI;
 begin
-  OKButton.Enabled := FSelectedList.Count > 0;
+  OKButton.Enabled := Assigned(FSelectedList) and (FSelectedList.Count > 0);
   SearchView.ItemHeight := FIconsSize;
-  SearchButton.Enabled := (SearchEdit.Text <> '') or (CollectionsCombo.ItemHeight >= 0);
+  SearchButton.Enabled := (SearchEdit.Text <> '') or (CollectionsCombo.ItemIndex > 0);
 end;
 
 procedure TSVGRESTClientSearchForm.AddImagesToSource(
@@ -195,8 +196,8 @@ var
 begin
   Result := [];
   LPrefix := '';
-  if CollectionsCombo.ItemIndex >= 0 then
-    LPrefix := FCollections[CollectionsCombo.ItemIndex].Prefix;
+  if CollectionsCombo.ItemIndex > 0 then
+    LPrefix := FCollections[CollectionsCombo.ItemIndex - 1].Prefix;
 
   if SearchEdit.Text <> '' then
   begin
@@ -208,7 +209,7 @@ begin
       LSearch.Free;
     end;
   end
-  else if CollectionsCombo.ItemIndex >= 0 then
+  else if CollectionsCombo.ItemIndex > 0 then
   begin
     LCollectionIcons := TIconifyCollectionIcons.Create;
     try
@@ -247,17 +248,21 @@ begin
   end;
 end;
 
+procedure TSVGRESTClientSearchForm.SearchEditTyping(Sender: TObject);
+begin
+  UpdateGUI;
+end;
+
 procedure TSVGRESTClientSearchForm.CollectionsComboChange(Sender: TObject);
 begin
   UpdateGUI;
-//  SearchButtonClick(SearchButton);
 end;
 
 procedure TSVGRESTClientSearchForm.CollectionsComboKeyDown(Sender: TObject;
   var Key: Word; var KeyChar: Char; Shift: TShiftState);
 begin
   if (key = VK_BACK) or (key = VK_DELETE) then
-    CollectionsCombo.ItemIndex := -1;
+    CollectionsCombo.ItemIndex := 0;
 end;
 
 constructor TSVGRESTClientSearchForm.Create(AOwner: TComponent);
@@ -318,8 +323,10 @@ begin
     FCollections.Clear;
     CollectionsCombo.Clear;
     FIconify.Collections(FCollections);
+    CollectionsCombo.Items.Add('(All collections)');
     for LCollection in FCollections do
       CollectionsCombo.Items.Add(LCollection.Name);
+    CollectionsCombo.ItemIndex := 0;
   end;
 end;
 

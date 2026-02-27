@@ -60,9 +60,9 @@ object SVGViewerForm: TSVGViewerForm
     end
     object ControlPanel: TPanel
       Left = 1
-      Top = 299
+      Top = 370
       Width = 198
-      Height = 300
+      Height = 229
       Align = alBottom
       BevelOuter = bvNone
       Ctl3D = True

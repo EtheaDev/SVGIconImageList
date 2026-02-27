@@ -43,6 +43,7 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
         Size.Height = 23.000000000000000000
         Size.PlatformDefault = False
         TextPrompt = 'Icon Name'
+        OnTyping = SearchEditTyping
       end
       object OpacityLabel: TLabel
         Align = Right
@@ -85,7 +86,6 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
         Size.PlatformDefault = False
         TabOrder = 0
         Text = 'Search'
-        TextSettings.Trimming = None
         OnClick = SearchButtonClick
       end
       object CollectionsCombo: TComboBox
@@ -122,10 +122,9 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
         TabOrder = 0
         OnDblClick = SearchViewDblClick
         AllowDrag = True
-        Columns = 2
         DisableFocusEffect = True
         ItemHeight = 36.000000000000000000
-        ItemWidth = 200.000000000000000000
+        ItemWidth = 300.000000000000000000
         DefaultItemStyles.ItemStyle = ''
         DefaultItemStyles.GroupHeaderStyle = ''
         DefaultItemStyles.GroupFooterStyle = ''
@@ -197,7 +196,6 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
       Size.PlatformDefault = False
       TabOrder = 0
       Text = 'OK'
-      TextSettings.Trimming = None
     end
     object CancelButton: TButton
       Align = Right
@@ -214,7 +212,6 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
       Size.PlatformDefault = False
       TabOrder = 1
       Text = 'Cancel'
-      TextSettings.Trimming = None
     end
     object HelpButton: TButton
       Align = Right
@@ -229,7 +226,6 @@ object SVGRESTClientSearchForm: TSVGRESTClientSearchForm
       Size.PlatformDefault = False
       TabOrder = 2
       Text = 'Help'
-      TextSettings.Trimming = None
       OnClick = HelpButtonClick
     end
     object RemovePrefixCheckBox: TCheckBox

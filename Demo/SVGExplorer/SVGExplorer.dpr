@@ -2,7 +2,7 @@
 {                                                                              }
 {       SVGExplorer: Demo to explore SVG files on disk                         }
 {                                                                              }
-{       Copyright (c) 2019-2025 (Ethea S.r.l.)                                 }
+{       Copyright (c) 2019-2026 (Ethea S.r.l.)                                 }
 {       Author: Carlo Barazzetta                                               }
 {                                                                              }
 {       https://github.com/EtheaDev/SVGIconImageList                           }
@@ -30,7 +30,7 @@ uses
 {$R *.res}
 
 begin
-  Application.Title := 'SVG Icons Explorer - Copyright (c) 2020-2025 Ethea S.r.l.';
+  Application.Title := 'SVG Icons Explorer - Copyright (c) 2020-2026 Ethea S.r.l.';
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TfmExplorerSVG, fmExplorerSVG);

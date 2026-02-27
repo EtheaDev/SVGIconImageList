@@ -3,7 +3,7 @@ unit Img32.Text;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.9                                                             *
-* Date      :  14 August 2025                                                  *
+* Date      :  20 December 2025                                                *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 * Purpose   :  TrueType fonts for TImage32 (without Windows dependencies)      *
@@ -25,7 +25,7 @@ type
   TFixed = type single;
   Int16 = type SmallInt;
   TFontFormat = (ffInvalid, ffTrueType, ffCompact);
-  TFontFamily = (tfUnknown, tfSerif, tfSansSerif, tfMonospace);
+  TFontFamily = (tfUnknown, tfSerif, tfSansSerif, tfMonospace, tfSymbol);
 
   TFontReader = class;
 
@@ -1000,7 +1000,7 @@ begin
   fKernTable            := nil;
   FillChar(fTbl_post, SizeOf(fTbl_post), 0);
   fFontInfo.fontFormat  := ffInvalid;
-  fFontInfo.family    := tfUnknown;
+  fFontInfo.family      := tfUnknown;
   fFontWeight           := 0;
   fStream.Clear;
   NotifyRecipients(inStateChange);
@@ -1238,6 +1238,8 @@ begin
     end;
   end;
 
+  fFontInfo.family := tfUnknown; // assign before calling GetTable_cmap
+
   if fTblIdxes[tblName] < 0 then fFontInfo.fontFormat := ffInvalid
   else if fTblIdxes[tblGlyf] < 0 then fFontInfo.fontFormat := ffCompact
   else fFontInfo.fontFormat := ffTrueType;
@@ -1293,11 +1295,14 @@ begin
   begin
     with cmapTblRecs[i] do
       if (platformID = 0) or (platformID = 3) then
-        fStream.Position := cmapTbl.offset + offset
-      else
-        Continue;
+    begin
+      fStream.Position := cmapTbl.offset + offset;
+      if (platformID = 3) and (encodingID = 0) then
+        fFontInfo.family := tfSymbol;
+    end else
+      Continue;
+        
     GetWord(fStream, format);
-
     case format of
       0:
         begin
@@ -1375,7 +1380,9 @@ var
 begin
   result := 0; // default to the 'missing' glyph
   if (codePoint < 256) and Assigned(fFormat0CodeMap) then
-    Result := fFormat0CodeMap[codePoint]
+  begin
+    Result := fFormat0CodeMap[codePoint];
+  end
   else if Assigned(fFormat12CodeMap) then
   begin
     for i := 0 to High(fFormat12CodeMap) do
@@ -1386,9 +1393,13 @@ begin
           result := (startGlyphCode + WORD(codePoint - startCharCode));
           Break;
         end;
-  end
-  else if (codePoint < $FFFF) and Assigned(fFormat4CodeMap) then
+  end else 
   begin
+    if (codePoint >= $FFFF) or not Assigned(fFormat4CodeMap) then Exit;
+
+    if (fFontInfo.family = tfSymbol) and (codePoint < 255) then
+      codePoint := codePoint - 32 + fFormat4CodeMap[0].startCode;
+
     for i := 0 to High(fFormat4CodeMap) do
       with fFormat4CodeMap[i] do
         if codePoint <= endCode then
@@ -1770,7 +1781,7 @@ begin
 
   setLength(result, tbl_glyf.numContours);
   repeats := 0;
-  flag := 0; // help the compiler with "flag isn't initialized"
+  flag := 0;
   for i := 0 to High(result) do
   begin
     if i = 0 then len := contourEnds[0] +1
@@ -1870,29 +1881,26 @@ end;
 
 function TFontReader.ConvertSplinesToBeziers(const pathsEx: TPathsEx): TPathsEx;
 var
-  i,j,k: integer;
-  pt: TPointEx;
-  prevOnCurve: Boolean;
+  i,j,k, len: integer;
+  pt, prev: TPointEx;
 begin
   SetLength(Result, Length(pathsEx));
   for i := 0 to High(pathsEx) do
   begin
-    SetLength(Result[i], Length(pathsEx[i]) * 2);
-    Result[i][0] := pathsEx[i][0]; k := 1;
-    prevOnCurve := true;
-    for j := 1 to High(pathsEx[i]) do
+    len := Length(pathsEx[i]);
+    SetLength(Result[i], len * 2);
+    k := 0;
+    prev := pathsEx[i][len -1];
+    for j := 0 to len -1 do
     begin
-      if OnCurve(pathsEx[i][j].flag) then
+      if not OnCurve(pathsEx[i][j].flag) and
+        not OnCurve(prev.flag) then
       begin
-        prevOnCurve := true;
-      end
-      else if not prevOnCurve then
-      begin
-        pt := MidPoint(pathsEx[i][j-1], pathsEx[i][j]);
+        pt := MidPoint(prev, pathsEx[i][j]);
         Result[i][k] := pt; inc(k);
-      end else
-        prevOnCurve := false;
-      Result[i][k] := pathsEx[i][j]; inc(k);
+      end;
+      prev := pathsEx[i][j];
+      Result[i][k] := prev; inc(k);
     end;
     SetLength(Result[i], k);
   end;
@@ -2192,8 +2200,6 @@ var
   gmT: TGlyphInfo;
   hmtxI, hmtxM: TFontTable_Hmtx;
 begin
-  fFontInfo.family := tfUnknown;
-
   if (fTbl_post.majorVersion > 0) and
     (fTbl_post.isFixedPitch <> 0) then
   begin
@@ -2218,6 +2224,8 @@ begin
     fFontInfo.family := tfMonospace;
     Exit;
   end;
+
+  if fFontInfo.family = tfSymbol then Exit;
 
   gmT := GetGlyphInfoInternal(giT);
   if Assigned(gmT.paths) and (Length(gmT.paths[0]) > 10) then
@@ -2878,7 +2886,7 @@ begin
   begin
     // to get here the unicode char is not supported by fFontReader
     altFontReader :=
-      fFontReader.fFontManager.FindReaderContainingGlyph(codepoint, tfUnknown, glyphIdx);
+      aFontManager.FindReaderContainingGlyph(codepoint, tfUnknown, glyphIdx);
     if Assigned(altFontReader) then
     begin
       altFontReader.GetGlyphInfo(codepoint, dummy, Result^);
@@ -3586,7 +3594,9 @@ begin
   for i := 0 to fFontList.Count -1 do
   begin
     fr := TFontReader(fFontList[i]);
-    currDiff := CompareFontInfos(fontInfo, fr.fFontInfo);
+    if fontInfo.fontFormat = ffInvalid then
+      currDiff := GetFullNameDiff(fontInfo, fr.fFontInfo.fullFaceName) else
+      currDiff := CompareFontInfos(fontInfo, fr.fFontInfo);
     if (currDiff < bestDiff) then
     begin
       Result := fr;

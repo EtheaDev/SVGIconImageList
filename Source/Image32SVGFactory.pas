@@ -347,5 +347,6 @@ initialization
   FontManager.LoadFontReaderFamily('Times New Roman');
   FontManager.LoadFontReaderFamily('Segoe UI');
   FontManager.LoadFontReaderFamily('Segoe UI Emoji');
+  FontManager.LoadFontReaderFamily('Webdings');
 
 end.

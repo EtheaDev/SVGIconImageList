@@ -3,7 +3,7 @@ unit Img32.SVG.Core;
 (*******************************************************************************
 * Author    :  Angus Johnson                                                   *
 * Version   :  4.9                                                             *
-* Date      :  9 August 2025                                                   *
+* Date      :  15 December 2025                                                *
 * Website   :  https://www.angusj.com                                          *
 * Copyright :  Angus Johnson 2019-2025                                         *
 *                                                                              *
@@ -103,6 +103,7 @@ type
     family        : TFontFamily;
     familyNames   : UTF8Strings;
     size          : double;
+    sizeUnitType  : TUnitType;
     spacing       : double;
     spacesInText  : TSpacesInText;
     textLength    : double;
@@ -1681,6 +1682,7 @@ procedure GetSvgFontInfo(const value: UTF8String; var fontInfo: TSVGFontInfo);
 var
   c, endC: PUTF8Char;
   hash: Cardinal;
+  tmp: TValue;
 begin
   c := PUTF8Char(value);
   endC := c + Length(value);
@@ -1689,7 +1691,12 @@ begin
     if c = ';' then
       break
     else if IsNumPending(c, endC, true) then
-      ParseNextNum(c, endC, true, fontInfo.size)
+    begin
+      tmp.Init;
+      if not ParseNextNumEx(c, endC, true, tmp.rawVal, tmp.unitType) then Exit;
+      fontInfo.size := tmp.rawVal;
+      fontInfo.sizeUnitType := tmp.unitType;
+    end
     else
     begin
       hash := ParseNextWordHashed(c, endC);
