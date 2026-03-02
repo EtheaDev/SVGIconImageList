@@ -2,7 +2,7 @@
 
 ## Four engines to render SVG (Delphi Image32, SVGMagic, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 4.7.0 (VCL+FMX)
+### Actual official version 4.7.1 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -138,6 +138,9 @@ A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/Ico
 Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
 ### RELEASE NOTES
+02 Mar 2026 - version 4.7.1
+- Fixed Setup for Delphi 13.0 and 13.1
+
 27 Feb 2026 - version 4.7.0
 - Optimized drawing of icons in FMX
 - Fixed FMX SvgIconImagelist Insert Icon check dup names
