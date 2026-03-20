@@ -58,10 +58,10 @@
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='ALL'">
-        <BuildGroupProject Include="dclSVGIconImageList.dproj">
-            <ProjectGuid>{1E417A1F-FB83-4DB2-AC88-C8A00536AE33}</ProjectGuid>
+        <BuildGroupProject Include="SVGImage32Package.dproj">
+            <ProjectGuid>{2CD52E11-1ED4-4102-8D51-32480210103C}</ProjectGuid>
             <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
+            <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="SVGIconImageList.dproj">
@@ -70,11 +70,20 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="SVGImage32Package.dproj">
-            <ProjectGuid>{2CD52E11-1ED4-4102-8D51-32480210103C}</ProjectGuid>
+        <BuildGroupProject Include="dclSVGIconImageList.dproj">
+            <ProjectGuid>{1E417A1F-FB83-4DB2-AC88-C8A00536AE33}</ProjectGuid>
             <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
     </ItemGroup>
+    <Target Name="Build">
+        <CallTarget Targets="SVGImage32Package;SVGIconImageList;dclSVGIconImageList;dclSVGMagicPackage"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="SVGImage32Package:Clean;SVGIconImageList:Clean;dclSVGIconImageList:Clean;dclSVGMagicPackage:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="SVGImage32Package:Make;SVGIconImageList:Make;dclSVGIconImageList:Make;dclSVGMagicPackage:Make"/>
+    </Target>
 </Project>
