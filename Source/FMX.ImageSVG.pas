@@ -190,7 +190,8 @@ end;
 
 procedure TFmxImageSVG.SetApplyFixedColorToRootOnly(Value: Boolean);
 var
-  Color: TColor;
+  //TAlphaColor, not TColor: an opaque color does not fit a signed Integer
+  Color: TAlphaColor;
 begin
   if FApplyFixedColorToRootOnly <> Value then
   begin

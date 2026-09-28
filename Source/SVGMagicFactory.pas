@@ -25,6 +25,7 @@ Uses
   System.UITypes,
   System.SysUtils,
   System.Classes,
+  System.Math,
   Vcl.Graphics,
   Xml.VerySimple,
   UTWSVG,
@@ -41,6 +42,11 @@ type
     fRasterizer: TWSVGGDIPlusRasterizer;
     FSource: String;
     FOriginalSource: String; // Original SVG source without color modifications
+    //The SVG recolored with FixedColor, kept until color, root-only or source
+    //change: a new TWSVG per paint re-parsed the XML every time and added a
+    //new entry (new UUID) to the rasterizer cache at every paint
+    FColoredSVG: TWSVG;
+    FColoredKey: string;
     FWidth: Single;
     FHeight: Single;
     FFixedColor: TColor;
@@ -72,6 +78,8 @@ type
     procedure SourceFromStream(Stream: TStream);
     procedure UpdateSizeInfo;
     function ApplyFixedColorToSVGSource(const SVGSource: string): string;
+    function GetColoredSVG: TWSVG;
+    procedure ResetColoredSVG;
   public
     constructor Create;
     destructor Destroy; override;
@@ -97,14 +105,54 @@ end;
 
 destructor TSVGMagic.Destroy;
 begin
+  ResetColoredSVG;
   fRasterizer.Free;
   fSVGGraphic.Free;
   fSVG.Free;
   inherited;
 end;
 
+procedure TSVGMagic.ResetColoredSVG;
+begin
+  FreeAndNil(FColoredSVG);
+  FColoredKey := '';
+end;
+
+function TSVGMagic.GetColoredSVG: TWSVG;
+var
+  LKey: string;
+  LStream: TStringStream;
+begin
+  LKey := Format('%d|%d', [FFixedColor, Ord(FApplyFixedColorToRootOnly)]);
+  if Assigned(FColoredSVG) and (LKey = FColoredKey) then
+    Exit(FColoredSVG);
+  ResetColoredSVG;
+  Result := nil;
+  try
+    FColoredSVG := TWSVG.Create;
+    LStream := TStringStream.Create(ApplyFixedColorToSVGSource(FOriginalSource), TEncoding.UTF8);
+    try
+      LStream.Position := 0;
+      if not FColoredSVG.LoadFromStream(LStream) then
+      begin
+        // If loading fails, fall back to original
+        ResetColoredSVG;
+        Exit;
+      end;
+    finally
+      LStream.Free;
+    end;
+    FColoredKey := LKey;
+    Result := FColoredSVG;
+  except
+    // If recoloring fails, fall back to original
+    ResetColoredSVG;
+  end;
+end;
+
 procedure TSVGMagic.Clear;
 begin
+  ResetColoredSVG;
   fSVG.Clear;
   FSource := '';
   FOriginalSource := '';
@@ -140,6 +188,7 @@ var
   StringStream: TStringStream;
 begin
   // Clear previous SVG data
+  ResetColoredSVG;
   fSVG.Clear;
 
   if FOriginalSource <> '' then
@@ -193,6 +242,7 @@ Var
   OldPos : Int64;
 begin
   // Clear previous SVG data
+  ResetColoredSVG;
   fSVG.Clear;
 
   // read and save the Source
@@ -236,11 +286,19 @@ var
   StringStream: TStringStream;
   OutputStringStream: TStringStream;
 
+  // none and url(...) (gradients, patterns) are not colors to replace
+  function IsPaintColor(const Value: string): Boolean;
+  var
+    LValue: string;
+  begin
+    LValue := LowerCase(Trim(Value));
+    Result := (LValue <> 'none') and not LValue.StartsWith('url');
+  end;
+
   procedure ProcessNode(Node: TXMLNode; IsRoot: Boolean);
   var
     I: Integer;
     NodeName: string;
-    HasStroke: Boolean;
   begin
     if Node = nil then
       Exit;
@@ -256,15 +314,24 @@ var
       // Only process if ApplyToRootOnly is false OR this is the root element
       if (not FApplyFixedColorToRootOnly) or IsRoot then
       begin
-        // Check if element originally had stroke
-        HasStroke := Node.HasAttribute('stroke');
+        // fill: an explicit color is replaced, fill="none" (outline icons)
+        // is kept; the root gets the color when it has no fill, since that
+        // default is what the children without a fill inherit
+        if Node.HasAttribute('fill') then
+        begin
+          if IsPaintColor(Node.Attributes['fill']) then
+            Node.SetAttribute('fill', ColorStr);
+        end
+        else if IsRoot then
+          Node.SetAttribute('fill', ColorStr);
 
-        // Set fill attribute
-        Node.SetAttribute('fill', ColorStr);
-
-        // Only set stroke if element originally had it
-        if HasStroke then
+        // stroke: only where the element has one
+        if Node.HasAttribute('stroke') and IsPaintColor(Node.Attributes['stroke']) then
           Node.SetAttribute('stroke', ColorStr);
+
+        // "currentColor" is resolved against the color attribute
+        if IsRoot then
+          Node.SetAttribute('color', ColorStr);
       end;
     end;
 
@@ -323,44 +390,20 @@ var
   Gray: Byte;
   BlendFunc: TBlendFunction;
   TempSVG: TWSVG;
-  SVGSourceToRender: string;
-  StringStream: TStringStream;
   NeedTempSVG: Boolean;
 begin
+  // An empty document paints nothing (as the other engines do)
   if IsEmpty then
-  begin
-    // Clear the destination DC if empty
-    FillRect(DC, Rect(Round(R.Left), Round(R.Top), Round(R.Right), Round(R.Bottom)), GetStockObject(WHITE_BRUSH));
     Exit;
-  end;
 
   // Check if we need to apply fixed color by modifying the source
   NeedTempSVG := (FFixedColor <> TColors.SysDefault) and (FFixedColor <> TColors.SysNone) and not FGrayScale;
 
-  // If we need to apply fixed color, create a temporary SVG with modified source
+  // If we need to apply fixed color, use the SVG with modified source
   if NeedTempSVG then
   begin
-    SVGSourceToRender := ApplyFixedColorToSVGSource(FOriginalSource);
-    TempSVG := TWSVG.Create;
-    try
-      StringStream := TStringStream.Create(SVGSourceToRender, TEncoding.UTF8);
-      try
-        StringStream.Position := 0;
-        if not TempSVG.LoadFromStream(StringStream) then
-        begin
-          // If loading fails, fall back to original
-          TempSVG.Free;
-          TempSVG := nil;
-          NeedTempSVG := False;
-        end;
-      finally
-        StringStream.Free;
-      end;
-    except
-      TempSVG.Free;
-      TempSVG := nil;
-      NeedTempSVG := False;
-    end;
+    TempSVG := GetColoredSVG;
+    NeedTempSVG := Assigned(TempSVG);
   end
   else
     TempSVG := nil;
@@ -453,8 +496,6 @@ begin
                        BlendFunc);
   finally
     Bitmap.Free;
-    if Assigned(TempSVG) then
-      TempSVG.Free;
   end;
 end;
 
@@ -524,7 +565,7 @@ end;
 
 procedure TSVGMagic.SetOpacity(const Opacity: Single);
 begin
-  FOpacity := Opacity;
+  FOpacity := EnsureRange(Opacity, 0, 1);
 end;
 
 procedure TSVGMagic.SetSource(const ASource: string);

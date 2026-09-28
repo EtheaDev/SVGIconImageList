@@ -171,6 +171,15 @@ type
             function IsEmpty: Boolean; virtual;
 
             {**
+             Clear the whole document
+             @br @bold(NOTE) The inherited Clear unregisters from the defines table only the ids of
+                             the direct children: the nested ones must go too, otherwise the table
+                             keeps pointing to freed elements (a <use> of them in the next loaded
+                             document resolves to freed memory: stack overflow or access violation)
+            }
+            procedure Clear; override;
+
+            {**
              Log content
              @param(margin Margin length in chars)
             }
@@ -975,6 +984,14 @@ begin
             // read next item
             Result := inherited ReadItem(name, pChildNode, m_pElements) and Result;
     end;
+end;
+//---------------------------------------------------------------------------
+procedure TWSVGParser.Clear;
+begin
+    inherited Clear;
+
+    // the whole document is gone, nested elements included
+    m_pDefsTable.Clear;
 end;
 //---------------------------------------------------------------------------
 function TWSVGParser.IsEmpty: Boolean;

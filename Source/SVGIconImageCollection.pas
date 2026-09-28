@@ -103,6 +103,8 @@ type
     //permanently mutating the shared collection (allows different attributes
     //per VirtualImageList sharing the same collection).
     FRenderOverrideCount: Integer;
+    //Bitmaps rendered with the override (see OverrideRenderCount)
+    FOverrideRenderCount: Integer;
     FRenderFixedColor: TColor;
     FRenderApplyFixedColorToRootOnly: Boolean;
     FRenderGrayScale: Boolean;
@@ -259,6 +261,13 @@ type
     ///   Ends the transient render override started by BeginRenderOverride.
     /// </summary>
     procedure EndRenderOverride;
+
+    /// <summary>
+    ///   Number of bitmaps GetBitmap has rendered with a render override
+    ///   active: a VirtualImageList compares it before and after an operation
+    ///   to know whether that operation rendered its bitmaps.
+    /// </summary>
+    property OverrideRenderCount: Integer read FOverrideRenderCount;
     {$ELSE}
     /// <summary>
     ///   Triggers a change notification for pre-10.3 compatibility.
@@ -525,6 +534,7 @@ begin
   begin
     FFixedColor := TSVGIconImageCollection(Source).FFixedColor;
     FApplyFixedColorToRootOnly := TSVGIconImageCollection(Source).FApplyFixedColorToRootOnly;
+    FAntiAliasColor := TSVGIconImageCollection(Source).FAntiAliasColor;
     FGrayScale := TSVGIconImageCollection(Source).FGrayScale;
     FOpacity := TSVGIconImageCollection(Source).FOpacity;
     FSVGItems.Assign(TSVGIconImageCollection(Source).SVGIconItems)
@@ -615,8 +625,9 @@ end;
 
 function TSVGIconImageCollection.IndexOf(const Name: string): Integer;
 begin
+  //Case insensitive, as GetIconByName and GetIndexByName
   for Result := 0 to FSVGItems.Count - 1 do
-    if FSVGItems[Result].IconName = Name then
+    if SameText(FSVGItems[Result].IconName, Name) then
       Exit;
   Result := -1;
 end;
@@ -701,7 +712,10 @@ begin
   if Assigned(LItem) then
   begin
     LOutDir := ExtractFilePath(AFileName);
-    System.SysUtils.ForceDirectories(LOutDir);
+    //ForceDirectories('') raises EInOutError: a bare file name means the
+    //current folder
+    if LOutDir <> '' then
+      System.SysUtils.ForceDirectories(LOutDir);
     LItem.SVG.SaveToFile(AFileName);
     Result := True;
   end;
@@ -852,6 +866,7 @@ begin
   begin
     if FRenderOverrideCount > 0 then
     begin
+      Inc(FOverrideRenderCount);
       //Render using the requesting VirtualImageList attributes, but let the
       //collection-level attributes take precedence when set (same precedence
       //rule used by the pre-10.3 RecreateBitmaps implementation).

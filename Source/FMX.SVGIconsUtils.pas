@@ -50,7 +50,10 @@ var
   LListItem: TListBoxItem;
   LSVGIconImageList: TSVGIconImageList;
 begin
+  Result := 0;
   LSVGIconImageList := AListBox.Images as TSVGIconImageList;
+  if LSVGIconImageList = nil then
+    Exit;
 
   AListBox.Items.BeginUpdate;
   try

@@ -272,6 +272,11 @@ type
     property FixedColor;
 
     /// <summary>
+    ///   When True, FixedColor is applied only to the root element.
+    /// </summary>
+    property ApplyFixedColorToRootOnly;
+
+    /// <summary>
     ///   Background color for anti-aliasing.
     /// </summary>
     property AntiAliasColor;
@@ -339,7 +344,10 @@ begin
     Item := FSVGItems.Add;
     Item.SVG := ASVG;
     Item.IconName := AIconName;
-    Item.Category := AIconCategory;
+    //An empty category must not remove the one included in AIconName
+    //("Category\Name")
+    if AIconCategory <> '' then
+      Item.Category := AIconCategory;
     Item.FixedColor := AFixedColor;
     Item.AntiAliasColor := AAntiAliasColor;
     Item.GrayScale := AGrayScale;
@@ -420,10 +428,17 @@ begin
   begin
     LItem := FSVGItems[AIndex];
     LSVG := LItem.SVG;
+    //Same precedence used by TSVGIconItem.ApplyAttributesToInterface
     if LItem.FixedColor <> SVG_INHERIT_COLOR then
-      LSVG.FixedColor := LItem.FixedColor
+    begin
+      LSVG.FixedColor := LItem.FixedColor;
+      LSVG.ApplyFixedColorToRootOnly := LItem.ApplyFixedColorToRootOnly;
+    end
     else
+    begin
       LSVG.FixedColor := FixedColor;
+      LSVG.ApplyFixedColorToRootOnly := ApplyFixedColorToRootOnly;
+    end;
     LOpacity := Opacity;
     if AEnabled then
     begin
@@ -479,6 +494,7 @@ begin
           //Read SVG Stream Size
           Stream.Read(LSize, SizeOf(Integer));
           LStream.CopyFrom(Stream, LSize);
+          LStream.Position := 0;
           //Read SVG Stream data
           try
             LSVG.LoadFromStream(LStream);
@@ -569,21 +585,19 @@ var
   var
     I, J, K: Integer;
   begin
-    with AStrip do
+    //No "with AStrip do": Width and Height are the ones of the image list
+    AStrip.Canvas.Brush.Color := clNone;
+    AStrip.Canvas.FillRect(Rect(0, 0, AStrip.Width, AStrip.Height));
+    J := 0;
+    K := 0;
+    for I := 0 to Self.Count - 1 do
     begin
-      Canvas.Brush.Color := clNone;
-      Canvas.FillRect(Rect(0, 0, AStrip.Width, AStrip.Height));
-      J := 0;
-      K := 0;
-      for I := 0 to Self.Count - 1 do
+      Draw(AStrip.Canvas, J * Self.Width, K * Self.Height, I, dsTransparent, itImage);
+      Inc(J);
+      if J >= LStripWidth then
       begin
-        Draw(Canvas, J * Width, K * Height, I, dsTransparent, itImage);
-        Inc(J);
-        if J >= LStripWidth then
-        begin
-          J := 0;
-          Inc(K);
-        end;
+        J := 0;
+        Inc(K);
       end;
     end;
   end;
@@ -603,9 +617,11 @@ var
   end;
 
 begin
+  LImageCount := Count;
+  if LImageCount = 0 then
+    Exit;
   LImageStrip := TBitmap.Create;
   try
-    LImageCount := Count;
     CalcDimensions(LImageCount, LStripWidth, LStripHeight);
     LImageStrip.Width := LStripWidth * Width;
     LImageStrip.Height := LStripHeight * Height;

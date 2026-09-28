@@ -26,7 +26,7 @@
 {******************************************************************************}
 unit FMX.Image32SVG;
 
-{$INCLUDE ..\..\Source\SVGIconImageList.inc}
+{$INCLUDE SVGIconImageList.inc}
 
 interface
 
@@ -110,7 +110,10 @@ end;
 
 procedure TFmxImage32SVG.LoadFromSource;
 begin
-  fSvgReader.LoadFromString(Source);
+  if Source = '' then
+    fSvgReader.Clear
+  else if not fSvgReader.LoadFromString(Source) then
+    raise Exception.Create(SVG_ERROR_TAG_SVG);
 end;
 
 procedure TFmxImage32SVG.LoadFromStream(Stream: TStream);
@@ -118,35 +121,45 @@ Var
   OldPos : Int64;
   LStream: TStringStream;
 begin
-  // read and save the Source
+  // read the Source from the current position: SetSource parses it
   OldPos := Stream.Position;
-  fSvgReader.LoadFromStream(Stream);
   LStream := TStringStream.Create('', TEncoding.UTF8);
   try
-    Stream.Position := 0;
-    LStream.LoadFromStream(Stream);
+    LStream.CopyFrom(Stream, Stream.Size - OldPos);
     SetSource(LStream.DataString);
   finally
     LStream.Free;
   end;
   // Restore Position
   Stream.Position := OldPos;
-  // Now create the SVG
-  FImage32.LoadFromStream(Stream);
 end;
 
 procedure TFmxImage32SVG.PaintToBitmap(ABitmap: TBitmap;
   const AZoom: Integer = 100; const KeepAspectRatio: Boolean = True);
 var
   LColor: TColor32;
+  LBitmapWidth, LBitmapHeight: Integer;
   LWidth, LHeight: Integer;
   LSource, LDest: TBitMapData;
+  LImage: TImage32;
+  dd: TDrawData;
 begin
   Assert(Assigned(FImage32));
   Assert(Assigned(ABitmap));
 
-  LWidth := Round(ABitmap.Width * AZoom / 100);
-  LHeight := Round(ABitmap.Height * AZoom / 100);
+  //The bitmap keeps its size: a Zoom below 100 draws a smaller icon,
+  //centered in it
+  LBitmapWidth := ABitmap.Width;
+  LBitmapHeight := ABitmap.Height;
+  if (LBitmapWidth <= 0) or (LBitmapHeight <= 0) then
+    Exit;
+  if fSvgReader.IsEmpty then
+  begin
+    ABitmap.Clear(TAlphaColors.Null);
+    Exit;
+  end;
+  LWidth := Round(LBitmapWidth * AZoom / 100);
+  LHeight := Round(LBitmapHeight * AZoom / 100);
 
   //Define Image32 output size
   FImage32.SetSize(LWidth, LHeight);
@@ -154,12 +167,17 @@ begin
   //Update FsvgReader before calling FsvgReader.DrawImage
   if ApplyFixedColorToRootOnly and not GrayScale and
     (AlphaToColor32(FixedColor) <> clNone32) then
-      LColor := AlphaToColor32(FixedColor)
-  else
-    LColor := clNone32;
-
-  fSvgReader.SetOverrideFillColor(LColor);
-  fSvgReader.SetOverrideStrokeColor(LColor);
+  begin
+    LColor := AlphaToColor32(FixedColor);
+    dd := fSvgReader.RootElement.DrawData;
+    //fill="none" (outline icons) must stay none
+    if dd.fillColor <> clNone32 then
+      dd.fillColor := LColor;
+    if (dd.strokeColor <> clInvalid) and (dd.strokeColor <> clNone32) then
+      dd.strokeColor := LColor;
+    dd.currentColor := LColor;
+    fSvgReader.RootElement.DrawData := dd;
+  end;
 
   FsvgReader.KeepAspectRatio := KeepAspectRatio;
 
@@ -177,17 +195,30 @@ begin
   if Opacity <> 1.0 then
     FImage32.ReduceOpacity(Round(Opacity * 255));
 
-  //Copy Image32 to Bitmap
-  FImage32.PreMultiply;
-  LSource := TBitMapData.Create(FImage32.Width, FImage32.Height, TPixelFormat.BGRA);
-  LSource.Data := FImage32.PixelBase;
-  LSource.Pitch := FImage32.Width * 4;
-  ABitmap.SetSize(FImage32.Width, FImage32.Height);
-  if ABitmap.Map(TMapAccess.Write, LDest) then
+  //Copy Image32 (centered, when zoomed) to Bitmap
+  if (LWidth <> LBitmapWidth) or (LHeight <> LBitmapHeight) then
+  begin
+    LImage := TImage32.Create(LBitmapWidth, LBitmapHeight);
+    LImage.Copy(FImage32, FImage32.Bounds,
+      System.Types.Rect((LBitmapWidth - LWidth) div 2, (LBitmapHeight - LHeight) div 2,
+        (LBitmapWidth - LWidth) div 2 + LWidth, (LBitmapHeight - LHeight) div 2 + LHeight));
+  end
+  else
+    LImage := FImage32;
   try
-    LDest.Copy(LSource);
+    LImage.PreMultiply;
+    LSource := TBitMapData.Create(LImage.Width, LImage.Height, TPixelFormat.BGRA);
+    LSource.Data := LImage.PixelBase;
+    LSource.Pitch := LImage.Width * 4;
+    if ABitmap.Map(TMapAccess.Write, LDest) then
+    try
+      LDest.Copy(LSource);
+    finally
+      ABitmap.Unmap(LDest);
+    end;
   finally
-    ABitmap.Unmap(LDest);
+    if LImage <> FImage32 then
+      LImage.Free;
   end;
 end;
 

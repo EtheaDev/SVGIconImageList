@@ -587,7 +587,9 @@ end;
 
 procedure TSVGIconImage.Clear;
 begin
-  SVG.Clear;
+  //Only the own SVG: with an ImageList, SVG is the icon of the list, shared
+  //with every other user of the list
+  FSVG.Clear;
   FFileName := '';
   Repaint;
 end;
@@ -601,7 +603,7 @@ function TSVGIconImage.IsImageIndexAvail: Boolean;
 begin
   Result := False;
   if (FImageIndex >= 0) and Assigned(FImageList) then
-    Result := FImageIndex <= FImageList.Count;
+    Result := FImageIndex < FImageList.Count;
 end;
 
 function TSVGIconImage.GetInheritedApplyToRootOnly: Boolean;
@@ -744,7 +746,8 @@ begin
     begin
       LSVGIconItems := SVGIconImageCollection.SVGIconItems;
       LItem := SVGVirtualImageList.Images[FImageIndex];
-      if Assigned(LItem) then
+      if Assigned(LItem) and (LItem.CollectionIndex >= 0) and
+        (LItem.CollectionIndex < LSVGIconItems.Count) then
         Result := LSVGIconItems[LItem.Collectionindex];
     end
     {$ENDIF}
@@ -753,8 +756,9 @@ end;
 
 function TSVGIconImage.UsingSVGText: Boolean;
 begin
-  Result := not (Assigned(FImageList) and (FImageIndex >= 0) and
-    (FImageIndex < FImageList.Count));
+  //Not only a valid index: the list must also be an SVG one (a plain
+  //TImageList, or a VirtualImageList of another collection, has no SVG item)
+  Result := SVGIconItem = nil;
 end;
 
 procedure TSVGIconImage.Paint;
@@ -847,7 +851,10 @@ procedure TSVGIconImage.Assign(Source: TPersistent);
 begin
   if (Source is TSVGIconImage) then
   begin
-    FSVG := (Source as TSVGIconImage).FSVG;
+    //A copy of what the source shows: sharing its ISVG would make every
+    //change of one visible in the other
+    FSVG := GlobalSVGFactory.NewSvg;
+    FSVG.Source := TSVGIconImage(Source).SVGText;
     FImageIndex := -1;
     CheckAutoSize;
   end;
@@ -964,7 +971,7 @@ begin
     CheckAutoSize;
     UpdateImageName;
     if (FImageIndex = -1) {$IFDEF D10_4+}and (FImageName = ''){$ENDIF} then
-      SVG.Clear;
+      FSVG.Clear;
     Invalidate;
   end;
 end;
@@ -1007,7 +1014,10 @@ procedure TSVGGraphic.Assign(Source: TPersistent);
 begin
   if (Source is TSVGGraphic) then
   begin
-    FSVG := TSVGGraphic(Source).FSVG;
+    //A copy, not the same ISVG (use AssignSVG to share it)
+    FSVG := GlobalSVGFactory.NewSvg;
+    FSVG.Source := TSVGGraphic(Source).FSVG.Source;
+    FOpacity := TSVGGraphic(Source).FOpacity;
     Changed(Self);
   end
   else
@@ -1060,7 +1070,14 @@ var
   Size: LongInt;
   MemStream: TMemoryStream;
 begin
-  Stream.Read(Size, SizeOf(Size));
+  Stream.ReadBuffer(Size, SizeOf(Size));
+  //An empty graphic is written with Size = 0, and CopyFrom(Stream, 0) would
+  //copy the WHOLE stream
+  if Size <= 0 then
+  begin
+    FSVG.Clear;
+    Exit;
+  end;
   MemStream := TMemoryStream.Create;
   try
     MemStream.CopyFrom(Stream, Size);

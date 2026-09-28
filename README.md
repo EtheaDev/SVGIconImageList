@@ -2,7 +2,7 @@
 
 ## Four engines to render SVG (Delphi Image32, SVGMagic, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
 
-### Actual official version 4.7.6 (VCL+FMX)
+### Actual official version 4.8.0 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -27,6 +27,10 @@ The Installer automatically detect your Delphi versions, install sources, build 
 ## Documentation
 
 Follow the [Project Site](https://ethea.it/docs/svgiconimagelist/) to known how to use those components to modernize your Delphi VCL or FMX applications with scalable, colored and beautiful icons.
+
+## Automated Test Suite
+
+From version 4.8.0 the project includes a Test Suite (DUnitX, Delphi 13) in the Test folder: the ISVG contract is checked against every rendering engine (Image32, SVGMagic, Skia4Delphi, Direct2D) and the VCL and FMX components are tested too, rendering the icons and checking the pixels. Run `Test\run_tests.cmd [Win32|Win64] [Debug|Release]` to build and execute all the tests.
 
 ## You can search and download Icons directly from the WEB!
 
@@ -138,6 +142,22 @@ A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/Ico
 Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
 ### RELEASE NOTES
+28 Sep 2026 - version 4.8.0
+- Complete code review of the library, with a new automated Test Suite (DUnitX, Delphi 13) in the Test folder: the ISVG contract is checked against every engine (Image32, SVGMagic, Skia, Direct2D), together with the VCL and FMX components (run Test\run_tests.cmd)
+- Fixed FixedColor ignored when creating disabled icons with TSVGIconVirtualImageList (also with AutoFill, a single icon changed and DisabledOpacity/DisabledGrayScale changed)
+- Fixed stack overflow / random access violation of SVGMagic engine reloading an SVG with nested ids used by `<use>` (e.g. svg-logo-v.svg)
+- Fixed PreferNativeSvgSupport (Direct2D) configuration: now it compiles and uses the selected engine as fallback
+- Fixed outline icons (fill="none") filled by FixedColor (SVGMagic, Direct2D and "ApplyFixedColorToRootOnly" for all engines)
+- Fixed Skia engine: root color forced to black without FixedColor, Source/SVGText rewritten, wrong Width/Height
+- Fixed Direct2D engine: icon still gray after GrayScale removed, size inherited from the previous SVG
+- Fixed FixedColor = clNone painting icons white (Image32, Direct2D)
+- Fixed Image32 engine: access violation loading an invalid SVG, Clear not clearing the image
+- Fixed TSVGIconImageList: category lost by Add, SaveToFile, ApplyFixedColorToRootOnly not stored into dfm
+- Fixed TSVGIconImage: access violation with a not SVG ImageList, Clear emptying the icon of the ImageList, Assign sharing the SVG
+- Fixed FMX TSVGIconImageList: duplicated icon names, inherited FixedColor/Opacity/GrayScale stored into icons, ApplyFixedColorToRootOnly, Zoom less than 100, LoadFromFiles stopped by a bad file
+- SVGMagic diagnostic log (OutputDebugString) active only with SVGMAGIC_LOG define
+- Delphi 13 projects updated to Delphi 13.2
+
 03 Sep 2026 - version 4.7.6
 - Added 18 and 24 pixel options to Export Png dialog
 - Fixed Delphi 12 Packages

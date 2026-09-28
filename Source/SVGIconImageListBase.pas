@@ -49,7 +49,7 @@ const
   /// <summary>
   ///   Current version of the SVGIconImageList library.
   /// </summary>
-  SVGIconImageListVersion = '4.7.6';
+  SVGIconImageListVersion = '4.8.0';
 
   /// <summary>
   ///   Default size (width and height) for icons in pixels.
@@ -416,7 +416,6 @@ begin
       FAntiAliasColor := TSVGIconImageListBase(Source).FAntiAliasColor;
       FGrayScale := TSVGIconImageListBase(Source).FGrayScale;
       FApplyFixedColorToRootOnly := TSVGIconImageListBase(Source).FApplyFixedColorToRootOnly;
-      FAntiAliasColor := TSVGIconImageListBase(Source).FAntiAliasColor;
       FDisabledGrayScale := TSVGIconImageListBase(Source).FDisabledGrayScale;
       FDisabledOpacity := TSVGIconImageListBase(Source).FDisabledOpacity;
       {$IFDEF HiDPISupport}
@@ -725,6 +724,7 @@ begin
   if FAntiAliasColor <> Value then
   begin
     FAntiAliasColor := Value;
+    Change;
   end;
 end;
 

@@ -28,7 +28,9 @@ Uses
   System.UITypes,
   System.SysUtils,
   System.Classes,
+  System.Math,
   System.Math.Vectors,
+  System.RegularExpressions,
   //Skia engine
   Vcl.Skia,
   System.Skia,
@@ -39,12 +41,19 @@ type
   TSkSvgBrushEx = class(TSkSvgBrush)
   strict private
     FOverrideRootColor: TAlphaColor;
+    FKeepRootFill: Boolean;
     procedure SetOverrideRootColor(const AValue: TAlphaColor);
+    procedure SetKeepRootFill(const AValue: Boolean);
   strict protected
     procedure DoAssign(ASource: TSkSvgBrush); override;
     function MakeDOM: ISkSVGDOM; override;
   public
     function Equals(AObject: TObject): Boolean; override;
+    /// <summary>
+    ///   True when the root has fill="none" (outline icons): OverrideRootColor
+    ///   then only changes "color" (currentColor), never the fill.
+    /// </summary>
+    property KeepRootFill: Boolean read FKeepRootFill write SetKeepRootFill;
   published
     property OverrideRootColor: TAlphaColor read FOverrideRootColor write SetOverrideRootColor default TAlphaColors.Null;
   end;
@@ -53,13 +62,19 @@ type
   TSkiaSVG = class(TInterfacedObject, ISVG)
   private
     FSvg: TSkSvgBrushEx;
+    //The SVG text as it was given: FSvg holds it rewritten by InlineSvgStyle
+    FSource: string;
     FDrawCached: Boolean;
     FDrawBuffer: HBITMAP;
     FDrawBufferData: Pointer;
     FDrawBufferStride: Integer;
     FDrawCacheEnabled: Boolean;
+    //Size of the document (Width/Height of ISVG)
     FWidth: Integer;
     FHeight: Integer;
+    //Size of the draw buffer (the last PaintTo rectangle)
+    FDrawWidth: Integer;
+    FDrawHeight: Integer;
     FFixedColor: TColor;
     FApplyFixedColorToRootOnly: Boolean;
     FGrayScale: Boolean;
@@ -103,15 +118,23 @@ type
 procedure TSkSvgBrushEx.DoAssign(ASource: TSkSvgBrush);
 begin
   if ASource is TSkSvgBrushEx then
-    FOverrideRootColor := TSkSvgBrushEx(ASource).FOverrideRootColor
+  begin
+    FOverrideRootColor := TSkSvgBrushEx(ASource).FOverrideRootColor;
+    FKeepRootFill := TSkSvgBrushEx(ASource).FKeepRootFill;
+  end
   else
+  begin
     FOverrideRootColor := TAlphaColors.Null;
+    FKeepRootFill := False;
+  end;
   inherited;
 end;
 
 function TSkSvgBrushEx.Equals(AObject: TObject): Boolean;
 begin
-  Result := (AObject is TSkSvgBrushEx) and (FOverrideRootColor = TSkSvgBrushEx(AObject).FOverrideRootColor) and inherited;
+  Result := (AObject is TSkSvgBrushEx) and
+    (FOverrideRootColor = TSkSvgBrushEx(AObject).FOverrideRootColor) and
+    (FKeepRootFill = TSkSvgBrushEx(AObject).FKeepRootFill) and inherited;
 end;
 
 function TSkSvgBrushEx.MakeDOM: ISkSVGDOM;
@@ -124,8 +147,21 @@ begin
   begin
     LAlphaColorRec := TAlphaColorRec(FOverrideRootColor);
     LNewColor := Format('rgb(%d,%d,%d)', [LAlphaColorRec.R, LAlphaColorRec.G, LAlphaColorRec.B]);
-    if Result.Root.TrySetAttribute('fill', LNewColor) and Result.Root.TrySetAttribute('color', LNewColor) and (LAlphaColorRec.A <> High(LAlphaColorRec.A)) then
+    if (FKeepRootFill or Result.Root.TrySetAttribute('fill', LNewColor)) and
+      Result.Root.TrySetAttribute('color', LNewColor) and
+      (LAlphaColorRec.A <> High(LAlphaColorRec.A)) then
       Result.Root.TrySetAttribute('opacity', FloatToStr(LAlphaColorRec.A / High(LAlphaColorRec.A), TFormatSettings.Invariant));
+  end;
+end;
+
+procedure TSkSvgBrushEx.SetKeepRootFill(const AValue: Boolean);
+begin
+  if FKeepRootFill <> AValue then
+  begin
+    FKeepRootFill := AValue;
+    RecreateDOM;
+    if HasContent then
+      DoChanged;
   end;
 end;
 
@@ -142,10 +178,8 @@ end;
 
 { TSkiaSVG }
 procedure TSkiaSVG.Clear;
-Const
-  EmptySvg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
 begin
-  SetSource(EmptySvg);
+  SetSource('');
 end;
 
 constructor TSkiaSVG.Create;
@@ -248,7 +282,7 @@ end;
 
 function TSkiaSVG.GetSource: string;
 begin
-  Result := FSvg.Source;
+  Result := FSource;
 end;
 
 function TSkiaSVG.GetWidth: Single;
@@ -262,7 +296,28 @@ begin
 end;
 
 procedure TSkiaSVG.LoadFromSource;
+const
+  //fill="none" on the root <svg> tag
+  RootFillNone = '<svg\b[^>]*\sfill\s*=\s*["'']\s*none\s*["'']';
 begin
+  DeleteBuffers;
+  if FSource = '' then
+  begin
+    FSvg.Source := '';
+    FWidth := 0;
+    FHeight := 0;
+    Exit;
+  end;
+  //Skia does not support <style>: the brush gets the classes inlined, while
+  //FSource keeps the text as it was given (returned by Source and saved)
+  FSvg.Source := InlineSvgStyle(FSource);
+  FSvg.KeepRootFill := TRegEx.IsMatch(FSource, RootFillNone, [roIgnoreCase]);
+  if FSvg.DOM = nil then
+  begin
+    FWidth := 0;
+    FHeight := 0;
+    raise ESVGException.Create(SKIA_ERROR_PARSING_SVG_TEXT);
+  end;
   FWidth := Round(FSvg.OriginalSize.cx);
   FHeight := Round(FSvg.OriginalSize.cy);
 end;
@@ -294,11 +349,11 @@ var
     LSurface: ISkSurface;
     LDestRect: TRectF;
   begin
-    LSurface := TSkSurface.MakeRasterDirect(TSkImageInfo.Create(FWidth, FHeight), FDrawBufferData, FDrawBufferStride);
+    LSurface := TSkSurface.MakeRasterDirect(TSkImageInfo.Create(FDrawWidth, FDrawHeight), FDrawBufferData, FDrawBufferStride);
     LSurface.Canvas.Clear(TAlphaColors.Null);
     LScaleFactor := 1;
     LSurface.Canvas.Concat(TMatrix.CreateScaling(LScaleFactor, LScaleFactor));
-    LDestRect := RectF(0, 0, FWidth / LScaleFactor, FHeight / LScaleFactor);
+    LDestRect := RectF(0, 0, FDrawWidth / LScaleFactor, FDrawHeight / LScaleFactor);
 
     //GrayScale and FixedColor
     FSvg.GrayScale := FGrayScale;
@@ -318,7 +373,8 @@ var
     end
     else
     begin
-      FSvg.OverrideRootColor := ColorToAlphaColor(FFixedColor);
+      //No FixedColor: the SVG colors are left untouched
+      FSvg.OverrideRootColor := TAlphaColors.Null;
       FSvg.OverrideColor := Default(TAlphaColor);
     end;
 
@@ -328,8 +384,8 @@ var
   end;
 
 begin
-  FWidth := Round(R.Width);
-  FHeight := Round(R.Height);
+  FDrawWidth := Round(R.Width);
+  FDrawHeight := Round(R.Height);
 
   if not KeepAspectRatio then
     FSvg.WrapMode := TSkSvgWrapMode.Stretch
@@ -337,14 +393,14 @@ begin
     FSvg.WrapMode := TSkSvgWrapMode.Fit;
 
   DeleteBuffers;
-  if (FWidth <= 0) or (FHeight <= 0) then
+  if (FDrawWidth <= 0) or (FDrawHeight <= 0) or IsEmpty then
     Exit;
 
   LDrawBufferDC := CreateCompatibleDC(0);
   if LDrawBufferDC <> 0 then
     try
       if FDrawBuffer = 0 then
-        CreateBuffer(FWidth, FHeight, LDrawBufferDC, FDrawBuffer, FDrawBufferData, FDrawBufferStride);
+        CreateBuffer(FDrawWidth, FDrawHeight, LDrawBufferDC, FDrawBuffer, FDrawBufferData, FDrawBufferStride);
       if FDrawBuffer <> 0 then
       begin
         LOldObj := SelectObject(LDrawBufferDC, FDrawBuffer);
@@ -353,7 +409,7 @@ begin
             InternalDraw;
           LBlendFunction := BlendFunction;
           LBlendFunction.SourceConstantAlpha := Round(FOpacity * 255);
-          AlphaBlend(DC, Round(R.Left), Round(R.Top), FWidth, FHeight, LDrawBufferDC, 0, 0, FWidth, FHeight, LBlendFunction);
+          AlphaBlend(DC, Round(R.Left), Round(R.Top), FDrawWidth, FDrawHeight, LDrawBufferDC, 0, 0, FDrawWidth, FDrawHeight, LBlendFunction);
         finally
           if LOldObj <> 0 then
             SelectObject(LDrawBufferDC, LOldObj);
@@ -380,7 +436,7 @@ procedure TSkiaSVG.SaveToStream(Stream: TStream);
 var
   Buffer: TBytes;
 begin
-  Buffer := TEncoding.UTF8.GetBytes(FSvg.Source);
+  Buffer := TEncoding.UTF8.GetBytes(FSource);
   Stream.WriteBuffer(Buffer, Length(Buffer))
 end;
 
@@ -426,14 +482,14 @@ end;
 
 procedure TSkiaSVG.SetOpacity(const Opacity: Single);
 begin
-  FOpacity := Opacity;
+  FOpacity := EnsureRange(Opacity, 0, 1);
 end;
 
 procedure TSkiaSVG.SetSource(const ASource: string);
 begin
-  if FSvg.Source <> ASource then
+  if FSource <> ASource then
   begin
-    FSvg.Source := InlineSvgStyle(ASource);
+    FSource := ASource;
     LoadFromSource;
   end;
 end;
@@ -449,15 +505,13 @@ begin
   try
     Stream.Position := 0;
     LStream.LoadFromStream(Stream);
-    DeleteBuffers;
-    LStream.Position := 0;
-    FSvg.Source := InlineSvgStyle(LStream.DataString);
+    FSource := LStream.DataString;
   finally
     LStream.Free;
     // Restore Position
     Stream.Position := OldPos;
-    DeleteBuffers;
   end;
+  LoadFromSource;
 end;
 
 { TSkiaSVGFactory }

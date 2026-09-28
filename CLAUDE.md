@@ -62,7 +62,7 @@ The library supports four different SVG rendering engines, configured via `Sourc
 - Supports blur effects
 - Good performance across different icon types
 
-**SVGMagic:** `{$DEFINE SVGMagic_SVGEngine}`
+**SVGMagic:** `{$DEFINE SVGMagic_Engine}`
 - Advanced SVG implementation by Ursa Minor Ltd.
 - Included in `SVGMagic/` directory
 - **Unique feature: Supports animated SVG files**
@@ -227,7 +227,7 @@ Both VCL and FMX component editors support:
 ### Switching SVG Engines
 
 1. Edit `Source/SVGIconImageList.inc`
-2. For VCL: Enable ONE of: `Image32_SVGEngine`, `SVGMagic_SVGEngine`, `Skia_SVGEngine`, or `PreferNativeSvgSupport`
+2. For VCL: Enable ONE of: `Image32_SVGEngine`, `SVGMagic_Engine` or `Skia_SVGEngine`; `PreferNativeSvgSupport` can be added on top of it (Direct2D where available, that engine as fallback)
 3. For FMX: Enable ONE of: `FMX_Image32_SVGEngine` or `FMX_Skia_SVGEngine`
 4. Rebuild all packages in order (runtime before design-time)
 5. Reinstall design-time packages in IDE
@@ -289,11 +289,20 @@ The `Setup/` directory contains InnoSetup scripts for automatic installation:
 - Advanced SVG 1.1 rendering engine
 - **Unique feature: Full support for animated SVG files**
 - Comprehensive implementation with excellent rendering quality
-- Available as optional engine via `{$DEFINE SVGMagic_SVGEngine}`
+- Available as optional engine via `{$DEFINE SVGMagic_Engine}`
 
 ## Testing
 
-Test projects located in `Test/` directory. The main test project demonstrates issue reproduction and validation.
+Automated tests (DUnitX, Delphi 13) are in `Test/`, laid out like KittoX's test suite:
+- `Test/run_tests.cmd [Win32|Win64] [Debug|Release]` builds and runs everything (default Win64/Debug, with range and overflow checks on); exit code 0 = all passed
+- `Test/Projects/D13/SVGIconImageListTests` - VCL: the ISVG contract checked against every engine (Image32, SVGMagic, Skia, D2D, via `[AllEngines]`) and the VCL components
+- `Test/Projects/D13/SVGIconImageListFMXTests` - FMX components (FMX engine selected by the .inc)
+- `Test/Projects/D13/EngineConfigCheck` - builds the library with `PreferNativeSvgSupport` defined and checks the global factory renders
+- Sources in `Test/Source`, reports (NUnit XML) in `Test/Bin/<platform>/<config>`
+- Rendering is checked with pixel probes (`SVGTestUtils`): render to a 32-bit bitmap on a known background, read the pixel
+- Known third-party issues are kept as `[Ignore]` tests (e.g. SVGMagic draws the stroke of `<rect>` inset)
+
+Manual/visual test projects are in `ManualTest/`.
 
 ## Related Projects
 

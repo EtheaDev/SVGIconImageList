@@ -38,7 +38,7 @@ td{
 </style>
 <h1>SVGIconImageList <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg" alt="License"/></a></h1>
 <h2>Four engines to render SVG (Delphi Image32, SVGMagic, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale&hellip;)</h2>
-<h3>Actual official version 4.7.6 (VCL+FMX)</h3>
+<h3>Actual official version 4.8.0 (VCL+FMX)</h3>
 <table>
   <tr>
     <th>Component</th>
@@ -71,6 +71,8 @@ td{
 <p><img src="./Demo/Images/Setup.png" alt="Setup"/></p>
 <h2>Documentation</h2>
 <p>Follow the <a href="https://ethea.it/docs/svgiconimagelist/">Project Site</a> to known how to use those components to modernize your Delphi VCL or FMX applications with scalable, colored and beautiful icons.</p>
+<h2>Automated Test Suite</h2>
+<p>From version 4.8.0 the project includes a Test Suite (DUnitX, Delphi 13) in the Test folder: the ISVG contract is checked against every rendering engine (Image32, SVGMagic, Skia4Delphi, Direct2D) and the VCL and FMX components are tested too, rendering the icons and checking the pixels. Run <code>Test\run_tests.cmd [Win32|Win64] [Debug|Release]</code> to build and execute all the tests.</p>
 <h2>You can search and download Icons directly from the WEB!</h2>
 <p>From version 4.3 an integrated service is now available in the component editor to download SVG icons from the WEB, via the API provided by <a href="https://iconify.design/">iconify.design</a>.</p>
 <p>Now you can select &ldquo;Add from WEB&rdquo; in the Component Editor: a new form to search and Download from the WEB is available for both VCL and FMX Platforms.</p>
@@ -165,6 +167,23 @@ Notice that those components are &ldquo;specific&rdquo; of SVGMagic Library, bec
 <p><img src="./Demo/Images/SupportingDelphi.jpg" alt="Delphi 13 Support"/></p>
 <p>Related links: <a href="https://www.embarcadero.com">embarcadero.com</a> - <a href="https://learndelphi.org">learndelphi.org</a></p>
 <h3>RELEASE NOTES</h3>
+<p>28 Sep 2026 - version 4.8.0</p>
+<ul>
+<li>Complete code review of the library, with a new automated Test Suite (DUnitX, Delphi 13) in the Test folder: the ISVG contract is checked against every engine (Image32, SVGMagic, Skia, Direct2D), together with the VCL and FMX components (run Test\run_tests.cmd)</li>
+<li>Fixed FixedColor ignored when creating disabled icons with TSVGIconVirtualImageList (also with AutoFill, a single icon changed and DisabledOpacity/DisabledGrayScale changed)</li>
+<li>Fixed stack overflow / random access violation of SVGMagic engine reloading an SVG with nested ids used by <use> (e.g. svg-logo-v.svg)</li>
+<li>Fixed PreferNativeSvgSupport (Direct2D) configuration: now it compiles and uses the selected engine as fallback</li>
+<li>Fixed outline icons (fill=&ldquo;none&rdquo;) filled by FixedColor (SVGMagic, Direct2D and &ldquo;ApplyFixedColorToRootOnly&rdquo; for all engines)</li>
+<li>Fixed Skia engine: root color forced to black without FixedColor, Source/SVGText rewritten, wrong Width/Height</li>
+<li>Fixed Direct2D engine: icon still gray after GrayScale removed, size inherited from the previous SVG</li>
+<li>Fixed FixedColor = clNone painting icons white (Image32, Direct2D)</li>
+<li>Fixed Image32 engine: access violation loading an invalid SVG, Clear not clearing the image</li>
+<li>Fixed TSVGIconImageList: category lost by Add, SaveToFile, ApplyFixedColorToRootOnly not stored into dfm</li>
+<li>Fixed TSVGIconImage: access violation with a not SVG ImageList, Clear emptying the icon of the ImageList, Assign sharing the SVG</li>
+<li>Fixed FMX TSVGIconImageList: duplicated icon names, inherited FixedColor/Opacity/GrayScale stored into icons, ApplyFixedColorToRootOnly, Zoom less than 100, LoadFromFiles stopped by a bad file</li>
+<li>SVGMagic diagnostic log (OutputDebugString) active only with SVGMAGIC_LOG define</li>
+<li>Delphi 13 projects updated to Delphi 13.2</li>
+</ul>
 <p>03 Sep 2026 - version 4.7.6</p>
 <ul>
 <li>Added 18 and 24 pixel options to Export Png dialog</li>

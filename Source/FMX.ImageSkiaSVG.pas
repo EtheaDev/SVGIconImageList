@@ -26,7 +26,7 @@
 {******************************************************************************}
 unit FMX.ImageSkiaSVG;
 
-{$INCLUDE ..\..\Source\SVGIconImageList.inc}
+{$INCLUDE SVGIconImageList.inc}
 
 interface
 
@@ -148,15 +148,18 @@ begin
   Assert(Assigned(FSvg));
   Assert(Assigned(ABitmap));
 
+  //The bitmap keeps its size: a Zoom below 100 draws a smaller icon,
+  //centered in it
   LWidth := Round(ABitmap.Width * AZoom / 100);
   LHeight := Round(ABitmap.Height * AZoom / 100);
-  ABitmap.SetSize(LWidth, LHeight);
   ABitmap.SkiaDraw(
     procedure(const ACanvas: ISkCanvas)
     var
       LDestRect: TRectF;
     begin
+      ACanvas.Clear(TAlphaColors.Null);
       LDestRect := RectF(0, 0, LWidth, LHeight);
+      LDestRect.Offset((ABitmap.Width - LWidth) / 2, (ABitmap.Height - LHeight) / 2);
       Draw(ACanvas, LDestRect, Opacity);
     end);
 end;

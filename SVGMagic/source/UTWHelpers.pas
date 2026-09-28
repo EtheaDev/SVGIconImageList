@@ -7069,7 +7069,11 @@ end;
 //---------------------------------------------------------------------------
 class procedure TWLogHelper.LogToCompiler(const msg: UnicodeString);
 begin
-  {$IFDEF DEBUG}
+  // Diagnostic log of the SVGMagic parser and rasterizer: off by default, also
+  // in Debug builds (it floods the IDE Event Log with messages about the
+  // properties an Inkscape style repeats on every element). Define
+  // SVGMAGIC_LOG in the project options to turn it on.
+  {$IFDEF SVGMAGIC_LOG}
   OutputDebugString(PWideChar(msg));
   {$ENDIF}
 end;

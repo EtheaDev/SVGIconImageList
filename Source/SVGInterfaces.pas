@@ -271,6 +271,12 @@ implementation
 {$INCLUDE SVGIconImageList.inc}
 
 Uses
+  {$IFDEF PreferNativeSvgSupport}
+    {$IFNDEF SvgDisableEngineHint}
+    {$MESSAGE HINT 'Prefer Windows Direct-2D SVG-Engine if available'}
+    {$ENDIF}
+    D2DSVGFactory,
+  {$ENDIF}
   {$IF DEFINED(Image32_SVGEngine)}
     {$IFNDEF SvgDisableEngineHint}
     {$MESSAGE HINT 'Use Delphi native Image32 SVG-Engine for SVGIconImageList'}
@@ -287,12 +293,6 @@ Uses
     {$ENDIF}
     SVGMagicFactory
   {$IFEND}
-  {$IFDEF PreferNativeSvgSupport}
-    {$IFNDEF SvgDisableEngineHint}
-    {$MESSAGE HINT 'but Prefer Windows Direct-2D SVG-Engine if available'}
-    {$ENDIF}
-    , D2DSVGFactory
-  {$ENDIF}
   ;
 
 Var

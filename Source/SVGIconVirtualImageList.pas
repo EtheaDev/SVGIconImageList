@@ -152,6 +152,19 @@ type
     ///   The component that owns this image list.
     /// </param>
     constructor Create(AOwner: TComponent); override;
+
+    /// <summary>
+    ///   Copies another virtual image list, its own rendering attributes
+    ///   (FixedColor, GrayScale, Opacity...) included.
+    /// </summary>
+    procedure Assign(Source: TPersistent); override;
+
+    /// <summary>
+    ///   Draws an icon; a disabled one is rendered (on first use) with this
+    ///   list attributes too.
+    /// </summary>
+    procedure DoDraw(Index: Integer; Canvas: TCanvas; X, Y: Integer;
+      Style: Cardinal; Enabled: Boolean = True); override;
     {$ENDIF}
   published
     /// <summary>
@@ -494,6 +507,7 @@ end;
 procedure TSVGIconVirtualImageList.DoChange;
 var
   LCollection: TSVGIconImageCollection;
+  LRendered: Integer;
 begin
   //Each VirtualImageList bakes its own native image list using its own
   //attributes, without mutating the shared collection. This allows multiple
@@ -505,6 +519,36 @@ begin
     LCollection.BeginRenderOverride(FFixedColor, FApplyFixedColorToRootOnly,
       FGrayScale, FAntiAliasColor, FOpacity);
     try
+      LRendered := LCollection.OverrideRenderCount;
+      inherited;
+      //TVirtualImageList renders some bitmaps before calling Change, and then
+      //skips the rebuild in DoChange (FImageListUpdating): AutoFill, Add,
+      //a single item changed by the collection, DisabledOpacity and
+      //DisabledGrayscale. Those bitmaps were rendered without this list
+      //attributes: when inherited rendered nothing, rebuild here.
+      if (LCollection.OverrideRenderCount = LRendered) and (Images.Count > 0) and
+        ([csLoading, csDestroying] * ComponentState = []) then
+        UpdateImageList;
+    finally
+      LCollection.EndRenderOverride;
+    end;
+  end
+  else
+    inherited;
+end;
+
+procedure TSVGIconVirtualImageList.DoDraw(Index: Integer; Canvas: TCanvas;
+  X, Y: Integer; Style: Cardinal; Enabled: Boolean);
+var
+  LCollection: TSVGIconImageCollection;
+begin
+  //The disabled bitmap is created on first use, here
+  LCollection := GetSVGImageCollection;
+  if not Enabled and (LCollection <> nil) then
+  begin
+    LCollection.BeginRenderOverride(FFixedColor, FApplyFixedColorToRootOnly,
+      FGrayScale, FAntiAliasColor, FOpacity);
+    try
       inherited;
     finally
       LCollection.EndRenderOverride;
@@ -512,6 +556,21 @@ begin
   end
   else
     inherited;
+end;
+
+procedure TSVGIconVirtualImageList.Assign(Source: TPersistent);
+begin
+  inherited;
+  if Source is TSVGIconVirtualImageList then
+  begin
+    FFixedColor := TSVGIconVirtualImageList(Source).FFixedColor;
+    FApplyFixedColorToRootOnly := TSVGIconVirtualImageList(Source).FApplyFixedColorToRootOnly;
+    FGrayScale := TSVGIconVirtualImageList(Source).FGrayScale;
+    FAntiAliasColor := TSVGIconVirtualImageList(Source).FAntiAliasColor;
+    FOpacity := TSVGIconVirtualImageList(Source).FOpacity;
+    if not (csLoading in ComponentState) then
+      Change;
+  end;
 end;
 
 procedure TSVGIconVirtualImageList.Loaded;

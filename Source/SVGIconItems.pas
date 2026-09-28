@@ -433,13 +433,18 @@ begin
     LAntiAliasColor := AAntiAliasColor;
 
   Result := TBitmap.Create;
-  Result.PixelFormat := pf32bit;
-  if TStyleManager.IsCustomStyleActive then
-    Result.Canvas.Brush.Color := ColorToRGB(StyleServices.GetSystemColor(LAntiAliasColor))
-  else
-    Result.Canvas.Brush.Color := ColorToRGB(LAntiAliasColor);
-  Result.SetSize(AWidth, AHeight);
-  FSVG.PaintTo(Result.Canvas.Handle, TRectF.Create(0, 0, AWidth, AHeight));
+  try
+    Result.PixelFormat := pf32bit;
+    if TStyleManager.IsCustomStyleActive then
+      Result.Canvas.Brush.Color := ColorToRGB(StyleServices.GetSystemColor(LAntiAliasColor))
+    else
+      Result.Canvas.Brush.Color := ColorToRGB(LAntiAliasColor);
+    Result.SetSize(AWidth, AHeight);
+    FSVG.PaintTo(Result.Canvas.Handle, TRectF.Create(0, 0, AWidth, AHeight));
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
 function TSVGIconItem.GetCategory: string;
@@ -533,7 +538,11 @@ procedure TSVGIconItem.SetSVG(const Value: ISVG);
 begin
   if FSVG <> Value then
   begin
-    FSVG := Value;
+    //The item always has an SVG: nil means "no image", i.e. an empty one
+    if Value = nil then
+      FSVG := GlobalSVGFactory.NewSvg
+    else
+      FSVG := Value;
     Changed(False);
   end;
 end;

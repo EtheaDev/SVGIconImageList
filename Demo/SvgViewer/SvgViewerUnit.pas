@@ -135,7 +135,7 @@ procedure TSVGViewerForm.FormCreate(Sender: TObject);
 begin
   Caption := Application.Title;
   SourcePath := ExtractFilePath(Application.ExeName)+'..\svg_examples';
-  if not DirectoryExists(SourcePath) then
+  if not System.SysUtils.DirectoryExists(SourcePath) then
     SourcePath := ExtractFilePath(Application.ExeName);
 
   FrameViewerD2D.InitViewer('Native Direct2D', GetD2DSVGFactory);
@@ -188,6 +188,8 @@ begin
 end;
 
 initialization
+  {$WARN SYMBOL_PLATFORM OFF}
   ReportMemoryLeaksOnShutdown := DebugHook <> 0;
+  {$WARN SYMBOL_PLATFORM ON}
 
 end.

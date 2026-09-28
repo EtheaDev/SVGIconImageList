@@ -229,8 +229,7 @@ begin
     {$ENDIF}
     else
       Exit;
-    Result := LIconItems.Count;
-    for I := 0 to Result -1 do
+    for I := 0 to LIconItems.Count -1 do
     begin
       LItem := LIconItems[I];
       if (ACategory = '') or
@@ -239,6 +238,8 @@ begin
         LListItem := AListView.Items.Add;
         LListItem.Caption := GetItemCaption;
         LListItem.ImageIndex := I;
+        //The number of items added (with a category filter, not all icons)
+        Inc(Result);
       end;
     end;
   finally
@@ -257,16 +258,23 @@ var
   LListItem: TListItem;
   LImageList: TCustomImageList;
 begin
+  Result := 0;
   LImageList := AListView.LargeImages as TCustomImageList;
+  if LImageList = nil then
+    Exit;
   AListView.Items.BeginUpdate;
   try
-    Result := LImageList.Count;
-    for I := 0 to Result -1 do
+    //Walk the rows of the list view: with a category filter they are fewer
+    //than the icons, and row I shows the icon of its own ImageIndex
+    for I := 0 to AListView.Items.Count -1 do
     begin
+      LListItem := AListView.Items[I];
+      if (LListItem.ImageIndex < 0) or (LListItem.ImageIndex >= LImageList.Count) then
+        Continue;
+      Inc(Result);
       if (LImageList is TSVGIconImageListBase) then
       begin
-        LItem := TSVGIconImageListBase(LImageList).SVGIconItems[I];
-        LListItem := AListView.Items[I];
+        LItem := TSVGIconImageListBase(LImageList).SVGIconItems[LListItem.ImageIndex];
         if AShowCaption then
         begin
           LListItem.Caption := Format('%d.%s',
@@ -278,8 +286,7 @@ begin
       {$IFDEF D10_3}
       if (LImageList is TVirtualImageList) then
       begin
-        LVirtualItem := TVirtualImageList(LImageList).Images.Items[I];
-        LListItem := AListView.Items[I];
+        LVirtualItem := TVirtualImageList(LImageList).Images.Items[LListItem.ImageIndex];
         if AShowCaption then
         begin
           LListItem.Caption := Format('%d.%s',

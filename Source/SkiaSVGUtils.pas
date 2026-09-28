@@ -35,7 +35,7 @@ implementation
 uses
   System.SysUtils
   , System.Generics.Collections
-  , System.StrUtils
+  , System.RegularExpressions
   ;
 
 {-----------------------------------------------------------------------------
@@ -43,137 +43,207 @@ uses
  Author: Zoomicon.Media.FMX.Delphi
  Original Unit: Zoomicon.Media.FMX.SkiaUtils
  License: MIT License
+ Rewritten by Ethea: the style block is located with a regular expression
+ (<style type="text/css"> included) and removed before the classes are
+ inlined, selectors are read only before a "{" (so "1.5" is not a selector),
+ class="a b" merges every class, and an attribute set by a class replaces the
+ presentation attribute of the same name (CSS wins) instead of duplicating it.
 -----------------------------------------------------------------------------}
 function InlineSvgStyle(const SvgText: string): string;
-begin
-  // Copy input SVG into Result
-  Result := SvgText;
+const
+  //Presentation attributes a class rule may be turned into
+  SupportedProps: array[0..21] of string = (
+    'fill', 'fill-opacity', 'fill-rule', 'stroke', 'stroke-width',
+    'stroke-opacity', 'stroke-linecap', 'stroke-linejoin', 'stroke-dasharray',
+    'stroke-dashoffset', 'stroke-miterlimit', 'opacity', 'stop-color',
+    'stop-opacity', 'display', 'visibility', 'font-family', 'font-size',
+    'font-weight', 'font-style', 'text-anchor', 'clip-rule');
+var
+  ClassMap: TDictionary<string, TList<TPair<string, string>>>;
 
-  // Locate <style> block boundaries
-  var StyleStart := Pos('<style>', Result);
-  var StyleEnd := Pos('</style>', Result);
-
-  // Proceed only if a valid style block is found
-  if (StyleStart > 0) and (StyleEnd > StyleStart) then
+  function IsSupported(const AName: string): Boolean;
+  var
+    LName: string;
   begin
-    // Extract raw CSS content between <style> and </style>
-    var StyleBlock := Copy(Result, StyleStart + Length('<style>'),
-      StyleEnd - (StyleStart + Length('<style>')));
+    for LName in SupportedProps do
+      if SameText(LName, AName) then
+        Exit(True);
+    Result := False;
+  end;
 
-    // Dictionary to map class names to merged inline attributes
-    var ClassMap: TDictionary<string, string> := TDictionary<string, string>.Create;
-    try
-      // Robust scan: parse successive ".selector{...}" segments across the entire style block
-      var idx := 1;
-      while idx <= Length(StyleBlock) do
+  procedure AddProp(const AClassName, AName, AValue: string);
+  var
+    LProps: TList<TPair<string, string>>;
+    I: Integer;
+  begin
+    if not ClassMap.TryGetValue(AClassName, LProps) then
+    begin
+      LProps := TList<TPair<string, string>>.Create;
+      ClassMap.Add(AClassName, LProps);
+    end;
+    //A later rule for the same property wins
+    for I := LProps.Count - 1 downto 0 do
+      if SameText(LProps[I].Key, AName) then
+        LProps.Delete(I);
+    LProps.Add(TPair<string, string>.Create(AName, AValue));
+  end;
+
+  procedure ParseCss(const ACss: string);
+  var
+    LRule: TMatch;
+    LSelector, LClassName, LProp, LName, LValue: string;
+    LStrokeParts: TArray<string>;
+    LColon: Integer;
+  begin
+    //selector-list { body }: the selector is whatever comes before "{"
+    for LRule in TRegEx.Matches(ACss, '([^{}]+)\{([^{}]*)\}') do
+    begin
+      for LSelector in LRule.Groups[1].Value.Split([',']) do
       begin
-        // Find start of selector
-        var selStart := PosEx('.', StyleBlock, idx);
-        if selStart = 0 then Break;
-
-        // Find opening and closing braces
-        var openBrace := PosEx('{', StyleBlock, selStart + 1);
-        if openBrace = 0 then Break;
-        var closeBrace := PosEx('}', StyleBlock, openBrace + 1);
-        if closeBrace = 0 then Break;
-
-        // Extract selector list and rule body
-        var SelectorPart := Trim(Copy(StyleBlock, selStart, openBrace - selStart));
-        var RuleBody := Copy(StyleBlock, openBrace + 1, closeBrace - openBrace - 1);
-
-        // Advance index past this rule
-        idx := closeBrace + 1;
-
-        // Split grouped selectors like ".cls-2,.cls-3"
-        var ClassNames := SelectorPart.Split([','], TStringSplitOptions.ExcludeEmpty);
-        var Props := RuleBody.Split([';'], TStringSplitOptions.ExcludeEmpty);
-
-        // Process each selector
-        for var RawClass in ClassNames do
+        //only plain class selectors: ".name"
+        LClassName := Trim(LSelector);
+        if not TRegEx.IsMatch(LClassName, '^\.[A-Za-z_][\w-]*$') then
+          Continue;
+        Delete(LClassName, 1, 1);
+        for LProp in LRule.Groups[2].Value.Split([';']) do
         begin
-          var ClassName := Trim(RawClass);
-          if ClassName.StartsWith('.') then Delete(ClassName, 1, 1); // remove leading dot
-
-          var Existing := '';
-          ClassMap.TryGetValue(ClassName, Existing); // merge with prior attributes if any
-
-          // Process each CSS property
-          for var Prop in Props do
+          LColon := Pos(':', LProp);
+          if LColon = 0 then
+            Continue;
+          LName := LowerCase(Trim(Copy(LProp, 1, LColon - 1)));
+          LValue := Trim(Copy(LProp, LColon + 1, MaxInt));
+          if (LName = '') or (LValue = '') then
+            Continue;
+          // Expand shorthand stroke: "stroke: red 2px dashed"
+          if LName = 'stroke' then
           begin
-            var Parts := Prop.Split([':'], TStringSplitOptions.ExcludeEmpty);
-            if Length(Parts) = 2 then
-            begin
-              var Name := Trim(Parts[0]);
-              var Value := Trim(Parts[1]);
+            LStrokeParts := LValue.Split([' '], TStringSplitOptions.ExcludeEmpty);
+            AddProp(LClassName, 'stroke', LStrokeParts[0]);
+            if Length(LStrokeParts) > 1 then
+              AddProp(LClassName, 'stroke-width', LStrokeParts[1]);
+            if Length(LStrokeParts) > 2 then
+              AddProp(LClassName, 'stroke-dasharray', LStrokeParts[2]);
+          end
+          else if IsSupported(LName) then
+            AddProp(LClassName, LName, LValue);
+        end;
+      end;
+    end;
+  end;
 
-              // Expand shorthand stroke: "stroke: red 2px dashed"
-              if Name = 'stroke' then
-              begin
-                var StrokeParts := Value.Split([' '], TStringSplitOptions.ExcludeEmpty);
-                if Length(StrokeParts) > 0 then Existing := Existing + ' stroke="' + StrokeParts[0] + '"';
-                if Length(StrokeParts) > 1 then Existing := Existing + ' stroke-width="' + StrokeParts[1] + '"';
-                if Length(StrokeParts) > 2 then Existing := Existing + ' stroke-dasharray="' + StrokeParts[2] + '"';
-              end
-              // Map supported properties directly to inline attributes
-              else if (Name = 'fill') or (Name = 'stroke-width') or
-                      (Name = 'fill-opacity') or (Name = 'stroke-opacity') or
-                      (Name = 'stroke-linecap') or (Name = 'stroke-linejoin') or
-                      (Name = 'stroke-dasharray') or (Name = 'fill-rule') or
-                      (Name = 'font-family') or (Name = 'font-size') or
-                      (Name = 'font-weight') then
-                Existing := Existing + ' ' + Name + '="' + Value + '"';
-            end;
+  function InlineTag(const ATag: string): string;
+  var
+    LAttr: TMatch;
+    LClassValue, LClassName: string;
+    LInline: TList<TPair<string, string>>;
+    LProps: TList<TPair<string, string>>;
+    LPair: TPair<string, string>;
+    LTagEnd, LNamePart, LAttrs: string;
+    LTail: Integer;
+    I: Integer;
+    LOverridden: Boolean;
+  begin
+    LClassValue := '';
+    LAttr := TRegEx.Match(ATag, '\sclass\s*=\s*("([^"]*)"|''([^'']*)'')');
+    if not LAttr.Success then
+      Exit(ATag);
+    if LAttr.Groups.Count > 2 then
+      LClassValue := LAttr.Groups[2].Value;
+    if (LClassValue = '') and (LAttr.Groups.Count > 3) then
+      LClassValue := LAttr.Groups[3].Value;
+
+    LInline := TList<TPair<string, string>>.Create;
+    try
+      //every class, in order: a later class wins
+      for LClassName in LClassValue.Split([' ', #9], TStringSplitOptions.ExcludeEmpty) do
+        if ClassMap.TryGetValue(LClassName, LProps) then
+          for LPair in LProps do
+          begin
+            for I := LInline.Count - 1 downto 0 do
+              if SameText(LInline[I].Key, LPair.Key) then
+                LInline.Delete(I);
+            LInline.Add(LPair);
           end;
 
-          // Store merged attributes for this class
-          ClassMap.AddOrSetValue(ClassName, Trim(Existing));
-          // Log.d('ClassMap[' + ClassName + '] = ' + ClassMap[ClassName]);
-        end;
-      end;
+      //split "<name" / attributes / ">" or "/>"
+      if ATag.EndsWith('/>') then
+        LTail := 2
+      else
+        LTail := 1;
+      LTagEnd := Copy(ATag, Length(ATag) - LTail + 1, LTail);
+      LNamePart := TRegEx.Match(ATag, '^<[^\s/>]+').Value;
+      LAttrs := Copy(ATag, Length(LNamePart) + 1, Length(ATag) - Length(LNamePart) - LTail);
 
-      // Replace each class="..." in SVG with inline attributes
-      var ScanPos := 1;
-      while ScanPos < Length(Result) do
+      Result := LNamePart;
+      //keep every attribute but class and the ones a class overrides
+      for LAttr in TRegEx.Matches(LAttrs, '([\w:.-]+)\s*=\s*("[^"]*"|''[^'']*'')') do
       begin
-        // Find next class="..." occurrence
-        var PosClass := PosEx('class="', Result, ScanPos);
-        if PosClass = 0 then Break;
-
-        // Extract class name between quotes
-        var StartPos := PosClass + Length('class="');
-        var EndPos := StartPos;
-        while (EndPos <= Length(Result)) and (Result[EndPos] <> '"') do Inc(EndPos);
-        var ClassName := Copy(Result, StartPos, EndPos - StartPos);
-
-        // Replace or remove based on dictionary lookup
-        if ClassMap.ContainsKey(ClassName) then
-        begin
-          var InlineAttrs := ClassMap[ClassName];
-
-          Result := Copy(Result, 1, PosClass - 1) + InlineAttrs +
-                       Copy(Result, EndPos + 1, Length(Result) - EndPos);
-
-          // Log.d('Replaced class="' + ClassName + '" with: ' + InlineAttrs);
-        end
-        else
-        begin
-          Result := Copy(Result, 1, PosClass - 1) +
-                       Copy(Result, EndPos + 1, Length(Result) - EndPos);
-
-          // Log.d('Removed class="' + ClassName + '" (no matching style)');
-        end;
-
-        // Advance scan position to continue parsing
-        ScanPos := PosClass + 1;
+        if SameText(LAttr.Groups[1].Value, 'class') then
+          Continue;
+        LOverridden := False;
+        for LPair in LInline do
+          if SameText(LPair.Key, LAttr.Groups[1].Value) then
+          begin
+            LOverridden := True;
+            Break;
+          end;
+        if not LOverridden then
+          Result := Result + ' ' + LAttr.Value;
       end;
-
-      // Remove the original <style> block entirely
-      Delete(Result, StyleStart, StyleEnd + Length('</style>') - StyleStart);
-
+      for LPair in LInline do
+        Result := Result + ' ' + LPair.Key + '="' + LPair.Value + '"';
+      Result := Result + LTagEnd;
     finally
-      // Guaranteed cleanup: free dictionary and nil reference
-      FreeAndNil(ClassMap);
+      LInline.Free;
     end;
+  end;
+
+var
+  LStyle: TMatch;
+  LCss: string;
+  LProps: TList<TPair<string, string>>;
+  LTag: TMatch;
+  LTagRegEx: TRegEx;
+  LPos: Integer;
+begin
+  Result := SvgText;
+
+  // Locate the <style> block (with or without attributes)
+  LStyle := TRegEx.Match(Result, '<style\b[^>]*>(.*?)</style\s*>', [roIgnoreCase, roSingleLine]);
+  if not LStyle.Success then
+    Exit;
+
+  // CSS content, without CDATA wrapper and comments
+  LCss := LStyle.Groups[1].Value;
+  LCss := StringReplace(LCss, '<![CDATA[', '', [rfReplaceAll]);
+  LCss := StringReplace(LCss, ']]>', '', [rfReplaceAll]);
+  LCss := TRegEx.Replace(LCss, '/\*.*?\*/', '', [roSingleLine]);
+
+  // Remove the style block first: positions computed on the original text
+  // would be invalid once the classes are replaced
+  Delete(Result, LStyle.Index, LStyle.Length);
+
+  ClassMap := TDictionary<string, TList<TPair<string, string>>>.Create;
+  try
+    ParseCss(LCss);
+
+    // Rewrite every tag that has a class attribute
+    LTagRegEx := TRegEx.Create('<[A-Za-z][^<>]*\sclass\s*=[^<>]*>');
+    LPos := 1;
+    while True do
+    begin
+      LTag := LTagRegEx.Match(Result, LPos);
+      if not LTag.Success then
+        Break;
+      LCss := InlineTag(LTag.Value);
+      Result := Copy(Result, 1, LTag.Index - 1) + LCss +
+        Copy(Result, LTag.Index + LTag.Length, MaxInt);
+      LPos := LTag.Index + Length(LCss);
+    end;
+  finally
+    for LProps in ClassMap.Values do
+      LProps.Free;
+    ClassMap.Free;
   end;
 end;
 

@@ -698,6 +698,14 @@ type
             function SetValue(const name, value: UnicodeString): Boolean;
 
             {**
+             Check if an unsupported property has a value without effect (not worth a log line)
+             @param(name Property name)
+             @param(value Property value)
+             @returns(@true if the value would change nothing even if the property was supported)
+            }
+            class function IsIgnorableUnknownValue(const name, value: UnicodeString): Boolean; static;
+
+            {**
              Parse the global style properties content
              @param(name Property name to parse)
              @param(value Property value)
@@ -1861,6 +1869,31 @@ begin
     inherited Destroy;
 end;
 //---------------------------------------------------------------------------
+class function TWSVGStyle.IsIgnorableUnknownValue(const name, value: UnicodeString): Boolean;
+var
+    lowerName, lowerValue: UnicodeString;
+begin
+    lowerName  := LowerCase(Trim(name));
+    lowerValue := LowerCase(Trim(value));
+
+    // markers are not supported: "none" is what not drawing them means anyway
+    if ((lowerName = 'marker') or (lowerName = 'marker-start') or (lowerName = 'marker-mid')
+            or (lowerName = 'marker-end'))
+    then
+        Exit(lowerValue = 'none');
+
+    // overflow is not supported: everything is drawn, as with "visible"
+    if (lowerName = 'overflow') then
+        Exit(lowerValue = 'visible');
+
+    // color (and so currentColor) is not supported: currentColor is always black, so black is fine
+    if (lowerName = 'color') then
+        Exit((lowerValue = 'black') or (lowerValue = '#000') or (lowerValue = '#000000')
+                or (lowerValue = 'rgb(0,0,0)') or (lowerValue = 'rgb(0, 0, 0)'));
+
+    Result := False;
+end;
+//---------------------------------------------------------------------------
 function TWSVGStyle.SetValue(const name, value: UnicodeString): Boolean;
 begin
     // found last value?
@@ -1928,8 +1961,10 @@ begin
     if ((name = C_SVG_Prop_Stroke_DashOffset) and m_pStroke.Parse(name, value, Self)) then
         Exit(True);
 
-    // log unknown value
-    TWLogHelper.LogToCompiler('Style - found unknown property - name - ' + name + ' - value - ' + value);
+    // log unknown value, unless it is a value that has no effect even if not supported (the ones
+    // Inkscape writes in every style: marker:none, overflow:visible, color:black)
+    if (not IsIgnorableUnknownValue(name, value)) then
+        TWLogHelper.LogToCompiler('Style - found unknown property - name - ' + name + ' - value - ' + value);
 
     // always return true to skip the unknown value without put the parsing into failure
     Result := True;

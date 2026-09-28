@@ -242,6 +242,7 @@ begin
   LBitmapHeight := Round(FHeight * Scale);
   LBitmap.Width  := LBitmapWidth;
   LBitmap.Height := LBitmapHeight;
+  FSVG.Opacity := FOpacity;
   PaintToBitmap(LBitmap, FSVG, FZoom);
   if Assigned(FOwnerCollection) then
     FOwnerCollection.OnDrawImage(Self);

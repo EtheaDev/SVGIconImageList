@@ -49,6 +49,7 @@ Uses
   System.UIConsts,
   System.SysUtils,
   System.Classes,
+  System.Math,
   System.RegularExpressions;
 
   resourcestring
@@ -177,6 +178,20 @@ begin
   Result := D2D1ColorF(LGray, LGray, LGray, Color.A);
 end;
 
+// The root fill: an explicit value is recolored unless it is none/url(...)
+// (outline icons must stay outlines), a missing one is set, since the default
+// black is what every child inherits.
+procedure RecolorRootFill(const Root: ID2D1SvgElement; NewColor: TD2D1ColorF);
+Var
+  IsInherited: Bool;
+begin
+  if Root.IsAttributeSpecified('fill', @IsInherited) and not IsInherited then
+    RecolorAttribute(Root, 'fill', NewColor)
+  else
+    Root.SetAttributeValue('fill', D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
+      @NewColor, SizeOf(NewColor));
+end;
+
 procedure RecolorSubtree(const Element: ID2D1SvgElement; NewColor: TD2D1ColorF);
 begin
   TransformSvgElement(Element,
@@ -230,10 +245,8 @@ end;
 {$ENDIF}
 
 procedure TD2DSVG.Clear;
-Const
-  EmptySvg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
 begin
-  SetSource(EmptySvg);
+  SetSource('');
 end;
 
 constructor TD2DSVG.Create;
@@ -250,8 +263,12 @@ var
   DeviceContext5: ID2D1DeviceContext5;
   Root: ID2D1SvgElement;
   ViewBox: D2D1_SVG_VIEWBOX;
+  HR: HResult;
 begin
   fsvgDoc := nil;
+  // The size of a previous document must not survive
+  fWidth := 0;
+  fHeight := 0;
   XStream := TStreamAdapter.Create(Stream, soReference);
   if Supports(RenderTarget, ID2D1DeviceContext5, DeviceContext5) then
   begin
@@ -261,9 +278,14 @@ begin
        CreateSvgDocument needs initial values which are
        not used if width and height are specified at the root.
     }
-    if not Succeeded(DeviceContext5.CreateSvgDocument(XStream, D2D1SizeF(100, 100), // some initial values
-    fSvgDoc)) then
-      RaiseLastOSError;
+    HR := DeviceContext5.CreateSvgDocument(XStream, D2D1SizeF(100, 100), // some initial values
+      fSvgDoc);
+    if not Succeeded(HR) then
+    begin
+      fSvgDoc := nil;
+      raise ESVGException.CreateResFmt(@D2D_ERROR_PARSING_SVG_TEXT,
+        [SysErrorMessage(Cardinal(HR))]);
+    end;
     fsvgDoc.GetRoot(Root);
     if Root.IsAttributeSpecified('width', nil) then
       Root.GetAttributeValue('width', D2D1_SVG_ATTRIBUTE_POD_TYPE_FLOAT, @fWidth, SizeOf(fWidth));
@@ -282,7 +304,7 @@ begin
       fSvgDoc.SetViewportSize(D2D1SizeF(fWidth, fHeight));
   end
   else
-    raise Exception.CreateRes(@D2D_ERROR_NOT_AVAILABLE);
+    raise ESVGException.CreateRes(@D2D_ERROR_NOT_AVAILABLE);
 end;
 
 procedure TD2DSVG.LoadFromFile(const FileName: string);
@@ -302,7 +324,12 @@ var
   MStream: TMemoryStream;
 begin
   fSvgDoc := nil;
-  if fSource = '' then Exit;
+  if fSource = '' then
+  begin
+    fWidth := 0;
+    fHeight := 0;
+    Exit;
+  end;
 {$IFDEF CheckForUnsupportedSvg}
   CheckForUnsupportedSvg;
 {$ENDIF}
@@ -316,8 +343,10 @@ begin
       MStream.Free;
     end;
   except
+    on E: ESVGException do
+      raise;
     on E: Exception do
-      raise Exception.CreateFmt(D2D_ERROR_PARSING_SVG_TEXT, [E.Message]);
+      raise ESVGException.CreateResFmt(@D2D_ERROR_PARSING_SVG_TEXT, [E.Message]);
   end;
 end;
 
@@ -342,17 +371,8 @@ begin
 end;
 
 function TD2DSVG.GetOpacity: Single;
-Var
-  Root: ID2D1SvgElement;
 begin
-  Result := 1;
-  if Assigned(fSvgDoc) then
-  begin
-    fSvgDoc.GetRoot(Root);
-    if Assigned(Root) then
-      Root.GetAttributeValue('opacity', D2D1_SVG_ATTRIBUTE_POD_TYPE_FLOAT,
-        @Result, SizeOf(Result));
-  end;
+  Result := fOpacity;
 end;
 
 function TD2DSVG.GetSource: string;
@@ -398,6 +418,7 @@ var
 begin
   if not Assigned(fSvgDoc) then Exit;
   SvgRect:= R;
+  Matrix := TD2DMatrix3X2F.Identity;
   if (fWidth > 0) and (fHeight > 0) then begin
     if KeepAspectRatio then
     begin
@@ -426,14 +447,17 @@ begin
         @fOpacity, SizeOf(fOpacity));
     end;
   end;
-  //FixedColor
-  if (FFixedColor <> TColors.SysDefault) and Assigned(fSvgDoc) then
+  //FixedColor (clNone means "no color", like clDefault)
+  if (FFixedColor <> TColors.SysDefault) and (FFixedColor <> TColors.SysNone) and
+    Assigned(fSvgDoc) then
   begin
     fSvgDoc.GetRoot(Root);
     with TColors(fFixedColor) do
       NewColor :=  D2D1ColorF(r/255, g/255, b/255, 1);
-    Root.SetAttributeValue('fill', D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
-              @NewColor, SizeOf(NewColor));
+    RecolorRootFill(Root, NewColor);
+    // "currentColor" is resolved against the root color attribute
+    Root.SetAttributeValue('color', D2D1_SVG_ATTRIBUTE_POD_TYPE_COLOR,
+      @NewColor, SizeOf(NewColor));
     if not fApplyFixedColorToRootOnly then
       RecolorSubtree(Root, NewColor)
     else
@@ -443,8 +467,8 @@ begin
   RT.BindDC(DC, SvgRect.Round);
   RT.BeginDraw;
   try
-    if (fWidth > 0) and (fHeight > 0) then
-      RT.SetTransform(Matrix);
+    // Always set it: the render target is shared by every instance
+    RT.SetTransform(Matrix);
     (RT as ID2D1DeviceContext5).DrawSvgDocument(fSvgDoc);
   finally
     RT.EndDraw;
@@ -505,11 +529,12 @@ Var
   Root: ID2D1SvgElement;
 begin
   if IsGrayScale = fGrayScale then
-    Exit
-  else
-  fGrayScale := IsGrayScale;
+    Exit;
+  // Reload when the document holds colors changed by the CURRENT state
+  // (gray, or a fixed color), before switching to the new one
   if fGrayScale or (fFixedColor <> TColors.SysDefault) then
     LoadFromSource;
+  fGrayScale := IsGrayScale;
   fFixedColor := TColors.SysDefault;
   if fGrayScale and Assigned(fSvgDoc) then
   begin
@@ -522,9 +547,9 @@ procedure TD2DSVG.SetOpacity(const AOpacity: Single);
 Var
   Root: ID2D1SvgElement;
 begin
-  if AOpacity = fOpacity then Exit
+  if EnsureRange(AOpacity, 0, 1) = fOpacity then Exit
   else
-    fOpacity := AOpacity;
+    fOpacity := EnsureRange(AOpacity, 0, 1);
   if Assigned(fSvgDoc) then
   begin
     fSvgDoc.GetRoot(Root);
@@ -585,7 +610,7 @@ begin
   begin
     if not Succeeded(D2DFactory.CreateDCRenderTarget(
       D2D1RenderTargetProperties(
-        {$IFDEF GPUSupprt}
+        {$IFDEF GPUSupport}
         D2D1_RENDER_TARGET_TYPE_DEFAULT,
         {$ELSE}
         D2D1_RENDER_TARGET_TYPE_SOFTWARE, // much faster in my desktop with a slow GPU
