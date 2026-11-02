@@ -272,21 +272,81 @@ type
   end;
 
   /// <summary>
-  ///  Known issues of the third-party engines, kept here so that they are
-  ///  documented and can be enabled once the library is fixed.
+  ///  Defects of the bundled SVGMagic library fixed in this fork, each pinned by a
+  ///  regression test (until 2026-11-03 the first was an ignored known issue).
   /// </summary>
   [TestFixture]
-  TSVGEngineKnownIssuesTests = class
+  TSVGMagicLibraryFixTests = class
   public
     /// <summary>
-    ///  SVGMagic library (UTWRenderer_GDIPlus): the stroke of a &lt;rect&gt; is
-    ///  drawn inside the rectangle (x 10..30 for x="10" stroke-width="20")
-    ///  instead of centered on its edge (0..20) as SVG requires; &lt;path&gt;
-    ///  and &lt;polygon&gt; are right.
+    ///  Regression.  The rasterizer drew &lt;rect&gt; through TWRenderer.DrawRect, which
+    ///  is made for controls and insets the outline: x 10..30 for x="10"
+    ///  stroke-width="20", where SVG centres it on the edge (0..20).
     /// </summary>
     [Test]
-    [Ignore('SVGMagic library: the stroke of <rect> is drawn inset, not centered on the edge')]
     procedure SVGMagic_RectStroke_IsCenteredOnTheEdge;
+
+    /// <summary>
+    ///  Regression.  The fill of a stroked &lt;rect&gt; was inset with the outline: it
+    ///  must reach the geometric edge, under the inner half of the stroke, so the
+    ///  stroke ends at x 20 and the fill shows from there.
+    /// </summary>
+    [Test]
+    procedure SVGMagic_StrokedRectFill_ReachesTheEdge;
+
+    /// <summary>
+    ///  Regression.  A rounded &lt;rect&gt; (rx, ry) took the same inset path: its stroke
+    ///  must be centred on the edge too, and the corner must stay rounded (the
+    ///  outer corner pixel unpainted).
+    /// </summary>
+    [Test]
+    procedure SVGMagic_RoundedRectStroke_IsCenteredOnTheEdge;
+
+    /// <summary>
+    ///  Regression.  A stroked and filled &lt;rect&gt; must render pixel for pixel like
+    ///  the &lt;path&gt; of the same geometry, which never went through DrawRect: before
+    ///  the fix the two differed along the whole outline and the edge of the fill.
+    /// </summary>
+    [Test]
+    procedure SVGMagic_StrokedRect_RendersAsTheSamePath;
+
+    /// <summary>
+    ///  Regression.  A rounded &lt;rect&gt; must render like the &lt;path&gt; of four arcs of the
+    ///  same radii: a wrong arc size or a square corner shows as differing pixels.
+    /// </summary>
+    [Test]
+    procedure SVGMagic_RoundedRect_RendersAsTheSamePath;
+
+    /// <summary>
+    ///  Regression.  Radii larger than half the side are clamped to it, as SVG requires:
+    ///  rx="100" ry="100" on 112 x 96 is the ellipse of radii 56 and 48.
+    /// </summary>
+    [Test]
+    procedure SVGMagic_OversizedRadii_AreClampedToHalfTheSide;
+
+    /// <summary>
+    ///  Regression.  A dashed &lt;rect&gt; must dash like the same &lt;path&gt;: the old route
+    ///  added the pattern twice and divided it by the stroke width twice.
+    /// </summary>
+    [Test]
+    procedure SVGMagic_DashedRect_RendersAsTheSamePath;
+
+    /// <summary>
+    ///  A &lt;rect&gt; inside a nested &lt;svg&gt; with preserveAspectRatio must be placed and
+    ///  scaled like the same &lt;path&gt;: the rect now takes the path's transform route.
+    /// </summary>
+    [Test]
+    procedure SVGMagic_RectInAspectRatioViewport_RendersAsTheSamePath;
+  private
+    /// <summary>
+    ///  Renders two SVG documents with SVGMagic at 100 x 100 and counts the pixels whose
+    ///  channels differ by more than 64 (arcs are approximated by Bezier curves, so a few
+    ///  levels of anti-aliasing differ at rounded edges and do not count).
+    /// </summary>
+    /// <param name="ASvgA">The first document.</param>
+    /// <param name="ASvgB">The second document.</param>
+    /// <returns>The number of clearly differing pixels.</returns>
+    function DifferingPixels(const ASvgA, ASvgB: string): Integer;
   end;
 
 implementation
@@ -709,9 +769,9 @@ begin
     TSVGTestUtils.SvgOf(ENGINE_SKIA, SVG_STYLE_CLASS_TRICKY), 50, 50, clPureRed, 'center');
 end;
 
-{ TSVGEngineKnownIssuesTests }
+{ TSVGMagicLibraryFixTests }
 
-procedure TSVGEngineKnownIssuesTests.SVGMagic_RectStroke_IsCenteredOnTheEdge;
+procedure TSVGMagicLibraryFixTests.SVGMagic_RectStroke_IsCenteredOnTheEdge;
 var
   LBitmap: TBitmap;
 begin
@@ -725,11 +785,127 @@ begin
   end;
 end;
 
+procedure TSVGMagicLibraryFixTests.SVGMagic_StrokedRectFill_ReachesTheEdge;
+const
+  SVG_FILLED_OUTLINE_SQUARE =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect x="10" y="10" width="80" height="80" fill="#FF0000" stroke="#0000FF" stroke-width="20"/></svg>';
+var
+  LBitmap: TBitmap;
+begin
+  LBitmap := TSVGTestUtils.Render(
+    TSVGTestUtils.SvgOf(ENGINE_SVGMAGIC, SVG_FILLED_OUTLINE_SQUARE), 100, 100);
+  try
+    TSVGTestUtils.AssertPixel(LBitmap, 5, 50, clPureBlue, 'outer half of the stroke');
+    TSVGTestUtils.AssertPixel(LBitmap, 25, 50, clPureRed, 'fill, past the inner half of the stroke');
+    TSVGTestUtils.AssertPixel(LBitmap, 50, 50, clPureRed, 'fill, centre');
+  finally
+    LBitmap.Free;
+  end;
+end;
+
+procedure TSVGMagicLibraryFixTests.SVGMagic_RoundedRectStroke_IsCenteredOnTheEdge;
+const
+  SVG_ROUNDED_OUTLINE_SQUARE =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect x="10" y="10" width="80" height="80" rx="20" fill="none" stroke="#0000FF" stroke-width="20"/></svg>';
+var
+  LBitmap: TBitmap;
+begin
+  LBitmap := TSVGTestUtils.Render(
+    TSVGTestUtils.SvgOf(ENGINE_SVGMAGIC, SVG_ROUNDED_OUTLINE_SQUARE), 100, 100);
+  try
+    TSVGTestUtils.AssertPixel(LBitmap, 5, 50, clPureBlue, 'outer half of the stroke');
+    TSVGTestUtils.AssertPixel(LBitmap, 25, 50, clPureWhite, 'past the inner half of the stroke');
+    TSVGTestUtils.AssertPixel(LBitmap, 1, 1, clPureWhite, 'outside the rounded corner');
+  finally
+    LBitmap.Free;
+  end;
+end;
+
+const
+  SVG_PAIR_HEAD = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">';
+  SVG_PAIR_STYLE = ' fill="#4F4F4F" stroke="#1060C0" stroke-width="8"/>';
+
+function TSVGMagicLibraryFixTests.DifferingPixels(const ASvgA, ASvgB: string): Integer;
+var
+  LA, LB: TBitmap;
+  LColorA, LColorB: TColor;
+  X, Y: Integer;
+begin
+  Result := 0;
+  LA := TSVGTestUtils.Render(TSVGTestUtils.SvgOf(ENGINE_SVGMAGIC, ASvgA), 100, 100);
+  try
+    LB := TSVGTestUtils.Render(TSVGTestUtils.SvgOf(ENGINE_SVGMAGIC, ASvgB), 100, 100);
+    try
+      for Y := 0 to 99 do
+        for X := 0 to 99 do
+        begin
+          LColorA := TSVGTestUtils.PixelAt(LA, X, Y);
+          LColorB := TSVGTestUtils.PixelAt(LB, X, Y);
+          if (Abs(GetRValue(LColorA) - GetRValue(LColorB)) > 64) or (Abs(GetGValue(LColorA) - GetGValue(LColorB)) > 64)
+            or (Abs(GetBValue(LColorA) - GetBValue(LColorB)) > 64) then
+            Inc(Result);
+        end;
+    finally
+      LB.Free;
+    end;
+  finally
+    LA.Free;
+  end;
+end;
+
+procedure TSVGMagicLibraryFixTests.SVGMagic_StrokedRect_RendersAsTheSamePath;
+begin
+  Assert.AreEqual(0, DifferingPixels(
+    SVG_PAIR_HEAD + '<rect x="28" y="64" width="112" height="96"' + SVG_PAIR_STYLE + '</svg>',
+    SVG_PAIR_HEAD + '<path d="M28 64H140V160H28Z"' + SVG_PAIR_STYLE + '</svg>'),
+    'pixels where the rect and the path differ');
+end;
+
+procedure TSVGMagicLibraryFixTests.SVGMagic_RoundedRect_RendersAsTheSamePath;
+begin
+  Assert.AreEqual(0, DifferingPixels(
+    SVG_PAIR_HEAD + '<rect x="28" y="64" width="112" height="96" rx="24"' + SVG_PAIR_STYLE + '</svg>',
+    SVG_PAIR_HEAD + '<path d="M52 64H116A24 24 0 0 1 140 88V136A24 24 0 0 1 116 160H52A24 24 0 0 1 28 136V88' +
+      'A24 24 0 0 1 52 64Z"' + SVG_PAIR_STYLE + '</svg>'),
+    'pixels where the rounded rect and the path differ');
+end;
+
+procedure TSVGMagicLibraryFixTests.SVGMagic_OversizedRadii_AreClampedToHalfTheSide;
+begin
+  Assert.AreEqual(0, DifferingPixels(
+    SVG_PAIR_HEAD + '<rect x="28" y="64" width="112" height="96" rx="100" ry="100"' + SVG_PAIR_STYLE + '</svg>',
+    SVG_PAIR_HEAD + '<path d="M84 64A56 48 0 0 1 140 112A56 48 0 0 1 84 160A56 48 0 0 1 28 112A56 48 0 0 1 84 64Z"' +
+      SVG_PAIR_STYLE + '</svg>'),
+    'pixels where the clamped rect and the ellipse differ');
+end;
+
+procedure TSVGMagicLibraryFixTests.SVGMagic_DashedRect_RendersAsTheSamePath;
+const
+  DASHED = ' fill="none" stroke="#1060C0" stroke-width="8" stroke-dasharray="24 12"/>';
+begin
+  Assert.AreEqual(0, DifferingPixels(
+    SVG_PAIR_HEAD + '<rect x="28" y="64" width="112" height="96"' + DASHED + '</svg>',
+    SVG_PAIR_HEAD + '<path d="M28 64H140V160H28Z"' + DASHED + '</svg>'),
+    'pixels where the dashed rect and the dashed path differ');
+end;
+
+procedure TSVGMagicLibraryFixTests.SVGMagic_RectInAspectRatioViewport_RendersAsTheSamePath;
+const
+  VIEWPORT = '<svg x="0" y="40" width="192" height="96" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">';
+begin
+  Assert.AreEqual(0, DifferingPixels(
+    SVG_PAIR_HEAD + VIEWPORT + '<rect x="10" y="20" width="80" height="60"' + SVG_PAIR_STYLE + '</svg></svg>',
+    SVG_PAIR_HEAD + VIEWPORT + '<path d="M10 20H90V80H10Z"' + SVG_PAIR_STYLE + '</svg></svg>'),
+    'pixels where the rect and the path in the viewport differ');
+end;
+
 initialization
   CoInitialize(nil);
   TDUnitX.RegisterTestFixture(TSVGEngineRenderTests);
   TDUnitX.RegisterTestFixture(TSVGEngineDocumentTests);
   TDUnitX.RegisterTestFixture(TSkiaInlineStyleTests);
-  TDUnitX.RegisterTestFixture(TSVGEngineKnownIssuesTests);
+  TDUnitX.RegisterTestFixture(TSVGMagicLibraryFixTests);
 
 end.

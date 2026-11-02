@@ -493,7 +493,6 @@ var
     pGraphicsPath, pPolylinePath, pTextPath:                                                          IWSmartPointer<TGpGraphicsPath>;
     pMatrix:                                                                                          IWSmartPointer<TGpMatrix>;
     pPathConverter:                                                                                   IWSmartPointer<TWGraphicPathConverter_GDIPlus>;
-    pRectOptions:                                                                                     IWSmartPointer<TWRenderer.IRectOptions>;
     pFill:                                                                                            IWSmartPointer<TWFill>;
     pStroke:                                                                                          IWSmartPointer<TWStroke>;
     paPen:                                                                                            IWSmartPointer<TGpPen>;
@@ -515,13 +514,11 @@ var
     point, textPos:                                                                                   TGpPointF;
     boundingBox, rectToDraw, charRect:                                                                TGpRectF;
     rect, imageRect, elementViewBox:                                                                  TWRectF;
-    iRect:                                                                                            TRect;
     svgPos, posFromProps:                                                                             TPoint;
     color:                                                                                            TWColor;
-    outputMatrix:                                                                                     TWMatrix3x3;
-    dashPatternCount, i:                                                                              NativeInt;
+    i:                                                                                                NativeInt;
     count:                                                                                            NativeUInt;
-    x, y, initialX, initialY, x1, y1, x2, y2, r, rx, ry, d, dx, dy, width, height, dashFactor, coord: Single;
+    x, y, initialX, initialY, x1, y1, x2, y2, r, rx, ry, d, dx, dy, width, height, coord:             Single;
     fontSize, fontStyleAngle:                                                                         Single;
     fontWeight:                                                                                       Cardinal;
     fontFamily, fontFamilyLowerCase:                                                                  UnicodeString;
@@ -1235,11 +1232,6 @@ begin
                         scaleH, antialiasing, switchMode, clippingMode, useMode, animation, pAspectRatio,
                         pCanvas, pGraphics, pRect, pPrevRegion);
 
-                pRectOptions := TWSmartPointer<TWRenderer.IRectOptions>.Create();
-
-                // create and populate rect options
-                pRectOptions.Antialiasing := antialiasing;
-
                 // configure animation
                 pAnimationData          := TWSmartPointer<IAnimationData>.Create();
                 pAnimationData.Position := animation.m_Position;
@@ -1309,71 +1301,86 @@ begin
                 end
                 else
                 begin
-                    // the dash factor is a value used to take care of the difference between svg and GDI+.
-                    // In fact, GDI+ multiplies each dash values by the stroke width
-                    if (pProps.Style.Stroke.Width.Value > 0) then
-                        dashFactor := pProps.Style.Stroke.Width.Value
-                    else
-                        dashFactor := 1.0;
-
-                    dashPatternCount := pProps.Style.Stroke.DashPattern.Value.Count;
-
-                    // apply the dash factor on the dash pattern
-                    for i := 0 to dashPatternCount - 1 do
-                        pRectOptions.Stroke.DashPattern.Add
-                                (pProps.Style.Stroke.DashPattern.Value[i] / dashFactor);
-
-                    // populate rect options with read values
-                    pRectOptions.Stroke.Width         := pProps.Style.Stroke.Width.Value;
-                    pRectOptions.Stroke.DashOffset    := pProps.Style.Stroke.DashOffset.Value / dashFactor;
-                    pRectOptions.Radius.LeftTop.X     := Round(rx);
-                    pRectOptions.Radius.LeftTop.Y     := Round(ry);
-                    pRectOptions.Radius.LeftBottom.X  := pRectOptions.Radius.LeftTop.X;
-                    pRectOptions.Radius.LeftBottom.Y  := pRectOptions.Radius.LeftTop.Y;
-                    pRectOptions.Radius.RightTop.X    := pRectOptions.Radius.LeftTop.X;
-                    pRectOptions.Radius.RightTop.Y    := pRectOptions.Radius.LeftTop.Y;
-                    pRectOptions.Radius.RightBottom.X := pRectOptions.Radius.LeftTop.X;
-                    pRectOptions.Radius.RightBottom.Y := pRectOptions.Radius.LeftTop.Y;
-
-                    pMatrix := TWSmartPointer<TGpMatrix>.Create();
-                    pProps.Matrix.Value.ToGpMatrix(pMatrix);
-
-                    // set svg element to final size
-                    pMatrix.Scale(scaleW, scaleH, MatrixOrderAppend);
-
-                    isAspectRatioClipped := False;
-
-                    // should apply an aspect ratio onto the rectangle?
-                    if (Assigned(pAspectRatio)) then
+                    // gllSVGIconImageList 2026-11-03: draw the rectangle as a path, as <path> and <polygon>
+                    // are drawn. TWRenderer.DrawRect() is made for controls: it insets the outline so that
+                    // it stays inside the rectangle, and fills the inset rectangle, where SVG centres the
+                    // stroke on the edge and fills up to it
+                    if ((rectToDraw.Width > 0.0) and (rectToDraw.Height > 0.0)) then
                     begin
-                        pPrevAspectRatioRegion := TWSmartPointer<TGpRegion>.Create();
+                        pGraphicsPath := TWSmartPointer<TGpGraphicsPath>.Create(TGpGraphicsPath.Create);
 
-                        // apply aspect ratio and get the previous clipping region, if any
-                        isAspectRatioClipped := ApplyAspectRatio(pAspectRatio, pProps, rectToDraw,
-                                pMatrix, pGraphics, pPrevAspectRatioRegion);
-                    end
-                    else
-                    begin
-                        // calculate position at which svg element should be drawn
-                        svgPos := CalculateFinalPos(pos, viewBox, scaleW, scaleH);
+                        // a radius larger than half the side is clamped to it, as SVG requires
+                        if (rx > (rectToDraw.Width / 2.0)) then
+                            rx := rectToDraw.Width / 2.0;
 
-                        // set svg element to final location (applying user position and viewbox correction)
-                        pMatrix.Translate(svgPos.X, svgPos.Y, MatrixOrderAppend);
+                        if (ry > (rectToDraw.Height / 2.0)) then
+                            ry := rectToDraw.Height / 2.0;
+
+                        if ((rx <= 0.0) or (ry <= 0.0)) then
+                            pGraphicsPath.AddRectangle(rectToDraw)
+                        else
+                        begin
+                            // rounded rectangle, clockwise from the top left corner
+                            pGraphicsPath.AddArc(rectToDraw.X, rectToDraw.Y, rx * 2.0, ry * 2.0, 180.0, 90.0);
+                            pGraphicsPath.AddArc(rectToDraw.X + rectToDraw.Width - (rx * 2.0), rectToDraw.Y,
+                                    rx * 2.0, ry * 2.0, 270.0, 90.0);
+                            pGraphicsPath.AddArc(rectToDraw.X + rectToDraw.Width - (rx * 2.0),
+                                    rectToDraw.Y + rectToDraw.Height - (ry * 2.0), rx * 2.0, ry * 2.0, 0.0, 90.0);
+                            pGraphicsPath.AddArc(rectToDraw.X, rectToDraw.Y + rectToDraw.Height - (ry * 2.0),
+                                    rx * 2.0, ry * 2.0, 90.0, 90.0);
+                            pGraphicsPath.CloseFigure;
+                        end;
+
+                        pMatrix := TWSmartPointer<TGpMatrix>.Create();
+                        pProps.Matrix.Value.ToGpMatrix(pMatrix);
+
+                        isAspectRatioClipped := False;
+
+                        // should apply an aspect ratio onto the rectangle?
+                        if (Assigned(pAspectRatio)) then
+                        begin
+                            // measure the bounding box as the path element does, stroke included, so
+                            // that the rectangle is fitted exactly as the same path would be
+                            pFakePen := nil;
+
+                            if (pProps.Style.Stroke.Width.Value > 0.0) then
+                            begin
+                                color.SetColor(clBlack);
+                                pFakePen := pRenderer.GetPen(color, pProps.Style.Stroke.Width.Value);
+                            end;
+
+                            pGraphicsPath.GetBounds(boundingBox, nil, pFakePen);
+
+                            pPrevAspectRatioRegion := TWSmartPointer<TGpRegion>.Create();
+
+                            // apply aspect ratio and get the previous clipping region, if any
+                            isAspectRatioClipped := ApplyAspectRatio(pAspectRatio, pProps, boundingBox,
+                                    pMatrix, pGraphics, pPrevAspectRatioRegion);
+                        end
+                        else
+                        begin
+                            // calculate position at which svg element should be drawn
+                            svgPos := CalculateFinalPos(pos, viewBox, scaleW, scaleH);
+
+                            ApplyMatrix(pMatrix, svgPos, scaleW, scaleH, pGraphics);
+                        end;
+
+                        pFill := TWSmartPointer<TWFill>.Create();
+
+                        // fill the rectangle
+                        if (GetBrush(pProps.Style, viewBox, rectToDraw, scaleW, scaleH, pRenderer, pFill)) then
+                            pRenderer.FillPath(pGraphicsPath, pFill, pGraphics, TWRectF.Create(rectToDraw, False));
+
+                        pStroke := TWSmartPointer<TWStroke>.Create();
+
+                        // outline the rectangle
+                        if (GetPen(pProps.Style, viewBox, rectToDraw, scaleW, scaleH, pRenderer, pStroke)) then
+                            pRenderer.DrawPath(pGraphicsPath, pStroke, pGraphics, TWRectF.Create(rectToDraw, False));
+
+                        // restore the previous cliping before aspect ratio, if any
+                        if (isAspectRatioClipped) then
+                            pGraphics.SetClip(pPrevAspectRatioRegion, CombineModeReplace);
                     end;
-
-                    // apply transformation matrix to rectangle
-                    outputMatrix := TWMatrix3x3.Create(pMatrix);
-                    pRectOptions.TransformMatrix.Assign(outputMatrix);
-
-                    GetBrush(pProps.Style, viewBox, rectToDraw, scaleW, scaleH, pRenderer, pRectOptions.Fill);
-                    GetPen  (pProps.Style, viewBox, rectToDraw, scaleW, scaleH, pRenderer, pRectOptions.Stroke);
-
-                    // draw rectangle
-                    pRenderer.DrawRect(TWRectF.Create(rectToDraw, False), pRectOptions, pGraphics, iRect);
-
-                    // restore the previous cliping before aspect ratio, if any
-                    if (isAspectRatioClipped) then
-                        pGraphics.SetClip(pPrevAspectRatioRegion, CombineModeReplace);
                 end;
 
                 // restore the previous clipping, if any
