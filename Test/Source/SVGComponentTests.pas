@@ -317,9 +317,31 @@ type
     procedure ExportToPng_HalfTransparentIcon_KeepsItsColor;
   end;
 
+  /// <summary>
+  ///  The URLs of the iconify.design API (no network: only how they are built).
+  /// </summary>
+  [TestFixture]
+  TIconifyApiTests = class
+  public
+    /// <summary>
+    ///  Regression. The icon was requested as "prefix:name.svg", which the API
+    ///  no longer accepts (404/403): every download of the web search failed.
+    /// </summary>
+    [Test]
+    procedure IconUrl_UsesPrefixSlashName;
+
+    /// <summary>
+    ///  Regression. Query and prefix were not URL-encoded: a search with
+    ///  spaces or non-ASCII characters built an invalid URL.
+    /// </summary>
+    [Test]
+    procedure SearchUrl_EncodesQueryAndPrefix;
+  end;
+
 implementation
 
 uses
+  Browser.IconifyApi,
   System.IOUtils,
   Winapi.Messages,
   Vcl.Imaging.pngimage,
@@ -947,6 +969,23 @@ begin
   end;
 end;
 
+{ TIconifyApiTests }
+
+procedure TIconifyApiTests.IconUrl_UsesPrefixSlashName;
+begin
+  Assert.AreEqual('https://api.iconify.design/mdi/home.svg', TIconifyApi.IconUrl('mdi:home'));
+end;
+
+procedure TIconifyApiTests.SearchUrl_EncodesQueryAndPrefix;
+var
+  LUrl: string;
+begin
+  LUrl := TIconifyApi.SearchUrl('arrow left '#$00E8, 'mdi', 10);
+  Assert.IsFalse(LUrl.Contains(' '), 'space in ' + LUrl);
+  Assert.IsTrue(LUrl.StartsWith('https://api.iconify.design/search?query=arrow+left+%C3%A8&'), LUrl);
+  Assert.IsTrue(LUrl.EndsWith('&limit=10&prefix=mdi'), LUrl);
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TSVGIconImageListTests);
   TDUnitX.RegisterTestFixture(TSVGIconImageCollectionTests);
@@ -954,5 +993,6 @@ initialization
   TDUnitX.RegisterTestFixture(TSVGIconImageTests);
   TDUnitX.RegisterTestFixture(TSVGIconItemTests);
   TDUnitX.RegisterTestFixture(TSVGIconUtilsTests);
+  TDUnitX.RegisterTestFixture(TIconifyApiTests);
 
 end.

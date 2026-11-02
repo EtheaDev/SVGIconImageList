@@ -1,8 +1,12 @@
-﻿# SVGIconImageList [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
+﻿# SVGIconImageList
+
+<!-- badges -->
+[![License: Apache](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/EtheaDev/SvgIconImageList?label=release&color=blue)](https://github.com/EtheaDev/SvgIconImageList/releases)
+[![Delphi XE3+](https://img.shields.io/badge/Delphi-XE3%2B-e62329.svg)](https://www.embarcadero.com/products/delphi)
+[![Platform: VCL and FMX](https://img.shields.io/badge/Platform-VCL%20%7C%20FMX-8a2be2.svg)](https://docwiki.embarcadero.com/RADStudio/en/Main_Page)
 
 ## Four engines to render SVG (Delphi Image32, SVGMagic, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale...)
-
-### Actual official version 4.8.0 (VCL+FMX)
 
 | Component | Description |
 | - | - |
@@ -18,7 +22,7 @@ This library contains a unique feature: the ability to **display animated SVG fi
 
 ## New Setup for automatic installation of components
 
-From 4.4.0 version a new "Installer" read-to-use is located in the Release area: [Download the Installer](https://github.com/EtheaDev/SVGIconImageList/releases/latest/download/SVGIconImageList_Setup.exe).
+An "Installer" read-to-use is located in the Release area: [Download the Installer](https://github.com/EtheaDev/SVGIconImageList/releases/latest/download/SVGIconImageList_Setup.exe).
 
 The Installer automatically detect your Delphi versions, install sources, build and install packages and add source paths.
 
@@ -142,6 +146,13 @@ A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/Ico
 Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
 ### RELEASE NOTES
+02 Nov 2026 - version 4.8.1
+- Fixed "Search icons from WEB": icons downloaded as prefix/name.svg (the iconify.design API no longer accepts prefix:name.svg), search query and prefix URL-encoded
+- Fixed ImageList Editor (VCL and FMX): the maximized state of the window is restored when the editor is reopened
+- Added "Export all" button to FMX ImageList Editor: saves every icon as [index].[name].svg into the selected folder
+- Setup: ReadMe added to the Start menu group
+- New product logo and setup wizard images
+
 28 Sep 2026 - version 4.8.0
 - Complete code review of the library, with a new automated Test Suite (DUnitX, Delphi 13) in the Test folder: the ISVG contract is checked against every engine (Image32, SVGMagic, Skia, Direct2D), together with the VCL and FMX components (run Test\run_tests.cmd)
 - Fixed FixedColor ignored when creating disabled icons with TSVGIconVirtualImageList (also with AutoFill, a single icon changed and DisabledOpacity/DisabledGrayScale changed)
@@ -601,3 +612,9 @@ These components uses the following libraries:
 Many thanks to **Vincent Parrett** and **Kiriakos Vlahos** for their great contribution.
 
 Thanks to George Birbilis for Package updates, build and test with Android, iOS and OSX platform
+
+## License
+
+Copyright (c) 2019-2026 Ethea S.r.l.
+
+Licensed under the [Apache License, Version 2.0](LICENSE) (the "License"): you may not use this software except in compliance with the License. Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

@@ -27,6 +27,7 @@ uses
   , System.SysUtils
   , System.Json
   , System.Net.HttpClient
+  , System.NetEncoding
   , System.Generics.Collections
   , REST.Json
   ;
@@ -78,6 +79,12 @@ type
 
   TIconifyApi = class
   public
+    /// <summary>URL of the SVG of an icon: AName is "prefix:name", as returned
+    /// by Search and Collection; the API wants "prefix/name.svg".</summary>
+    class function IconUrl(const AName: string): string; static;
+    /// <summary>URL of a search, with query and prefix URL-encoded.</summary>
+    class function SearchUrl(const APattern, APrefix: string;
+      const AMaxIcons: Integer): string; static;
     procedure Search(const APattern, APrefix: string; const AMaxIcons: Integer;
       AResult: TIconifySearch);
     function Download(const AName: string): string;
@@ -105,7 +112,7 @@ var
 begin
   LHttpClient := THTTPClient.Create;
   try
-    LURL := Format('%scollection?prefix=%s', [BaseUrl, APrefix]);
+    LURL := Format('%scollection?prefix=%s', [BaseUrl, TNetEncoding.URL.Encode(APrefix)]);
     LHttpResponse := LHttpClient.Get(LURL);
     if LHttpResponse.StatusCode >= 400 then
       raise TIconifyError.Create(LHttpResponse.StatusText);
@@ -189,6 +196,20 @@ begin
   end;
 end;
 
+class function TIconifyApi.IconUrl(const AName: string): string;
+begin
+  //Iconify API no longer accepts "prefix:name.svg": use "prefix/name.svg"
+  Result := BaseUrl + StringReplace(AName, ':', '/', []) + '.svg';
+end;
+
+class function TIconifyApi.SearchUrl(const APattern, APrefix: string;
+  const AMaxIcons: Integer): string;
+begin
+  //Query and prefix URL-encoded: spaces and non-ASCII characters
+  Result := Format('%ssearch?query=%s&limit=%d&prefix=%s', [BaseUrl,
+    TNetEncoding.URL.Encode(APattern), AMaxIcons, TNetEncoding.URL.Encode(APrefix)]);
+end;
+
 function TIconifyApi.Download(const AName: string): string;
 var
   LHttpClient: THTTPClient;
@@ -196,7 +217,7 @@ var
 begin
   LHttpClient := THTTPClient.Create;
   try
-    LHttpResponse := LHttpClient.Get(BaseUrl + AName + '.svg');
+    LHttpResponse := LHttpClient.Get(IconUrl(AName));
     if LHttpResponse.StatusCode >= 400 then
       raise TIconifyError.Create(LHttpResponse.StatusText);
     Result := LHttpResponse.ContentAsString(TEncoding.UTF8);
@@ -216,7 +237,7 @@ var
 begin
   LHttpClient := THTTPClient.Create;
   try
-    LURL := Format('%ssearch?query=%s&limit=%d&prefix=%s', [BaseUrl, APattern, AMaxIcons, APrefix]);
+    LURL := SearchUrl(APattern, APrefix, AMaxIcons);
     LHttpResponse := LHttpClient.Get(LURL);
     if LHttpResponse.StatusCode >= 400 then
       raise TIconifyError.Create(LHttpResponse.StatusText);

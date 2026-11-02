@@ -92,8 +92,8 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         OnClick = AddButtonClick
       end
       object DeleteButton: TButton
-        Position.X = 3.000000000000000000
-        Position.Y = 82.000000000000000000
+        Position.X = 4.000000000000000000
+        Position.Y = 118.000000000000000000
         Size.Width = 106.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
@@ -103,12 +103,12 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         OnClick = DeleteButtonClick
       end
       object ClearAllButton: TButton
-        Position.X = 3.000000000000000000
-        Position.Y = 108.000000000000000000
+        Position.X = 4.000000000000000000
+        Position.Y = 144.000000000000000000
         Size.Width = 106.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 4
+        TabOrder = 5
         Text = 'Clear all'
         TextSettings.Trimming = None
         OnClick = ClearAllButtonClick
@@ -134,6 +134,17 @@ object SVGIconImageListEditorFMX: TSVGIconImageListEditorFMX
         Text = 'Add from Web...'
         TextSettings.Trimming = None
         OnClick = AddWebButtonClick
+      end
+      object btnExportAll: TButton
+        Position.X = 4.000000000000000000
+        Position.Y = 86.000000000000000000
+        Size.Width = 106.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = 'Export all'
+        TextSettings.Trimming = None
+        OnClick = btnExportAllClick
       end
     end
     object paClient: TPanel

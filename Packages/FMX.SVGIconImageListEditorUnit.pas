@@ -92,6 +92,7 @@ type
     AddWebButton: TButton;
     BackgroundTrackBar: TTrackBar;
     IconBackGround: TRectangle;
+    btnExportAll: TButton;
     procedure ClearAllButtonClick(Sender: TObject);
     procedure DeleteButtonClick(Sender: TObject);
     procedure AddButtonClick(Sender: TObject);
@@ -127,9 +128,11 @@ type
     procedure FixedColorItemEditChange(Sender: TObject);
     procedure AddWebButtonClick(Sender: TObject);
     procedure BackgroundTrackBarTracking(Sender: TObject);
+    procedure btnExportAllClick(Sender: TObject);
   private
     FIconIndexLabel: string;
     FTotIconsLabel: string;
+    FSvgExpDir : string;
     FUpdating: Boolean;
     FEditingList: TSVGIconImageList;
     procedure UpdateIconBackgroundColour;
@@ -141,6 +144,9 @@ type
     procedure SetImageIconName(IconName: String);
     function SelectedSVGIcon: TSVGIconSourceItem;
     function GetClearAlphaColorString(AColor: TAlphaColor): string;
+    function svgIconExport(idx : Integer; const dir : String;
+      const enc : TEncoding): Boolean;
+    function svgIconsExport(const dir : String): Integer;
   protected
   public
     destructor Destroy; override;
@@ -162,11 +168,17 @@ uses
   {$ENDIF}
   , FMX.SVGIconsUtils
   , System.Math
+  , System.IOUtils
   , FMX.SVGRESTClientFormUnit
   ;
 
+resourcestring
+  SELECT_SVG_EXPORT_DIR = 'Select a SVG files destination folder';
+  SVG_FILES_SAVED = '%d File(s) saved into "%s" folder';
+
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
+  SavedWindowState: TWindowState = TWindowState.wsNormal;
   ItemPanelHeight: Single;
   TrackaBarPosition: Single;
 
@@ -230,7 +242,15 @@ begin
           //Screen.Cursor := crDefault;
         end;
       end;
-      SavedBounds := Bounds;
+      //Bounds of the normal window only: the ones of a maximized window,
+      //restored on a normal one, give a window as big as the screen but not
+      //maximized
+      if WindowState = TWindowState.wsNormal then
+        SavedBounds := Bounds;
+      if WindowState = TWindowState.wsMaximized then
+        SavedWindowState := TWindowState.wsMaximized
+      else
+        SavedWindowState := TWindowState.wsNormal;
       ItemPanelHeight := ItemPanel.Height;
       TrackaBarPosition := BackgroundTrackBar.Value;
     finally
@@ -262,6 +282,51 @@ begin
   end;
 end;
 
+function TSVGIconImageListEditorFMX.svgIconExport(idx: Integer;
+  const dir: String; const enc : TEncoding): Boolean;
+begin
+  Result := False;
+  if not Assigned(FEditingList) then
+    Exit();
+
+  var aicon := FEditingList.GetIcon(idx);
+  if
+    not Assigned(aicon) or
+    aicon.SVGText.IsEmpty
+  then
+    Exit();
+
+  var fname := TPath.Combine(
+    dir,
+    idx.ToString() + '.' + aicon.IconName + '.svg'
+  );
+
+  TFile.WriteAllText(
+    fname,
+    aicon.SVGText,
+    enc
+  );
+  Result := True;
+end;
+
+function TSVGIconImageListEditorFMX.svgIconsExport(const dir: String): Integer;
+begin
+  Result := 0;
+  //Created before the try: if the creation fails, there is nothing to free
+  var utf8NoBom : TEncoding := TUTF8Encoding.Create(false);
+  try
+    for var idx := 0 to FEditingList.Count-1 do
+      if svgIconExport(
+        idx,
+        dir,
+        utf8NoBom
+      ) then
+        Inc(Result);
+  finally
+    FreeAndNil(utf8NoBom);
+  end;
+end;
+
 procedure TSVGIconImageListEditorFMX.SVGTextExit(Sender: TObject);
 begin
   SelectedSVGIcon.SVGText := SVGText.Lines.Text;
@@ -271,6 +336,24 @@ end;
 procedure TSVGIconImageListEditorFMX.BackgroundTrackBarTracking(Sender: TObject);
 begin
   UpdateIconBackgroundColour;
+end;
+
+procedure TSVGIconImageListEditorFMX.btnExportAllClick(Sender: TObject);
+begin
+  if
+    not Assigned(FEditingList) or
+    (0 = FEditingList.Count)
+  then
+    Exit();
+
+  if
+    SelectDirectory(
+      SELECT_SVG_EXPORT_DIR,
+      EmptyStr,
+      FSvgExpDir
+    )
+  then
+    ShowMessage(Format(SVG_FILES_SAVED, [svgIconsExport(FSvgExpDir), FSvgExpDir]));
 end;
 
 procedure TSVGIconImageListEditorFMX.AutoSizeCheckBoxClick(Sender: TObject);
@@ -660,6 +743,9 @@ procedure TSVGIconImageListEditorFMX.FormShow(Sender: TObject);
 begin
   if SavedBounds.Right - SavedBounds.Left > 0 then
     SetBounds(SavedBounds.Left, SavedBounds.Top, SavedBounds.Width, SavedBounds.Height);
+  //After the normal bounds, so that "Restore" goes back to them
+  if SavedWindowState = TWindowState.wsMaximized then
+    WindowState := TWindowState.wsMaximized;
 
   if ItemPanelHeight <> 0 then
     ItemPanel.Height := ItemPanelHeight;

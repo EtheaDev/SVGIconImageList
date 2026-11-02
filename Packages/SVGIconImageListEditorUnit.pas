@@ -249,7 +249,21 @@ uses
 
 var
   SavedBounds: TRect = (Left: 0; Top: 0; Right: 0; Bottom: 0);
+  SavedWindowState: TWindowState = wsNormal;
   paTopHeight: Integer;
+
+procedure SaveEditorState(const AEditor: TSVGIconImageListEditor);
+begin
+  //Bounds of the normal window only: the ones of a maximized window, restored
+  //on a normal one, give a window as big as the screen but not maximized
+  if AEditor.WindowState = wsNormal then
+    SavedBounds := AEditor.BoundsRect;
+  if AEditor.WindowState = wsMaximized then
+    SavedWindowState := wsMaximized
+  else
+    SavedWindowState := wsNormal;
+  paTopHeight := AEditor.paTop.Height;
+end;
 
 function EditSVGIconImageList(const AImageList: TSVGIconImageList): Boolean;
 var
@@ -275,8 +289,7 @@ begin
         Screen.Cursor := crDefault;
       end;
     end;
-    SavedBounds := LEditor.BoundsRect;
-    paTopHeight := LEditor.paTop.Height;
+    SaveEditorState(LEditor);
   finally
     LEditor.Free;
   end;
@@ -311,8 +324,7 @@ begin
         Screen.Cursor := crDefault;
       end;
     end;
-    SavedBounds := LEditor.BoundsRect;
-    paTopHeight := LEditor.paTop.Height;
+    SaveEditorState(LEditor);
   finally
     LEditor.Free;
   end;
@@ -353,8 +365,7 @@ begin
         Screen.Cursor := crDefault;
       end;
     end;
-    SavedBounds := LEditor.BoundsRect;
-    paTopHeight := LEditor.paTop.Height;
+    SaveEditorState(LEditor);
   finally
     LEditor.Free;
   end;
@@ -1200,6 +1211,9 @@ begin
 
   if SavedBounds.Right - SavedBounds.Left > 0 then
     SetBounds(SavedBounds.Left, SavedBounds.Top, SavedBounds.Width, SavedBounds.Height);
+  //After the normal bounds, so that "Restore" goes back to them
+  if SavedWindowState = wsMaximized then
+    WindowState := wsMaximized;
 
   if paTopHeight <> 0 then
     paTop.Height := paTopHeight;

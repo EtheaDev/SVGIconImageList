@@ -1,8 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>README</title>
 <style type="text/css">
-body{
-  font-family: Arial, Helvetica, sans-serif;
-}
+:root{color-scheme:light;}
+body{font-family:"Arial",sans-serif;font-size:12pt;color:#000000;background-color:#FFFFFF;}
+a{color:#0000FF;}
+.markdown-alert>:last-child{margin-bottom:0;}
+.markdown-alert-title{margin-top:0;}
+@media print{body{color:#000;background-color:#fff;}}
+</style>
+<script>
+document.addEventListener("click",function(e){var a=e.target.closest("a");if(a){var h=a.getAttribute("href");if(h&&h.charAt(0)==="#"){e.preventDefault();var t=document.getElementById(decodeURIComponent(h.substring(1)));if(t)t.scrollIntoView();}}});
+window.addEventListener("scroll",function(){if(window.chrome&&chrome.webview)chrome.webview.postMessage("scrollY:"+Math.round(window.scrollY)+":"+Math.max(0,Math.round(document.documentElement.scrollHeight-window.innerHeight)));});
+</script>
+</head>
+<body>
+<style type="text/css">
 img{
+  max-width: 100%;
+  height: auto;
+}
+video{
   max-width: 100%;
   height: auto;
 }
@@ -28,74 +48,140 @@ table{
   border:1px solid;
   border-collapse:collapse;
 }
-th{  padding:5px;
+th{
+  padding:5px;
   border:1px solid;
 }
 td{
   padding:5px;
   border:1px solid;
 }
+mark{
+  background-color: #fff3a0;
+  color: #000;
+}
+kbd{
+  font-family: "Consolas", monospace;
+  border: 1px solid #bbb;
+  padding: 0 4px;
+}
+div.math{
+  text-align: center;
+}
+pre.mermaid{
+  border: none;
+  padding: 0;
+}
+.markdown-alert{
+  padding: 0.5em 1em;
+  margin-bottom: 1em;
+  border-left: 4px solid #d0d7de;
+}
+.markdown-alert-title{
+  font-weight: bold;
+}
+.markdown-alert-note{
+  border-left: 4px solid #0969da;
+}
+.markdown-alert-note .markdown-alert-title{
+  color: #0969da;
+}
+.markdown-alert-tip{
+  border-left: 4px solid #1a7f37;
+}
+.markdown-alert-tip .markdown-alert-title{
+  color: #1a7f37;
+}
+.markdown-alert-important{
+  border-left: 4px solid #8250df;
+}
+.markdown-alert-important .markdown-alert-title{
+  color: #8250df;
+}
+.markdown-alert-warning{
+  border-left: 4px solid #9a6700;
+}
+.markdown-alert-warning .markdown-alert-title{
+  color: #9a6700;
+}
+.markdown-alert-caution{
+  border-left: 4px solid #cf222e;
+}
+.markdown-alert-caution .markdown-alert-title{
+  color: #cf222e;
+}
 </style>
-<h1>SVGIconImageList <a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg" alt="License"/></a></h1>
-<h2>Four engines to render SVG (Delphi Image32, SVGMagic, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale&hellip;)</h2>
-<h3>Actual official version 4.8.0 (VCL+FMX)</h3>
+<h1 id="svgiconimagelist">SVGIconImageList</h1>
+<!-- badges -->
+<p><a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-green.svg" alt="License: Apache" /></a>
+<a href="https://github.com/EtheaDev/SvgIconImageList/releases"><img src="https://img.shields.io/github/v/release/EtheaDev/SvgIconImageList?label=release&amp;color=blue" alt="Latest release" /></a>
+<a href="https://www.embarcadero.com/products/delphi"><img src="https://img.shields.io/badge/Delphi-XE3%2B-e62329.svg" alt="Delphi XE3+" /></a>
+<a href="https://docwiki.embarcadero.com/RADStudio/en/Main_Page"><img src="https://img.shields.io/badge/Platform-VCL%20%7C%20FMX-8a2be2.svg" alt="Platform: VCL and FMX" /></a></p>
+<h2 id="four-engines-to-render-svg-delphi-image32-svgmagic-skia4delphi-direct2d-wrapper-and-four-components-to-simplify-use-of-svg-images-resize-fixedcolor-grayscale">Four engines to render SVG (Delphi Image32, SVGMagic, Skia4Delphi, Direct2D wrapper) and four components to simplify use of SVG images (resize, fixedcolor, grayscale…)</h2>
 <table>
-  <tr>
-    <th>Component</th>
-    <th>Description</th>
-  </tr>
-  <tr>
-    <td><img src="./Packages/SVGIconImageCollectionComponentIcon.png" alt="SVGIconImageCollectionComponentIcon.png"/></td>
-    <td><strong>TSVGIconImageCollection</strong> is collection of SVG Images for Delphi to provide a centralized list of images for SVGIconVirtualImageLists (only for VCL)</td>
-  </tr>
-  <tr>
-    <td><img src="./Packages/SVGIconVirtualImageListComponentIcon.png" alt="SVGIconVirtualImageListComponentIcon.png"/></td>
-    <td><strong>TSVGIconVirtualImageList</strong> is a special &ldquo;virtual&rdquo; ImageList for Delphi linked to an SVGIconImageCollection (only for VCL) to simplify use of SVG Icons (resize, opacity, grayscale and more&hellip;)</td>
-  </tr>
-  <tr>
-    <td><img src="./Packages/SVGIconImageComponentIcon.png" alt="SVGIconImageComponentIcon.png"/></td>
-    <td><strong>TSVGIconImage</strong> is an extended Image component for Delphi (VCL+FMX) to show any SVG image directly or included into a an SVGIconImageList with all functionality (stretch, opacity, grayscale and more&hellip;)</td>
-  </tr>
-  <tr>
-    <td><img src="./Packages/SVGIconImageListComponentIcon.png" alt="SVGIconImageListComponentIcon.png"/></td>
-    <td><strong>TSVGIconImageList</strong> is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection. Use this component to simplify replace of ImageList for older Delphi Apps and obtain auto-scaling of Icons!</td>
-  </tr>
+<thead>
+<tr>
+<th>Component</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="./Packages/SVGIconImageCollectionComponentIcon.png" alt="SVGIconImageCollectionComponentIcon.png" /></td>
+<td><strong>TSVGIconImageCollection</strong> is collection of SVG Images for Delphi to provide a centralized list of images for SVGIconVirtualImageLists (only for VCL)</td>
+</tr>
+<tr>
+<td><img src="./Packages/SVGIconVirtualImageListComponentIcon.png" alt="SVGIconVirtualImageListComponentIcon.png" /></td>
+<td><strong>TSVGIconVirtualImageList</strong> is a special “virtual” ImageList for Delphi linked to an SVGIconImageCollection (only for VCL) to simplify use of SVG Icons (resize, opacity, grayscale and more…)</td>
+</tr>
+<tr>
+<td><img src="./Packages/SVGIconImageComponentIcon.png" alt="SVGIconImageComponentIcon.png" /></td>
+<td><strong>TSVGIconImage</strong> is an extended Image component for Delphi (VCL+FMX) to show any SVG image directly or included into a an SVGIconImageList with all functionality (stretch, opacity, grayscale and more…)</td>
+</tr>
+<tr>
+<td><img src="./Packages/SVGIconImageListComponentIcon.png" alt="SVGIconImageListComponentIcon.png" /></td>
+<td><strong>TSVGIconImageList</strong> is an extended ImageList for Delphi (VCL+FMX) with an embedded SVG image collection. Use this component to simplify replace of ImageList for older Delphi Apps and obtain auto-scaling of Icons!</td>
+</tr>
+</tbody>
 </table>
-<br/>
-<h2>New integration with SVGMagic Library for Animated SVG</h2>
+<h2 id="new-integration-with-svgmagic-library-for-animated-svg">New integration with SVGMagic Library for Animated SVG</h2>
 <p>Starting with version 4.6.0, a new Delphi/Native library has been added to the project.</p>
 <p>This library contains a unique feature: the ability to <strong>display animated SVG files</strong>. In the current implementation, the library is used as a new available rendering engine for the standard SvgIconImageList components, but other components are available for displaying animated SVGs, as shown in the SVGMagic-specific demo.</p>
-<h2>New Setup for automatic installation of components</h2>
-<p>From 4.4.0 version a new &ldquo;Installer&rdquo; read-to-use is located in the Release area: <a href="https://github.com/EtheaDev/SVGIconImageList/releases/latest/download/SVGIconImageList_Setup.exe">Download the Installer</a>.</p>
+<h2 id="new-setup-for-automatic-installation-of-components">New Setup for automatic installation of components</h2>
+<p>An “Installer” read-to-use is located in the Release area: <a href="https://github.com/EtheaDev/SVGIconImageList/releases/latest/download/SVGIconImageList_Setup.exe">Download the Installer</a>.</p>
 <p>The Installer automatically detect your Delphi versions, install sources, build and install packages and add source paths.</p>
-<p><img src="./Demo/Images/Setup.png" alt="Setup"/></p>
-<h2>Documentation</h2>
+<p><img src="./Demo/Images/Setup.png" alt="Setup" /></p>
+<h2 id="documentation">Documentation</h2>
 <p>Follow the <a href="https://ethea.it/docs/svgiconimagelist/">Project Site</a> to known how to use those components to modernize your Delphi VCL or FMX applications with scalable, colored and beautiful icons.</p>
-<h2>Automated Test Suite</h2>
+<h2 id="automated-test-suite">Automated Test Suite</h2>
 <p>From version 4.8.0 the project includes a Test Suite (DUnitX, Delphi 13) in the Test folder: the ISVG contract is checked against every rendering engine (Image32, SVGMagic, Skia4Delphi, Direct2D) and the VCL and FMX components are tested too, rendering the icons and checking the pixels. Run <code>Test\run_tests.cmd [Win32|Win64] [Debug|Release]</code> to build and execute all the tests.</p>
-<h2>You can search and download Icons directly from the WEB!</h2>
+<h2 id="you-can-search-and-download-icons-directly-from-the-web">You can search and download Icons directly from the WEB!</h2>
 <p>From version 4.3 an integrated service is now available in the component editor to download SVG icons from the WEB, via the API provided by <a href="https://iconify.design/">iconify.design</a>.</p>
-<p>Now you can select &ldquo;Add from WEB&rdquo; in the Component Editor: a new form to search and Download from the WEB is available for both VCL and FMX Platforms.</p>
-<p><img src="./Demo/Images/SVG_REST_Client_Search.jpg" alt="SVG_REST_Client_Search"/></p>
+<p>Now you can select “Add from WEB” in the Component Editor: a new form to search and Download from the WEB is available for both VCL and FMX Platforms.</p>
+<p><img src="./Demo/Images/SVG_REST_Client_Search.jpg" alt="SVG_REST_Client_Search" /></p>
 <p>Read <a href="https://ethea.it/docs/svgiconimagelist/RESTAPISearch.html">this page</a> to understand how to easily download SVG icons from the WEB and include them in the SVGIconImageList or SVGIconImageCollection.</p>
-<h2>Important notice</h2>
+<h2 id="important-notice">Important notice</h2>
 <p>From version 4.0, <strong>TSVGIconVirtualImageList</strong> inherits from <strong>TVirtualImageList</strong> (using Delphi 10.3 to latest). For previous Delphi versions <strong>TSVGIconVirtualImageList</strong> inherits from <strong>TSVGIconImageListBase</strong>.</p>
 <p>An important difference is that a TVirtualImageList may use and create only a subset of the images in the collection.</p>
 <p>Although, the standard TVirtualImageList does not have the FixedColor, GrayScale, ApplyToRootOnly and Opacity properties, these properties exist at the TSVGIconImageCollection and they would be reflected on the linked TVirtualImageList, but if you change those properties at collection level, all the VirtualImageList linked changes!</p>
 <p>For this reasons, now TSVGIconVirtualImageList have also FixedColor, GrayScale, ApplyToRootOnly and Opacity properties, so you can setup those properties only at VirtualImageList level, and you can share the same TSVGIconImageCollection from many VirtualImageList with different poperties, as you can see in the new SVGIconVirtualImageListDemo.</p>
 <p>For this reason, if you are using those components from Delphi 10.3, the recommended combination should be <strong>TSVGIconImageCollection + TSVGIconVirtualImageList</strong>.</p>
-<p>Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to &ldquo;True&rdquo;, everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.</p>
-<p>Another feature available from Delphi 10.4 version, is that <strong>TSVGIconImageCollection</strong> inherits from TCustomImageCollection, so you can also use it with the TVirtualImage component and place SVG icons into the TControlList component, as explained <a href="https://ethea.it/docs/svgiconimagelist/TControlList-with-SVGIconImageCollection.html">here&hellip;</a></p>
-<h2>Choose your preferred SVG engine!</h2>
+<p>Don't forget also the importance of PreserveItems when you have a large ImageCollection with many linked Actions. Without setting this property to “True”, everytime you add or remove an icon in the collection, you have to check and change the ImageIndex of all the Actions.</p>
+<p>Another feature available from Delphi 10.4 version, is that <strong>TSVGIconImageCollection</strong> inherits from TCustomImageCollection, so you can also use it with the TVirtualImage component and place SVG icons into the TControlList component, as explained <a href="https://ethea.it/docs/svgiconimagelist/TControlList-with-SVGIconImageCollection.html">here…</a></p>
+<h2 id="choose-your-preferred-svg-engine">Choose your preferred SVG engine!</h2>
 <p>There are four implementations for VCL (three for FMX):</p>
 <ul>
-<li><p><strong>Native Delphi Image32</strong> (default), uses Image32 library by Angus Johnson (VCL + FMX)</p>
+<li>
+<p><strong>Native Delphi Image32</strong> (default), uses Image32 library by Angus Johnson (VCL + FMX)</p>
 </li>
-<li><p><strong>SVGMagic</strong>, advanced SVG engine by Ursa Minor Ltd. with <strong>unique support for animated SVG files</strong> (VCL only)</p>
+<li>
+<p><strong>SVGMagic</strong>, advanced SVG engine by Ursa Minor Ltd. with <strong>unique support for animated SVG files</strong> (VCL only)</p>
 </li>
-<li><p>Using <strong>Skia4Delphi</strong> library, a cross-platform 2D graphics API based on Google's Skia Graphics Library (VCL + FMX)</p>
+<li>
+<p>Using <strong>Skia4Delphi</strong> library, a cross-platform 2D graphics API based on Google's Skia Graphics Library (VCL + FMX)</p>
 </li>
-<li><p>A wrapper to the native Windows <strong>Direct2D</strong> implementation (VCL only)</p>
+<li>
+<p>A wrapper to the native Windows <strong>Direct2D</strong> implementation (VCL only)</p>
 </li>
 </ul>
 <p>To choose your preferred Engine, you must edit SVGIconImageList.inc in the correct section:</p>
@@ -103,53 +189,56 @@ td{
 <p>for FMX, enabling: <code>{$DEFINE FMX_Image32_SVGEngine}</code> or <code>{$DEFINE FMX_Skia_SVGEngine}</code></p>
 <p>By Default Image32_SVGEngine is Enabled.</p>
 <p><strong>Note:</strong> SVGMagic is the only engine that fully supports animated SVG files, making it the ideal choice for applications requiring SVG animations.</p>
-<h2>Performance comparison</h2>
+<h2 id="performance-comparison">Performance comparison</h2>
 <p>This table shows the performance of the three rendering engines tested with SVGExplorer, using a significant amount of icons from different sets, rendered at 128x128 pixels.</p>
 <table>
-  <tr>
-    <th align="right">Count</th>
-    <th align="left">Icon set</th>
-    <th align="right">Image32</th>
-    <th align="right">D2D</th>
-    <th align="right">Skia4Delphi</th>
-  </tr>
-  <tr>
-    <td align="right">997</td>
-    <td align="left">Font-Awesome</td>
-    <td align="right">1265ms</td>
-    <td align="right">1453ms</td>
-    <td align="right">1172ms</td>
-  </tr>
-  <tr>
-    <td align="right">654</td>
-    <td align="left">Papirus</td>
-    <td align="right">2750ms<sup>(1)</sup></td>
-    <td align="right">937ms</td>
-    <td align="right">1266ms<sup>(1)</sup></td>
-  </tr>
-  <tr>
-    <td align="right">5366</td>
-    <td align="left">Material-Design</td>
-    <td align="right">11015ms</td>
-    <td align="right">12001ms</td>
-    <td align="right">10688ms</td>
-  </tr>
+<thead>
+<tr>
+<th align="right">Count</th>
+<th align="left">Icon set</th>
+<th align="right">Image32</th>
+<th align="right">D2D</th>
+<th align="right">Skia4Delphi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">997</td>
+<td align="left">Font-Awesome</td>
+<td align="right">1265ms</td>
+<td align="right">1453ms</td>
+<td align="right">1172ms</td>
+</tr>
+<tr>
+<td align="right">654</td>
+<td align="left">Papirus</td>
+<td align="right">2750ms<sup>(1)</sup></td>
+<td align="right">937ms</td>
+<td align="right">1266ms<sup>(1)</sup></td>
+</tr>
+<tr>
+<td align="right">5366</td>
+<td align="left">Material-Design</td>
+<td align="right">11015ms</td>
+<td align="right">12001ms</td>
+<td align="right">10688ms</td>
+</tr>
+</tbody>
 </table>
-<br/>
 <p>As you can see, the engines perform differently depending on the icons and their complexity.</p>
-<p><sup>(1)</sup>Notice that Image32 and Skia4Delphi are the only engines capable of rendering blur effect (that is always slow to calculate): this is the reason of &ldquo;slow&rdquo; performance to render Papirus icons that contains blur effect.</p>
+<p><sup>(1)</sup>Notice that Image32 and Skia4Delphi are the only engines capable of rendering blur effect (that is always slow to calculate): this is the reason of “slow” performance to render Papirus icons that contains blur effect.</p>
 <p><strong>Sample image of VCL version</strong></p>
-<p><img src="./Demo/Images/Sample.jpg" alt="Sample.jpg"/></p>
+<p><img src="./Demo/Images/Sample.jpg" alt="Sample.jpg" /></p>
 <p><strong>Sample image of FMX (Windows) version</strong></p>
-<p><img src="./Demo/Images/SampleFMX.jpg" alt="SampleFMX.jpg"/></p>
+<p><img src="./Demo/Images/SampleFMX.jpg" alt="SampleFMX.jpg" /></p>
 <p><strong>Sample images of the VCL SVGText-property editor (VCL and FMX)</strong></p>
-<p><img src="./Demo/Images/SVGTextPropertyEditor.jpg" alt="SVGTextPropertyEditor.jpg"/></p>
-<p><img src="./Demo/Images/SVGTextPropertyEditorFMX.jpg" alt="SVGTextPropertyEditorFMX.jpg"/></p>
-<h3>UTILITIES</h3>
+<p><img src="./Demo/Images/SVGTextPropertyEditor.jpg" alt="SVGTextPropertyEditor.jpg" /></p>
+<p><img src="./Demo/Images/SVGTextPropertyEditorFMX.jpg" alt="SVGTextPropertyEditorFMX.jpg" /></p>
+<h3 id="utilities">UTILITIES</h3>
 <p>The <a href="https://ethea.it/docs/svgiconimagelist/SVG-Viewer-(VCL).html">SVG Viewer Demo</a> is useful to check the rendering quality of the engines available, including the new SVGMagic engine.</p>
 <p>The <a href="https://ethea.it/docs/svgiconimagelist/SVGIconExplorer.html">SVG Icon Explorer utility</a> utility is useful to explore and preview your svg image collections.</p>
 <p><strong>All demo applications have been updated to support and test the new SVGMagic engine</strong>, including its unique capability to render animated SVG files.</p>
-<h3>Animated SVG</h3>
+<h3 id="animated-svg">Animated SVG</h3>
 <p>The <strong>SVGMagic Demo</strong> located in <strong>Demo\SVGMagic</strong> folder showcases the SVGMagic library components with a comprehensive demonstration for animated SVG including:</p>
 <ul>
 <li>TWSVGImage, TWSVGImageButton, TWSVGImageList components</li>
@@ -157,23 +246,31 @@ td{
 <li>SVG browser with animation support and real-time control</li>
 <li>Real-world UI examples (banking and payment forms)</li>
 <li>Full demonstration of animated SVG rendering capabilities
-Notice that those components are &ldquo;specific&rdquo; of SVGMagic Library, because they manage SVG animations.</li>
+Notice that those components are “specific” of SVGMagic Library, because they manage SVG animations.</li>
 </ul>
-<h3>SVG Shell Extensions Project</h3>
+<h3 id="svg-shell-extensions-project">SVG Shell Extensions Project</h3>
 <p>You can use <a href="https://github.com/EtheaDev/SVGShellExtensions">SVG Shell Extensions</a> if you want to see your icons directly into Windows Explorer or you want to edit them using a powerful <strong>SVG Text Editor</strong>.</p>
-<h3>Other similar library</h3>
+<h3 id="other-similar-library">Other similar library</h3>
 <p>A similar project made by Ethea for Icon Fonts: <a href="https://github.com/EtheaDev/IconFontsImageList">https://github.com/EtheaDev/IconFontsImageList</a></p>
-<h3>Available from Delphi XE3 to Delphi 13 (VCL and FMX Platforms)</h3>
-<p><img src="./Demo/Images/SupportingDelphi.jpg" alt="Delphi 13 Support"/></p>
+<h3 id="available-from-delphi-xe3-to-delphi-13-vcl-and-fmx-platforms">Available from Delphi XE3 to Delphi 13 (VCL and FMX Platforms)</h3>
+<p><img src="./Demo/Images/SupportingDelphi.jpg" alt="Delphi 13 Support" /></p>
 <p>Related links: <a href="https://www.embarcadero.com">embarcadero.com</a> - <a href="https://learndelphi.org">learndelphi.org</a></p>
-<h3>RELEASE NOTES</h3>
+<h3 id="release-notes">RELEASE NOTES</h3>
+<p>02 Nov 2026 - version 4.8.1</p>
+<ul>
+<li>Fixed “Search icons from WEB”: icons downloaded as prefix/name.svg (the iconify.design API no longer accepts prefix:name.svg), search query and prefix URL-encoded</li>
+<li>Fixed ImageList Editor (VCL and FMX): the maximized state of the window is restored when the editor is reopened</li>
+<li>Added “Export all” button to FMX ImageList Editor: saves every icon as [index].[name].svg into the selected folder</li>
+<li>Setup: ReadMe added to the Start menu group</li>
+<li>New product logo and setup wizard images</li>
+</ul>
 <p>28 Sep 2026 - version 4.8.0</p>
 <ul>
 <li>Complete code review of the library, with a new automated Test Suite (DUnitX, Delphi 13) in the Test folder: the ISVG contract is checked against every engine (Image32, SVGMagic, Skia, Direct2D), together with the VCL and FMX components (run Test\run_tests.cmd)</li>
 <li>Fixed FixedColor ignored when creating disabled icons with TSVGIconVirtualImageList (also with AutoFill, a single icon changed and DisabledOpacity/DisabledGrayScale changed)</li>
-<li>Fixed stack overflow / random access violation of SVGMagic engine reloading an SVG with nested ids used by <use> (e.g. svg-logo-v.svg)</li>
+<li>Fixed stack overflow / random access violation of SVGMagic engine reloading an SVG with nested ids used by <code>&lt;use&gt;</code> (e.g. svg-logo-v.svg)</li>
 <li>Fixed PreferNativeSvgSupport (Direct2D) configuration: now it compiles and uses the selected engine as fallback</li>
-<li>Fixed outline icons (fill=&ldquo;none&rdquo;) filled by FixedColor (SVGMagic, Direct2D and &ldquo;ApplyFixedColorToRootOnly&rdquo; for all engines)</li>
+<li>Fixed outline icons (fill=“none”) filled by FixedColor (SVGMagic, Direct2D and “ApplyFixedColorToRootOnly” for all engines)</li>
 <li>Fixed Skia engine: root color forced to black without FixedColor, Source/SVGText rewritten, wrong Width/Height</li>
 <li>Fixed Direct2D engine: icon still gray after GrayScale removed, size inherited from the previous SVG</li>
 <li>Fixed FixedColor = clNone painting icons white (Image32, Direct2D)</li>
@@ -197,7 +294,7 @@ Notice that those components are &ldquo;specific&rdquo; of SVGMagic Library, bec
 <p>16 Jun 2026 - version 4.7.4</p>
 <ul>
 <li>Removed Build for Windows ARM Platform by Installer</li>
-<li>Fixed &ldquo;DisableOpacity&rdquo; value in Icons with TToolBar/DisabledImageList</li>
+<li>Fixed “DisableOpacity” value in Icons with TToolBar/DisabledImageList</li>
 </ul>
 <p>11 Apr 2026 - version 4.7.3</p>
 <ul>
@@ -291,7 +388,7 @@ Notice that those components are &ldquo;specific&rdquo; of SVGMagic Library, bec
 </ul>
 <p>26 Feb 2025: version 4.4.2 (VCL+FMX)</p>
 <ul>
-<li>Added option to filter Icons from web by &ldquo;Collection&rdquo;</li>
+<li>Added option to filter Icons from web by “Collection”</li>
 <li>Aligned to Image32 4.6 Released on 25 Feb 2025</li>
 </ul>
 <p>06 Jan 2025: version 4.4.1 (VCL+FMX)</p>
@@ -368,7 +465,7 @@ Notice that those components are &ldquo;specific&rdquo; of SVGMagic Library, bec
 <p>08 Jan 2024: version 4.1.2 (VCL+FMX)</p>
 <ul>
 <li>Aligned To latest Image32</li>
-<li>Added copy SVG to Clipboard into &ldquo;Export to png&rdquo; dialog</li>
+<li>Added copy SVG to Clipboard into “Export to png” dialog</li>
 <li>Updated Copyrights</li>
 </ul>
 <p>09 Nov 2023: version 4.1.1 (VCL+FMX)</p>
@@ -381,12 +478,12 @@ Notice that those components are &ldquo;specific&rdquo; of SVGMagic Library, bec
 <p>03 Sep 2023: version 4.1.0 (VCL+FMX)</p>
 <ul>
 <li>Aligned Image32 Library released on 03/09/2023</li>
-<li>Fixed demo (removed &ldquo;obsolete&rdquo; SVGColor uses)</li>
+<li>Fixed demo (removed “obsolete” SVGColor uses)</li>
 <li>Added support for Delphi 12.1</li>
 </ul>
 <p>24 Aug 2023: version 4.0.0 (VCL+FMX)</p>
 <ul>
-<li>Removed old &ldquo;native&rdquo; engine TSVG</li>
+<li>Removed old “native” engine TSVG</li>
 <li>Updated to Skia4Delphi ver. 6.0.0</li>
 <li>TSVGIconVirtualImageList inherits from TVirtualImageList (from D10.3 to actual version).</li>
 <li>Added SVGIconVirtualImageListDemo to test multiple TSVGIconVirtualImageList in same form</li>
@@ -427,7 +524,7 @@ Notice that those components are &ldquo;specific&rdquo; of SVGMagic Library, bec
 <p>08 May 2022: version 3.8.3 (VCL+FMX)</p>
 <ul>
 <li>Updated to Skia4Delphi 3.4.0 library</li>
-<li>SVGExplorer example moved under &ldquo;Demo&rdquo; folder</li>
+<li>SVGExplorer example moved under “Demo” folder</li>
 </ul>
 <p>10 Apr 2022: version 3.8.2 (VCL+FMX)</p>
 <ul>
@@ -482,11 +579,11 @@ Notice that those components are &ldquo;specific&rdquo; of SVGMagic Library, bec
 <ul>
 <li>Updated Image32 library to 4.0.0 version</li>
 <li>Added a set of playing cards svg examples</li>
-<li>Fixed Image32 drawing problem with &ldquo;playing cards&rdquo;</li>
+<li>Fixed Image32 drawing problem with “playing cards”</li>
 </ul>
 <p>24 Nov 2021: version 3.2.0 (VCL+FMX)</p>
 <ul>
-<li>Component Editors uses IDE themes (light, dark&hellip;) and style</li>
+<li>Component Editors uses IDE themes (light, dark…) and style</li>
 <li>Fixed available components into palette when working with mobile platforms</li>
 </ul>
 <p>05 Nov 2021: version 3.1.1 (VCL+FMX)</p>
@@ -524,7 +621,7 @@ Notice that those components are &ldquo;specific&rdquo; of SVGMagic Library, bec
 <li>Added support for Android and iOS platforms (by Image32 engine)</li>
 <li>Added support for backward Delphi versions (from XE3)</li>
 <li>Added demo to compare the four engines (SVGViewer)</li>
-<li>Fixed rendering &ldquo;centered&rdquo; in SVGIconImage for Cairo engine.</li>
+<li>Fixed rendering “centered” in SVGIconImage for Cairo engine.</li>
 <li>Warning: changed TSVGIconImage component ancestor from TCustomControl to TGraphicControl</li>
 </ul>
 <p>18 Apr 2021: version 2.2.6 (VCL+FMX)</p>
@@ -562,7 +659,7 @@ Notice that those components are &ldquo;specific&rdquo; of SVGMagic Library, bec
 </ul>
 <p>23 Sep 2020: version 2.2.0 (VCL+FMX)</p>
 <ul>
-<li>Added &ldquo;Cairo&rdquo; SVG Engine</li>
+<li>Added “Cairo” SVG Engine</li>
 <li>Added AntialiasColor to perfect antialias effect</li>
 <li>Added ImageIndex property editor for SVGIconImage</li>
 <li>Added FixedColor and GrayScale to TSVGIconImage component</li>
@@ -575,7 +672,7 @@ Notice that those components are &ldquo;specific&rdquo; of SVGMagic Library, bec
 <p>04 Sep 2020: version 2.1.0 (VCL) 1.5.1 (FMX)</p>
 <ul>
 <li>Added preview for icons when loading svg files</li>
-<li>Fixed many issue (#81, #86, #87, #88, #91, #94, #103&hellip;)</li>
+<li>Fixed many issue (#81, #86, #87, #88, #91, #94, #103…)</li>
 <li>Refactoring parsing XML to increase performances (using XmlLite)</li>
 </ul>
 <p>26 Aug 2020: version 2.0 (VCL) 1.5.0 (FMX)</p>
@@ -608,7 +705,7 @@ Take care of TSVGIconVirtualImageList.Collection renamed to SVGIconVirtualImageL
 <li>Fixed issue #28: Colors should be reversed in TSVGRadialGradient</li>
 <li>Fixed issue #29: Scaling should be based on ViewBox width/height</li>
 <li>Fixed issue #31: Empty svg properties cause exceptions</li>
-<li>Fixed issue #33: &ldquo;fill-rule' presentation attribute is not processed</li>
+<li>Fixed issue #33: “fill-rule' presentation attribute is not processed</li>
 <li>Fixed issue #34: Exception text elements cause exceptions</li>
 </ul>
 <p>05 Aug 2020: version 1.7 (VCL+FMX)</p>
@@ -625,7 +722,7 @@ Take care of TSVGIconVirtualImageList.Collection renamed to SVGIconVirtualImageL
 <p>15 July 2020: version 1.6 (VCL+FMX)</p>
 <ul>
 <li>Fixed rendering on TButton! (VCL)</li>
-<li>Fixed &ldquo;Apply&rdquo; into ImageEditor (VCL)</li>
+<li>Fixed “Apply” into ImageEditor (VCL)</li>
 <li>Added reformat XML to ImageEditor (VCL)</li>
 <li>Added utility to explore icons into disk/folder (SVGExplorer)</li>
 <li>Fixed inherited color drawing (SVG)</li>
@@ -673,20 +770,28 @@ Take care of TSVGIconVirtualImageList.Collection renamed to SVGIconVirtualImageL
 <li>Very high performance for building hundreds of icons.</li>
 <li>Support from Delphi 10.2 to 10.4 Sydney (other Delphi versions coming soon)</li>
 </ul>
-<h3>THANKS TO</h3>
+<h3 id="thanks-to">THANKS TO</h3>
 <p>These components uses the following libraries:</p>
 <ul>
-<li><p>Image32 library by <a href="https://angusj.com/image32/Docs/_Body.htm">Angus Johnson</a></p>
+<li>
+<p>Image32 library by <a href="https://angusj.com/image32/Docs/_Body.htm">Angus Johnson</a></p>
 <p>These files are included in the Image32/Source folders</p>
 <p>Copyright <a href="https://www.boost.org/LICENSE_1_0.txt">Boost Software License Version 1</a></p>
 </li>
-<li><p>SVGMagic library by Ursa Minor Ltd.</p>
+<li>
+<p>SVGMagic library by Ursa Minor Ltd.</p>
 <p>These files are included in the SVGMagic/source folder</p>
 <p>Advanced SVG 1.1 rendering engine with full support for animated SVG files</p>
 </li>
-<li><p>Skia4Delphi Library by <a href="https://skia4delphi.org/">the authors</a></p>
+<li>
+<p>Skia4Delphi Library by <a href="https://skia4delphi.org/">the authors</a></p>
 <p>Copyright <a href="https://github.com/skia4delphi/skia4delphi?tab=MIT-1-ov-file">MIT-License</a></p>
 </li>
 </ul>
 <p>Many thanks to <strong>Vincent Parrett</strong> and <strong>Kiriakos Vlahos</strong> for their great contribution.</p>
 <p>Thanks to George Birbilis for Package updates, build and test with Android, iOS and OSX platform</p>
+<h2 id="license">License</h2>
+<p>Copyright (c) 2019-2026 Ethea S.r.l.</p>
+<p>Licensed under the <a href="LICENSE">Apache License, Version 2.0</a> (the “License”): you may not use this software except in compliance with the License. Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an “AS IS” BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</p>
+</body>
+</html>
