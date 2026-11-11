@@ -146,6 +146,9 @@ A similar project made by Ethea for Icon Fonts: [https://github.com/EtheaDev/Ico
 Related links: [embarcadero.com](https://www.embarcadero.com) - [learndelphi.org](https://learndelphi.org)
 
 ### RELEASE NOTES
+11 Nov 2026 - version 4.8.2
+- Compatibility with Delphi 13.2
+
 02 Nov 2026 - version 4.8.1
 - Fixed "Search icons from WEB": icons downloaded as prefix/name.svg (the iconify.design API no longer accepts prefix:name.svg), search query and prefix URL-encoded
 - Fixed ImageList Editor (VCL and FMX): the maximized state of the window is restored when the editor is reopened
